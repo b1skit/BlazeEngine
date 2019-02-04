@@ -2,16 +2,25 @@
 #include "EventGenerator.h"
 #include "EventListener.h"
 
-class LogManager : EventGenerator, EventListener
+namespace CaturdayEngine
 {
-public:
-	LogManager();
-	~LogManager();
-
-	int HandleEvent(EVENT_TYPE event, EventGenerator* generator);
 
 
-private:
+	class LogManager : EventGenerator, EventListener
+	{
+	public:
+		static LogManager& Instance()
+		{
+			static LogManager* instance = new LogManager();
+			return *instance;
+		}
 
-};
+		int HandleEvent(EVENT_TYPE event, EventGenerator* generator);
 
+
+	private:
+		LogManager();
+		~LogManager();
+	};
+
+}

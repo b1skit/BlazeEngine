@@ -1,10 +1,15 @@
 #pragma once
 
-class EventGenerator
+namespace CaturdayEngine
 {
-public:
+
+	class EventGenerator
+	{
+	public:
 
 
-private:
+	private:
 
-};
+	};
+
+}

@@ -2,11 +2,16 @@
 #include "EventManager.h"
 #include "EventGenerator.h"
 
-class EventListener
+namespace CaturdayEngine
 {
-public:
-	virtual int HandleEvent(EVENT_TYPE event, EventGenerator* generator) = 0;
-	
-private:
 
-};
+	class EventListener
+	{
+	public:
+		virtual int HandleEvent(EVENT_TYPE event, EventGenerator* generator) = 0;
+
+	private:
+
+	};
+
+}

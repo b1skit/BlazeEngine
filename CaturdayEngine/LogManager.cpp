@@ -1,21 +1,41 @@
 #include "LogManager.h"
+#include <iostream>
+
+using std::cout;
+using std::endl;
 
 
-
-LogManager::LogManager()
+namespace CaturdayEngine
 {
-
-}
-
-
-LogManager::~LogManager()
-{
-	
-}
+	extern EventManager _EventManager;
 
 
-int LogManager::HandleEvent(EVENT_TYPE event, EventGenerator * generator)
-{
+	LogManager::LogManager()
+	{
+		_EventManager.Instance();
+	}
 
-	return 0;
+
+	LogManager::~LogManager()
+	{
+
+	}
+
+
+	int LogManager::HandleEvent(EVENT_TYPE event, EventGenerator * generator)
+	{
+		switch (event)
+		{
+		case EVENT_TICK:
+			cout << "EVENT_UPDATE posted by generator  ???" << endl;
+			break;
+
+		default:
+			cout << "ERROR: Default event generated!" << endl;
+			break;
+		}
+
+		return 0;
+	}
+
 }
