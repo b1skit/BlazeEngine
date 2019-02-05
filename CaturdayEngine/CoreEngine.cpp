@@ -7,18 +7,20 @@ using std::cout;
 using std::endl;
 
 
+int main()
+{
+	cout << "Welcome to the Caturday Engine..." << endl;
+
+	return 0;
+}
+
 namespace CaturdayEngine
 {
 	const static EventManager _EventManager;
 	const static LogManager _LogManager;
 
 
-	int main()
-	{
-		cout << "Welcome to the Caturday Engine..." << endl;
 
-		return 0;
-	}
 
 	void Startup()
 	{

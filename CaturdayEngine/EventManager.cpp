@@ -3,15 +3,15 @@
 namespace CaturdayEngine
 {
 
-	EventManager::EventManager()
-	{
-		//eventQueues[UPDATE_EVENT] = queue<
-	}
+	//EventManager::EventManager()
+	//{
+	//	//eventQueues[UPDATE_EVENT] = queue<
+	//}
 
-	EventManager::~EventManager()
-	{
+	//EventManager::~EventManager()
+	//{
 
-	}
+	//}
 
 	bool EventManager::Subscribe(EVENT_TYPE eventType, EventListener* listener)
 	{

@@ -17,10 +17,12 @@ namespace CaturdayEngine
 
 		int HandleEvent(EVENT_TYPE event, EventGenerator* generator);
 
+		//LogManager();
+		//~LogManager();
 
 	private:
-		LogManager();
-		~LogManager();
+		
+		
 	};
 
 }

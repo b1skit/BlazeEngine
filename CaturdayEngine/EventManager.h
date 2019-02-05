@@ -7,17 +7,6 @@ using std::queue;
 
 namespace CaturdayEngine
 {
-
-
-	enum EVENT_TYPE
-	{
-		EVENT_TICK = 0,
-		// EVENT_UPDATE = 1
-		// ...
-
-	}; // EventManager.NUM_EVENT_TYPES must equal the number of enums
-
-
 	struct EventInfo
 	{
 		EVENT_TYPE type;
@@ -34,7 +23,7 @@ namespace CaturdayEngine
 		}
 
 		// Subscribe to an event
-		bool Subscribe(EVENT_TYPE eventType, EventListener* listener);
+		bool Subscribe(EVENT_TYPE eventType, CaturdayEngine::EventListener* listener);
 
 		// Post an event
 		bool Notify(EVENT_TYPE eventType, EventGenerator* eventGenerator);
@@ -44,9 +33,9 @@ namespace CaturdayEngine
 
 		static const int NUM_EVENT_TYPES = 1; // Must equal the count of enum EVENT_TYPE
 	private:
-		EventManager();
+		//EventManager();
 
-		~EventManager();
+		//~EventManager();
 
 		queue<EventInfo> eventQueues[NUM_EVENT_TYPES];
 

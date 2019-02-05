@@ -1,5 +1,6 @@
 #include "LogManager.h"
 #include <iostream>
+#include "EventManager.h"
 
 using std::cout;
 using std::endl;
@@ -10,16 +11,16 @@ namespace CaturdayEngine
 	extern EventManager _EventManager;
 
 
-	LogManager::LogManager()
-	{
-		_EventManager.Instance();
-	}
+	//LogManager::LogManager()
+	//{
+	//	_EventManager.Instance();
+	//}
 
 
-	LogManager::~LogManager()
-	{
+	//LogManager::~LogManager()
+	//{
 
-	}
+	//}
 
 
 	int LogManager::HandleEvent(EVENT_TYPE event, EventGenerator * generator)
