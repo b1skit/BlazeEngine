@@ -1,51 +1,40 @@
-
 #include <iostream>
+#include "CoreEngine.h"
 #include "EventManager.h"
-#include "LogManager.h"
 
 using std::cout;
-using std::endl;
 
-
-int main()
-{
-	cout << "Welcome to the Blaze Engine..." << endl;
-
-	return 0;
-}
 
 namespace BlazeEngine
 {
-	
-
-	class CoreEngine
+	void CoreEngine::Startup()
 	{
-	public:
-		// Engine components:
-		const static EventManager _EventManager;
-		const static LogManager _LogManager;
+		cout << "CoreEngine starting up...\n";
 
-		void Startup()
-		{
-			cout << "CoreEngine starting up...\n";
+		BlazeEventManager = EventManager::Instance();
+		BlazeEventManager.Startup(this);
 
-			return;
-		}
+		BlazeLogManager = LogManager::Instance();
+		BlazeLogManager.Startup(this);
 
-		void Shutdown()
-		{
-			cout << "CoreEngine shutting down...\n";
-
-			return;
-		}
-
-	private:
+		return;
+	}
 
 
-	};
+	// Main game loop
+	void CoreEngine::Run()
+	{
+		cout << "CoreEngine Run() called!\n";
+	}
 
+	void CoreEngine::Shutdown()
+	{
+		cout << "CoreEngine shutting down...\n";
 
-	
+		BlazeEventManager.Shutdown();
+
+		return;
+	}
 
 
 }

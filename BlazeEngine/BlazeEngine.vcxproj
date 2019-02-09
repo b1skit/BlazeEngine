@@ -123,8 +123,11 @@
     <ClCompile Include="CoreEngine.cpp" />
     <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="LogManager.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CoreEngine.h" />
+    <ClInclude Include="EngineComponent.h" />
     <ClInclude Include="EventGenerator.h" />
     <ClInclude Include="EventListener.h" />
     <ClInclude Include="EventManager.h" />

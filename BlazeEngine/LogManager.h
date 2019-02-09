@@ -1,24 +1,25 @@
 #pragma once
 #include "EventGenerator.h"
 #include "EventListener.h"
+#include "EngineComponent.h"
 
 namespace BlazeEngine
 {
-
-
-	class LogManager : EventGenerator, EventListener
+	class LogManager : public EventGenerator, public EventListener, public EngineComponent
 	{
 	public:
-		static LogManager& Instance()
-		{
-			static LogManager* instance = new LogManager();
-			return *instance;
-		}
+		//LogManager();
+		//~LogManager();
+		static LogManager& Instance();
+
+		void Startup(CoreEngine * coreEngine);
+
+		void Shutdown();
+
+		void Update();
 
 		int HandleEvent(EVENT_TYPE event, EventGenerator* generator);
 
-		//LogManager();
-		//~LogManager();
 
 	private:
 		

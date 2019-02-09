@@ -3,14 +3,10 @@
 #include "EventManager.h"
 
 using std::cout;
-using std::endl;
 
 
 namespace BlazeEngine
 {
-	extern EventManager _EventManager;
-
-
 	//LogManager::LogManager()
 	//{
 	//	_EventManager.Instance();
@@ -19,20 +15,45 @@ namespace BlazeEngine
 
 	//LogManager::~LogManager()
 	//{
-
+	//
 	//}
+
+	LogManager& LogManager::Instance()
+	{
+		cout << "LogManager.Instance() called!\n"; // To do: Log this as an event...
+
+		static LogManager* instance = new LogManager();
+		return *instance;
+	}
+
+	void LogManager::Startup(CoreEngine* coreEngine)
+	{
+		EngineComponent::coreEngine = coreEngine;
+
+		cout << "LogManager.Startup() called!\n"; // To do: Log this as an event...
+	}
+
+	void LogManager::Shutdown()
+	{
+		cout << "LogManager.Shutdown() called!\n"; // To do: Log this as an event...
+	}
+
+	void LogManager::Update()
+	{
+		cout << "LogManager.Update() called!\n"; // To do: Log this as an event...
+	}
 
 
 	int LogManager::HandleEvent(EVENT_TYPE event, EventGenerator * generator)
 	{
 		switch (event)
 		{
-		case EVENT_TICK:
-			cout << "EVENT_UPDATE posted by generator  ???" << endl;
+		case EVENT_TEST:
+			cout << "EVENT_TEST posted by generator  ???\n";
 			break;
 
 		default:
-			cout << "ERROR: Default event generated!" << endl;
+			cout << "ERROR: Default event generated!\n";
 			break;
 		}
 

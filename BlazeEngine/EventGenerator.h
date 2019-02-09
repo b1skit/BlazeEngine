@@ -4,8 +4,9 @@ namespace BlazeEngine
 {
 	enum EVENT_TYPE
 	{
-		EVENT_TICK = 0,
-		// EVENT_UPDATE = 1
+		EVENT_TEST = 0,
+		// EVENT_TICK ??
+		// EVENT_UPDATE ??
 		// ...
 
 	}; // EventManager.NUM_EVENT_TYPES must equal the number of enums

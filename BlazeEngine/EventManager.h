@@ -1,6 +1,8 @@
 #pragma once
+//#include "CoreEngine.h"
 #include "EventListener.h"
 #include "EventGenerator.h"
+#include "EngineComponent.h"
 #include <queue>
 
 using std::queue;
@@ -14,28 +16,33 @@ namespace BlazeEngine
 	};
 
 
-	class EventManager {
+	class EventManager : public EngineComponent
+	{
 	public:
-		static EventManager& Instance()
-		{
-			static EventManager* instance = new EventManager();
-			return *instance;
-		}
+		//EventManager();
+		//~EventManager();
+		static EventManager& Instance();
+
+		void Startup(CoreEngine* coreEngine);
+
+		void Shutdown();
+
+		void Update();
 
 		// Subscribe to an event
-		bool Subscribe(EVENT_TYPE eventType, BlazeEngine::EventListener* listener);
+		bool Subscribe(EVENT_TYPE eventType, EventListener* listener);
 
 		// Post an event
 		bool Notify(EVENT_TYPE eventType, EventGenerator* eventGenerator);
 
 
 
-
 		static const int NUM_EVENT_TYPES = 1; // Must equal the count of enum EVENT_TYPE
-	private:
-		//EventManager();
 
-		//~EventManager();
+	private:
+
+
+		
 
 		queue<EventInfo> eventQueues[NUM_EVENT_TYPES];
 
