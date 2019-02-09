@@ -11,7 +11,7 @@ namespace BlazeEngine
 	class EngineComponent
 	{
 	public:
-		virtual void Startup(CoreEngine* coreEngine) = 0;
+		virtual void Startup(CoreEngine* coreEngine, int objectID) = 0;
 		virtual void Shutdown() = 0;
 
 		virtual void Update() = 0;
@@ -19,8 +19,8 @@ namespace BlazeEngine
 
 	protected:
 		//static CoreEngine* coreEngine;
-		const CoreEngine* coreEngine;
-
+		CoreEngine* coreEngine;
+		int objectID;
 
 	private:
 

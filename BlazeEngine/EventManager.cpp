@@ -1,6 +1,4 @@
 #include "EventManager.h"
-//#include "CoreEngine.h"
-//#include "EngineComponent.h"
 
 #include <iostream> // DEBUG
 #include <string>
@@ -12,12 +10,23 @@ using BlazeEngine::CoreEngine;
 
 namespace BlazeEngine
 {
+	EventManager::EventManager()
+	{
+		coreEngine = nullptr;
+		objectID = -1;
 
-	//EventManager::EventManager()
-	//{
-	//	//eventQueues[UPDATE_EVENT] = queue<
+		eventQueues.reserve(NUM_EVENT_TYPES);
+		for (int i = 0; i < NUM_EVENT_TYPES; i++)
+		{
+			eventQueues.push_back(vector<EventInfo>());
+		}
 
-	//}
+		eventListeners.reserve(EVENT_QUEUE_START_SIZE);
+		for (int i = 0; i < EVENT_QUEUE_START_SIZE; i++)
+		{
+			eventListeners.push_back(vector<EventListener*>());
+		}		
+	}
 
 	//EventManager::~EventManager()
 	//{
@@ -26,41 +35,65 @@ namespace BlazeEngine
 
 	EventManager& EventManager::Instance()
 	{
-		cout << "EventManager.Instance() called!\n"; // To do: Log this as an event...
-		
 		static EventManager* instance = new EventManager();
 		return *instance;
 	}
 
-	void EventManager::Startup(CoreEngine* coreEngine)
+	void EventManager::Startup(CoreEngine* coreEngine, int objectID)
 	{
-		EngineComponent::coreEngine = coreEngine;
+		this->coreEngine = coreEngine;
+		this->objectID = objectID;
 
-		cout << "EventManager.Startup() called!\n"; // To do: Log this as an event...
+		Notify(EventInfo{ EVENT_LOG, this, "Event manager started!" });
 	}
 
 	void EventManager::Shutdown()
 	{
-		cout << "EventManager.Shutdown() called!\n"; // To do: Log this as an event...
+		Notify(EventInfo{ EVENT_LOG, this, "Event manager shutting down..." });
 	}
 
 	void EventManager::Update()
 	{
-		cout << "EventManager.Update() called!\n"; // To do: Log this as an event...
+		Notify(EventInfo{ EVENT_LOG, this, "Event manager updating!"});
+
+		for (int currentEventType = 0; currentEventType < NUM_EVENT_TYPES; currentEventType++)
+		{
+			int numCurrentEvents = eventQueues[currentEventType].size();
+			for (int currentEvent = 0; currentEvent < numCurrentEvents; currentEvent++)
+			{
+				int numListeners = eventListeners[currentEventType].size();
+				for (int currentListener = 0; currentListener < numListeners; currentListener++)
+				{
+					eventListeners[currentEventType][currentListener]->HandleEvent(eventQueues[currentEventType][currentEvent]);
+				}
+			}
+		}
 	}
 
-	bool EventManager::Subscribe(EVENT_TYPE eventType, EventListener* listener)
+	void EventManager::Subscribe(EVENT_TYPE eventType, EventListener* listener)
 	{
-		//BlazeEventManager
-		return true;
+		eventListeners[eventType].push_back(listener);
+		return;
 	}
 
-	bool EventManager::Notify(EVENT_TYPE eventType, EventGenerator* eventGenerator)
+	void EventManager::Unsubscribe(EventListener * listener)
 	{
-		EventInfo newEvent{ eventType, eventGenerator };
-		eventQueues[eventType].push(newEvent);
+		// DEBUG:
+		Notify(EventInfo{ EVENT_ERROR, this, "EventManager.Unsubscribe() was called, but is NOT implemented!"});
 
-		return true;
+		return;
+	}
+
+	void EventManager::Notify(EventInfo eventInfo)
+	{
+		eventQueues[(int)eventInfo.type].push_back(eventInfo);
+
+		return;
+	}
+
+	int EventManager::GetObjectID()
+	{
+		return objectID;
 	}
 
 }

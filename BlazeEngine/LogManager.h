@@ -5,21 +5,27 @@
 
 namespace BlazeEngine
 {
-	class LogManager : public EventGenerator, public EventListener, public EngineComponent
+	class LogManager : public EngineComponent, public EventGenerator, public EventListener
 	{
 	public:
-		//LogManager();
+		LogManager();
 		//~LogManager();
 		static LogManager& Instance();
 
-		void Startup(CoreEngine * coreEngine);
+		// EngineComponent:
+		void Startup(CoreEngine * coreEngine, int objectID);
 
 		void Shutdown();
 
 		void Update();
 
-		int HandleEvent(EVENT_TYPE event, EventGenerator* generator);
+		
+		// EventGenerator:
+		int GetObjectID();
 
+
+		// EventListener:
+		int HandleEvent(EventInfo eventInfo);
 
 	private:
 		

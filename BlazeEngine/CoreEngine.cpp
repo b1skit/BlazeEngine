@@ -9,13 +9,18 @@ namespace BlazeEngine
 {
 	void CoreEngine::Startup()
 	{
-		cout << "CoreEngine starting up...\n";
+		objectID = AssignObjectID(); // CoreEngine should always run first to be given ID 0
 
 		BlazeEventManager = EventManager::Instance();
-		BlazeEventManager.Startup(this);
-
+		BlazeEventManager.Startup(this, AssignObjectID());
+		
 		BlazeLogManager = LogManager::Instance();
-		BlazeLogManager.Startup(this);
+		BlazeLogManager.Startup(this, AssignObjectID());
+		
+
+		BlazeEventManager.Notify(EventInfo{EVENT_LOG, this, "CoreEngine started!" });
+
+		isRunning = true;
 
 		return;
 	}
@@ -24,16 +29,36 @@ namespace BlazeEngine
 	// Main game loop
 	void CoreEngine::Run()
 	{
-		cout << "CoreEngine Run() called!\n";
+		BlazeEventManager.Notify(EventInfo{EVENT_LOG, this, "CoreEngine running!" });
+
+		while (isRunning)
+		{
+			BlazeEventManager.Update();
+
+			BlazeLogManager.Update();
+
+			isRunning = false; // DEBUG
+		}
 	}
 
 	void CoreEngine::Shutdown()
 	{
-		cout << "CoreEngine shutting down...\n";
+		BlazeEventManager.Notify(EventInfo{EVENT_LOG, this, "CoreEngine shutting down..." });
+
 
 		BlazeEventManager.Shutdown();
 
 		return;
+	}
+
+	int CoreEngine::AssignObjectID() // CoreEngine should always access this first to be given ID 0
+	{
+		return objectIDs++;
+	}
+
+	int CoreEngine::GetObjectID()
+	{
+		return objectID;
 	}
 
 

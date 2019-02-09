@@ -1,16 +1,17 @@
 #include "LogManager.h"
 #include <iostream>
 #include "EventManager.h"
+#include "CoreEngine.h"
 
 using std::cout;
 
-
 namespace BlazeEngine
 {
-	//LogManager::LogManager()
-	//{
-	//	_EventManager.Instance();
-	//}
+	LogManager::LogManager()
+	{
+		coreEngine = nullptr;
+		objectID = -1;
+	}
 
 
 	//LogManager::~LogManager()
@@ -20,36 +21,37 @@ namespace BlazeEngine
 
 	LogManager& LogManager::Instance()
 	{
-		cout << "LogManager.Instance() called!\n"; // To do: Log this as an event...
-
 		static LogManager* instance = new LogManager();
 		return *instance;
 	}
 
-	void LogManager::Startup(CoreEngine* coreEngine)
+	void LogManager::Startup(CoreEngine* coreEngine, int objectID)
 	{
-		EngineComponent::coreEngine = coreEngine;
+		this->coreEngine = coreEngine;
+		this->objectID = objectID;
 
-		cout << "LogManager.Startup() called!\n"; // To do: Log this as an event...
+		this->coreEngine->BlazeEventManager.Subscribe(EVENT_LOG, this);
+
+		this->coreEngine->BlazeEventManager.Notify(EventInfo{ EVENT_LOG, this, "Log manager started!" });
 	}
 
 	void LogManager::Shutdown()
 	{
-		cout << "LogManager.Shutdown() called!\n"; // To do: Log this as an event...
+		coreEngine->BlazeEventManager.Notify(EventInfo{ EVENT_LOG, this, "Log manager shutting down..." });
 	}
 
 	void LogManager::Update()
 	{
-		cout << "LogManager.Update() called!\n"; // To do: Log this as an event...
+		coreEngine->BlazeEventManager.Notify(EventInfo{ EVENT_LOG, this, "Log manager updating!" });
 	}
 
 
-	int LogManager::HandleEvent(EVENT_TYPE event, EventGenerator * generator)
+	int LogManager::HandleEvent(EventInfo eventInfo)
 	{
-		switch (event)
+		switch (eventInfo.type)
 		{
-		case EVENT_TEST:
-			cout << "EVENT_TEST posted by generator  ???\n";
+		case EVENT_LOG:
+			cout << "EVENT_LOG posted by object #" << std::to_string(eventInfo.generator->GetObjectID() ) << ": \"" << eventInfo.eventMessage << "\"\n";
 			break;
 
 		default:
@@ -60,4 +62,8 @@ namespace BlazeEngine
 		return 0;
 	}
 
+	int LogManager::GetObjectID()
+	{
+		return objectID;
+	}
 }

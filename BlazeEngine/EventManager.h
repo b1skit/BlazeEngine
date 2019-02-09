@@ -1,50 +1,53 @@
 #pragma once
-//#include "CoreEngine.h"
 #include "EventListener.h"
 #include "EventGenerator.h"
 #include "EngineComponent.h"
-#include <queue>
+#include <vector>
+//#include <queue>
 
-using std::queue;
+
+//using std::queue;
+using std::vector;
+
 
 namespace BlazeEngine
 {
-	struct EventInfo
-	{
-		EVENT_TYPE type;
-		EventGenerator* generator;
-	};
+	const static int EVENT_QUEUE_START_SIZE = 100; // The starting size of the event queue to reserve
 
-
-	class EventManager : public EngineComponent
+	class EventManager : public EngineComponent, public EventGenerator
 	{
 	public:
-		//EventManager();
+		EventManager();
 		//~EventManager();
 		static EventManager& Instance();
 
-		void Startup(CoreEngine* coreEngine);
+		void Startup(CoreEngine* coreEngine, int objectID);
 
 		void Shutdown();
 
 		void Update();
 
 		// Subscribe to an event
-		bool Subscribe(EVENT_TYPE eventType, EventListener* listener);
+		void Subscribe(EVENT_TYPE eventType, EventListener* listener);
+
+		void Unsubscribe(EventListener* listener);
 
 		// Post an event
-		bool Notify(EVENT_TYPE eventType, EventGenerator* eventGenerator);
+		void Notify(EventInfo eventInfo);
+
+		// EventGenerator:
+		int GetObjectID();
 
 
 
-		static const int NUM_EVENT_TYPES = 1; // Must equal the count of enum EVENT_TYPE
+		//static const int NUM_EVENT_TYPES = 1; // Must equal the count of enum EVENT_TYPE
 
 	private:
-
-
 		
-
-		queue<EventInfo> eventQueues[NUM_EVENT_TYPES];
+		//vector< vector<EventGenerator*> > eventQueues;
+		vector<vector<EventInfo>> eventQueues;
+		
+		vector< vector<EventListener*> > eventListeners;
 
 	};
 

@@ -1,5 +1,4 @@
 #pragma once
-//#include "EventManager.h"
 #include "EventGenerator.h"
 
 namespace BlazeEngine
@@ -8,7 +7,7 @@ namespace BlazeEngine
 	class EventListener
 	{
 	public:
-		virtual int HandleEvent(EVENT_TYPE event, EventGenerator* generator) = 0;
+		virtual int HandleEvent(EventInfo eventInfo) = 0;
 
 	private:
 
