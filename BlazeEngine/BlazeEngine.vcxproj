@@ -21,7 +21,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{80C62E80-7437-4BB9-B7E0-693FA4C402A1}</ProjectGuid>
-    <RootNamespace>CaturdayEngine</RootNamespace>
+    <RootNamespace>BlazeEngine</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
     <ProjectName>BlazeEngine</ProjectName>
   </PropertyGroup>
