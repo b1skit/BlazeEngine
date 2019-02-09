@@ -9,28 +9,43 @@ using std::endl;
 
 int main()
 {
-	cout << "Welcome to the Caturday Engine..." << endl;
+	cout << "Welcome to the Blaze Engine..." << endl;
 
 	return 0;
 }
 
-namespace CaturdayEngine
+namespace BlazeEngine
 {
-	const static EventManager _EventManager;
-	const static LogManager _LogManager;
+	
 
-
-
-
-	void Startup()
+	class CoreEngine
 	{
-		cout << "CoreEngine starting up...\n";
-	}
+	public:
+		// Engine components:
+		const static EventManager _EventManager;
+		const static LogManager _LogManager;
 
-	void Shutdown()
-	{
-		cout << "CoreEngine shutting down...\n";
-	}
+		void Startup()
+		{
+			cout << "CoreEngine starting up...\n";
+
+			return;
+		}
+
+		void Shutdown()
+		{
+			cout << "CoreEngine shutting down...\n";
+
+			return;
+		}
+
+	private:
+
+
+	};
+
+
+	
 
 
 }

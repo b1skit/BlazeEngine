@@ -6,7 +6,7 @@ using std::cout;
 using std::endl;
 
 
-namespace CaturdayEngine
+namespace BlazeEngine
 {
 	extern EventManager _EventManager;
 

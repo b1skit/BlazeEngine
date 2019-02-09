@@ -1,6 +1,6 @@
 #pragma once
 
-namespace CaturdayEngine
+namespace BlazeEngine
 {
 	enum EVENT_TYPE
 	{

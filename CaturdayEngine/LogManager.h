@@ -2,7 +2,7 @@
 #include "EventGenerator.h"
 #include "EventListener.h"
 
-namespace CaturdayEngine
+namespace BlazeEngine
 {
 
 

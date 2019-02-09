@@ -1,6 +1,6 @@
 #include "EventManager.h"
 
-namespace CaturdayEngine
+namespace BlazeEngine
 {
 
 	//EventManager::EventManager()

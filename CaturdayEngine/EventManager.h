@@ -5,7 +5,7 @@
 
 using std::queue;
 
-namespace CaturdayEngine
+namespace BlazeEngine
 {
 	struct EventInfo
 	{
@@ -23,7 +23,7 @@ namespace CaturdayEngine
 		}
 
 		// Subscribe to an event
-		bool Subscribe(EVENT_TYPE eventType, CaturdayEngine::EventListener* listener);
+		bool Subscribe(EVENT_TYPE eventType, BlazeEngine::EventListener* listener);
 
 		// Post an event
 		bool Notify(EVENT_TYPE eventType, EventGenerator* eventGenerator);
