@@ -7,9 +7,11 @@
 namespace BlazeEngine
 {
 
-	class CoreEngine : EventGenerator
+	class CoreEngine : public BlazeObject, public EventGenerator
 	{
 	public:
+		CoreEngine() : BlazeObject() {};
+
 		// Engine component API:
 		EventManager BlazeEventManager;
 		LogManager BlazeLogManager;
@@ -19,15 +21,9 @@ namespace BlazeEngine
 		void Run();
 		void Shutdown();
 
-		// Utilities:
-		int AssignObjectID();
-
-		// EventGenerator:
-		int GetObjectID();
 
 	private:
 		bool isRunning = false;
-		int objectID;
 		int objectIDs = 0;
 	};
 }

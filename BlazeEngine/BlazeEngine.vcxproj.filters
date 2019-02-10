@@ -47,5 +47,8 @@
     <ClInclude Include="EngineComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BlazeObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

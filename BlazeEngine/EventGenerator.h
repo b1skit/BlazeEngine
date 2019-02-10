@@ -1,10 +1,14 @@
 #pragma once
+#include "BlazeObject.h"
 #include <string>
 
 using std::string;
 
 namespace BlazeEngine
 {
+	class EventGenerator; // Pre-declaration
+
+
 	enum EVENT_TYPE
 	{
 		EVENT_LOG = 0,
@@ -12,17 +16,13 @@ namespace BlazeEngine
 		// EVENT_TICK ??
 		// EVENT_UPDATE ??
 		// ...
+	};
+	const static int NUM_EVENT_TYPES = 2; // MUST equal the number of EVENT_TYPE enums
 
-	}; // NUM_EVENT_TYPES must be the same as the number of EVENT_TYPE enums
-	const static int NUM_EVENT_TYPES = 2; // Must equal the number of EVENT_TYPE enums
-	
-	
-
-	class EventGenerator; // Pre-declaration
 	struct EventInfo
 	{
 		EVENT_TYPE type;
-		EventGenerator* generator;
+		BlazeObject* generator;
 		string eventMessage = ""; // Default to empty message
 	};
 
@@ -31,7 +31,7 @@ namespace BlazeEngine
 	class EventGenerator
 	{
 	public:
-		virtual int GetObjectID() = 0;
+		
 
 
 	private:

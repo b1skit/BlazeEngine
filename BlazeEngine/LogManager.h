@@ -13,16 +13,11 @@ namespace BlazeEngine
 		static LogManager& Instance();
 
 		// EngineComponent:
-		void Startup(CoreEngine * coreEngine, int objectID);
+		void Startup(CoreEngine * coreEngine);
 
 		void Shutdown();
 
 		void Update();
-
-		
-		// EventGenerator:
-		int GetObjectID();
-
 
 		// EventListener:
 		int HandleEvent(EventInfo eventInfo);

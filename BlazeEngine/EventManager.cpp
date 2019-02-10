@@ -1,19 +1,14 @@
 #include "EventManager.h"
-
-#include <iostream> // DEBUG
-#include <string>
-using std::cout; // DEBUG
-using std::to_string;
+#include "BlazeObject.h"
 
 using BlazeEngine::CoreEngine;
 
 
 namespace BlazeEngine
 {
-	EventManager::EventManager()
+	EventManager::EventManager() : EngineComponent()
 	{
 		coreEngine = nullptr;
-		objectID = -1;
 
 		eventQueues.reserve(NUM_EVENT_TYPES);
 		for (int i = 0; i < NUM_EVENT_TYPES; i++)
@@ -30,7 +25,7 @@ namespace BlazeEngine
 
 	//EventManager::~EventManager()
 	//{
-
+	//
 	//}
 
 	EventManager& EventManager::Instance()
@@ -39,7 +34,7 @@ namespace BlazeEngine
 		return *instance;
 	}
 
-	void EventManager::Startup(CoreEngine* coreEngine, int objectID)
+	void EventManager::Startup(CoreEngine* coreEngine)
 	{
 		this->coreEngine = coreEngine;
 		this->objectID = objectID;
@@ -90,10 +85,4 @@ namespace BlazeEngine
 
 		return;
 	}
-
-	int EventManager::GetObjectID()
-	{
-		return objectID;
-	}
-
 }

@@ -7,10 +7,9 @@ using std::cout;
 
 namespace BlazeEngine
 {
-	LogManager::LogManager()
+	LogManager::LogManager() : EngineComponent()
 	{
 		coreEngine = nullptr;
-		objectID = -1;
 	}
 
 
@@ -25,7 +24,7 @@ namespace BlazeEngine
 		return *instance;
 	}
 
-	void LogManager::Startup(CoreEngine* coreEngine, int objectID)
+	void LogManager::Startup(CoreEngine* coreEngine)
 	{
 		this->coreEngine = coreEngine;
 		this->objectID = objectID;
@@ -60,10 +59,5 @@ namespace BlazeEngine
 		}
 
 		return 0;
-	}
-
-	int LogManager::GetObjectID()
-	{
-		return objectID;
 	}
 }

@@ -3,10 +3,7 @@
 #include "EventGenerator.h"
 #include "EngineComponent.h"
 #include <vector>
-//#include <queue>
 
-
-//using std::queue;
 using std::vector;
 
 
@@ -21,7 +18,7 @@ namespace BlazeEngine
 		//~EventManager();
 		static EventManager& Instance();
 
-		void Startup(CoreEngine* coreEngine, int objectID);
+		void Startup(CoreEngine* coreEngine);
 
 		void Shutdown();
 
@@ -35,18 +32,8 @@ namespace BlazeEngine
 		// Post an event
 		void Notify(EventInfo eventInfo);
 
-		// EventGenerator:
-		int GetObjectID();
-
-
-
-		//static const int NUM_EVENT_TYPES = 1; // Must equal the count of enum EVENT_TYPE
-
 	private:
-		
-		//vector< vector<EventGenerator*> > eventQueues;
-		vector<vector<EventInfo>> eventQueues;
-		
+		vector< vector<EventInfo> > eventQueues;		
 		vector< vector<EventListener*> > eventListeners;
 
 	};

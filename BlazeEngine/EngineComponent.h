@@ -1,5 +1,8 @@
+// Interface for Blaze engine components
+// Inherits from BlazeObject
+
 #pragma once
-//#include "CoreEngine.h"
+#include "BlazeObject.h"
 
 
 namespace BlazeEngine
@@ -8,19 +11,20 @@ namespace BlazeEngine
 	class CoreEngine;
 
 	// EngineComponent Interface: Functionality common to components in main game loop
-	class EngineComponent
+	class EngineComponent : public BlazeObject
 	{
 	public:
-		virtual void Startup(CoreEngine* coreEngine, int objectID) = 0;
+		EngineComponent() : BlazeObject() {};
+
+		virtual void Startup(CoreEngine* coreEngine) = 0;
+		
 		virtual void Shutdown() = 0;
 
 		virtual void Update() = 0;
 
 
 	protected:
-		//static CoreEngine* coreEngine;
 		CoreEngine* coreEngine;
-		int objectID;
 
 	private:
 

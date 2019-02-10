@@ -9,13 +9,11 @@ namespace BlazeEngine
 {
 	void CoreEngine::Startup()
 	{
-		objectID = AssignObjectID(); // CoreEngine should always run first to be given ID 0
-
 		BlazeEventManager = EventManager::Instance();
-		BlazeEventManager.Startup(this, AssignObjectID());
+		BlazeEventManager.Startup(this);
 		
 		BlazeLogManager = LogManager::Instance();
-		BlazeLogManager.Startup(this, AssignObjectID());
+		BlazeLogManager.Startup(this);
 		
 
 		BlazeEventManager.Notify(EventInfo{EVENT_LOG, this, "CoreEngine started!" });
@@ -50,16 +48,4 @@ namespace BlazeEngine
 
 		return;
 	}
-
-	int CoreEngine::AssignObjectID() // CoreEngine should always access this first to be given ID 0
-	{
-		return objectIDs++;
-	}
-
-	int CoreEngine::GetObjectID()
-	{
-		return objectID;
-	}
-
-
 }
