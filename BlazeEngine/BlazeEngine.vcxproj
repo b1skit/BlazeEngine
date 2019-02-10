@@ -129,7 +129,6 @@
     <ClInclude Include="BlazeObject.h" />
     <ClInclude Include="CoreEngine.h" />
     <ClInclude Include="EngineComponent.h" />
-    <ClInclude Include="EventGenerator.h" />
     <ClInclude Include="EventListener.h" />
     <ClInclude Include="EventManager.h" />
     <ClInclude Include="LogManager.h" />

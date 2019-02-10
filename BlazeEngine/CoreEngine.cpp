@@ -9,14 +9,14 @@ namespace BlazeEngine
 {
 	void CoreEngine::Startup()
 	{
-		BlazeEventManager = EventManager::Instance();
-		BlazeEventManager.Startup(this);
+		BlazeEventManager = &EventManager::Instance();
+		BlazeEventManager->Startup(this);
 		
-		BlazeLogManager = LogManager::Instance();
-		BlazeLogManager.Startup(this);
+		BlazeLogManager = &LogManager::Instance();
+		BlazeLogManager->Startup(this);
 		
 
-		BlazeEventManager.Notify(EventInfo{EVENT_LOG, this, "CoreEngine started!" });
+		BlazeEventManager->Notify(EventInfo{EVENT_LOG, this, "CoreEngine started!" });
 
 		isRunning = true;
 
@@ -27,13 +27,13 @@ namespace BlazeEngine
 	// Main game loop
 	void CoreEngine::Run()
 	{
-		BlazeEventManager.Notify(EventInfo{EVENT_LOG, this, "CoreEngine running!" });
+		BlazeEventManager->Notify(EventInfo{EVENT_LOG, this, "CoreEngine running!" });
 
 		while (isRunning)
 		{
-			BlazeEventManager.Update();
+			BlazeEventManager->Update();
 
-			BlazeLogManager.Update();
+			BlazeLogManager->Update();
 
 			isRunning = false; // DEBUG
 		}
@@ -41,10 +41,10 @@ namespace BlazeEngine
 
 	void CoreEngine::Shutdown()
 	{
-		BlazeEventManager.Notify(EventInfo{EVENT_LOG, this, "CoreEngine shutting down..." });
+		BlazeEventManager->Notify(EventInfo{EVENT_LOG, this, "CoreEngine shutting down..." });
 
 
-		BlazeEventManager.Shutdown();
+		BlazeEventManager->Shutdown();
 
 		return;
 	}

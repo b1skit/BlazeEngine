@@ -10,6 +10,7 @@ namespace BlazeEngine
 	LogManager::LogManager() : EngineComponent()
 	{
 		coreEngine = nullptr;
+		SetName("LogManager");
 	}
 
 
@@ -29,19 +30,19 @@ namespace BlazeEngine
 		this->coreEngine = coreEngine;
 		this->objectID = objectID;
 
-		this->coreEngine->BlazeEventManager.Subscribe(EVENT_LOG, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_LOG, this);
 
-		this->coreEngine->BlazeEventManager.Notify(EventInfo{ EVENT_LOG, this, "Log manager started!" });
+		this->coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Log manager started!" });
 	}
 
 	void LogManager::Shutdown()
 	{
-		coreEngine->BlazeEventManager.Notify(EventInfo{ EVENT_LOG, this, "Log manager shutting down..." });
+		coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Log manager shutting down..." });
 	}
 
 	void LogManager::Update()
 	{
-		coreEngine->BlazeEventManager.Notify(EventInfo{ EVENT_LOG, this, "Log manager updating!" });
+		coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Log manager updating!" });
 	}
 
 
@@ -50,7 +51,7 @@ namespace BlazeEngine
 		switch (eventInfo.type)
 		{
 		case EVENT_LOG:
-			cout << "EVENT_LOG posted by object #" << std::to_string(eventInfo.generator->GetObjectID() ) << ": \"" << eventInfo.eventMessage << "\"\n";
+			cout << "EVENT_LOG: Object #" << std::to_string(eventInfo.generator->GetObjectID() ) << " \"" << eventInfo.generator->GetName() <<"\": \"" << eventInfo.eventMessage << "\"\n";
 			break;
 
 		default:

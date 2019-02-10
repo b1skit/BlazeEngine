@@ -1,11 +1,11 @@
 #pragma once
-#include "EventGenerator.h"
+//#include "EventGenerator.h"
 #include "EventListener.h"
 #include "EngineComponent.h"
 
 namespace BlazeEngine
 {
-	class LogManager : public EngineComponent, public EventGenerator, public EventListener
+	class LogManager : public EngineComponent, public EventListener
 	{
 	public:
 		LogManager();

@@ -3,9 +3,13 @@
 
 #pragma once
 
+#include <string>
 #include <iostream> // DEBUG
 using std::cout;
+using std::string;
 
+
+// Global variables: These should never be modified directly.
 namespace BlazeEnginePrivate
 {
 	static int objectIDs = 0;
@@ -29,10 +33,22 @@ namespace BlazeEngine
 			return objectID;
 		}
 
+		inline string GetName()
+		{
+			return name;
+		}
+
+		inline void SetName(string newName)
+		{
+			name = newName;
+		}
+
 	protected:
 		int objectID;
 
 	private:
+		string name = "unnamed";
+
 		// Utilities:
 		int AssignObjectID()
 		{

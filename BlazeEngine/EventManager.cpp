@@ -1,3 +1,5 @@
+// Handles logging for the engine and 
+
 #include "EventManager.h"
 #include "BlazeObject.h"
 
@@ -9,6 +11,7 @@ namespace BlazeEngine
 	EventManager::EventManager() : EngineComponent()
 	{
 		coreEngine = nullptr;
+		SetName("EventManager");
 
 		eventQueues.reserve(NUM_EVENT_TYPES);
 		for (int i = 0; i < NUM_EVENT_TYPES; i++)
@@ -62,6 +65,9 @@ namespace BlazeEngine
 					eventListeners[currentEventType][currentListener]->HandleEvent(eventQueues[currentEventType][currentEvent]);
 				}
 			}
+
+			// Clear the current queue:
+			eventQueues[currentEventType].clear();
 		}
 	}
 

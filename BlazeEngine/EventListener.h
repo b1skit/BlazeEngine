@@ -1,8 +1,11 @@
 #pragma once
-#include "EventGenerator.h"
+//#include "EventGenerator.h"
+//#include "EventManager.h"
 
 namespace BlazeEngine
 {
+	// Predeclaration:
+	struct EventInfo;
 
 	class EventListener
 	{

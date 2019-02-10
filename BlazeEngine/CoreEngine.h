@@ -2,19 +2,21 @@
 #include <iostream>
 #include "EventManager.h"
 #include "LogManager.h"
-#include "EventGenerator.h"
 
 namespace BlazeEngine
 {
 
-	class CoreEngine : public BlazeObject, public EventGenerator
+	class CoreEngine : public BlazeObject
 	{
 	public:
-		CoreEngine() : BlazeObject() {};
+		CoreEngine() : BlazeObject() 
+		{
+			SetName("CoreEngine");
+		};
 
 		// Engine component API:
-		EventManager BlazeEventManager;
-		LogManager BlazeLogManager;
+		EventManager* BlazeEventManager;
+		LogManager* BlazeLogManager;
 
 		// Lifetime flow:
 		void Startup();
