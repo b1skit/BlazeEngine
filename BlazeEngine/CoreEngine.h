@@ -2,6 +2,7 @@
 #include <iostream>
 #include "EventManager.h"
 #include "LogManager.h"
+#include "TimeManager.h"
 
 namespace BlazeEngine
 {
@@ -14,9 +15,9 @@ namespace BlazeEngine
 			SetName("CoreEngine");
 		};
 
-		// Engine component API:
+		// Engine component public API:
 		EventManager* BlazeEventManager;
-		LogManager* BlazeLogManager;
+		TimeManager* BlazeTimeManager;
 
 		// Lifetime flow:
 		void Startup();
@@ -27,5 +28,9 @@ namespace BlazeEngine
 	private:
 		bool isRunning = false;
 		int objectIDs = 0;
+
+		// Private engine components:
+		LogManager* BlazeLogManager;
+		
 	};
 }

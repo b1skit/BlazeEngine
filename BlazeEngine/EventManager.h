@@ -36,26 +36,21 @@ namespace BlazeEngine
 	public:
 		EventManager();
 		//~EventManager();
+		
+		// Singleton functionality:
 		static EventManager& Instance();
-
-		// Disallow copying of our Singleton
-		EventManager(EventManager const&) = delete; 
+		EventManager(EventManager const&) = delete; // Disallow copying of our Singleton
 		void operator=(EventManager const&) = delete;
 		
-
+		// EngineComponent interface:
 		void Startup(CoreEngine* coreEngine);
-
 		void Shutdown();
-
 		void Update();
 
-		// Subscribe to an event
-		void Subscribe(EVENT_TYPE eventType, EventListener* listener);
-
-		void Unsubscribe(EventListener* listener);
-
-		// Post an event
-		void Notify(EventInfo eventInfo, bool pushToFront = false);
+		// Member functions:
+		void Subscribe(EVENT_TYPE eventType, EventListener* listener); // Subscribe to an event
+		/*void Unsubscribe(EventListener* listener);*/
+		void Notify(EventInfo eventInfo, bool pushToFront = false); // Post an event
 
 	private:
 		vector< vector<EventInfo> > eventQueues;		

@@ -23,8 +23,6 @@ namespace BlazeEngine
 	public:
 		BlazeObject()
 		{
-			cout << "BLAZEOBJECT CONTRUCTOR CALLED!!!!\n"; // Currently, we've got a bug where our "singletons" are being copied when created.
-
 			objectID = AssignObjectID();
 		}
 

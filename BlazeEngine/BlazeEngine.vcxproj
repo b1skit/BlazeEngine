@@ -124,6 +124,7 @@
     <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="LogManager.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="TimeManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BlazeObject.h" />
@@ -132,6 +133,7 @@
     <ClInclude Include="EventListener.h" />
     <ClInclude Include="EventManager.h" />
     <ClInclude Include="LogManager.h" />
+    <ClInclude Include="TimeManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

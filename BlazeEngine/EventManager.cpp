@@ -39,8 +39,7 @@ namespace BlazeEngine
 
 	void EventManager::Startup(CoreEngine* coreEngine)
 	{
-		this->coreEngine = coreEngine;
-		this->objectID = objectID;
+		EngineComponent::Startup(coreEngine);
 
 		Notify(EventInfo{ EVENT_LOG, this, "Event manager started!" });
 	}
@@ -77,13 +76,13 @@ namespace BlazeEngine
 		return;
 	}
 
-	void EventManager::Unsubscribe(EventListener * listener)
-	{
-		// DEBUG:
-		Notify(EventInfo{ EVENT_ERROR, this, "EventManager.Unsubscribe() was called, but is NOT implemented!"});
+	//void EventManager::Unsubscribe(EventListener * listener)
+	//{
+	//	// DEBUG:
+	//	Notify(EventInfo{ EVENT_ERROR, this, "EventManager.Unsubscribe() was called, but is NOT implemented!"});
 
-		return;
-	}
+	//	return;
+	//}
 
 	void EventManager::Notify(EventInfo eventInfo, bool pushToFront)
 	{

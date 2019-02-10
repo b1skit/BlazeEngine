@@ -10,20 +10,20 @@ namespace BlazeEngine
 	public:
 		LogManager();
 		//~LogManager();
+		
+		// Singleton functionality:
 		static LogManager& Instance();
-
-		// Disallow copying of our Singleton
-		LogManager(LogManager const&) = delete;
+		LogManager(LogManager const&) = delete; // Disallow copying of our Singleton
 		void operator=(LogManager const&) = delete;		
 
-		// EngineComponent:
+		// EngineComponent interface:
 		void Startup(CoreEngine * coreEngine);
 
 		void Shutdown();
 
 		void Update();
 
-		// EventListener:
+		// EventListener interface:
 		int HandleEvent(EventInfo eventInfo);
 
 	private:

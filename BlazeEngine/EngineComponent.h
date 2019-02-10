@@ -16,7 +16,10 @@ namespace BlazeEngine
 	public:
 		EngineComponent() : BlazeObject() {};
 
-		virtual void Startup(CoreEngine* coreEngine) = 0;
+		virtual void Startup(CoreEngine* coreEngine)
+		{
+			this->coreEngine = coreEngine;
+		}
 		
 		virtual void Shutdown() = 0;
 

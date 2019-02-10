@@ -25,10 +25,9 @@ namespace BlazeEngine
 		return *instance;
 	}
 
-	void LogManager::Startup(CoreEngine* coreEngine)
+	void LogManager::Startup(CoreEngine* coreEngine) 
 	{
-		this->coreEngine = coreEngine;
-		this->objectID = objectID;
+		EngineComponent::Startup(coreEngine);
 
 		this->coreEngine->BlazeEventManager->Subscribe(EVENT_LOG, this);
 
