@@ -12,6 +12,10 @@ namespace BlazeEngine
 		//~LogManager();
 		static LogManager& Instance();
 
+		// Disallow copying of our Singleton
+		LogManager(LogManager const&) = delete;
+		void operator=(LogManager const&) = delete;		
+
 		// EngineComponent:
 		void Startup(CoreEngine * coreEngine);
 

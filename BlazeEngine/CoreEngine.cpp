@@ -14,9 +14,8 @@ namespace BlazeEngine
 		
 		BlazeLogManager = &LogManager::Instance();
 		BlazeLogManager->Startup(this);
-		
 
-		BlazeEventManager->Notify(EventInfo{EVENT_LOG, this, "CoreEngine started!" });
+		BlazeEventManager->Notify(EventInfo{EVENT_LOG, this, "CoreEngine started!" }, true);
 
 		isRunning = true;
 

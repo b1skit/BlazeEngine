@@ -38,6 +38,11 @@ namespace BlazeEngine
 		//~EventManager();
 		static EventManager& Instance();
 
+		// Disallow copying of our Singleton
+		EventManager(EventManager const&) = delete; 
+		void operator=(EventManager const&) = delete;
+		
+
 		void Startup(CoreEngine* coreEngine);
 
 		void Shutdown();
@@ -50,7 +55,7 @@ namespace BlazeEngine
 		void Unsubscribe(EventListener* listener);
 
 		// Post an event
-		void Notify(EventInfo eventInfo);
+		void Notify(EventInfo eventInfo, bool pushToFront = false);
 
 	private:
 		vector< vector<EventInfo> > eventQueues;		

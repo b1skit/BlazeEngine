@@ -85,10 +85,17 @@ namespace BlazeEngine
 		return;
 	}
 
-	void EventManager::Notify(EventInfo eventInfo)
+	void EventManager::Notify(EventInfo eventInfo, bool pushToFront)
 	{
-		eventQueues[(int)eventInfo.type].push_back(eventInfo);
-
+		if (pushToFront)
+		{
+			vector<EventInfo>::iterator iterator = eventQueues[(int)eventInfo.type].begin();
+			eventQueues[(int)eventInfo.type].insert(iterator, eventInfo);
+		}
+		else
+		{
+			eventQueues[(int)eventInfo.type].push_back(eventInfo);
+		}
 		return;
 	}
 }
