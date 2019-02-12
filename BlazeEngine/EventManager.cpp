@@ -50,8 +50,6 @@ namespace BlazeEngine
 
 	void EventManager::Update()
 	{
-		Notify(EventInfo{ EVENT_LOG, this, "Event manager updating!"});
-
 		for (int currentEventType = 0; currentEventType < NUM_EVENT_TYPES; currentEventType++)
 		{
 			size_t numCurrentEvents = eventQueues[currentEventType].size();

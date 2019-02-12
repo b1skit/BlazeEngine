@@ -10,10 +10,12 @@ namespace BlazeEngine
 	class CoreEngine : public BlazeObject
 	{
 	public:
-		CoreEngine() : BlazeObject() 
+		/*CoreEngine() : BlazeObject() 
 		{
 			SetName("CoreEngine");
-		};
+		};*/
+
+		CoreEngine();
 
 		// Engine component public API:
 		EventManager* BlazeEventManager;

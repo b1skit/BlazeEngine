@@ -1,5 +1,6 @@
 #include "TimeManager.h"
 #include "CoreEngine.h"
+#include "SDL.h"
 
 namespace BlazeEngine
 {
@@ -8,7 +9,7 @@ namespace BlazeEngine
 		coreEngine = nullptr;
 		SetName("TimeManager");
 
-		startTime = time(nullptr);
+		startTime = prevTime = currentTime = SDL_GetTicks();
 
 	}
 
@@ -38,7 +39,9 @@ namespace BlazeEngine
 
 	void TimeManager::Update()
 	{
-
+		prevTime = currentTime;
+		currentTime = SDL_GetTicks();
+		deltaTime = currentTime - prevTime;
 	}
 }
 

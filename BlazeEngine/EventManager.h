@@ -25,6 +25,23 @@ namespace BlazeEngine
 
 	struct EventInfo
 	{
+		//// Easy/Dangerous constructor: Posts an EVENT_LOG with only a string. Useful for quick debug statements
+		//EventInfo(string newEventMessage)
+		//{	
+		//	this->eventMessage = newEventMessage;
+		//	this->type = EVENT_LOG;
+		//	this->generator = nullptr; // Danger!
+		//}
+		//
+		//// Full constructor
+		//EventInfo(EVENT_TYPE eventType, BlazeObject* generator, string newEventMessage)
+		//{
+		//	this->type = eventType;
+		//	this->generator = generator;
+		//	this->eventMessage = newEventMessage;
+		//}
+
+
 		EVENT_TYPE type;
 		BlazeObject* generator;
 		string eventMessage = ""; // Default to empty message

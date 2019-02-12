@@ -40,7 +40,7 @@ namespace BlazeEngine
 
 	void LogManager::Update()
 	{
-		coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Log manager updating!" });
+		
 	}
 
 

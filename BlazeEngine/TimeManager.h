@@ -4,7 +4,8 @@
 #pragma once
 
 #include "EngineComponent.h"
-#include <time.h>
+//#include <time.h>
+#include "Dependencies/SDL2/include/SDL_timer.h"
 
 namespace BlazeEngine
 {
@@ -27,16 +28,32 @@ namespace BlazeEngine
 		void Update();
 
 		// Member functions:
-		inline double GetCurrentTime()
+
+		//inline unsigned int GetCurrentTime()
+		//{
+		//	return currentTime;
+		//}
+
+		// Get the time elapsed since the last frame, in seconds
+		inline double GetDeltaTimeSeconds()
 		{
-			return currentTime;
+			return GetDeltaTimeMs() * 0.001; // Convert: ms->sec
 		}
 
-		// Get the time elapsed since the last frame
-		inline double GetDeltaTime()
+		// Get the time elapsed since the last frame, in milliseconds
+		inline unsigned int GetDeltaTimeMs()
 		{
+			return deltaTime;
+		}
 
-			return 0.0f; // TEMP
+		inline unsigned int GetTotalRunningTimeMs()
+		{
+			return currentTime - startTime;
+		}
+
+		inline double GetTotalRunningTimeSeconds()
+		{
+			return (double)GetTotalRunningTimeMs() * 0.001;
 		}
 
 
@@ -44,11 +61,11 @@ namespace BlazeEngine
 
 
 	private:
-		double startTime;
-		double currentTime;
-		double lastFrameTime;
-		double currentFrameTime;
-		double deltaTime;
+		unsigned int startTime;
+		unsigned int currentTime;
+		unsigned int prevTime;
+		//double currentTime;
+		unsigned int deltaTime;
 	};
 }
 
