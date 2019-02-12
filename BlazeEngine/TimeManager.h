@@ -9,6 +9,8 @@
 
 namespace BlazeEngine
 {
+	
+
 	class TimeManager : EngineComponent
 	{
 	public:
@@ -56,16 +58,19 @@ namespace BlazeEngine
 			return (double)GetTotalRunningTimeMs() * 0.001;
 		}
 
+		
+
 
 	protected:
 
 
 	private:
 		unsigned int startTime;
-		unsigned int currentTime;
 		unsigned int prevTime;
-		//double currentTime;
+		unsigned int currentTime;
 		unsigned int deltaTime;
+
+		/*double timeScale;*/
 	};
 }
 

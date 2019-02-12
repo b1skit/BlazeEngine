@@ -28,11 +28,18 @@ namespace BlazeEngine
 
 
 	private:
-		bool isRunning = false;
-		int objectIDs = 0;
+		// Engine config:
+		int maxFPS = 150;
+		
+		// Constants:
+		const double FIXED_TIMESTEP = 1000.0 / 120.0; // Regular step size, in ms
+		//const double MAX_TIMESTEP = 0.5;	// Max amount of time before giving up
+
 
 		// Private engine components:
 		LogManager* BlazeLogManager;
 		
+		// Engine control:
+		bool isRunning = false;
 	};
 }

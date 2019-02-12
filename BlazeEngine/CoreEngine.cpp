@@ -46,30 +46,32 @@ namespace BlazeEngine
 	{
 		BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "CoreEngine beginning main game loop!" });
 
-		int debugCount = 0;
-
-		double timeCount = 0.0;
+		double elapsed = 0.0;	
 
 		while (isRunning)
 		{
+			// TO DO: BlazeInputManager->Update(); // Process input
+
 			BlazeTimeManager->Update();
+			elapsed += BlazeTimeManager->GetDeltaTimeMs();
 
-			BlazeEventManager->Update();
-
-			timeCount += BlazeTimeManager->GetDeltaTimeSeconds();
-			if (timeCount >= 1)
+			while (elapsed >= FIXED_TIMESTEP)
 			{
-				BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Tick..."} );
-				timeCount -= 1.0;
+				BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Update loop called: " + std::to_string(elapsed)});
+
+				// Update components:
+				BlazeEventManager->Update();
+				BlazeLogManager->Update();
+
+
+				// Update the time for the next iteration:
+				BlazeTimeManager->Update();
+				elapsed -= FIXED_TIMESTEP;
 			}
 			
-
-			BlazeLogManager->Update();
-
-			if (debugCount == 5000000)// DEBUG
-				isRunning = false;
-			else
-				debugCount++;
+			// TO DO: BlazeRenderManager->Render(elapsed/FIXED_TIMESTEP); // Render precise current position
+			BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Pretending to render at ~60fps..." });
+			SDL_Delay(1000.0 / 60.0);
 		}
 	}
 
