@@ -10,7 +10,6 @@ namespace BlazeEngine
 {
 	EventManager::EventManager() : EngineComponent()
 	{
-		coreEngine = nullptr;
 		SetName("EventManager");
 
 		eventQueues.reserve(NUM_EVENT_TYPES);
@@ -55,10 +54,10 @@ namespace BlazeEngine
 
 		for (int currentEventType = 0; currentEventType < NUM_EVENT_TYPES; currentEventType++)
 		{
-			int numCurrentEvents = eventQueues[currentEventType].size();
+			size_t numCurrentEvents = eventQueues[currentEventType].size();
 			for (int currentEvent = 0; currentEvent < numCurrentEvents; currentEvent++)
 			{
-				int numListeners = eventListeners[currentEventType].size();
+				size_t numListeners = eventListeners[currentEventType].size();
 				for (int currentListener = 0; currentListener < numListeners; currentListener++)
 				{
 					eventListeners[currentEventType][currentListener]->HandleEvent(eventQueues[currentEventType][currentEvent]);

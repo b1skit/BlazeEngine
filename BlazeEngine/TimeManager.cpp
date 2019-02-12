@@ -1,8 +1,6 @@
 #include "TimeManager.h"
 #include "CoreEngine.h"
 
-
-
 namespace BlazeEngine
 {
 	TimeManager::TimeManager() : EngineComponent()

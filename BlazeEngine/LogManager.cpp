@@ -9,7 +9,6 @@ namespace BlazeEngine
 {
 	LogManager::LogManager() : EngineComponent()
 	{
-		coreEngine = nullptr;
 		SetName("LogManager");
 	}
 
