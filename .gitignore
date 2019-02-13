@@ -375,3 +375,8 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+
+
+# Forced inclusions:
+#-------------------
+!Dependencies/SDL2/lib/
