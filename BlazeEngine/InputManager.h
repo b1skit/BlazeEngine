@@ -55,7 +55,11 @@ namespace BlazeEngine
 		short int inputKeys[INPUT_NUM_KEY_INPUTS];
 		double inputMouse[INPUT_NUM_MOUSE_INPUTS];
 
-		
+		// Control configuration
+		// TO DO: Break this out into an external file...
+
+		SDL_Scancode Button_quit = SDL_SCANCODE_ESCAPE;
+
 	};
 }
 

@@ -1,7 +1,5 @@
 #include <iostream>
 #include "CoreEngine.h"
-#include "EventManager.h"
-
 
 #include "SDL.h"
 
@@ -32,12 +30,16 @@ namespace BlazeEngine
 		BlazeLogManager->Startup(this);
 
 		BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "CoreEngine started!" }, true);
+		BlazeEventManager->Subscribe(EVENT_ENGINE_QUIT, this);
 
 		BlazeTimeManager = &TimeManager::Instance();
 		BlazeTimeManager->Startup(this);
 
 		BlazeInputManager = &InputManager::Instance();
 		BlazeInputManager->Startup(this);
+
+		BlazeRenderManager = &RenderManager::Instance();
+		BlazeRenderManager->Startup(this);
 
 		isRunning = true;
 
@@ -73,19 +75,46 @@ namespace BlazeEngine
 				elapsed -= FIXED_TIMESTEP;
 			}
 			
-			// TO DO: BlazeRenderManager->Render(elapsed/FIXED_TIMESTEP); // Render precise current position
-			/*BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Pretending to render at ~60fps..." });*/
-			SDL_Delay((unsigned int)(1000.0 / 60.0));
+			BlazeRenderManager->Render(elapsed/FIXED_TIMESTEP); // Render precise current position
+			
+			
 		}
+	}
+
+	void CoreEngine::Stop()
+	{
+		isRunning = false;
 	}
 
 	void CoreEngine::Shutdown()
 	{
 		BlazeEventManager->Notify(EventInfo{EVENT_LOG, this, "CoreEngine shutting down..."});
 
+		
 
 		BlazeEventManager->Shutdown();
+		BlazeTimeManager->Shutdown();		
+		BlazeInputManager->Shutdown();
+		BlazeRenderManager->Shutdown();
+
+		BlazeEventManager->Update();
 
 		return;
+	}
+
+	int CoreEngine::HandleEvent(EventInfo eventInfo)
+	{
+		switch (eventInfo.type)
+		{
+		case EVENT_ENGINE_QUIT:
+			Stop();
+			break;
+
+		default:
+			cout << "ERROR: Default event generated in CoreEngine!\n";
+			break;
+		}
+
+		return 0;
 	}
 }

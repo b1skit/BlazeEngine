@@ -34,7 +34,7 @@ namespace BlazeEngine
 
 	void TimeManager::Shutdown()
 	{
-
+		coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Time manager shutting down..." });
 	}
 
 	void TimeManager::Update()

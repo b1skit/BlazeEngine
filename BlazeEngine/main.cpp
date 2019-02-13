@@ -5,7 +5,7 @@ using BlazeEngine::CoreEngine;
 using std::cout;
 
 
-int main()
+int main(int argc, char **argv)
 {
 	cout << "Welcome to the Blaze Engine!\n\n";
 

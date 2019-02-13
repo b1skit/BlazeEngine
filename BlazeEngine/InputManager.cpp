@@ -4,6 +4,7 @@
 #include "SDL_keyboard.h"
 #include "SDL_keycode.h"
 
+#include <string> // DEBUG
 
 
 namespace BlazeEngine
@@ -58,6 +59,11 @@ namespace BlazeEngine
 
 	void InputManager::Update()
 	{
+		const char* text; // DEBUG
+
+		const Uint8* keyboardState;
+		int numKeys;
+
 		SDL_Event currentSDLEvent;
 		while (SDL_PollEvent(&currentSDLEvent))
 		{
@@ -65,15 +71,40 @@ namespace BlazeEngine
 			switch (currentSDLEvent.type)
 			{
 			case SDL_TEXTINPUT:
-				coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Text input detected!!!" });
+				text = currentSDLEvent.text.text;
+				coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_TEXTINPUT detected!!! " + string( text)  }); 
+
+				break;
+
+			case SDL_KEYDOWN:
+				coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_KEYDOWN detected!!!" });
+
+				numKeys = 0;
+				keyboardState  = SDL_GetKeyboardState(&numKeys);
+				if (numKeys > 0)
+				{
+					if (keyboardState[Button_quit])
+					{
+						coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_ENGINE_QUIT, this, "InputManager generated EVENT_ENGINE_QUIT..." });
+					}
+				}
+
+				break;
+
+			case SDL_KEYUP:
+				coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_KEYUP detected!!!" });
 				break;
 
 			case SDL_MOUSEMOTION:
-				coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Mouse motion detected!!!" });
+				coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_MOUSEMOTION detected!!!" });
+				break;
+
+			case SDL_MOUSEBUTTONDOWN:
+				coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_MOUSEBUTTONDOWN detected!!!" });
 				break;
 
 			default:
-				coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_ERROR, this, "Unhandled input event!" });
+				/*coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_ERROR, this, "Error! Unhandled input event!" });*/
 				break;
 			}
 		}

@@ -15,8 +15,9 @@ namespace BlazeEngine
 
 	enum EVENT_TYPE
 	{
-		EVENT_LOG = 0,
-		EVENT_ERROR = 1,
+		EVENT_LOG,
+		EVENT_ERROR,
+		EVENT_ENGINE_QUIT,
 		// EVENT_TICK ??
 		// EVENT_UPDATE ??
 		// ...
