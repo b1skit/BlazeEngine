@@ -12,8 +12,8 @@ namespace BlazeEngine
 	{
 		SetName("EventManager");
 
-		eventQueues.reserve(NUM_EVENT_TYPES);
-		for (int i = 0; i < NUM_EVENT_TYPES; i++)
+		eventQueues.reserve(EVENT_NUM_EVENTS);
+		for (int i = 0; i < EVENT_NUM_EVENTS; i++)
 		{
 			eventQueues.push_back(vector<EventInfo>());
 		}
@@ -50,7 +50,7 @@ namespace BlazeEngine
 
 	void EventManager::Update()
 	{
-		for (int currentEventType = 0; currentEventType < NUM_EVENT_TYPES; currentEventType++)
+		for (int currentEventType = 0; currentEventType < EVENT_NUM_EVENTS; currentEventType++)
 		{
 			size_t numCurrentEvents = eventQueues[currentEventType].size();
 			for (int currentEvent = 0; currentEvent < numCurrentEvents; currentEvent++)

@@ -3,6 +3,7 @@
 #include "EventManager.h"
 #include "LogManager.h"
 #include "TimeManager.h"
+#include "InputManager.h"
 
 namespace BlazeEngine
 {
@@ -10,16 +11,12 @@ namespace BlazeEngine
 	class CoreEngine : public BlazeObject
 	{
 	public:
-		/*CoreEngine() : BlazeObject() 
-		{
-			SetName("CoreEngine");
-		};*/
-
 		CoreEngine();
 
 		// Engine component public API:
 		EventManager* BlazeEventManager;
 		TimeManager* BlazeTimeManager;
+		InputManager* BlazeInputManager;
 
 		// Lifetime flow:
 		void Startup();

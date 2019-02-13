@@ -2,6 +2,7 @@
 #include "CoreEngine.h"
 #include "EventManager.h"
 
+
 #include "SDL.h"
 
 #include <string>
@@ -35,6 +36,9 @@ namespace BlazeEngine
 		BlazeTimeManager = &TimeManager::Instance();
 		BlazeTimeManager->Startup(this);
 
+		BlazeInputManager = &InputManager::Instance();
+		BlazeInputManager->Startup(this);
+
 		isRunning = true;
 
 		return;
@@ -50,14 +54,14 @@ namespace BlazeEngine
 
 		while (isRunning)
 		{
-			// TO DO: BlazeInputManager->Update(); // Process input
+			BlazeInputManager->Update(); // Process input
 
 			BlazeTimeManager->Update();
 			elapsed += BlazeTimeManager->GetDeltaTimeMs();
 
 			while (elapsed >= FIXED_TIMESTEP)
 			{
-				BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Update loop called: " + std::to_string(elapsed)});
+				/*BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Update loop called: " + std::to_string(elapsed)});*/
 
 				// Update components:
 				BlazeEventManager->Update();
@@ -70,8 +74,8 @@ namespace BlazeEngine
 			}
 			
 			// TO DO: BlazeRenderManager->Render(elapsed/FIXED_TIMESTEP); // Render precise current position
-			BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Pretending to render at ~60fps..." });
-			SDL_Delay(1000.0 / 60.0);
+			/*BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Pretending to render at ~60fps..." });*/
+			SDL_Delay((unsigned int)(1000.0 / 60.0));
 		}
 	}
 
