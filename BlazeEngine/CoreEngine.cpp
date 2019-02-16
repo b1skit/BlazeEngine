@@ -23,23 +23,14 @@ namespace BlazeEngine
 	void CoreEngine::Startup()
 	{
 		// Initialize BlazeEngine:
-		BlazeEventManager = &EventManager::Instance();
-		BlazeEventManager->Startup(this);
-		
-		BlazeLogManager = &LogManager::Instance();
+		BlazeEventManager->Startup(this);		
 		BlazeLogManager->Startup(this);
 
 		BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "CoreEngine started!" }, true);
-		/*BlazeEventManager->Subscribe(EVENT_ENGINE_QUIT, this);*/
 		BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN, this);
 
-		BlazeTimeManager = &TimeManager::Instance();
 		BlazeTimeManager->Startup(this);
-
-		BlazeInputManager = &InputManager::Instance();
 		BlazeInputManager->Startup(this);
-
-		BlazeRenderManager = &RenderManager::Instance();
 		BlazeRenderManager->Startup(this);
 
 		isRunning = true;

@@ -14,12 +14,12 @@ namespace BlazeEngine
 	public:
 		CoreEngine();
 
-		// Engine component public API:
-		EventManager* BlazeEventManager;
-		TimeManager* BlazeTimeManager;
-		InputManager* BlazeInputManager;
-		
+		// Engine component public API:		
+		EventManager* const BlazeEventManager = &EventManager::Instance();
+		TimeManager* const BlazeTimeManager = &TimeManager::Instance();
+		InputManager* const BlazeInputManager = &InputManager::Instance();
 
+		
 		// Lifetime flow:
 		void Startup();
 		void Run();
@@ -35,11 +35,9 @@ namespace BlazeEngine
 		const double FIXED_TIMESTEP = 1000.0 / 120.0; // Regular step size, in ms
 		//const double MAX_TIMESTEP = 0.5;	// Max amount of time before giving up
 
+		LogManager* const BlazeLogManager = &LogManager::Instance();
+		RenderManager* const BlazeRenderManager = &RenderManager::Instance();
 
-		// Private engine components:
-		LogManager* BlazeLogManager;
-		RenderManager* BlazeRenderManager;
-		
 		// Engine control:
 		bool isRunning = false;
 	};
