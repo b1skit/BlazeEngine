@@ -379,4 +379,4 @@ healthchecksdb
 
 # Forced inclusions:
 #-------------------
-!./Dependencies/
+!./BlazeEngine/Dependencies/
