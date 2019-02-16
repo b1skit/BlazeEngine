@@ -78,32 +78,32 @@ namespace BlazeEngine
 				keyboardState  = SDL_GetKeyboardState(&numKeys);
 				if (numKeys > 0)
 				{
-					if (currentSDLEvent.key.keysym.sym == Button_forward)
+					if (currentSDLEvent.key.keysym.sym == bindings.Button_forward)
 					{
 						buttonStates[INPUT_BUTTON_FORWARD] = true;
 					}
-					else if (currentSDLEvent.key.keysym.sym == Button_backward)
+					else if (currentSDLEvent.key.keysym.sym == bindings.Button_backward)
 					{
 						buttonStates[INPUT_BUTTON_BACKWARD] = true;
 					}
-					else if (currentSDLEvent.key.keysym.sym == Button_left)
+					else if (currentSDLEvent.key.keysym.sym == bindings.Button_left)
 					{
 						buttonStates[INPUT_BUTTON_LEFT] = true;
 					}
-					else if (currentSDLEvent.key.keysym.sym == Button_right)
+					else if (currentSDLEvent.key.keysym.sym == bindings.Button_right)
 					{
 						buttonStates[INPUT_BUTTON_RIGHT] = true;
 					}
-					else if (currentSDLEvent.key.keysym.sym == Button_up)
+					else if (currentSDLEvent.key.keysym.sym == bindings.Button_up)
 					{
 						buttonStates[INPUT_BUTTON_UP] = true;
 					}
-					else if (currentSDLEvent.key.keysym.sym == Button_down)
+					else if (currentSDLEvent.key.keysym.sym == bindings.Button_down)
 					{
 						buttonStates[INPUT_BUTTON_DOWN] = true;
 					}
 
-					else if (currentSDLEvent.key.keysym.sym == Button_quit)
+					else if (currentSDLEvent.key.keysym.sym == bindings.Button_quit)
 					{
 						buttonStates[INPUT_BUTTON_QUIT] = true;
 					}
@@ -127,32 +127,32 @@ namespace BlazeEngine
 				keyboardState = SDL_GetKeyboardState(&numKeys);
 				if (numKeys > 0)
 				{			
-					if (currentSDLEvent.key.keysym.sym == Button_forward)
+					if (currentSDLEvent.key.keysym.sym == bindings.Button_forward)
 					{
 						buttonStates[INPUT_BUTTON_FORWARD] = false;
 					}
-					else if (currentSDLEvent.key.keysym.sym == Button_backward)
+					else if (currentSDLEvent.key.keysym.sym == bindings.Button_backward)
 					{
 						buttonStates[INPUT_BUTTON_BACKWARD] = false;
 					}
-					else if (currentSDLEvent.key.keysym.sym == Button_left)
+					else if (currentSDLEvent.key.keysym.sym == bindings.Button_left)
 					{
 						buttonStates[INPUT_BUTTON_LEFT] = false;
 					}
-					else if (currentSDLEvent.key.keysym.sym == Button_right)
+					else if (currentSDLEvent.key.keysym.sym == bindings.Button_right)
 					{
 						buttonStates[INPUT_BUTTON_RIGHT] = false;
 					}
-					else if (currentSDLEvent.key.keysym.sym == Button_up)
+					else if (currentSDLEvent.key.keysym.sym == bindings.Button_up)
 					{
 						buttonStates[INPUT_BUTTON_UP] = false;
 					}
-					else if (currentSDLEvent.key.keysym.sym == Button_down)
+					else if (currentSDLEvent.key.keysym.sym == bindings.Button_down)
 					{
 						buttonStates[INPUT_BUTTON_DOWN] = false;
 					}
 
-					else if (currentSDLEvent.key.keysym.sym == Button_quit)
+					else if (currentSDLEvent.key.keysym.sym == bindings.Button_quit)
 					{
 						buttonStates[INPUT_BUTTON_QUIT] = false;
 					}

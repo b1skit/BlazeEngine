@@ -35,6 +35,7 @@ namespace BlazeEngine
 		INPUT_NUM_INPUT_AXIS	// RESERVED: A count of the number of INPUT_AXIS's
 	};
 
+
 	class InputManager : public EngineComponent
 	{
 	public:
@@ -62,22 +63,25 @@ namespace BlazeEngine
 		bool buttonStates[INPUT_NUM_BUTTON_INPUTS]; // Stores the state of buttons. Updated on key down/up
 		double mouseAxisStates[INPUT_NUM_INPUT_AXIS];
 
-		// Control configuration
-		// TO DO: Break this out into an external file...
-		
-		SDL_Keycode Button_forward = SDLK_w;
-		SDL_Keycode Button_backward = SDLK_s;
-		SDL_Keycode Button_left = SDLK_a;
-		SDL_Keycode Button_right = SDLK_d;
-		SDL_Keycode Button_up = SDLK_SPACE;
-		SDL_Keycode Button_down = SDLK_LSHIFT;
+		// Control configuration:
+		struct
+		{
+			// TO DO: Break this out into an external file...
 
-		unsigned short Button_leftClick = SDL_BUTTON_LEFT;
-		unsigned short Button_rightClick = SDL_BUTTON_RIGHT;
+			SDL_Keycode Button_forward = SDLK_w;
+			SDL_Keycode Button_backward = SDLK_s;
+			SDL_Keycode Button_left = SDLK_a;
+			SDL_Keycode Button_right = SDLK_d;
+			SDL_Keycode Button_up = SDLK_SPACE;
+			SDL_Keycode Button_down = SDLK_LSHIFT;
 
-		// TO DO: Bind mouse axis's
+			unsigned short Button_leftClick = SDL_BUTTON_LEFT;
+			unsigned short Button_rightClick = SDL_BUTTON_RIGHT;
 
-		SDL_Keycode Button_quit = SDLK_ESCAPE;
+			// TO DO: Bind mouse axis's
+
+			SDL_Keycode Button_quit = SDLK_ESCAPE;
+		} bindings;
 	};
 }
 
