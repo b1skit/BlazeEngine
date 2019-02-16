@@ -78,32 +78,82 @@ namespace BlazeEngine
 				{
 					if (currentSDLEvent.key.keysym.sym == bindings.Button_forward)
 					{
-						buttonStates[INPUT_BUTTON_FORWARD] = true;
+						if (buttonStates[INPUT_BUTTON_FORWARD] == true)
+						{
+							doFireEvent = false;
+						}
+						else
+						{
+							buttonStates[INPUT_BUTTON_FORWARD] = true;
+						}
 					}
 					else if (currentSDLEvent.key.keysym.sym == bindings.Button_backward)
 					{
-						buttonStates[INPUT_BUTTON_BACKWARD] = true;
+						if (buttonStates[INPUT_BUTTON_BACKWARD] == true)
+						{
+							doFireEvent = false;
+						}
+						else
+						{
+							buttonStates[INPUT_BUTTON_BACKWARD] = true;
+						}						
 					}
 					else if (currentSDLEvent.key.keysym.sym == bindings.Button_left)
 					{
-						buttonStates[INPUT_BUTTON_LEFT] = true;
+						if (buttonStates[INPUT_BUTTON_LEFT] == true)
+						{
+							doFireEvent = false;
+						}
+						else
+						{
+							buttonStates[INPUT_BUTTON_LEFT] = true;
+						}
 					}
 					else if (currentSDLEvent.key.keysym.sym == bindings.Button_right)
 					{
-						buttonStates[INPUT_BUTTON_RIGHT] = true;
+						if (buttonStates[INPUT_BUTTON_RIGHT] == true)
+						{
+							doFireEvent = false;
+						}
+						else
+						{
+							buttonStates[INPUT_BUTTON_RIGHT] = true;
+						}
 					}
 					else if (currentSDLEvent.key.keysym.sym == bindings.Button_up)
 					{
-						buttonStates[INPUT_BUTTON_UP] = true;
+						if (buttonStates[INPUT_BUTTON_UP] == true)
+						{
+							doFireEvent = false;
+						}
+						else
+						{
+							buttonStates[INPUT_BUTTON_UP] = true;
+						}
+						
 					}
 					else if (currentSDLEvent.key.keysym.sym == bindings.Button_down)
 					{
-						buttonStates[INPUT_BUTTON_DOWN] = true;
+						if (buttonStates[INPUT_BUTTON_DOWN] == true)
+						{
+							doFireEvent = false;
+						}
+						else
+						{
+							buttonStates[INPUT_BUTTON_DOWN] = true;
+						}
 					}
 
 					else if (currentSDLEvent.key.keysym.sym == bindings.Button_quit)
 					{
-						buttonStates[INPUT_BUTTON_QUIT] = true;
+						if (buttonStates[INPUT_BUTTON_QUIT] == true)
+						{
+							doFireEvent = false;
+						}
+						else
+						{
+							buttonStates[INPUT_BUTTON_QUIT] = true;
+						}
 					}
 
 					else // We weren't listening for this button: No need to fire an event
@@ -119,7 +169,7 @@ namespace BlazeEngine
 				}
 				break;
 
-			case SDL_KEYUP:
+			case SDL_KEYUP: // No need to check the state, we always fire an event on key up
 
 				numKeys = 0;
 				keyboardState = SDL_GetKeyboardState(&numKeys);
