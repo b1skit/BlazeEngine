@@ -379,4 +379,4 @@ healthchecksdb
 
 # Forced inclusions:
 #-------------------
-!*/Dependencies/SDL2/lib/*
+!./Dependencies/
