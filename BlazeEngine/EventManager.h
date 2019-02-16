@@ -18,6 +18,14 @@ namespace BlazeEngine
 		EVENT_LOG,
 		EVENT_ERROR,
 		EVENT_ENGINE_QUIT,
+		
+		EVENT_INPUT_BUTTON_DOWN,
+		EVENT_INPUT_BUTTON_UP,
+		
+		EVENT_INPUT_MOUSE_CLICK,
+		EVENT_INPUT_MOUSE_RELEASE,
+		EVENT_INPUT_MOUSE_MOVED,
+
 		// EVENT_TICK ??
 		// EVENT_UPDATE ??
 		// ...
@@ -25,6 +33,22 @@ namespace BlazeEngine
 		EVENT_NUM_EVENTS // RESERVED: A count of the number of EVENT_TYPE's
 	};
 	
+	const static string EVENT_NAME[EVENT_NUM_EVENTS] = 
+	{
+		"EVENT_LOG", 
+		"EVENT_ERROR", 
+		"EVENT_ENGINE_QUIT", 
+
+		"EVENT_INPUT_BUTTON_DOWN", 
+		"EVENT_INPUT_BUTTON_UP", 
+
+		"EVENT_INPUT_MOUSE_CLICK", 
+		"EVENT_INPUT_MOUSE_RELEASE", 
+		"EVENT_INPUT_MOUSE_MOVED",
+
+
+	}; // NOTE: String order must match the order of EVENT_TYPE enum
+
 
 	struct EventInfo
 	{

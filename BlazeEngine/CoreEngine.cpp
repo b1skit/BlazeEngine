@@ -30,7 +30,8 @@ namespace BlazeEngine
 		BlazeLogManager->Startup(this);
 
 		BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "CoreEngine started!" }, true);
-		BlazeEventManager->Subscribe(EVENT_ENGINE_QUIT, this);
+		/*BlazeEventManager->Subscribe(EVENT_ENGINE_QUIT, this);*/
+		BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN, this);
 
 		BlazeTimeManager = &TimeManager::Instance();
 		BlazeTimeManager->Startup(this);
@@ -106,8 +107,12 @@ namespace BlazeEngine
 	{
 		switch (eventInfo.type)
 		{
-		case EVENT_ENGINE_QUIT:
-			Stop();
+		case EVENT_INPUT_BUTTON_DOWN:
+			if (BlazeInputManager->GetInput(INPUT_BUTTON_QUIT))
+			{
+				Stop();
+			}
+			
 			break;
 
 		default:

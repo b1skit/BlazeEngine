@@ -32,6 +32,13 @@ namespace BlazeEngine
 		this->coreEngine->BlazeEventManager->Subscribe(EVENT_ERROR, this);
 		this->coreEngine->BlazeEventManager->Subscribe(EVENT_ENGINE_QUIT, this);
 
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP, this);
+		
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_CLICK, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_RELEASE, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_MOVED, this);
+
 
 		this->coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Log manager started!" });
 	}
@@ -49,25 +56,15 @@ namespace BlazeEngine
 
 	int LogManager::HandleEvent(EventInfo eventInfo)
 	{
-		switch (eventInfo.type)
+		cout << EVENT_NAME[eventInfo.type] << ": Object #" << std::to_string(eventInfo.generator->GetObjectID()) << " (" << eventInfo.generator->GetName() << ")";
+		
+		if (eventInfo.eventMessage.size() > 0)
 		{
-		case EVENT_LOG:
-			cout << "EVENT_LOG: Object #" << std::to_string(eventInfo.generator->GetObjectID() ) << " \"" << eventInfo.generator->GetName() <<"\": \"" << eventInfo.eventMessage << "\"\n";
-			break;
-
-		case EVENT_ERROR:
-			cout << "EVENT_ERROR: Object #" << std::to_string(eventInfo.generator->GetObjectID()) << " \"" << eventInfo.generator->GetName() << "\": \"" << eventInfo.eventMessage << "\"\n";
-			break;
-
-		case EVENT_ENGINE_QUIT:
-			cout << "EVENT_ENGINE_QUIT: Object #" << std::to_string(eventInfo.generator->GetObjectID()) << " \"" << eventInfo.generator->GetName() << "\": \"" << eventInfo.eventMessage << "\"\n";
-			break;
-
-		default:
-			cout << "ERROR: Default event generated in LogManager!\n";
-			break;
+			cout << ": \"" << eventInfo.eventMessage << "\"";
 		}
 
+		cout << std::endl;
+		
 		return 0;
 	}
 }

@@ -13,14 +13,14 @@ namespace BlazeEngine
 	{
 		SetName("InputManager");
 
-		for (int i = 0; i < INPUT_NUM_KEY_INPUTS; i++)
+		for (int i = 0; i < INPUT_NUM_BUTTON_INPUTS; i++)
 		{
-			inputKeys[i] = 0;
+			buttonStates[i] = false;
 		}
 
-		for (int i = 0; i < INPUT_NUM_MOUSE_INPUTS; i++)
+		for (int i = 0; i < INPUT_NUM_INPUT_AXIS; i++)
 		{
-			inputMouse[i] = 0.0;
+			mouseAxisStates[i] = 0.0;
 		}
 	}
 
@@ -35,14 +35,14 @@ namespace BlazeEngine
 		return *instance;
 	}
 
-	int InputManager::GetInput(INPUT_KEY key)
+	int InputManager::GetInput(INPUT_BUTTON key)
 	{
-		return (int)inputKeys[(int)key];
+		return (int)buttonStates[(int)key];
 	}
 
-	double InputManager::GetInput(INPUT_ANALOGUE axis)
+	double InputManager::GetMouseAxisInput(INPUT_AXIS axis)
 	{
-		return inputMouse[(int)axis];
+		return mouseAxisStates[(int)axis];
 	}
 	
 	void InputManager::Startup(CoreEngine* coreEngine)
@@ -63,48 +63,127 @@ namespace BlazeEngine
 
 		const Uint8* keyboardState;
 		int numKeys;
+		bool doFireEvent;
 
 		SDL_Event currentSDLEvent;
 		while (SDL_PollEvent(&currentSDLEvent))
 		{
-			
-			switch (currentSDLEvent.type)
+			doFireEvent = true;
+
+			switch (currentSDLEvent.type) // We update button states on keydown/keyup
 			{
-			case SDL_TEXTINPUT:
-				text = currentSDLEvent.text.text;
-				coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_TEXTINPUT detected!!! " + string( text)  }); 
-
-				break;
-
 			case SDL_KEYDOWN:
-				coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_KEYDOWN detected!!!" });
 
 				numKeys = 0;
 				keyboardState  = SDL_GetKeyboardState(&numKeys);
 				if (numKeys > 0)
 				{
-					if (keyboardState[Button_quit])
+					if (currentSDLEvent.key.keysym.sym == Button_forward)
 					{
-						coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_ENGINE_QUIT, this, "InputManager generated EVENT_ENGINE_QUIT..." });
+						buttonStates[INPUT_BUTTON_FORWARD] = true;
+					}
+					else if (currentSDLEvent.key.keysym.sym == Button_backward)
+					{
+						buttonStates[INPUT_BUTTON_BACKWARD] = true;
+					}
+					else if (currentSDLEvent.key.keysym.sym == Button_left)
+					{
+						buttonStates[INPUT_BUTTON_LEFT] = true;
+					}
+					else if (currentSDLEvent.key.keysym.sym == Button_right)
+					{
+						buttonStates[INPUT_BUTTON_RIGHT] = true;
+					}
+					else if (currentSDLEvent.key.keysym.sym == Button_up)
+					{
+						buttonStates[INPUT_BUTTON_UP] = true;
+					}
+					else if (currentSDLEvent.key.keysym.sym == Button_down)
+					{
+						buttonStates[INPUT_BUTTON_DOWN] = true;
+					}
+
+					else if (currentSDLEvent.key.keysym.sym == Button_quit)
+					{
+						buttonStates[INPUT_BUTTON_QUIT] = true;
+					}
+
+					else // We weren't listening for this button: No need to fire an event
+					{
+						doFireEvent = false;
+					}
+
+					// Fire an event, if necessary:
+					if (doFireEvent)
+					{
+						coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_INPUT_BUTTON_DOWN, this });
 					}
 				}
-
 				break;
 
 			case SDL_KEYUP:
-				coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_KEYUP detected!!!" });
+
+				numKeys = 0;
+				keyboardState = SDL_GetKeyboardState(&numKeys);
+				if (numKeys > 0)
+				{			
+					if (currentSDLEvent.key.keysym.sym == Button_forward)
+					{
+						buttonStates[INPUT_BUTTON_FORWARD] = false;
+					}
+					else if (currentSDLEvent.key.keysym.sym == Button_backward)
+					{
+						buttonStates[INPUT_BUTTON_BACKWARD] = false;
+					}
+					else if (currentSDLEvent.key.keysym.sym == Button_left)
+					{
+						buttonStates[INPUT_BUTTON_LEFT] = false;
+					}
+					else if (currentSDLEvent.key.keysym.sym == Button_right)
+					{
+						buttonStates[INPUT_BUTTON_RIGHT] = false;
+					}
+					else if (currentSDLEvent.key.keysym.sym == Button_up)
+					{
+						buttonStates[INPUT_BUTTON_UP] = false;
+					}
+					else if (currentSDLEvent.key.keysym.sym == Button_down)
+					{
+						buttonStates[INPUT_BUTTON_DOWN] = false;
+					}
+
+					else if (currentSDLEvent.key.keysym.sym == Button_quit)
+					{
+						buttonStates[INPUT_BUTTON_QUIT] = false;
+					}
+
+					else // We weren't listening for this button: No need to fire an event
+					{
+						doFireEvent = false;
+					}
+
+					// Fire an event, if necessary:
+					if (doFireEvent)
+					{
+						coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_INPUT_BUTTON_UP, this });
+					}
+				}
+				break;
+
+			// TO DO: IMPLEMENT MOUSE HANDLING...
+			case SDL_MOUSEBUTTONDOWN:
+				/*coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_MOUSEBUTTONDOWN detected!!!" });*/
+				break;
+
+			case SDL_MOUSEBUTTONUP:
+				/*coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_MOUSEBUTTONUP detected!!!" });*/
 				break;
 
 			case SDL_MOUSEMOTION:
-				coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_MOUSEMOTION detected!!!" });
+				/*coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_MOUSEMOTION detected!!!" });*/
 				break;
 
-			case SDL_MOUSEBUTTONDOWN:
-				coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_MOUSEBUTTONDOWN detected!!!" });
-				break;
-
-			default:
-				/*coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_ERROR, this, "Error! Unhandled input event!" });*/
+			default: // We don't care about anything else
 				break;
 			}
 		}

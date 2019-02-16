@@ -9,23 +9,30 @@
 namespace BlazeEngine
 {
 	// Binary controls
-	enum INPUT_KEY
+	enum INPUT_BUTTON
 	{		
-		INPUT_KEY_FORWARD,
-		INPUT_KEY_BACKWARD,
-		INPUT_KEY_LEFT,
-		INPUT_KEY_RIGHT,
+		INPUT_BUTTON_FORWARD,
+		INPUT_BUTTON_BACKWARD,
+		INPUT_BUTTON_LEFT,
+		INPUT_BUTTON_RIGHT,
+		INPUT_BUTTON_UP,
+		INPUT_BUTTON_DOWN,
 
-		INPUT_NUM_KEY_INPUTS // RESERVED: A count of the number of INPUT_KEY's
+		INPUT_MOUSE_LEFT,
+		INPUT_MOUSE_RIGHT,
+
+		INPUT_BUTTON_QUIT, // Temporary: Hard code a quit button
+
+		INPUT_NUM_BUTTON_INPUTS // RESERVED: A count of the number of INPUT_BUTTON's
 	};
 
 	// Analogue controls (eg. mouse movement)
-	enum INPUT_ANALOGUE
+	enum INPUT_AXIS
 	{
 		INPUT_MOUSE_X,
 		INPUT_MOUSE_Y,
-
-		INPUT_NUM_MOUSE_INPUTS	// RESERVED: A count of the number of INPUT_MOUSE's
+		
+		INPUT_NUM_INPUT_AXIS	// RESERVED: A count of the number of INPUT_AXIS's
 	};
 
 	class InputManager : public EngineComponent
@@ -40,8 +47,8 @@ namespace BlazeEngine
 		void operator=(InputManager const&) = delete;
 
 		// Member functions:
-		int GetInput(INPUT_KEY key);
-		double GetInput(INPUT_ANALOGUE axis);
+		int GetInput(INPUT_BUTTON button);
+		double GetMouseAxisInput(INPUT_AXIS axis);
 
 
 		// EngineComponent interface:
@@ -52,14 +59,25 @@ namespace BlazeEngine
 		void Update();
 
 	private:
-		short int inputKeys[INPUT_NUM_KEY_INPUTS];
-		double inputMouse[INPUT_NUM_MOUSE_INPUTS];
+		bool buttonStates[INPUT_NUM_BUTTON_INPUTS]; // Stores the state of buttons. Updated on key down/up
+		double mouseAxisStates[INPUT_NUM_INPUT_AXIS];
 
 		// Control configuration
 		// TO DO: Break this out into an external file...
+		
+		SDL_Keycode Button_forward = SDLK_w;
+		SDL_Keycode Button_backward = SDLK_s;
+		SDL_Keycode Button_left = SDLK_a;
+		SDL_Keycode Button_right = SDLK_d;
+		SDL_Keycode Button_up = SDLK_SPACE;
+		SDL_Keycode Button_down = SDLK_LSHIFT;
 
-		SDL_Scancode Button_quit = SDL_SCANCODE_ESCAPE;
+		unsigned short Button_leftClick = SDL_BUTTON_LEFT;
+		unsigned short Button_rightClick = SDL_BUTTON_RIGHT;
 
+		// TO DO: Bind mouse axis's
+
+		SDL_Keycode Button_quit = SDLK_ESCAPE;
 	};
 }
 
