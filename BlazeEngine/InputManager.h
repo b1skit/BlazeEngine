@@ -48,7 +48,7 @@ namespace BlazeEngine
 		void operator=(InputManager const&) = delete;
 
 		// Member functions:
-		int GetInput(INPUT_BUTTON button);
+		bool GetInput(INPUT_BUTTON button);
 		double GetMouseAxisInput(INPUT_AXIS axis);
 
 

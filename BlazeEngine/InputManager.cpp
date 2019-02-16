@@ -4,7 +4,7 @@
 #include "SDL_keyboard.h"
 #include "SDL_keycode.h"
 
-#include <string> // DEBUG
+//#include <string> // DEBUG
 
 
 namespace BlazeEngine
@@ -35,14 +35,14 @@ namespace BlazeEngine
 		return *instance;
 	}
 
-	int InputManager::GetInput(INPUT_BUTTON key)
+	bool InputManager::GetInput(INPUT_BUTTON key)
 	{
-		return (int)buttonStates[(int)key];
+		return buttonStates[key];
 	}
 
 	double InputManager::GetMouseAxisInput(INPUT_AXIS axis)
 	{
-		return mouseAxisStates[(int)axis];
+		return mouseAxisStates[axis];
 	}
 	
 	void InputManager::Startup(CoreEngine* coreEngine)
