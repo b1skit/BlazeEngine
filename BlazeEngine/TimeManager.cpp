@@ -29,12 +29,12 @@ namespace BlazeEngine
 	{
 		EngineComponent::Startup(coreEngine);
 
-		coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "TimeManager started!" });
+		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "TimeManager started!" });
 	}
 
 	void TimeManager::Shutdown()
 	{
-		coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Time manager shutting down..." });
+		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Time manager shutting down..." });
 	}
 
 	void TimeManager::Update()

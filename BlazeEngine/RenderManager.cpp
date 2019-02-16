@@ -34,12 +34,12 @@ namespace BlazeEngine
 
 		window = SDL_CreateWindow("Window title", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 800, SDL_WINDOW_OPENGL);
 
-		this->coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Render manager started!" });
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Render manager started!" });
 	}
 
 	void RenderManager::Shutdown()
 	{
-		this->coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Render manager shutting down..." });
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Render manager shutting down..." });
 	}
 
 	void RenderManager::Update()

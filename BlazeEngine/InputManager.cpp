@@ -49,18 +49,16 @@ namespace BlazeEngine
 	{
 		EngineComponent::Startup(coreEngine);
 
-		this->coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Input manager started!" });
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Input manager started!" });
 	}
 
 	void InputManager::Shutdown()
 	{
-		coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Input manager shutting down..." });
+		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Input manager shutting down..." });
 	}
 
 	void InputManager::Update()
 	{
-		const char* text; // DEBUG
-
 		const Uint8* keyboardState;
 		int numKeys;
 		bool doFireEvent;
@@ -116,7 +114,7 @@ namespace BlazeEngine
 					// Fire an event, if necessary:
 					if (doFireEvent)
 					{
-						coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_INPUT_BUTTON_DOWN, this });
+						coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN, this });
 					}
 				}
 				break;
@@ -165,7 +163,7 @@ namespace BlazeEngine
 					// Fire an event, if necessary:
 					if (doFireEvent)
 					{
-						coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_INPUT_BUTTON_UP, this });
+						coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_INPUT_BUTTON_UP, this });
 					}
 				}
 				break;

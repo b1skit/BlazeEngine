@@ -4,13 +4,10 @@
 #pragma once
 
 #include "EngineComponent.h"
-//#include <time.h>
 #include "Dependencies/SDL2/include/SDL_timer.h"
 
 namespace BlazeEngine
 {
-	
-
 	class TimeManager : EngineComponent
 	{
 	public:

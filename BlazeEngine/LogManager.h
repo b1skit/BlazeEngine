@@ -23,7 +23,7 @@ namespace BlazeEngine
 		void Update();
 
 		// EventListener interface:
-		int HandleEvent(EventInfo eventInfo);
+		int HandleEvent(EventInfo const* eventInfo);
 
 	private:
 		

@@ -77,10 +77,10 @@ namespace BlazeEngine
 		// Member functions:
 		void Subscribe(EVENT_TYPE eventType, EventListener* listener); // Subscribe to an event
 		/*void Unsubscribe(EventListener* listener);*/
-		void Notify(EventInfo eventInfo, bool pushToFront = false); // Post an event
+		void Notify(EventInfo const* eventInfo, bool pushToFront = false); // Post an event
 
 	private:
-		vector< vector<EventInfo> > eventQueues;		
+		vector< vector<EventInfo const* > > eventQueues;
 		vector< vector<EventListener*> > eventListeners;
 
 	};

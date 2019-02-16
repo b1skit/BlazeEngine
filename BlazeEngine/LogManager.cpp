@@ -40,12 +40,12 @@ namespace BlazeEngine
 		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_MOVED, this);
 
 
-		this->coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Log manager started!" });
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Log manager started!" });
 	}
 
 	void LogManager::Shutdown()
 	{
-		coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Log manager shutting down..." });
+		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Log manager shutting down..." });
 	}
 
 	void LogManager::Update()
@@ -54,13 +54,13 @@ namespace BlazeEngine
 	}
 
 
-	int LogManager::HandleEvent(EventInfo eventInfo)
+	int LogManager::HandleEvent(EventInfo const* eventInfo)
 	{
-		cout << EVENT_NAME[eventInfo.type] << ": Object #" << std::to_string(eventInfo.generator->GetObjectID()) << " (" << eventInfo.generator->GetName() << ")";
+		cout << EVENT_NAME[eventInfo->type] << ": Object #" << std::to_string(eventInfo->generator->GetObjectID()) << " (" << eventInfo->generator->GetName() << ")";
 		
-		if (eventInfo.eventMessage.size() > 0)
+		if (eventInfo->eventMessage.size() > 0)
 		{
-			cout << ": \"" << eventInfo.eventMessage << "\"";
+			cout << ": \"" << eventInfo->eventMessage << "\"";
 		}
 
 		cout << std::endl;

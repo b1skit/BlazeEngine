@@ -15,7 +15,7 @@ namespace BlazeEngine
 		eventQueues.reserve(EVENT_NUM_EVENTS);
 		for (int i = 0; i < EVENT_NUM_EVENTS; i++)
 		{
-			eventQueues.push_back(vector<EventInfo>());
+			eventQueues.push_back(vector<EventInfo const*>());
 		}
 
 		eventListeners.reserve(EVENT_QUEUE_START_SIZE);
@@ -40,29 +40,35 @@ namespace BlazeEngine
 	{
 		EngineComponent::Startup(coreEngine);
 
-		Notify(EventInfo{ EVENT_LOG, this, "Event manager started!" });
+		Notify(new EventInfo{ EVENT_LOG, this, "Event manager started!" });
 	}
 
 	void EventManager::Shutdown()
 	{
-		Notify(EventInfo{ EVENT_LOG, this, "Event manager shutting down..." });
+		Notify(new EventInfo{ EVENT_LOG, this, "Event manager shutting down..." });
 	}
 
 	void EventManager::Update()
 	{
+		// Loop through each type of event:
 		for (int currentEventType = 0; currentEventType < EVENT_NUM_EVENTS; currentEventType++)
 		{
+			// Loop through each event item in the current event queue:
 			size_t numCurrentEvents = eventQueues[currentEventType].size();
 			for (int currentEvent = 0; currentEvent < numCurrentEvents; currentEvent++)
 			{
+				// Loop through each listener subscribed to the current event:
 				size_t numListeners = eventListeners[currentEventType].size();
 				for (int currentListener = 0; currentListener < numListeners; currentListener++)
 				{
 					eventListeners[currentEventType][currentListener]->HandleEvent(eventQueues[currentEventType][currentEvent]);
 				}
+				
+				// Deallocate the event:
+				delete eventQueues[currentEventType][currentEvent];
 			}
 
-			// Clear the current queue:
+			// Clear the current event queue (of now invalid pointers):
 			eventQueues[currentEventType].clear();
 		}
 	}
@@ -81,16 +87,16 @@ namespace BlazeEngine
 	//	return;
 	//}
 
-	void EventManager::Notify(EventInfo eventInfo, bool pushToFront)
+	void EventManager::Notify(EventInfo const* eventInfo, bool pushToFront)
 	{
 		if (pushToFront)
 		{
-			vector<EventInfo>::iterator iterator = eventQueues[(int)eventInfo.type].begin();
-			eventQueues[(int)eventInfo.type].insert(iterator, eventInfo);
+			vector<EventInfo const*>::iterator iterator = eventQueues[(int)eventInfo->type].begin();
+			eventQueues[(int)eventInfo->type].insert(iterator, eventInfo);
 		}
 		else
 		{
-			eventQueues[(int)eventInfo.type].push_back(eventInfo);
+			eventQueues[(int)eventInfo->type].push_back(eventInfo);
 		}
 		return;
 	}

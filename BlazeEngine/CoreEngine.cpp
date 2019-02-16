@@ -29,7 +29,7 @@ namespace BlazeEngine
 		BlazeLogManager = &LogManager::Instance();
 		BlazeLogManager->Startup(this);
 
-		BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "CoreEngine started!" }, true);
+		BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "CoreEngine started!" }, true);
 		/*BlazeEventManager->Subscribe(EVENT_ENGINE_QUIT, this);*/
 		BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN, this);
 
@@ -51,7 +51,7 @@ namespace BlazeEngine
 	// Main game loop
 	void CoreEngine::Run()
 	{
-		BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "CoreEngine beginning main game loop!" });
+		BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "CoreEngine beginning main game loop!" });
 
 		double elapsed = 0.0;	
 
@@ -89,7 +89,7 @@ namespace BlazeEngine
 
 	void CoreEngine::Shutdown()
 	{
-		BlazeEventManager->Notify(EventInfo{EVENT_LOG, this, "CoreEngine shutting down..."});
+		BlazeEventManager->Notify(new EventInfo{EVENT_LOG, this, "CoreEngine shutting down..."});
 
 		
 
@@ -103,9 +103,9 @@ namespace BlazeEngine
 		return;
 	}
 
-	int CoreEngine::HandleEvent(EventInfo eventInfo)
+	int CoreEngine::HandleEvent(EventInfo const* eventInfo)
 	{
-		switch (eventInfo.type)
+		switch (eventInfo->type)
 		{
 		case EVENT_INPUT_BUTTON_DOWN:
 			if (BlazeInputManager->GetInput(INPUT_BUTTON_QUIT))
