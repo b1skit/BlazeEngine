@@ -9,7 +9,7 @@ namespace BlazeEngine
 		coreEngine = nullptr;
 		SetName("TimeManager");
 
-		startTime = prevTime = currentTime = SDL_GetTicks();
+		startTime = prevTime = currentTime = SDL_GetTicks(); // TO DO: use the high res timer instead?
 
 	}
 

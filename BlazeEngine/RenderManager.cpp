@@ -32,7 +32,10 @@ namespace BlazeEngine
 	{
 		EngineComponent::Startup(coreEngine);
 
-		window = SDL_CreateWindow("Window title", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 800, SDL_WINDOW_OPENGL);
+		this->xRes = coreEngine->GetConfig()->windowXRes;
+		this->yRes = coreEngine->GetConfig()->windowYRes;
+
+		window = SDL_CreateWindow(coreEngine->GetConfig()->windowName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 800, SDL_WINDOW_OPENGL);
 
 		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Render manager started!" });
 	}

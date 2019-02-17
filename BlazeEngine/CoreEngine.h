@@ -8,11 +8,25 @@
 
 namespace BlazeEngine
 {
+	// TO DO: Implement loading/saving of this object...
+	struct EngineConfig
+	{
+		string windowName;
+		int windowXRes;
+		int windowYRes;
+
+		// TO DO: Add button config
+
+		// TO DO: Implement load/save functions
+		void LoadConfig(string path);
+		void SaveConfig(string path);
+
+	};
 
 	class CoreEngine : public BlazeObject, public EventListener
 	{
 	public:
-		CoreEngine();
+		CoreEngine(string configPath);
 
 		// Engine component singletons public API:		
 		EventManager* const BlazeEventManager = &EventManager::Instance();
@@ -25,6 +39,9 @@ namespace BlazeEngine
 		void Run();
 		void Stop();
 		void Shutdown();
+
+		// Member functions
+		EngineConfig const* GetConfig();
 
 		// EventListener interface:
 		int HandleEvent(EventInfo const* eventInfo);
@@ -41,5 +58,9 @@ namespace BlazeEngine
 
 		// Engine control:
 		bool isRunning = false;
+
+		// Engine configuration:
+		EngineConfig config;
+		string configPath;
 	};
 }

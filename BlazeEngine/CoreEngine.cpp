@@ -9,9 +9,12 @@
 
 namespace BlazeEngine
 {
-	CoreEngine::CoreEngine() : BlazeObject()
+	CoreEngine::CoreEngine(string configPath) : BlazeObject()
 	{
 		SetName("CoreEngine");
+
+		this->configPath = configPath;
+		config.LoadConfig(this->configPath);
 
 		// Initialize SDL:
 		if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
@@ -82,7 +85,7 @@ namespace BlazeEngine
 	{
 		BlazeEventManager->Notify(new EventInfo{EVENT_LOG, this, "CoreEngine shutting down..."});
 
-		
+		config.SaveConfig("./");
 
 		BlazeEventManager->Shutdown();
 		BlazeTimeManager->Shutdown();		
@@ -92,6 +95,11 @@ namespace BlazeEngine
 		BlazeEventManager->Update();
 
 		return;
+	}
+
+	EngineConfig const * CoreEngine::GetConfig()
+	{
+		return &config;
 	}
 
 	int CoreEngine::HandleEvent(EventInfo const* eventInfo)
@@ -113,4 +121,19 @@ namespace BlazeEngine
 
 		return 0;
 	}
+
+	void EngineConfig::LoadConfig(string path)
+	{
+		cout << "DEBUG: EngineConfig.LoadConfig is not implemented. Using hard coded default values!\n";
+		
+		windowName = "Blaze Engine";
+		windowXRes = 800;
+		windowYRes = 600;
+	}
+
+	void EngineConfig::SaveConfig(string path)
+	{
+		cout << "DEBUG: EngineConfig.SaveConfig is not implemented. No data is being saved!\n";
+	}
+
 }

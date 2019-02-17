@@ -30,6 +30,8 @@ namespace BlazeEngine
 
 		
 	private:
+		int xRes;
+		int yRes;
 		SDL_Window* window;
 
 		// Configuration:
