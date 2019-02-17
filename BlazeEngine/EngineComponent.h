@@ -16,6 +16,7 @@ namespace BlazeEngine
 	public:
 		EngineComponent() : BlazeObject() {};
 
+		// We can't control the order constructors are called, so this function should be called to start the object
 		virtual void Startup(CoreEngine* coreEngine)
 		{
 			this->coreEngine = coreEngine;

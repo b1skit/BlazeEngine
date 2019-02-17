@@ -14,7 +14,7 @@ namespace BlazeEngine
 	public:
 		CoreEngine();
 
-		// Engine component public API:		
+		// Engine component singletons public API:		
 		EventManager* const BlazeEventManager = &EventManager::Instance();
 		TimeManager* const BlazeTimeManager = &TimeManager::Instance();
 		InputManager* const BlazeInputManager = &InputManager::Instance();
@@ -35,6 +35,7 @@ namespace BlazeEngine
 		const double FIXED_TIMESTEP = 1000.0 / 120.0; // Regular step size, in ms
 		//const double MAX_TIMESTEP = 0.5;	// Max amount of time before giving up
 
+		// Private engine component singletons:	
 		LogManager* const BlazeLogManager = &LogManager::Instance();
 		RenderManager* const BlazeRenderManager = &RenderManager::Instance();
 

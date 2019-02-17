@@ -42,7 +42,7 @@ namespace BlazeEngine
 		}
 
 	protected:
-		int objectID;
+		int objectID; // TO DO: Replace this with a hash of the object name
 
 	private:
 		string name = "unnamed";
