@@ -12,9 +12,13 @@ namespace BlazeEngine
 	// TO DO: Implement loading/saving of this object...
 	struct EngineConfig
 	{
-		string windowName;
-		int windowXRes;
-		int windowYRes;
+		struct
+		{
+			string windowTitle;
+			int windowXRes;
+			int windowYRes;
+		} renderer;
+		
 
 		// TO DO: Add button config
 

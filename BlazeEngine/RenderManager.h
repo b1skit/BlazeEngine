@@ -3,6 +3,7 @@
 #pragma once
 #include "EngineComponent.h"
 #include "EventManager.h"
+#include <string>
 //#include "glm.hpp"
 #include "SDL.h"
 
@@ -35,8 +36,9 @@ namespace BlazeEngine
 		// Configuration:
 		int xRes;
 		int yRes;
-		SDL_Window* window;
-
+		string windowTitle;
+		SDL_Window* glWindow;
+		SDL_GLContext glContext;
 		
 		
 

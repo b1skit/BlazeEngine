@@ -28,7 +28,7 @@ namespace BlazeEngine
 		BlazeLogManager->Startup(this);
 
 		BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "CoreEngine started!" }, true);
-		BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN, this);
+		BlazeEventManager->Subscribe(EVENT_ENGINE_QUIT, this);
 
 		BlazeTimeManager->Startup(this);
 		BlazeInputManager->Startup(this);
@@ -62,7 +62,7 @@ namespace BlazeEngine
 				/*BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Update loop called: " + std::to_string(elapsed)});*/
 
 				// Update components:
-				BlazeEventManager->Update();
+				BlazeEventManager->Update(); // Clears SDL event queue: Must occur after any other component that listens to SDL events
 				BlazeLogManager->Update();
 
 				BlazeSceneManager->Update();
@@ -114,12 +114,10 @@ namespace BlazeEngine
 	{
 		switch (eventInfo->type)
 		{
-		case EVENT_INPUT_BUTTON_DOWN:
-			if (BlazeInputManager->GetInput(INPUT_BUTTON_QUIT))
-			{
-				Stop();
-			}
-			
+		case EVENT_ENGINE_QUIT:
+		{
+			Stop();
+		}			
 			break;
 
 		default:
@@ -134,9 +132,9 @@ namespace BlazeEngine
 	{
 		cout << "DEBUG: EngineConfig.LoadConfig() is not implemented. Using hard coded default values!\n";
 		
-		windowName = "Blaze Engine";
-		windowXRes = 800;
-		windowYRes = 600;
+		renderer.windowTitle = "Blaze Engine";
+		renderer.windowXRes = 800;
+		renderer.windowYRes = 600;
 	}
 
 	void EngineConfig::SaveConfig(string path)

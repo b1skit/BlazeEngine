@@ -1,7 +1,7 @@
 #include "RenderManager.h"
 #include "CoreEngine.h"
 
-//#include "glm.hpp"
+#include "GL/glew.h"
 #include "SDL.h"
 #undef main // Required to prevent SDL from redefining main...
 
@@ -27,22 +27,55 @@ namespace BlazeEngine
 	{
 		EngineComponent::Startup(coreEngine);
 
-		this->xRes = coreEngine->GetConfig()->windowXRes;
-		this->yRes = coreEngine->GetConfig()->windowYRes;
+		// Cache the relevant config data:
+		this->xRes = coreEngine->GetConfig()->renderer.windowXRes;
+		this->yRes = coreEngine->GetConfig()->renderer.windowYRes;
+		this->windowTitle = coreEngine->GetConfig()->renderer.windowTitle;
 
-		window = SDL_CreateWindow(coreEngine->GetConfig()->windowName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 800, SDL_WINDOW_OPENGL);
+		// Configure and open a window:
+		/*SDL_Init(SDL_INIT_VIDEO);*/ // Currently doing a global init... 
 
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Render manager started!" });
+		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+		SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+		SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+		SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
+		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+		glWindow = SDL_CreateWindow(
+			coreEngine->GetConfig()->renderer.windowTitle.c_str(), 
+			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
+			xRes, 
+			yRes, 
+			SDL_WINDOW_OPENGL
+		);
+
+		glContext = SDL_GL_CreateContext(glWindow);
+
+		GLenum glStatus = glewInit();
+		if (glStatus != GLEW_OK)
+		{
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "Render manager start failed: glStatus not ok!" });
+		}
+		else
+		{
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Render manager started!" });
+		}		
 	}
 
 	void RenderManager::Shutdown()
 	{
 		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Render manager shutting down..." });
+
+		// Close our window:
+		SDL_GL_DeleteContext(glContext);
+		SDL_DestroyWindow(glWindow);
+		SDL_Quit();
 	}
 
 	void RenderManager::Update()
 	{
-
+		SDL_GL_SwapWindow(glWindow);
 	}
 
 

@@ -5,6 +5,7 @@
 #pragma once
 #include "EngineComponent.h"
 #include "SDL_events.h"
+#include "EventListener.h"
 
 namespace BlazeEngine
 {
@@ -35,8 +36,28 @@ namespace BlazeEngine
 		INPUT_NUM_INPUT_AXIS	// RESERVED: A count of the number of INPUT_AXIS's
 	};
 
+	// Control configuration:
+	struct InputBindings
+	{
+		// TO DO: Break this out into an external file...
 
-	class InputManager : public EngineComponent
+		Sint32 Button_forward = SDLK_w;			// SDL_Keycodes, cast as signed 32 bit ints
+		Sint32 Button_backward = SDLK_s;
+		Sint32 Button_left = SDLK_a;
+		Sint32 Button_right = SDLK_d;
+		Sint32 Button_up = SDLK_SPACE;
+		Sint32 Button_down = SDLK_LSHIFT;
+
+		unsigned short Button_leftClick = SDL_BUTTON_LEFT;
+		unsigned short Button_rightClick = SDL_BUTTON_RIGHT;
+
+		// TO DO: Bind mouse axis's
+
+		Sint32 Button_quit = SDLK_ESCAPE;
+	};
+
+
+	class InputManager : public EngineComponent, public EventListener
 	{
 	public:
 		InputManager();
@@ -50,7 +71,11 @@ namespace BlazeEngine
 		// Member functions:
 		bool GetInput(INPUT_BUTTON button);
 		double GetMouseAxisInput(INPUT_AXIS axis);
-
+		
+		inline InputBindings const* GetInputBindings()
+		{
+			return &inputBindings;
+		}
 
 		// EngineComponent interface:
 		void Startup(CoreEngine* coreEngine);
@@ -59,29 +84,18 @@ namespace BlazeEngine
 
 		void Update();
 
+		// EventListener interface:
+		void HandleEvent(EventInfo const* eventInfo);
+
 	private:
 		bool buttonStates[INPUT_NUM_BUTTON_INPUTS]; // Stores the state of buttons. Updated on key down/up
 		double mouseAxisStates[INPUT_NUM_INPUT_AXIS];
 
-		// Control configuration:
-		struct
-		{
-			// TO DO: Break this out into an external file...
+		// SDL2 event queue handling:
+		const static int MAX_EVENTS = 10; // Max number of events to look for
+		SDL_Event SDLEventBuffer[MAX_EVENTS];
 
-			SDL_Keycode Button_forward = SDLK_w;
-			SDL_Keycode Button_backward = SDLK_s;
-			SDL_Keycode Button_left = SDLK_a;
-			SDL_Keycode Button_right = SDLK_d;
-			SDL_Keycode Button_up = SDLK_SPACE;
-			SDL_Keycode Button_down = SDLK_LSHIFT;
-
-			unsigned short Button_leftClick = SDL_BUTTON_LEFT;
-			unsigned short Button_rightClick = SDL_BUTTON_RIGHT;
-
-			// TO DO: Bind mouse axis's
-
-			SDL_Keycode Button_quit = SDLK_ESCAPE;
-		} bindings;
+		InputBindings inputBindings;
 	};
 }
 

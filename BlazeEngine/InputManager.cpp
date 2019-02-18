@@ -47,6 +47,7 @@ namespace BlazeEngine
 	{
 		EngineComponent::Startup(coreEngine);
 
+
 		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Input manager started!" });
 	}
 
@@ -57,181 +58,59 @@ namespace BlazeEngine
 
 	void InputManager::Update()
 	{
-		const Uint8* keyboardState;
-		int numKeys;
-		bool doFireEvent;
+		
+	}
 
-		SDL_Event currentSDLEvent;
-		while (SDL_PollEvent(&currentSDLEvent))
+	void InputManager::HandleEvent(EventInfo const * eventInfo)
+	{
+		switch (eventInfo->type)
 		{
-			doFireEvent = true;
+		case EVENT_INPUT_BUTTON_DOWN_FORWARD:
+		case EVENT_INPUT_BUTTON_UP_FORWARD:
+		{
+			buttonStates[INPUT_BUTTON_FORWARD] = !buttonStates[INPUT_BUTTON_FORWARD];
+		}
+		break;
 
-			switch (currentSDLEvent.type) // We update button states on keydown/keyup
-			{
-			case SDL_KEYDOWN:
+		case EVENT_INPUT_BUTTON_DOWN_BACKWARD:
+		case EVENT_INPUT_BUTTON_UP_BACKWARD:
+		{
+			buttonStates[INPUT_BUTTON_BACKWARD] = !buttonStates[INPUT_BUTTON_BACKWARD];
+		}
+		break;
 
-				numKeys = 0;
-				keyboardState  = SDL_GetKeyboardState(&numKeys);
-				if (numKeys > 0)
-				{
-					if (currentSDLEvent.key.keysym.sym == bindings.Button_forward)
-					{
-						if (buttonStates[INPUT_BUTTON_FORWARD] == true)
-						{
-							doFireEvent = false;
-						}
-						else
-						{
-							buttonStates[INPUT_BUTTON_FORWARD] = true;
-						}
-					}
-					else if (currentSDLEvent.key.keysym.sym == bindings.Button_backward)
-					{
-						if (buttonStates[INPUT_BUTTON_BACKWARD] == true)
-						{
-							doFireEvent = false;
-						}
-						else
-						{
-							buttonStates[INPUT_BUTTON_BACKWARD] = true;
-						}						
-					}
-					else if (currentSDLEvent.key.keysym.sym == bindings.Button_left)
-					{
-						if (buttonStates[INPUT_BUTTON_LEFT] == true)
-						{
-							doFireEvent = false;
-						}
-						else
-						{
-							buttonStates[INPUT_BUTTON_LEFT] = true;
-						}
-					}
-					else if (currentSDLEvent.key.keysym.sym == bindings.Button_right)
-					{
-						if (buttonStates[INPUT_BUTTON_RIGHT] == true)
-						{
-							doFireEvent = false;
-						}
-						else
-						{
-							buttonStates[INPUT_BUTTON_RIGHT] = true;
-						}
-					}
-					else if (currentSDLEvent.key.keysym.sym == bindings.Button_up)
-					{
-						if (buttonStates[INPUT_BUTTON_UP] == true)
-						{
-							doFireEvent = false;
-						}
-						else
-						{
-							buttonStates[INPUT_BUTTON_UP] = true;
-						}
-						
-					}
-					else if (currentSDLEvent.key.keysym.sym == bindings.Button_down)
-					{
-						if (buttonStates[INPUT_BUTTON_DOWN] == true)
-						{
-							doFireEvent = false;
-						}
-						else
-						{
-							buttonStates[INPUT_BUTTON_DOWN] = true;
-						}
-					}
+		case EVENT_INPUT_BUTTON_DOWN_LEFT:
+		case EVENT_INPUT_BUTTON_UP_LEFT:
+		{
+			buttonStates[INPUT_BUTTON_LEFT] = !buttonStates[INPUT_BUTTON_LEFT];
+		}
+		break;
 
-					else if (currentSDLEvent.key.keysym.sym == bindings.Button_quit)
-					{
-						if (buttonStates[INPUT_BUTTON_QUIT] == true)
-						{
-							doFireEvent = false;
-						}
-						else
-						{
-							buttonStates[INPUT_BUTTON_QUIT] = true;
-						}
-					}
+		case EVENT_INPUT_BUTTON_DOWN_RIGHT:
+		case EVENT_INPUT_BUTTON_UP_RIGHT: 
+		{
+			buttonStates[INPUT_BUTTON_RIGHT] = !buttonStates[INPUT_BUTTON_RIGHT];
+		}
+		break;
 
-					else // We weren't listening for this button: No need to fire an event
-					{
-						doFireEvent = false;
-					}
+		case EVENT_INPUT_BUTTON_DOWN_UP:
+		case EVENT_INPUT_BUTTON_UP_UP:
+		{
+			buttonStates[INPUT_BUTTON_UP] = !buttonStates[INPUT_BUTTON_UP];
+		}
+		break;
 
-					// Fire an event, if necessary:
-					if (doFireEvent)
-					{
-						coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN, this });
-					}
-				}
-				break;
+		case EVENT_INPUT_BUTTON_DOWN_DOWN:
+		case EVENT_INPUT_BUTTON_UP_DOWN:
+		{
+			buttonStates[INPUT_BUTTON_DOWN] = !buttonStates[INPUT_BUTTON_DOWN];
+		}
+		break;
 
-			case SDL_KEYUP: // No need to check the state, we always fire an event on key up
 
-				numKeys = 0;
-				keyboardState = SDL_GetKeyboardState(&numKeys);
-				if (numKeys > 0)
-				{			
-					if (currentSDLEvent.key.keysym.sym == bindings.Button_forward)
-					{
-						buttonStates[INPUT_BUTTON_FORWARD] = false;
-					}
-					else if (currentSDLEvent.key.keysym.sym == bindings.Button_backward)
-					{
-						buttonStates[INPUT_BUTTON_BACKWARD] = false;
-					}
-					else if (currentSDLEvent.key.keysym.sym == bindings.Button_left)
-					{
-						buttonStates[INPUT_BUTTON_LEFT] = false;
-					}
-					else if (currentSDLEvent.key.keysym.sym == bindings.Button_right)
-					{
-						buttonStates[INPUT_BUTTON_RIGHT] = false;
-					}
-					else if (currentSDLEvent.key.keysym.sym == bindings.Button_up)
-					{
-						buttonStates[INPUT_BUTTON_UP] = false;
-					}
-					else if (currentSDLEvent.key.keysym.sym == bindings.Button_down)
-					{
-						buttonStates[INPUT_BUTTON_DOWN] = false;
-					}
-
-					else if (currentSDLEvent.key.keysym.sym == bindings.Button_quit)
-					{
-						buttonStates[INPUT_BUTTON_QUIT] = false;
-					}
-
-					else // We weren't listening for this button: No need to fire an event
-					{
-						doFireEvent = false;
-					}
-
-					// Fire an event, if necessary:
-					if (doFireEvent)
-					{
-						coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_INPUT_BUTTON_UP, this });
-					}
-				}
-				break;
-
-			// TO DO: IMPLEMENT MOUSE HANDLING...
-			case SDL_MOUSEBUTTONDOWN:
-				/*coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_MOUSEBUTTONDOWN detected!!!" });*/
-				break;
-
-			case SDL_MOUSEBUTTONUP:
-				/*coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_MOUSEBUTTONUP detected!!!" });*/
-				break;
-
-			case SDL_MOUSEMOTION:
-				/*coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_MOUSEMOTION detected!!!" });*/
-				break;
-
-			default: // We don't care about anything else
-				break;
-			}
+		default:
+			coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "ERROR: Default event generated in InputManager!" });
+			break;
 		}
 	}
 }
