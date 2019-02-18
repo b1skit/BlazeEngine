@@ -1,4 +1,4 @@
-#include <iostream>
+//#include <iostream>
 #include "CoreEngine.h"
 
 #include "SDL.h"
@@ -121,16 +121,17 @@ namespace BlazeEngine
 			break;
 
 		default:
-			cout << "ERROR: Default event generated in CoreEngine!\n";
+			BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "ERROR: Default event generated in CoreEngine!" });
 			break;
 		}
 
 		return;
 	}
 
+
 	void EngineConfig::LoadConfig(string path)
 	{
-		cout << "DEBUG: EngineConfig.LoadConfig() is not implemented. Using hard coded default values!\n";
+		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, nullptr, "DEBUG: EngineConfig.LoadConfig() is not implemented. Using hard coded default values!" });
 		
 		renderer.windowTitle = "Blaze Engine";
 		renderer.windowXRes = 800;
@@ -139,7 +140,9 @@ namespace BlazeEngine
 
 	void EngineConfig::SaveConfig(string path)
 	{
-		cout << "DEBUG: EngineConfig.SaveConfig() is not implemented. No data is being saved!\n";
+		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, nullptr, "DEBUG: EngineConfig.SaveConfig() is not implemented. No data is being saved!\n" });
 	}
+
+	
 
 }

@@ -63,7 +63,19 @@ namespace BlazeEngine
 
 	void LogManager::HandleEvent(EventInfo const* eventInfo)
 	{
-		cout << EVENT_NAME[eventInfo->type] << ": Object #" << std::to_string(eventInfo->generator->GetObjectID()) << " (" << eventInfo->generator->GetName() << ")";
+		cout << EVENT_NAME[eventInfo->type] << ": Object #";
+		
+		if (eventInfo->generator)
+		{
+			cout << std::to_string(eventInfo->generator->GetObjectID()) << " (" << eventInfo->generator->GetName() << ")";
+		}
+		else
+		{
+			cout << "_unknown_ (null event generator)";
+		}
+
+		
+			
 		
 		if (eventInfo->eventMessage.length() > 0)
 		{

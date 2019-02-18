@@ -1,5 +1,5 @@
 #pragma once
-#include <iostream>
+//#include <iostream>
 #include "EventManager.h"
 #include "LogManager.h"
 #include "TimeManager.h"
@@ -12,6 +12,12 @@ namespace BlazeEngine
 	// TO DO: Implement loading/saving of this object...
 	struct EngineConfig
 	{
+		EngineConfig(CoreEngine* coreEngine)
+		{
+			this->coreEngine = coreEngine;
+		}
+
+		// Renderer config:
 		struct
 		{
 			string windowTitle;
@@ -19,12 +25,14 @@ namespace BlazeEngine
 			int windowYRes;
 		} renderer;
 		
-
-		// TO DO: Add button config
+		// TO DO: Add button config for inputmanager
 
 		// TO DO: Implement load/save functions
 		void LoadConfig(string path);
 		void SaveConfig(string path);
+
+	private:
+		CoreEngine* coreEngine;
 
 	};
 
@@ -69,7 +77,7 @@ namespace BlazeEngine
 		bool isRunning = false;
 
 		// Engine configuration:
-		EngineConfig config;
+		EngineConfig config = EngineConfig(this);
 		string configPath;
 		bool configDirty = false; // Marks whether we need to save the config file or not
 	};
