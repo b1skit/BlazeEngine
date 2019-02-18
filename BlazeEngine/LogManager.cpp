@@ -74,9 +74,6 @@ namespace BlazeEngine
 			cout << "_unknown_ (null event generator)";
 		}
 
-		
-			
-		
 		if (eventInfo->eventMessage.length() > 0)
 		{
 			cout << ": \"" << eventInfo->eventMessage << "\"";
