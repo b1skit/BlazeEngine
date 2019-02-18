@@ -4,13 +4,9 @@
 
 namespace BlazeEngine
 {
-	TimeManager::TimeManager() : EngineComponent()
+	TimeManager::TimeManager() : EngineComponent("TimeManager")
 	{
-		coreEngine = nullptr;
-		SetName("TimeManager");
-
 		startTime = prevTime = currentTime = SDL_GetTicks(); // TO DO: use the high res timer instead?
-
 	}
 
 

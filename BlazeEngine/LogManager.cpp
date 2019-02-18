@@ -7,12 +7,6 @@ using std::cout;
 
 namespace BlazeEngine
 {
-	LogManager::LogManager() : EngineComponent()
-	{
-		SetName("LogManager");
-	}
-
-
 	//LogManager::~LogManager()
 	//{
 	//
@@ -54,17 +48,17 @@ namespace BlazeEngine
 	}
 
 
-	int LogManager::HandleEvent(EventInfo const* eventInfo)
+	void LogManager::HandleEvent(EventInfo const* eventInfo)
 	{
 		cout << EVENT_NAME[eventInfo->type] << ": Object #" << std::to_string(eventInfo->generator->GetObjectID()) << " (" << eventInfo->generator->GetName() << ")";
 		
-		if (eventInfo->eventMessage.size() > 0)
+		if (eventInfo->eventMessage.length() > 0)
 		{
 			cout << ": \"" << eventInfo->eventMessage << "\"";
 		}
 
 		cout << std::endl;
 		
-		return 0;
+		return;
 	}
 }

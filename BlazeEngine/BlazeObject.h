@@ -4,15 +4,18 @@
 #pragma once
 
 #include <string>
+//#include <unordered_map>
+
 #include <iostream> // DEBUG
 using std::cout;
 using std::string;
+//using std::unordered_map;
 
 
 // Global variables: These should never be modified directly.
 namespace BlazeEnginePrivate
 {
-	static int objectIDs = 0;
+	static unsigned long objectIDs = 0;
 }
 
 
@@ -21,12 +24,17 @@ namespace BlazeEngine
 	class BlazeObject
 	{
 	public:
-		BlazeObject()
+		BlazeObject(string name)
 		{
+			if (!name.length() == 0) // Default to "unnamed" if no valid name is received
+			{
+				this->name = name;
+			}
+
 			objectID = AssignObjectID();
 		}
 
-		inline int GetObjectID()
+		inline unsigned long GetObjectID()
 		{
 			return objectID;
 		}
@@ -36,21 +44,31 @@ namespace BlazeEngine
 			return name;
 		}
 
-		inline void SetName(string newName)
+		// Used to hash objects when inserting into an unordered_map
+		inline string GetHashString()
 		{
-			name = newName;
+			return hashString;
 		}
 
+		virtual void Update() = 0;
+
 	protected:
-		int objectID; // TO DO: Replace this with a hash of the object name
+		unsigned long objectID; // Hashed value
 
 	private:
 		string name = "unnamed";
+		string hashString;
+
+
+		std::hash<string> hashFunction;
 
 		// Utilities:
-		int AssignObjectID()
-		{
-			return BlazeEnginePrivate::objectIDs++;
+		unsigned long AssignObjectID()
+		{ 
+			hashString = name + std::to_string(BlazeEnginePrivate::objectIDs++); // Append a number to give different hashes for the same name
+			size_t hash = hashFunction(hashString);
+
+			return (unsigned long) hash;
 		}
 	};
 }

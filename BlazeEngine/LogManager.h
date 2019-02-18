@@ -7,7 +7,7 @@ namespace BlazeEngine
 	class LogManager : public EngineComponent, public EventListener
 	{
 	public:
-		LogManager();
+		LogManager() : EngineComponent("LogManager") {}
 		//~LogManager();
 		
 		// Singleton functionality:
@@ -23,7 +23,7 @@ namespace BlazeEngine
 		void Update();
 
 		// EventListener interface:
-		int HandleEvent(EventInfo const* eventInfo);
+		void HandleEvent(EventInfo const* eventInfo);
 
 	private:
 		

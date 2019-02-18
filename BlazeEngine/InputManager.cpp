@@ -9,10 +9,8 @@
 
 namespace BlazeEngine
 {
-	InputManager::InputManager() : EngineComponent()
+	InputManager::InputManager() : EngineComponent("InputManager")
 	{
-		SetName("InputManager");
-
 		for (int i = 0; i < INPUT_NUM_BUTTON_INPUTS; i++)
 		{
 			buttonStates[i] = false;

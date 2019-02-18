@@ -7,10 +7,11 @@
 
 namespace BlazeEngine
 {
+	
 	class RenderManager : public EngineComponent
 	{
 	public:
-		RenderManager();
+		RenderManager() : EngineComponent("RenderManager") {}
 		/*~RenderManager();*/
 
 		// Singleton functionality:
@@ -35,7 +36,7 @@ namespace BlazeEngine
 		SDL_Window* window;
 
 		// Configuration:
-
+		
 
 	};
 }

@@ -10,7 +10,7 @@ namespace BlazeEngine
 	class EventListener
 	{
 	public:
-		virtual int HandleEvent(EventInfo const* eventInfo) = 0;
+		virtual void HandleEvent(EventInfo const* eventInfo) = 0;
 
 	private:
 

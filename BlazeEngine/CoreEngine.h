@@ -5,6 +5,7 @@
 #include "TimeManager.h"
 #include "InputManager.h"
 #include "RenderManager.h"
+#include "SceneManager.h"
 
 namespace BlazeEngine
 {
@@ -32,6 +33,7 @@ namespace BlazeEngine
 		EventManager* const BlazeEventManager = &EventManager::Instance();
 		TimeManager* const BlazeTimeManager = &TimeManager::Instance();
 		InputManager* const BlazeInputManager = &InputManager::Instance();
+		SceneManager* const BlazeSceneManager = &SceneManager::Instance();
 
 		
 		// Lifetime flow:
@@ -43,8 +45,11 @@ namespace BlazeEngine
 		// Member functions
 		EngineConfig const* GetConfig();
 
+		// BlazeObject interface:
+		void Update() {} // Do nothing...
+
 		// EventListener interface:
-		int HandleEvent(EventInfo const* eventInfo);
+		void HandleEvent(EventInfo const* eventInfo);
 
 
 	private:	
@@ -62,5 +67,6 @@ namespace BlazeEngine
 		// Engine configuration:
 		EngineConfig config;
 		string configPath;
+		bool configDirty = false; // Marks whether we need to save the config file or not
 	};
 }

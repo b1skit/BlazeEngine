@@ -8,10 +8,8 @@ using BlazeEngine::CoreEngine;
 
 namespace BlazeEngine
 {
-	EventManager::EventManager() : EngineComponent()
+	EventManager::EventManager() : EngineComponent("EventManager")
 	{
-		SetName("EventManager");
-
 		eventQueues.reserve(EVENT_NUM_EVENTS);
 		for (int i = 0; i < EVENT_NUM_EVENTS; i++)
 		{
@@ -45,6 +43,8 @@ namespace BlazeEngine
 
 	void EventManager::Shutdown()
 	{
+		Update(); // Run one last update
+
 		Notify(new EventInfo{ EVENT_LOG, this, "Event manager shutting down..." });
 	}
 

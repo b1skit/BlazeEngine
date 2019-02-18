@@ -14,7 +14,10 @@ namespace BlazeEngine
 	class EngineComponent : public BlazeObject
 	{
 	public:
-		EngineComponent() : BlazeObject() {};
+		EngineComponent(string name) : BlazeObject(name)
+		{
+			coreEngine = nullptr; // Init to null: Overridden when startup is called
+		}
 
 		// We can't control the order constructors are called, so this function should be called to start the object
 		virtual void Startup(CoreEngine* coreEngine)
@@ -24,7 +27,7 @@ namespace BlazeEngine
 		
 		virtual void Shutdown() = 0;
 
-		virtual void Update() = 0;
+		/*virtual void Update() = 0;*/
 
 
 	protected:

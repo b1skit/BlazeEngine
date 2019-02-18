@@ -5,11 +5,6 @@
 
 namespace BlazeEngine
 {
-	RenderManager::RenderManager() : EngineComponent()
-	{
-		SetName("RenderManager");
-	}
-
 	/*RenderManager::~RenderManager()
 	{
 	}*/
@@ -24,8 +19,6 @@ namespace BlazeEngine
 	{
 		/*coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Pretending to render at ~60fps..." });*/
 		SDL_Delay((unsigned int)(1000.0 / 60.0));
-
-
 	}
 
 	void RenderManager::Startup(CoreEngine * coreEngine)

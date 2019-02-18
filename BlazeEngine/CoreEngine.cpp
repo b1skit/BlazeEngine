@@ -9,10 +9,8 @@
 
 namespace BlazeEngine
 {
-	CoreEngine::CoreEngine(string configPath) : BlazeObject()
+	CoreEngine::CoreEngine(string configPath) : BlazeObject("CoreEngine")
 	{
-		SetName("CoreEngine");
-
 		this->configPath = configPath;
 		config.LoadConfig(this->configPath);
 
@@ -34,6 +32,9 @@ namespace BlazeEngine
 
 		BlazeTimeManager->Startup(this);
 		BlazeInputManager->Startup(this);
+
+		BlazeSceneManager->Startup(this);
+
 		BlazeRenderManager->Startup(this);
 
 		isRunning = true;
@@ -64,6 +65,7 @@ namespace BlazeEngine
 				BlazeEventManager->Update();
 				BlazeLogManager->Update();
 
+				BlazeSceneManager->Update();
 
 				// Update the time for the next iteration:
 				BlazeTimeManager->Update();
@@ -71,8 +73,6 @@ namespace BlazeEngine
 			}
 			
 			BlazeRenderManager->Render(elapsed/FIXED_TIMESTEP); // Render precise current position
-			
-			
 		}
 	}
 
@@ -85,14 +85,22 @@ namespace BlazeEngine
 	{
 		BlazeEventManager->Notify(new EventInfo{EVENT_LOG, this, "CoreEngine shutting down..."});
 
-		config.SaveConfig("./");
+		if (configDirty)
+		{
+			config.SaveConfig(configPath);
+		}		
 
-		BlazeEventManager->Shutdown();
+		// Note: Shutdown order matters!
 		BlazeTimeManager->Shutdown();		
 		BlazeInputManager->Shutdown();
+		
 		BlazeRenderManager->Shutdown();
+		
+		BlazeSceneManager->Shutdown();
 
-		BlazeEventManager->Update();
+		BlazeEventManager->Shutdown();
+
+		BlazeLogManager->Shutdown();
 
 		return;
 	}
@@ -102,7 +110,7 @@ namespace BlazeEngine
 		return &config;
 	}
 
-	int CoreEngine::HandleEvent(EventInfo const* eventInfo)
+	void CoreEngine::HandleEvent(EventInfo const* eventInfo)
 	{
 		switch (eventInfo->type)
 		{
@@ -119,12 +127,12 @@ namespace BlazeEngine
 			break;
 		}
 
-		return 0;
+		return;
 	}
 
 	void EngineConfig::LoadConfig(string path)
 	{
-		cout << "DEBUG: EngineConfig.LoadConfig is not implemented. Using hard coded default values!\n";
+		cout << "DEBUG: EngineConfig.LoadConfig() is not implemented. Using hard coded default values!\n";
 		
 		windowName = "Blaze Engine";
 		windowXRes = 800;
@@ -133,7 +141,7 @@ namespace BlazeEngine
 
 	void EngineConfig::SaveConfig(string path)
 	{
-		cout << "DEBUG: EngineConfig.SaveConfig is not implemented. No data is being saved!\n";
+		cout << "DEBUG: EngineConfig.SaveConfig() is not implemented. No data is being saved!\n";
 	}
 
 }
