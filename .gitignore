@@ -380,3 +380,5 @@ healthchecksdb
 # Forced inclusions:
 #-------------------
 !./BlazeEngine/Dependencies/
+!./BlazeEngine/BlazeEngine/SDL2.dll
+!./BlazeEngine/BlazeEngine/glew32.dll
