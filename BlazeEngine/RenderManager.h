@@ -3,6 +3,7 @@
 #pragma once
 #include "EngineComponent.h"
 #include "EventManager.h"
+//#include "glm.hpp"
 #include "SDL.h"
 
 namespace BlazeEngine
@@ -31,11 +32,12 @@ namespace BlazeEngine
 
 		
 	private:
+		// Configuration:
 		int xRes;
 		int yRes;
 		SDL_Window* window;
 
-		// Configuration:
+		
 		
 
 	};
