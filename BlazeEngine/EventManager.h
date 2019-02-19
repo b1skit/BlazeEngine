@@ -49,6 +49,7 @@ namespace BlazeEngine
 		EVENT_NUM_EVENTS // RESERVED: A count of the number of EVENT_TYPE's
 	};
 	
+	// Matched event string names:
 	const static string EVENT_NAME[EVENT_NUM_EVENTS] = 
 	{
 		// System:

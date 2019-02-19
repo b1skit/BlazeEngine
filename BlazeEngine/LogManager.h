@@ -4,8 +4,8 @@
 
 
 // Compiler directives: Control logging verbosity
-//#define LOG_VERBOSITY_ALL
-#define LOG_VERBOSITY_DEBUG
+#define LOG_VERBOSITY_ALL
+//#define LOG_VERBOSITY_DEBUG
 //#define LOG_VERBOSITY_RELEASE
 
 namespace BlazeEngine
