@@ -27,25 +27,26 @@ namespace BlazeEngine
 		this->coreEngine->BlazeEventManager->Subscribe(EVENT_ERROR, this);
 		this->coreEngine->BlazeEventManager->Subscribe(EVENT_ENGINE_QUIT, this);
 
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_FORWARD, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_FORWARD, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_BACKWARD, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_BACKWARD, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_LEFT, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_LEFT, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_RIGHT, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_RIGHT, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_UP, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_UP, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_DOWN, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_DOWN, this);
+		#if defined(LOG_VERBOSITY_ALL)
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_FORWARD, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_FORWARD, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_BACKWARD, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_BACKWARD, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_LEFT, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_LEFT, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_RIGHT, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_RIGHT, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_UP, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_UP, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_DOWN, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_DOWN, this);
 		
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_CLICK_LEFT, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_RELEASE_LEFT, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_CLICK_RIGHT, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_RELEASE_RIGHT, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_MOVED, this);
-
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_CLICK_LEFT, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_RELEASE_LEFT, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_CLICK_RIGHT, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_RELEASE_RIGHT, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_MOVED, this);
+		#endif
 
 		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Log manager started!" });
 	}

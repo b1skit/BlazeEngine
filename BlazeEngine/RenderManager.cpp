@@ -19,8 +19,16 @@ namespace BlazeEngine
 
 	void RenderManager::Render(double alpha)
 	{
+
+
+		SDL_GL_SwapWindow(glWindow);
+
+
+		// Deubg:
 		/*coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Pretending to render at ~60fps..." });*/
 		SDL_Delay((unsigned int)(1000.0 / 60.0));
+
+		
 	}
 
 	void RenderManager::Startup(CoreEngine * coreEngine)
@@ -59,6 +67,15 @@ namespace BlazeEngine
 		}
 		else
 		{
+			// Set the initial color in both buffers:
+			glClearColor(0.79f, 0.32f, 0.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+			
+			SDL_GL_SwapWindow(glWindow);
+
+			glClearColor(0.79f, 0.32f, 0.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+
 			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Render manager started!" });
 		}		
 	}
@@ -75,7 +92,7 @@ namespace BlazeEngine
 
 	void RenderManager::Update()
 	{
-		SDL_GL_SwapWindow(glWindow);
+		
 	}
 
 
