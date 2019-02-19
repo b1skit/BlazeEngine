@@ -1,6 +1,7 @@
 #include "RenderManager.h"
 #include "CoreEngine.h"
 #include "Shader.h"
+#include "Mesh.h"
 
 #include "glm.hpp"
 #include "GL/glew.h"
@@ -28,15 +29,25 @@ namespace BlazeEngine
 
 	void RenderManager::Render(double alpha)
 	{
-		vec3 vertices[3] = 
+		Vertex vertices[3] = 
 		{
-			{-0.5f, -0.5f, 0.0f},
-			{0.5f, -0.5f, 0.0f},
-			{0.0f, 0.5f, 0.0f}
+			Vertex(vec3(-0.5f, -0.5f, 0.0f)),
+			Vertex(vec3(0.5f, -0.5f, 0.0f)),
+			Vertex(vec3(0.0f, 0.5f, 0.0f)),
 		};
 
-		// Copy vertices to the currently bound buffer:
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		Mesh mesh(vertices, 3);
+		
+		glBindVertexArray(mesh.vertexArrayObject);
+
+		glDrawArrays(GL_TRIANGLES, 0, mesh.drawCount); // Type, start index, size
+
+
+
+
+
+		//// Copy vertices to the currently bound buffer:
+		//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // SHOULDN'T THIS BE sizeof(vertices) * num of verts OR vertices[0] ????????
 
 
 		
