@@ -34,6 +34,7 @@ namespace BlazeEngine
 		BlazeInputManager->Startup(this);
 
 		BlazeSceneManager->Startup(this);
+		BlazeSceneManager->LoadScene(config.scene.scenePath);
 
 		BlazeRenderManager->Startup(this);
 

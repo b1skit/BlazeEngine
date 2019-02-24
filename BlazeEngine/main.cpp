@@ -1,7 +1,7 @@
 #include <iostream>
 #include "CoreEngine.h"
 
-using BlazeEngine::CoreEngine;
+//using BlazeEngine::CoreEngine;
 using std::cout;
 
 
@@ -9,7 +9,7 @@ int main(int argc, char **argv)
 {
 	cout << "Welcome to the Blaze Engine!\n\n";
 
-	CoreEngine coreEngine("./"); // TO DO: Implement config file path passing
+	BlazeEngine::CoreEngine coreEngine("./"); // TO DO: Implement config file (command line) path passing
 
 	coreEngine.Startup();
 

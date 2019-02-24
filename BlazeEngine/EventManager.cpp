@@ -5,8 +5,6 @@
 #include "CoreEngine.h"
 #include "SDL.h"
 
-using BlazeEngine::CoreEngine;
-
 
 namespace BlazeEngine
 {

@@ -1,10 +1,14 @@
 #pragma once
 
+#include "Material.h"
+
 #include <glm.hpp>
 #include <GL/glew.h>
 
+//using glm::vec2;
 using glm::vec3;
 using glm::vec4;
+
 
 namespace BlazeEngine
 {
@@ -23,6 +27,7 @@ namespace BlazeEngine
 	private:
 		vec3 position;
 		/*vec4 color;*/
+		/*vec2 UV;*/
 
 	};
 
@@ -49,7 +54,10 @@ namespace BlazeEngine
 
 
 	private:
-		
+		Vertex* vertices;
+		int numVerts;
+
+		Material* material;
 		
 	};
 }

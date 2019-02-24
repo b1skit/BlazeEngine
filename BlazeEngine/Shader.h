@@ -11,9 +11,7 @@ namespace BlazeEngine
 	class Shader
 	{
 	public:
-		Shader() : Shader("./Shaders/defaultShader") {} // Call the constructor with a default path
-		// TO DO: Replace this hard coded value and handle more elegantly!!!!!
-
+		Shader() : Shader(DEFAULT_PATH) {} // Call the string-arg constructor with a default path
 		Shader(const string filepath);
 		~Shader();
 
@@ -28,6 +26,7 @@ namespace BlazeEngine
 		GLuint shaderProgram;
 		GLuint shaders[NUM_SHADERS];
 
+		const string DEFAULT_PATH = "./Shaders/defaultShader";
 	};
 
 

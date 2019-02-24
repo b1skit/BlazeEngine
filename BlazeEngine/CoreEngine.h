@@ -24,6 +24,12 @@ namespace BlazeEngine
 			int windowXRes;
 			int windowYRes;
 		} renderer;
+
+		// Scene config:
+		struct
+		{
+			string scenePath = "./Scenes/testScene"; // DEBUG: hard coded scene path
+		} scene;
 		
 		// TO DO: Add button config for inputmanager
 

@@ -23,9 +23,7 @@ namespace BlazeEngine
 
 		// EngineComponent interface:
 		void Startup(CoreEngine * coreEngine);
-
 		void Shutdown();
-
 		void Update();
 
 		// EventListener interface:

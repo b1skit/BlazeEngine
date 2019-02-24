@@ -1,8 +1,8 @@
 #include "LogManager.h"
-#include <iostream>
 #include "EventManager.h"
 #include "CoreEngine.h"
 
+#include <iostream>
 using std::cout;
 
 namespace BlazeEngine

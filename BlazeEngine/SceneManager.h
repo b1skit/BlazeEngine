@@ -2,6 +2,20 @@
 
 #include "EngineComponent.h"
 #include "EventListener.h"
+#include "SceneObject.h"
+#include "GameObject.h"
+#include "Renderable.h"
+//#include "Material.h"
+#include "Shader.h"
+//#include "Light.h"
+//#include "Camera.h"
+
+//class GameObject;
+//class SceneObject;
+
+#include <vector>
+
+using std::vector;
 
 namespace BlazeEngine
 {
@@ -18,22 +32,33 @@ namespace BlazeEngine
 
 		// EngineComponent interface:
 		void Startup(CoreEngine * coreEngine);
-
 		void Shutdown();
-
 		void Update();
 
 		// EventListener interface:
 		void HandleEvent(EventInfo const* eventInfo);
 
 		// Member functions:
-		void UpdateSceneObjects();
+		void LoadScene(string scenePath);
+
+		inline vector<Renderable> const* GetRenderables()
+		{
+			return &renderables;
+		}
+		/*inline vector<Light> const* GetLights();
+		inline Camera const* GetCamera();*/
 
 	protected:
 
 
 	private:
-
+		//vector<GameObject> gameObjects;
+		vector<Renderable> renderables;
+		vector<Mesh> meshes;
+		/*vector<Material> materials;*/
+		vector<Shader> shaders;
+		/*vector<Light> lights;*/
+		/*Camera mainCamera;*/
 
 	};
 
