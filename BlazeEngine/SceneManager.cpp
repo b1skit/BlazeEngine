@@ -2,14 +2,17 @@
 #include "EventManager.h"
 #include "CoreEngine.h"
 
-//class CoreEngine;
-//using BlazeEngine::CoreEngine;
 
 namespace BlazeEngine
 {
-	//SceneManager::~SceneManager()
-	//{
-	//}
+	SceneManager::~SceneManager()
+	{
+		for (int i = 0; i < meshes.size(); i++)
+		{
+			delete renderables[i];
+			delete meshes[i].Vertices();
+		}
+	}
 
 	SceneManager& SceneManager::Instance()
 	{
@@ -26,7 +29,6 @@ namespace BlazeEngine
 
 	void SceneManager::Shutdown()
 	{
-
 		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Scene manager shutting down..." });
 	}
 

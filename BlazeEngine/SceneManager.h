@@ -23,7 +23,8 @@ namespace BlazeEngine
 	{
 	public:
 		SceneManager() : EngineComponent("SceneManager") {}
-		/*~SceneManager();*/
+
+		~SceneManager();
 
 		// Singleton functionality:
 		static SceneManager& Instance();
@@ -54,7 +55,7 @@ namespace BlazeEngine
 	private:
 		// The scene manager holds and provides access to all of the scene objects needed by the rest of the engine:
 		vector<GameObject> gameObjects;
-		vector<Renderable const*> renderables;
+		vector<Renderable const*> renderables; // Point directly to the renderables of our gameObjects
 		vector<Mesh> meshes;
 		/*vector<Material> materials;*/
 		vector<Shader> shaders;
