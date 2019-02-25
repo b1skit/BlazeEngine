@@ -43,8 +43,10 @@ namespace BlazeEngine
 				glGenVertexArrays(1, &vertexArrayObject); // Size, target
 				glBindVertexArray(vertexArrayObject);
 
-				glGenBuffers(VERTEX_BUFFER_SIZE, vertexArrayBuffers); // Allocate buffer on the GPU
-				glBindBuffer(GL_ARRAY_BUFFER, vertexArrayBuffers[VERTEX_BUFFER_POSITION]); // Tell OpenGl to interpret buffer as an array
+				// Allocate a vertex buffer:
+				//glGenBuffers(VERTEX_BUFFER_SIZE, vertexArrayBuffers); // Allocate buffer on the GPU
+				//glBindBuffer(GL_ARRAY_BUFFER, vertexArrayBuffers[VERTEX_BUFFER_POSITION]); // Tell OpenGl to interpret buffer as an array
+				//^^^ Moved to startup
 				glBufferData(GL_ARRAY_BUFFER, mesh->NumVerts() * sizeof(mesh->Vertices()[0]), mesh->Vertices(), GL_STATIC_DRAW); // Put data into the buffer
 
 				// Tell OpenGL how to interpet the data we've put on the GPU:
@@ -52,8 +54,6 @@ namespace BlazeEngine
 				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0); // Tell it how to read the array: attribute array, count (3 = 3 elements in vec3), data type, normalize?, space between steps(?), start offset
 
 				glBindVertexArray(0); // Prevent further vertex array object operations affecting our vertex array object
-
-				// End of Mesh stuff
 
 				glBindVertexArray(vertexArrayObject);
 
@@ -115,8 +115,9 @@ namespace BlazeEngine
 		}
 
 		// Create and bind a vertex buffer:
-		glGenBuffers(1, &VBO);
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glGenBuffers(VERTEX_BUFFER_SIZE, vertexArrayBuffers); // Allocate buffer on the GPU
+		glBindBuffer(GL_ARRAY_BUFFER, vertexArrayBuffers[VERTEX_BUFFER_POSITION]); // Tell OpenGl to interpret buffer as an array
+
 
 		ClearWindow(vec4(0.79f, 0.32f, 0.0f, 1.0f));
 

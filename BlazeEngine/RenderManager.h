@@ -46,24 +46,17 @@ namespace BlazeEngine
 		// OpenGL components and settings:
 		SDL_Window* glWindow;
 		SDL_GLContext glContext;
-		unsigned int VBO = 0; // Vertex Buffer Object: Holds vertices in GPU memory
-
-		// Moved from mesh:
-
-		// Temp: Make these public for now TODO: Getters/setters!!!!!!!!!!!!!!!!!!!!
+		
 		enum
 		{
 			VERTEX_BUFFER_POSITION,
+			//VERTEX_BUFFER_NORMAL,
 
-			VERTEX_BUFFER_SIZE, // Reserved: Number of elements in our buffer
+			VERTEX_BUFFER_SIZE, // Reserved: Number of buffers to allocate
 		};
 
-		GLuint vertexArrayObject;
 		GLuint vertexArrayBuffers[VERTEX_BUFFER_SIZE];
-
-		// End of mesh stuff
-		
-
+		GLuint vertexArrayObject;
 
 		// DEBUG: Temporarily hard coded shader
 		Shader* defaultShader;
