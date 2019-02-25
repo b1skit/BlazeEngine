@@ -87,7 +87,8 @@ namespace BlazeEngine
 		this->gameObjects.emplace_back(testObject);
 		int gameObjectIndex = (int)this->gameObjects.size() - 1;
 		
-		this->renderables.emplace_back(gameObjects[gameObjectIndex].GetRenderable()); // Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
+		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
+		this->renderables.emplace_back(gameObjects[gameObjectIndex].GetRenderable()); 
 	}
 }
 

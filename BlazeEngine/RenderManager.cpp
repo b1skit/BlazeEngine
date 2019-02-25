@@ -2,6 +2,7 @@
 #include "CoreEngine.h"
 #include "Shader.h"
 #include "Mesh.h"
+#include "Transform.h"
 
 #include "glm.hpp"
 #include "GL/glew.h"
@@ -57,6 +58,8 @@ namespace BlazeEngine
 				glBindVertexArray(vertexArrayObject);
 
 				glDrawArrays(GL_TRIANGLES, 0, mesh->NumVerts()); // Type, start index, size
+
+				/*renderables->at(i)->GetTransform();*/
 			}
 		}
 

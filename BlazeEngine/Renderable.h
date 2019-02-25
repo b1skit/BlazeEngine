@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "Mesh.h"
+#include "Transform.h"
 
 using std::vector;
 
@@ -11,10 +12,11 @@ namespace BlazeEngine
 	class Renderable
 	{
 	public:
-		Renderable() {} // This should never be called, since we always need a view mesh...
+		Renderable() { transform = nullptr; } // This should never be called, since we always need a view mesh...
 		Renderable(vector<Mesh*> viewMeshes)
 		{
 			this->viewMeshes = viewMeshes;
+			this->transform = nullptr;
 
 			/*bool isStatic = false;*/
 		}
@@ -31,16 +33,20 @@ namespace BlazeEngine
 		{
 		}*/
 
-		inline vector<Mesh*> const* ViewMeshes() const
-		{
-			return &viewMeshes;
-		}
+		// Getters/Setters:
+		inline vector<Mesh*> const* ViewMeshes() const { return &viewMeshes; }
+
+		inline Transform* GetTransform() const { return transform; }
+		inline void SetTransform(Transform* transform) { this->transform = transform; }
+
 
 	protected:
 
 
 	private:
 		vector<Mesh*> viewMeshes;
+		Transform* transform; // The SceneObject that owns this Renderable must set the transform
+
 		/*Mesh* boundsMesh;*/
 
 		/*bool isStatic;*/
