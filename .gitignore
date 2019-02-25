@@ -382,4 +382,5 @@ healthchecksdb
 !./BlazeEngine/Dependencies/
 !./BlazeEngine/BlazeEngine/SDL2.dll
 !./BlazeEngine/BlazeEngine/glew32.dll
-!./BlazeEngine/Dependencies/glew/*
+!./BlazeEngine/Dependencies/glew/lib/Release/x64/glew32.lib
+!./BlazeEngine/Dependencies/glew/lib/Release/x64/glew32s.lib
