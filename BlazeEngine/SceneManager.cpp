@@ -17,7 +17,7 @@ namespace BlazeEngine
 		return *instance;
 	}
 
-	void SceneManager::Startup(CoreEngine * coreEngine)
+	void SceneManager::Startup(CoreEngine* coreEngine)
 	{
 		EngineComponent::Startup(coreEngine);
 
@@ -53,7 +53,7 @@ namespace BlazeEngine
 		shaders.clear();
 		/*lights.clear();
 		mainCamera = Camera();*/
-
+		
 		// Load our .FBX:
 		// ...
 
@@ -62,8 +62,30 @@ namespace BlazeEngine
 
 		// DEBUG: HARD CODE SOME OBJECTS TO WORK WITH:
 
-		//GameObject testObject(this, "testObject");
+		// Allocate vertices: (Normally, we'll do this when loading a .FBX)
+		Vertex* vertices = new Vertex[3];
+		vertices[0] = Vertex(vec3(-0.5f, -0.5f, 0.0f));
+		vertices[1] = Vertex(vec3(0.5f, -0.5f, 0.0f));
+		vertices[2] = Vertex(vec3(0.0f, 0.5f, 0.0f));
 
+		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
+		Mesh mesh(vertices, 3);
+		this->meshes.push_back(mesh);
+		int meshIndex = (int)this->meshes.size() - 1; // Store the index so we can pass the address
+
+		// Assemble a list of all meshes held by a Renderable:
+		vector<Mesh*> viewMeshes;
+		viewMeshes.push_back( &(this->meshes.at(meshIndex)) ); // Store the address of our mesh to pass to our Renderable
+		Renderable testRenderable(viewMeshes);
+		
+		// Construct a GameObject:
+		GameObject testObject("testObject", testRenderable);
+		
+		// Add test objects to scene:
+		this->gameObjects.emplace_back(testObject);
+		int gameObjectIndex = (int)this->gameObjects.size() - 1;
+		
+		this->renderables.emplace_back(gameObjects[gameObjectIndex].GetRenderable()); // Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
 	}
 }
 

@@ -16,7 +16,15 @@ namespace BlazeEngine
 	class GameObject : public SceneObject
 	{
 	public:
-		GameObject(string newName) : SceneObject::SceneObject(newName) {};
+		GameObject() : SceneObject::SceneObject("Unnamed GameObject") {}
+		GameObject(string name) : SceneObject::SceneObject(name) {};
+		GameObject(string name, Renderable renderable);
+
+		// Copy constructor:
+		GameObject(const GameObject& gameObject)
+		{
+			this->renderable = gameObject.renderable;
+		}
 
 		/*~GameObject();*/
 
@@ -29,11 +37,11 @@ namespace BlazeEngine
 		void HandleEvent(EventInfo const* eventInfo);
 
 		// Getters/Setters:
-		inline Renderable const* GetRenderable() { return renderable; }
-		inline void SetRenderable(Renderable* renderable) { this->renderable = renderable; }
+		inline Renderable const* GetRenderable() { return &renderable; }
+		
 
 	protected:
-		Renderable* renderable;
+		Renderable renderable;
 
 
 	private:

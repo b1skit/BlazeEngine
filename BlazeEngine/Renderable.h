@@ -11,17 +11,30 @@ namespace BlazeEngine
 	class Renderable
 	{
 	public:
+		Renderable() {} // This should never be called, since we always need a view mesh...
 		Renderable(vector<Mesh*> viewMeshes)
 		{
 			this->viewMeshes = viewMeshes;
 
 			/*bool isStatic = false;*/
 		}
+
+		// Copy constructor:
+		Renderable(const Renderable& renderable)
+		{
+			this->viewMeshes = renderable.viewMeshes;
+
+			/*this->isStatic = renderable.isStatic;*/
+		}
 		
 		/*~Renderable()
 		{
 		}*/
 
+		inline vector<Mesh*> const* ViewMeshes() const
+		{
+			return &viewMeshes;
+		}
 
 	protected:
 

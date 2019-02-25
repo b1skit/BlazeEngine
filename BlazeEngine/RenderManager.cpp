@@ -29,38 +29,46 @@ namespace BlazeEngine
 
 	void RenderManager::Render(double alpha)
 	{
-		Vertex vertices[3] = 
+		// Loop through every renderable:
+		vector<Renderable const*> const* renderables = coreEngine->BlazeSceneManager->GetRenderables();
+		for (int i = 0; i < renderables->size(); i++)
 		{
-			Vertex(vec3(-0.5f, -0.5f, 0.0f)),
-			Vertex(vec3(0.5f, -0.5f, 0.0f)),
-			Vertex(vec3(0.0f, 0.5f, 0.0f)),
-		};
+			// Loop through every mesh:
+			int numRenderables = (int)renderables->size();
+			for (int j = 0; j < numRenderables; j++)
+			{
+				Mesh* mesh = renderables->at(i)->ViewMeshes()->at(j);
 
-		Mesh mesh(vertices, 3);
-		
-		glBindVertexArray(mesh.vertexArrayObject);
+				glGenVertexArrays(1, &vertexArrayObject); // Size, target
+				glBindVertexArray(vertexArrayObject);
 
-		glDrawArrays(GL_TRIANGLES, 0, mesh.drawCount); // Type, start index, size
+				glGenBuffers(VERTEX_BUFFER_SIZE, vertexArrayBuffers); // Allocate buffer on the GPU
+				glBindBuffer(GL_ARRAY_BUFFER, vertexArrayBuffers[VERTEX_BUFFER_POSITION]); // Tell OpenGl to interpret buffer as an array
+				glBufferData(GL_ARRAY_BUFFER, mesh->NumVerts() * sizeof(mesh->Vertices()[0]), mesh->Vertices(), GL_STATIC_DRAW); // Put data into the buffer
 
+				// Tell OpenGL how to interpet the data we've put on the GPU:
+				glEnableVertexAttribArray(0); // Treat data as an array
+				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0); // Tell it how to read the array: attribute array, count (3 = 3 elements in vec3), data type, normalize?, space between steps(?), start offset
 
+				glBindVertexArray(0); // Prevent further vertex array object operations affecting our vertex array object
 
+				// End of Mesh stuff
 
+				glBindVertexArray(vertexArrayObject);
+
+				glDrawArrays(GL_TRIANGLES, 0, mesh->NumVerts()); // Type, start index, size
+			}
+		}
 
 		//// Copy vertices to the currently bound buffer:
 		//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // SHOULDN'T THIS BE sizeof(vertices) * num of verts OR vertices[0] ????????
-
-
-		
-
 
 		// Display the new frame:
 		SDL_GL_SwapWindow(glWindow);
 
 
-		// Debug:
+		// DEBUG:
 		SDL_Delay((unsigned int)(1000.0 / 60.0));
-
-		
 	}
 
 	void RenderManager::Startup(CoreEngine * coreEngine)
@@ -121,6 +129,8 @@ namespace BlazeEngine
 	void RenderManager::Shutdown()
 	{
 		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Render manager shutting down..." });
+
+		glDeleteVertexArrays(1, &vertexArrayObject);
 
 		// Close our window:
 		SDL_GL_DeleteContext(glContext);

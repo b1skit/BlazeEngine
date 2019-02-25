@@ -48,7 +48,23 @@ namespace BlazeEngine
 		SDL_GLContext glContext;
 		unsigned int VBO = 0; // Vertex Buffer Object: Holds vertices in GPU memory
 
+		// Moved from mesh:
+
+		// Temp: Make these public for now TODO: Getters/setters!!!!!!!!!!!!!!!!!!!!
+		enum
+		{
+			VERTEX_BUFFER_POSITION,
+
+			VERTEX_BUFFER_SIZE, // Reserved: Number of elements in our buffer
+		};
+
+		GLuint vertexArrayObject;
+		GLuint vertexArrayBuffers[VERTEX_BUFFER_SIZE];
+
+		// End of mesh stuff
 		
+
+
 		// DEBUG: Temporarily hard coded shader
 		Shader* defaultShader;
 		string filepath = "./Shaders/defaultShader";

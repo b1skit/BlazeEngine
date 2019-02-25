@@ -15,11 +15,26 @@ namespace BlazeEngine
 	struct Vertex
 	{
 	public:
-		Vertex(const glm::vec3& position)
+		// TO DO: Figure out an elegant way to initialize vertices with all of their attributes...
+		Vertex()
 		{
-			this->position = position;
+			position = vec3(0, 0, 0); 
 		}
 
+		// Explicit constructor:
+		/*Vertex(const glm::vec3& position)*/
+		Vertex(glm::vec3 const& position)
+		{
+			this->position = position;
+			
+		}
+
+		// Copy constructor:
+		Vertex(const Vertex& vertex)
+		{
+			this->position = vertex.position;
+
+		}
 
 	protected:
 
@@ -31,34 +46,35 @@ namespace BlazeEngine
 
 	};
 
+
 	class Mesh
 	{
 	public:
 		Mesh(Vertex* vertices, unsigned int numVerts);
 		~Mesh();
 
-
-		// Temp: Make these public for now TODO: Getters/setters!!!!!!!!!!!!!!!!!!!!
-		enum
+		// Copy constructor:
+		Mesh(const Mesh& mesh)
 		{
-			VERTEX_BUFFER_POSITION,
+			this->vertices = mesh.vertices;
+			this->numVerts = mesh.numVerts;
 
-			VERTEX_BUFFER_SIZE, // Reserved: Number of elements in our buffer
-		};
+			this->material = mesh.material;
+		}
 
-		GLuint vertexArrayObject;
-		GLuint vertexArrayBuffers[VERTEX_BUFFER_SIZE];
-		unsigned int drawCount;
+		// Getters/Setters:
+		inline Vertex* Vertices() { return vertices; }
+		inline unsigned int NumVerts() { return this->numVerts; }
+
 
 	protected:
 
 
 	private:
 		Vertex* vertices;
-		int numVerts;
+		unsigned int numVerts;
 
 		Material* material;
-		
 	};
 }
 

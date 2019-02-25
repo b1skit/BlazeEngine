@@ -38,6 +38,9 @@ namespace BlazeEngine
 
 		BlazeRenderManager->Startup(this);
 
+		// TEMP: Must wait to load a scene until the renderer is called, since there is OpenGL init code inside of mesh...
+		/*BlazeSceneManager->LoadScene(config.scene.scenePath);*/
+
 		isRunning = true;
 
 		return;

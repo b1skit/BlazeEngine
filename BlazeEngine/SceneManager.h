@@ -41,7 +41,7 @@ namespace BlazeEngine
 		// Member functions:
 		void LoadScene(string scenePath);
 
-		inline vector<Renderable> const* GetRenderables()
+		inline vector<Renderable const*> const* GetRenderables()
 		{
 			return &renderables;
 		}
@@ -52,8 +52,9 @@ namespace BlazeEngine
 
 
 	private:
-		//vector<GameObject> gameObjects;
-		vector<Renderable> renderables;
+		// The scene manager holds and provides access to all of the scene objects needed by the rest of the engine:
+		vector<GameObject> gameObjects;
+		vector<Renderable const*> renderables;
 		vector<Mesh> meshes;
 		/*vector<Material> materials;*/
 		vector<Shader> shaders;
