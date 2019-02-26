@@ -56,11 +56,7 @@ namespace BlazeEngine
 		};
 
 		GLuint vertexArrayBuffers[VERTEX_BUFFER_SIZE];
-		GLuint vertexArrayObject;
-
-		// DEBUG: Temporarily hard coded shader
-		Shader* defaultShader;
-		string filepath = "./Shaders/defaultShader";
+		GLuint vertexArrayObject;		
 
 
 		// Private member functions:

@@ -33,13 +33,14 @@ namespace BlazeEngine
 		BlazeTimeManager->Startup(this);
 		BlazeInputManager->Startup(this);
 
-		BlazeSceneManager->Startup(this);
-		BlazeSceneManager->LoadScene(config.scene.scenePath);
+		/*BlazeSceneManager->Startup(this);*/
+		/*BlazeSceneManager->LoadScene(config.scene.scenePath);*/
 
 		BlazeRenderManager->Startup(this);
 
-		// TEMP: Must wait to load a scene until the renderer is called, since there is OpenGL init code inside of mesh...
-		/*BlazeSceneManager->LoadScene(config.scene.scenePath);*/
+		// TEMP: Must wait to start scene manager and load a scene until the renderer is called, since we need to initialize OpenGL in the RenderManager before creating shaders
+		BlazeSceneManager->Startup(this);
+		BlazeSceneManager->LoadScene(config.scene.scenePath);
 
 		isRunning = true;
 
@@ -97,6 +98,8 @@ namespace BlazeEngine
 		// Note: Shutdown order matters!
 		BlazeTimeManager->Shutdown();		
 		BlazeInputManager->Shutdown();
+
+		//BlazeSceneManager->Shutdown(); // 
 		
 		BlazeRenderManager->Shutdown();
 		

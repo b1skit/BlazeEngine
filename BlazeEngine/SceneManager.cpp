@@ -7,10 +7,12 @@ namespace BlazeEngine
 {
 	SceneManager::~SceneManager()
 	{
-		for (int i = 0; i < meshes.size(); i++)
+		delete defaultShader; // Only need to delete this if the SceneManager is being destroyed
+
+		// TEMP: Crashes if we do this in shutdown!?!?!
+		for (int i = 0; i < renderables.size(); i++)
 		{
 			delete renderables[i];
-			delete meshes[i].Vertices();
 		}
 	}
 
@@ -24,12 +26,25 @@ namespace BlazeEngine
 	{
 		EngineComponent::Startup(coreEngine);
 
+		defaultShader = new Shader(coreEngine->GetConfig()->shader.defaultShaderFilepath);
+
 		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Scene manager started!" });
 	}
 
 	void SceneManager::Shutdown()
 	{
 		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Scene manager shutting down..." });
+
+		for (int i = 0; i < meshes.size(); i++)
+		{
+			delete meshes[i].Vertices();
+		}
+
+		// TEMP: This crashes, but works in the destructor?!
+		/*for (int i = 0; i < renderables.size(); i++)
+		{
+			delete renderables[i];
+		}*/
 	}
 
 	void SceneManager::Update()
@@ -48,9 +63,10 @@ namespace BlazeEngine
 		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "Could not load " + scenePath + ", as SceneManager.LoadScene() is not implemented. Using a debug hard coded path for now!" });
 
 		// Flush any existing scene objects: (NOTE: Any objects that access these must be shut down first!)
+		// TO DO: Make sure we're deallocating everything before clearing the lists
 		//gameObjects.clear();
 		renderables.clear();
-		meshes.clear();
+		/*meshes.clear();*/  // TO DO: delete meshes.Vertices()
 		/*materials.clear();*/
 		shaders.clear();
 		/*lights.clear();
@@ -70,8 +86,17 @@ namespace BlazeEngine
 		vertices[1] = Vertex(vec3(0.5f, -0.5f, 0.0f));
 		vertices[2] = Vertex(vec3(0.0f, 0.5f, 0.0f));
 
+		// Create a material and shader:
+		Shader shader(coreEngine->GetConfig()->shader.defaultShaderFilepath);
+		this->shaders.push_back(shader);
+		int shaderIndex = (int)this->shaders.size() - 1; // Store the index so we can pass the address
+		
+		Material material( &(this->shaders.at(shaderIndex)) );
+		this->materials.push_back(material);
+		int materialIndex = (int)this->materials.size() - 1;
+
 		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		Mesh mesh(vertices, 3);
+		Mesh mesh(vertices, 3, &(this->materials.at(materialIndex)));
 		this->meshes.push_back(mesh);
 		int meshIndex = (int)this->meshes.size() - 1; // Store the index so we can pass the address
 

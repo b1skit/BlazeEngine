@@ -9,8 +9,6 @@ using std::cout;
 
 namespace BlazeEngine
 {
-	
-
 	Shader::Shader(const string filepath)
 	{
 		shaderProgram = glCreateProgram();

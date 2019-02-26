@@ -25,6 +25,11 @@ namespace BlazeEngine
 			int windowYRes;
 		} renderer;
 
+		struct
+		{
+			string defaultShaderFilepath = "./Shaders/defaultShader";
+		} shader;
+
 		// Scene config:
 		struct
 		{

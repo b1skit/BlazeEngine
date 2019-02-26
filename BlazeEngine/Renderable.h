@@ -13,6 +13,7 @@ namespace BlazeEngine
 	{
 	public:
 		Renderable() { transform = nullptr; } // This should never be called, since we always need a view mesh...
+		
 		Renderable(vector<Mesh*> viewMeshes)
 		{
 			this->viewMeshes = viewMeshes;

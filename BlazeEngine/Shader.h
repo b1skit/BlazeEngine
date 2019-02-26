@@ -26,7 +26,7 @@ namespace BlazeEngine
 		GLuint shaderProgram;
 		GLuint shaders[NUM_SHADERS];
 
-		const string DEFAULT_PATH = "./Shaders/defaultShader";
+		const string DEFAULT_PATH = "./Shaders/defaultShader"; // Should this be static?
 	};
 
 

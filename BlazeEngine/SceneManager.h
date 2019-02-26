@@ -57,8 +57,11 @@ namespace BlazeEngine
 		vector<GameObject> gameObjects;
 		vector<Renderable const*> renderables; // Point directly to the renderables of our gameObjects
 		vector<Mesh> meshes;
-		/*vector<Material> materials;*/
+		vector<Material> materials;
+
 		vector<Shader> shaders;
+		Shader* defaultShader;
+
 		/*vector<Light> lights;*/
 		/*Camera mainCamera;*/
 

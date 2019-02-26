@@ -7,8 +7,11 @@ namespace BlazeEngine
 	class Material
 	{
 	public:
-		Material();
+		Material(Shader* shader);
 		~Material();
+
+		// Getters/Setters:
+		inline Shader* GetShader() { return shader; }
 
 
 	protected:
