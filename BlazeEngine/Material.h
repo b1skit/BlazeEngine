@@ -7,18 +7,18 @@ namespace BlazeEngine
 	class Material
 	{
 	public:
-		Material(Shader* shader);
+		Material(unsigned int shaderIndex);
 		~Material();
 
 		// Getters/Setters:
-		inline Shader* GetShader() { return shader; }
+		inline unsigned int GetShaderIndex() { return shaderIndex; }
 
 
 	protected:
 
 
 	private:
-		Shader* shader;
+		unsigned int shaderIndex;
 		//Texture* albedo;
 		//Texture* normal;
 		//Texture* roughness; // Or metalness?

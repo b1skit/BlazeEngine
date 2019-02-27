@@ -7,7 +7,6 @@ namespace BlazeEngine
 {
 	SceneManager::~SceneManager()
 	{
-		delete defaultShader; // Only need to delete this if the SceneManager is being destroyed
 
 		// TEMP: Crashes if we do this in shutdown!?!?!
 		for (int i = 0; i < renderables.size(); i++)
@@ -25,8 +24,6 @@ namespace BlazeEngine
 	void SceneManager::Startup(CoreEngine* coreEngine)
 	{
 		EngineComponent::Startup(coreEngine);
-
-		defaultShader = new Shader(coreEngine->GetConfig()->shader.defaultShaderFilepath);
 
 		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Scene manager started!" });
 	}
@@ -68,7 +65,6 @@ namespace BlazeEngine
 		renderables.clear();
 		/*meshes.clear();*/  // TO DO: delete meshes.Vertices()
 		/*materials.clear();*/
-		shaders.clear();
 		/*lights.clear();
 		mainCamera = Camera();*/
 		
@@ -87,11 +83,9 @@ namespace BlazeEngine
 		vertices[2] = Vertex(vec3(0.0f, 0.5f, 0.0f));
 
 		// Create a material and shader:
-		Shader shader(coreEngine->GetConfig()->shader.defaultShaderFilepath);
-		this->shaders.push_back(shader);
-		int shaderIndex = (int)this->shaders.size() - 1; // Store the index so we can pass the address
+		unsigned int shaderIndex = SHADER_DEFAULT;
 		
-		Material material( &(this->shaders.at(shaderIndex)) );
+		Material material( shaderIndex );
 		this->materials.push_back(material);
 		int materialIndex = (int)this->materials.size() - 1;
 

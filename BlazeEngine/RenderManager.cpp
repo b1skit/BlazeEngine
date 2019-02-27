@@ -28,56 +28,6 @@ namespace BlazeEngine
 		return *instance;
 	}
 
-	void RenderManager::Render(double alpha)
-	{
-		// Loop through every renderable:
-		vector<Renderable const*> const* renderables = coreEngine->BlazeSceneManager->GetRenderables();
-		for (int i = 0; i < renderables->size(); i++)
-		{
-			// Loop through every mesh:
-			int numRenderables = (int)renderables->size();
-			for (int j = 0; j < numRenderables; j++)
-			{
-				Mesh* mesh = renderables->at(i)->ViewMeshes()->at(j);
-
-				// ??
-				//glGenVertexArrays(1, &vertexArrayObject); // Size, target
-				//glBindVertexArray(vertexArrayObject);
-
-				// Allocate a vertex buffer:
-				//glGenBuffers(VERTEX_BUFFER_SIZE, vertexArrayBuffers); // Allocate buffer on the GPU
-				//glBindBuffer(GL_ARRAY_BUFFER, vertexArrayBuffers[VERTEX_BUFFER_POSITION]); // Tell OpenGl to interpret buffer as an array
-				//^^^ Moved to startup
-
-				// Copy vertex data into the buffer:
-				glBufferData(GL_ARRAY_BUFFER, mesh->NumVerts() * sizeof(mesh->Vertices()[0]), mesh->Vertices(), GL_STATIC_DRAW); // Put data into the buffer
-				// TODO: Define which obects that use GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW
-
-				//// Tell OpenGL how to interpet the data we've put on the GPU:
-				//glEnableVertexAttribArray(0); // Treat data as an array
-				//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0); // Tell it how to read the array: attribute array, count (3 = 3 elements in vec3), data type, normalize?, space between steps(?), start offset
-
-				//glBindVertexArray(0); // Prevent further vertex array object operations affecting our vertex array object
-
-				//glBindVertexArray(vertexArrayObject);
-
-				glDrawArrays(GL_TRIANGLES, 0, mesh->NumVerts()); // Type, start index, size
-
-				/*renderables->at(i)->GetTransform();*/
-			}
-		}
-
-		//// Copy vertices to the currently bound buffer:
-		//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // SHOULDN'T THIS BE sizeof(vertices) * num of verts OR vertices[0] ????????
-
-		// Display the new frame:
-		SDL_GL_SwapWindow(glWindow);
-
-
-		// DEBUG:
-		SDL_Delay((unsigned int)(1000.0 / 60.0));
-	}
-
 	void RenderManager::Startup(CoreEngine * coreEngine)
 	{
 		EngineComponent::Startup(coreEngine);
@@ -139,6 +89,11 @@ namespace BlazeEngine
 
 		ClearWindow(vec4(0.79f, 0.32f, 0.0f, 1.0f));
 
+		// Shaders: MUST be initialized in the same order as our shader name enum!
+		Shader defaultShader(coreEngine->GetConfig()->shader.defaultShaderFilepath);
+		shaders.push_back(std::pair<coreEngine->GetConfig()->shader.defaultShaderFilepath, defaultShader>);
+		// TO DO: Push error shader
+
 
 		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Render manager started!" });
 	}
@@ -159,6 +114,65 @@ namespace BlazeEngine
 	{
 		
 	}
+
+
+	void RenderManager::Render(double alpha)
+	{
+		// Loop through every renderable:
+		vector<Renderable const*> const* renderables = coreEngine->BlazeSceneManager->GetRenderables();
+		for (int i = 0; i < renderables->size(); i++)
+		{
+			// Loop through every mesh:
+			int numRenderables = (int)renderables->size();
+			for (int j = 0; j < numRenderables; j++)
+			{
+				Mesh* mesh = renderables->at(i)->ViewMeshes()->at(j);
+
+				// ??
+				//glGenVertexArrays(1, &vertexArrayObject); // Size, target
+				//glBindVertexArray(vertexArrayObject);
+
+				// Allocate a vertex buffer:
+				//glGenBuffers(VERTEX_BUFFER_SIZE, vertexArrayBuffers); // Allocate buffer on the GPU
+				//glBindBuffer(GL_ARRAY_BUFFER, vertexArrayBuffers[VERTEX_BUFFER_POSITION]); // Tell OpenGl to interpret buffer as an array
+				//^^^ Moved to startup
+
+				// Copy vertex data into the buffer:
+				glBufferData(GL_ARRAY_BUFFER, mesh->NumVerts() * sizeof(mesh->Vertices()[0]), mesh->Vertices(), GL_STATIC_DRAW); // Put data into the buffer
+				// TODO: Define which obects that use GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW
+
+				//// Tell OpenGL how to interpet the data we've put on the GPU:
+				//glEnableVertexAttribArray(0); // Treat data as an array
+				//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0); // Tell it how to read the array: attribute array, count (3 = 3 elements in vec3), data type, normalize?, space between steps(?), start offset
+
+				//glBindVertexArray(0); // Prevent further vertex array object operations affecting our vertex array object
+
+				//glBindVertexArray(vertexArrayObject);
+
+				glDrawArrays(GL_TRIANGLES, 0, mesh->NumVerts()); // Type, start index, size
+
+				/*renderables->at(i)->GetTransform();*/
+			}
+		}
+
+		//// Copy vertices to the currently bound buffer:
+		//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // SHOULDN'T THIS BE sizeof(vertices) * num of verts OR vertices[0] ????????
+
+		// Display the new frame:
+		SDL_GL_SwapWindow(glWindow);
+
+
+		// DEBUG:
+		SDL_Delay((unsigned int)(1000.0 / 60.0));
+	}
+
+	unsigned int RenderManager::GetShaderIndex(string filepath)
+	{
+		// TO DO: Implement this funciton
+		// Return the index if it's found, or load the shader and return a new index otherwise
+		return SHADER_DEFAULT;
+	}
+
 
 	void RenderManager::ClearWindow(vec4 clearColor)
 	{

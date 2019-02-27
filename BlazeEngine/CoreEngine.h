@@ -9,6 +9,7 @@
 
 namespace BlazeEngine
 {
+	// ENGINE CONFIG:
 	// TO DO: Implement loading/saving of this object...
 	struct EngineConfig
 	{
@@ -47,6 +48,8 @@ namespace BlazeEngine
 
 	};
 
+
+	// CORE ENGINE:
 	class CoreEngine : public BlazeObject, public EventListener
 	{
 	public:

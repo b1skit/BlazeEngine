@@ -5,14 +5,22 @@
 #include "EventManager.h"
 #include "Shader.h"
 #include <string>
+
 #include "glm.hpp"
 #include "SDL.h"
 
+using std::pair;
 using glm::vec4;
 
 
 namespace BlazeEngine
 {
+	enum SHADER // Guaranteed shaders
+	{
+		SHADER_DEFAULT = 0,
+		/*SHADER_ERROR = 1,*/
+
+	};
 	
 	class RenderManager : public EngineComponent
 	{
@@ -26,15 +34,17 @@ namespace BlazeEngine
 		RenderManager(RenderManager const&) = delete; // Disallow copying of our Singleton
 		void operator=(RenderManager const&) = delete;
 
-		// Member functions:
-		void Render(double alpha);
-
 		// EngineComponent interface:
 		void Startup(CoreEngine * coreEngine);
 
 		void Shutdown();
 
 		void Update();
+
+		// Member functions:
+		void Render(double alpha);
+
+		unsigned int GetShaderIndex(string filepath);
 
 		
 	private:
@@ -58,6 +68,10 @@ namespace BlazeEngine
 		GLuint vertexArrayBuffers[VERTEX_BUFFER_SIZE];
 		GLuint vertexArrayObject;		
 
+		// Shaders:
+		/*map<string, Shader> shaders;*/
+		vector<pair<string, Shader>> shaders;
+		
 
 		// Private member functions:
 		void ClearWindow(vec4 clearColor);

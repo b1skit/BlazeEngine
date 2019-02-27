@@ -2,9 +2,9 @@
 
 namespace BlazeEngine
 {
-	Material::Material(Shader* shader)
+	Material::Material(unsigned int shaderIndex)
 	{
-		this->shader = shader;
+		this->shaderIndex = shaderIndex;
 	}
 
 	Material::~Material()
