@@ -44,7 +44,7 @@ namespace BlazeEngine
 		// Member functions:
 		void Render(double alpha);
 
-		unsigned int GetShaderIndex(string filepath);
+		unsigned int GetShaderIndex(string shaderName);
 
 		
 	private:
@@ -69,9 +69,15 @@ namespace BlazeEngine
 		GLuint vertexArrayObject;		
 
 		// Shaders:
-		/*map<string, Shader> shaders;*/
-		vector<pair<string, Shader>> shaders;
-		
+		vector<Shader> shaders;
+
+		Shader CreateShader(string shaderName);
+
+		//string LoadShader(const string& shaderName);
+		//bool CheckShaderError(GLuint shader, GLuint flag, bool isProgram);
+		////GLuint
+		//Shader CreateShader(const string& text, GLenum shaderType);
+		//
 
 		// Private member functions:
 		void ClearWindow(vec4 clearColor);

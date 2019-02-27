@@ -9,12 +9,14 @@ using std::cout;
 
 namespace BlazeEngine
 {
-	Shader::Shader(const string filepath)
+	Shader::Shader(const string shaderName)
 	{
+		this->shaderName = shaderName; // ERROR: Currently, this name includes the file path...
+
 		shaderProgram = glCreateProgram();
 
-		shaders[0] = CreateShader(LoadShader(filepath + ".vert"), GL_VERTEX_SHADER); 
-		shaders[1] = CreateShader(LoadShader(filepath + ".frag"), GL_FRAGMENT_SHADER);
+		shaders[0] = CreateShader(LoadShader(shaderName + ".vert"), GL_VERTEX_SHADER);
+		shaders[1] = CreateShader(LoadShader(shaderName + ".frag"), GL_FRAGMENT_SHADER);
 
 		for (int i = 0; i < NUM_SHADERS; i++)
 		{
@@ -78,10 +80,10 @@ namespace BlazeEngine
 		return output;
 	}
 
-	static void CheckShaderError(GLuint shader, GLuint flag, bool isProgram, const string& errorMessage)
+	static bool CheckShaderError(GLuint shader, GLuint flag, bool isProgram, string errorMessage)
 	{
 		GLint success = 0;
-		GLchar error[1024] = { 0 };
+		GLchar error[1024] = { 0 }; // Error buffer
 
 		if (isProgram)
 		{
@@ -103,7 +105,16 @@ namespace BlazeEngine
 				glGetShaderInfoLog(shader, sizeof(error), nullptr, error);
 			}
 			
-			cout << "DEBUG: Shader.CheckShaderError() FAILED:\n" << error << "\n"; // TO DO: TRIGGER AN ERROR EVENT IF THIS FAILS!!!!!!!!!!
+			//cout << "DEBUG: Shader.CheckShaderError() FAILED:\n" << error << "\n"; // TO DO: TRIGGER AN ERROR EVENT IF THIS FAILS!!!!!!!!!!
+
+			string errorAsString(error);
+			errorMessage = "Shader.CheckShaderError() failed: " + errorAsString;
+
+			return false;
+		}
+		else
+		{
+			return true;
 		}
 	}
 

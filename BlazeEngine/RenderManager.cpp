@@ -4,6 +4,8 @@
 #include "Mesh.h"
 #include "Transform.h"
 
+#include <fstream>
+
 #include "glm.hpp"
 #include "GL/glew.h"
 #include <GL/GL.h> // MUST follow glew.h...
@@ -11,6 +13,7 @@
 #include "SDL.h"
 #undef main // Required to prevent SDL from redefining main...
 
+using std::ifstream;
 using glm::vec3;
 using glm::vec4;
 
@@ -31,6 +34,8 @@ namespace BlazeEngine
 	void RenderManager::Startup(CoreEngine * coreEngine)
 	{
 		EngineComponent::Startup(coreEngine);
+
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Render manager started!" });
 
 		// Cache the relevant config data:
 		this->xRes = coreEngine->GetConfig()->renderer.windowXRes;
@@ -90,12 +95,15 @@ namespace BlazeEngine
 		ClearWindow(vec4(0.79f, 0.32f, 0.0f, 1.0f));
 
 		// Shaders: MUST be initialized in the same order as our shader name enum!
-		Shader defaultShader(coreEngine->GetConfig()->shader.defaultShaderFilepath);
-		shaders.push_back(std::pair<coreEngine->GetConfig()->shader.defaultShaderFilepath, defaultShader>);
-		// TO DO: Push error shader
+		//Shader defaultShader(coreEngine->GetConfig()->shader.shaderDirectory + coreEngine->GetConfig()->shader.defaultShader);
+		//shaders.push_back(defaultShader); 
+		
+		// Index 0
+		shaders.push_back( CreateShader(coreEngine->GetConfig()->shader.defaultShader) );
+		// TO DO: Push error shader to index 1...
 
 
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Render manager started!" });
+		
 	}
 
 	void RenderManager::Shutdown()
@@ -166,15 +174,170 @@ namespace BlazeEngine
 		SDL_Delay((unsigned int)(1000.0 / 60.0));
 	}
 
-	unsigned int RenderManager::GetShaderIndex(string filepath)
+	unsigned int RenderManager::GetShaderIndex(string shaderName)
 	{
 		// TO DO: Implement this funciton
 		// Return the index if it's found, or load the shader and return a new index otherwise
-		return SHADER_DEFAULT;
+
+		int shaderIndex = -1;
+		for (int i = 0; i < shaders.size(); i++)
+		{
+			if (shaders.at(i).Name() == shaderName)
+			{
+				shaderIndex = i;
+				break;
+			}
+		}
+
+		// If the shader was not found, attempt to load it:
+		if (shaderIndex == -1)
+		{
+
+			// TO DO: Try and create a shader, and return the correct index:
+			shaders.push_back( CreateShader(shaderName) );
+
+
+			shaderIndex = 0; // DEBUG: Set it as the default until we finish the logic
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "RenderManager.GetShaderIndex() could not find shader " + shaderName + ". Returning default (index 0)" });
+
+
+
+			// If all else fails, return the error shader:
+			// TBC...
+
+		}
+
+		return shaderIndex;
 	}
 
 
-	void RenderManager::ClearWindow(vec4 clearColor)
+	//string RenderManager::LoadShader(const string& shaderName)
+	//{
+	//	string filePath = coreEngine->GetConfig()->shader.shaderDirectory + shaderName;
+	//	ifstream file;
+	//	file.open(filePath.c_str());
+
+	//	string output;
+	//	string line;
+	//	if (file.is_open())
+	//	{
+	//		while (file.good())
+	//		{
+	//			getline(file, line);
+	//			output.append(line + "\n");
+	//		}
+	//	}
+	//	else
+	//	{
+	//		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "RenderManager.LoadShader() could not load: " + filePath });
+	//	}
+
+	//	return output;
+	//}
+
+	// bool RenderManager::CheckShaderError(GLuint shader, GLuint flag, bool isProgram)
+	//{
+	//	GLint success = 0;
+	//	GLchar error[1024] = { 0 }; // Error buffer
+
+	//	if (isProgram)
+	//	{
+	//		glGetProgramiv(shader, flag, &success);
+	//	}
+	//	else
+	//	{
+	//		glGetShaderiv(shader, flag, &success);
+	//	}
+
+	//	if (success == GL_FALSE)
+	//	{
+	//		if (isProgram)
+	//		{
+	//			glGetProgramInfoLog(shader, sizeof(error), nullptr, error);
+	//		}
+	//		else
+	//		{
+	//			glGetShaderInfoLog(shader, sizeof(error), nullptr, error);
+	//		}
+
+	//		string errorAsString(error);
+	//		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "RenderManager.CheckShaderError(): " + errorAsString });
+
+	//		return false;
+	//	}
+	//	else
+	//	{
+	//		return true;
+	//	}
+	//}
+
+	////GLuint
+	//Shader RenderManager::CreateShader(const string& text, GLenum shaderType)
+	//{
+	//	Shader newShader();
+	//	newShader.shaderProgram = glCreateProgram();
+
+	//	
+
+
+
+
+	//	GLuint shader = glCreateShader(shaderType);
+	//	if (shader == 0)
+	//	{
+	//		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "RenderManager.CreateShader() failed" });
+	//	}
+
+	//	const GLchar* shaderSourceStrings[1];
+	//	GLint shaderSourceStringLengths[1];
+
+	//	shaderSourceStrings[0] = text.c_str();
+	//	shaderSourceStringLengths[0] = (GLint)text.length();
+
+	//	glShaderSource(shader, 1, shaderSourceStrings, shaderSourceStringLengths);
+	//	glCompileShader(shader);
+
+	//	if (!CheckShaderError(shader, GL_COMPILE_STATUS, false))
+	//	{
+	//		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "RenderManager.CheckShaderError() returned false"});
+	//	}
+
+	//	return shader;
+
+
+
+
+
+	//	shaders[0] = CreateShader(LoadShader(shaderName + ".vert"), GL_VERTEX_SHADER);
+	//	shaders[1] = CreateShader(LoadShader(shaderName + ".frag"), GL_FRAGMENT_SHADER);
+
+	//	for (int i = 0; i < NUM_SHADERS; i++)
+	//	{
+	//		glAttachShader(shaderProgram, shaders[i]); // Attach our shaders to the shader program
+	//	}
+
+	//	// 
+	//	glBindAttribLocation(shaderProgram, 0, "position"); // Bind attribute 0 to the "position" variable in the vertex shader
+
+	//	// Link:
+	//	glLinkProgram(shaderProgram);
+	//	CheckShaderError(shaderProgram, GL_LINK_STATUS, true, "Error: Shader program linking failed: ");
+
+	//	// Validate:
+	//	glValidateProgram(shaderProgram);
+	//	CheckShaderError(shaderProgram, GL_VALIDATE_STATUS, true, "Error: Shader program is invalid: ");
+	//}
+
+
+Shader RenderManager::CreateShader(string shaderName)
+{
+	this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "RenderManager created shader " + shaderName });
+
+	// TEMP:
+	return Shader(coreEngine->GetConfig()->shader.shaderDirectory + shaderName);
+}
+
+void RenderManager::ClearWindow(vec4 clearColor)
 	{
 		// Set the initial color in both buffers:
 		glClearColor(GLclampf(clearColor.r), GLclampf(clearColor.g), GLclampf(clearColor.b), GLclampf(clearColor.a));

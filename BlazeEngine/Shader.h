@@ -11,12 +11,15 @@ namespace BlazeEngine
 	class Shader
 	{
 	public:
-		Shader() : Shader(DEFAULT_PATH) {} // Call the string-arg constructor with a default path
-		Shader(const string filepath);
+		Shader(const string shaderName);
 		~Shader();
 
 		// Set the GPU to use the vertex/fragement shaders defined by this Shader
 		void Bind();
+
+		// Getters/Setters:
+		inline string Name() { return shaderName; }
+
 
 	protected:
 
@@ -26,13 +29,13 @@ namespace BlazeEngine
 		GLuint shaderProgram;
 		GLuint shaders[NUM_SHADERS];
 
-		const string DEFAULT_PATH = "./Shaders/defaultShader"; // Should this be static? Or, can we use the coreEngine.config value??
+		string shaderName; // Extensionless filename of the shader. Will have ".vert" / ".frag" appended
 	};
 
 
 	// Static Shader functions:
 	static string LoadShader(const string& filepath);
-	static void CheckShaderError(GLuint shader, GLuint flag, bool isProgram, const string& errorMessage);
+	static bool CheckShaderError(GLuint shader, GLuint flag, bool isProgram, string errorMessage);
 	static GLuint CreateShader(const string& text, GLenum shaderType);
 }
 

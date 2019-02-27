@@ -83,7 +83,7 @@ namespace BlazeEngine
 		vertices[2] = Vertex(vec3(0.0f, 0.5f, 0.0f));
 
 		// Create a material and shader:
-		unsigned int shaderIndex = SHADER_DEFAULT;
+		unsigned int shaderIndex = coreEngine->BlazeRenderManager->GetShaderIndex(coreEngine->GetConfig()->shader.defaultShader);
 		
 		Material material( shaderIndex );
 		this->materials.push_back(material);

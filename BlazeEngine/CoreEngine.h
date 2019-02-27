@@ -28,7 +28,9 @@ namespace BlazeEngine
 
 		struct
 		{
-			string defaultShaderFilepath = "./Shaders/defaultShader";
+			string shaderDirectory = "./Shaders/";
+			string defaultShader = "defaultShader";
+			string errorShader = "errorShader";
 		} shader;
 
 		// Scene config:
@@ -60,7 +62,7 @@ namespace BlazeEngine
 		TimeManager* const BlazeTimeManager = &TimeManager::Instance();
 		InputManager* const BlazeInputManager = &InputManager::Instance();
 		SceneManager* const BlazeSceneManager = &SceneManager::Instance();
-
+		RenderManager* const BlazeRenderManager = &RenderManager::Instance();
 		
 		// Lifetime flow:
 		void Startup();
@@ -85,7 +87,6 @@ namespace BlazeEngine
 
 		// Private engine component singletons:	
 		LogManager* const BlazeLogManager = &LogManager::Instance();
-		RenderManager* const BlazeRenderManager = &RenderManager::Instance();
 
 		// Engine control:
 		bool isRunning = false;
