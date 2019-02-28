@@ -118,5 +118,11 @@
     <None Include="Shaders\defaultShader.vert">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="Shaders\errorShader.frag">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\errorShader.vert">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

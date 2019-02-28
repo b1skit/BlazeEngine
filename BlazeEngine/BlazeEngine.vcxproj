@@ -166,6 +166,8 @@
   <ItemGroup>
     <None Include="Shaders\defaultShader.frag" />
     <None Include="Shaders\defaultShader.vert" />
+    <None Include="Shaders\errorShader.frag" />
+    <None Include="Shaders\errorShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

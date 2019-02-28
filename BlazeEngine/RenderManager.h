@@ -17,9 +17,8 @@ namespace BlazeEngine
 {
 	enum SHADER // Guaranteed shaders
 	{
-		SHADER_DEFAULT = 0,
-		/*SHADER_ERROR = 1,*/
-
+		SHADER_ERROR = 0,
+		SHADER_DEFAULT = 1,
 	};
 	
 	class RenderManager : public EngineComponent
@@ -73,8 +72,8 @@ namespace BlazeEngine
 
 		int CreateShader(string shaderName);
 
-		string LoadShader(const string& filepath);
-		GLuint DoCreateShader(const string& text, GLenum shaderType); // TEMPORARY: WILL UPDATE THIS
+		string LoadShaderFile(const string& filepath);
+		GLuint CreateGLShaderObject(const string& text, GLenum shaderType); // TEMPORARY: WILL UPDATE THIS
 		bool CheckShaderError(GLuint shader, GLuint flag, bool isProgram);
 		//void BindShader(); // Set the GPU to use the vertex/fragement shaders defined by this Shader
 

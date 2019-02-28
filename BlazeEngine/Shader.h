@@ -23,9 +23,10 @@ namespace BlazeEngine
 
 
 		// Temporary public variables:
+		GLuint shaderReference;
 		unsigned int numShaders = 2;
 		GLuint* shaders;
-		GLuint shaderProgram;
+		
 
 	protected:
 

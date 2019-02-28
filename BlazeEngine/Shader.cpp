@@ -39,9 +39,11 @@ namespace BlazeEngine
 
 	Shader::Shader(const Shader& existingShader)
 	{
-		this->shaderName = existingShader.shaderName;
+		this->shaderReference = existingShader.shaderReference;
 		this->numShaders = existingShader.numShaders;
 		this->shaders = new GLuint[this->numShaders];
+
+		this->shaderName = existingShader.shaderName;
 	}
 
 	Shader::~Shader()

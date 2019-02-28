@@ -94,13 +94,11 @@ namespace BlazeEngine
 
 		ClearWindow(vec4(0.79f, 0.32f, 0.0f, 1.0f));
 
-		// Shaders: MUST be initialized in the same order as our shader name enum!
-		//Shader defaultShader(coreEngine->GetConfig()->shader.shaderDirectory + coreEngine->GetConfig()->shader.defaultShader);
-		//shaders.push_back(defaultShader); 
-		
-		// Index 0
+		// Shaders: MUST be initialized in the same order as our shader name enum!	
+		// Index 0:
 		CreateShader(coreEngine->GetConfig()->shader.defaultShader);
-		// TO DO: Push error shader to index 1...
+		// Index 1:
+		CreateShader(coreEngine->GetConfig()->shader.errorShader);
 
 
 		
@@ -115,13 +113,13 @@ namespace BlazeEngine
 		// Detach and delete shaders:
 		for (int i = 0; i < (int)shaders.size(); i++)
 		{
-			for (int j = 0; j < shaders.at(i).numShaders; j++)
+			for (unsigned int j = 0; j < shaders.at(i).numShaders; j++)
 			{
-				glDetachShader(shaders.at(i).shaderProgram, shaders.at(i).shaders[i]);
-				glDeleteShader(shaders.at(i).shaderProgram);
+				glDetachShader(shaders.at(i).shaderReference, shaders.at(i).shaders[i]);
+				glDeleteShader(shaders.at(i).shaderReference);
 			}
 			// Delete the shader program:
-			glDeleteProgram(shaders.at(i).shaderProgram);
+			glDeleteProgram(shaders.at(i).shaderReference);
 		}
 
 		// Close our window:
@@ -188,7 +186,7 @@ namespace BlazeEngine
 
 	unsigned int RenderManager::GetShaderIndex(string shaderName)
 	{
-		// TO DO: Implement this funciton
+	
 		// Return the index if it's found, or load the shader and return a new index otherwise
 
 		int shaderIndex = -1;
@@ -196,38 +194,29 @@ namespace BlazeEngine
 		{
 			if (shaders.at(i).Name() == shaderName)
 			{
-				shaderIndex = i;
-				break;
+				return i; // We're done!
 			}
 		}
 
-		// If the shader was not found, attempt to load it:
-		if (shaderIndex == -1)
+		// If we've made it this far, the shader was not found. Attempt to load it:
+		shaderIndex = CreateShader(shaderName);
+
+		if (shaderIndex >= 0)
 		{
-
-			// TO DO: Try and create a shader, and return the correct index:
-
-			shaderIndex = CreateShader(shaderName);
-
-			if (shaderIndex >= 0)
-			{
-				return shaderIndex;
-			}
-			else // If all else fails, return the error shader:
-			{
-				return 1; // TO DO: Make error shader 0, default shader 1 ??????????
-			}
+			return shaderIndex;
 		}
-
-		return shaderIndex;
+		else // If all else fails, return the error shader:
+		{
+			return 0;
+		}
 	}
 
 int RenderManager::CreateShader(string shaderName)
 {
-	this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "RenderManager created shader " + shaderName });
+	this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "RenderManager loading shader " + shaderName });
 
 	// TEMP:
-	Shader newShader(coreEngine->GetConfig()->shader.shaderDirectory + shaderName);
+	Shader newShader(shaderName);
 
 
 	// UPDATED FLOW
@@ -235,40 +224,45 @@ int RenderManager::CreateShader(string shaderName)
 	// Shader vars:
 
 	//string shaderName; // <- copy this
-	GLuint shaderProgram;
-	static const unsigned int NUM_SHADERS = 2; // <- numShaders
+	GLuint shaderReference;
+	//static const unsigned int NUM_SHADERS = 2;
 	//GLuint shaders[NUM_SHADERS];
-	GLuint* shaders = new GLuint[NUM_SHADERS];
+	unsigned int numShaders = 2;
+	GLuint* shaders = new GLuint[numShaders];
 
-	
-	shaderProgram = glCreateProgram();
+	// Create an empty shader program object, and get its reference:
+	shaderReference = glCreateProgram();
 
-	// TO DO: Handle failure in DoCreateShader() (returns "")
-	shaders[0] = DoCreateShader(LoadShader(shaderName + ".vert"), GL_VERTEX_SHADER);
-	shaders[1] = DoCreateShader(LoadShader(shaderName + ".frag"), GL_FRAGMENT_SHADER);
+	// TO DO: Handle failure in CreateGLShaderObject() (returns "")
+	shaders[0] = CreateGLShaderObject(LoadShaderFile(shaderName + ".vert"), GL_VERTEX_SHADER);
+	shaders[1] = CreateGLShaderObject(LoadShaderFile(shaderName + ".frag"), GL_FRAGMENT_SHADER);
 
-	for (int i = 0; i < NUM_SHADERS; i++)
+	// ^^^ CLEANUP POINT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+	for (unsigned int i = 0; i < numShaders; i++)
 	{
-		glAttachShader(shaderProgram, shaders[i]); // Attach our shaders to the shader program
+		glAttachShader(shaderReference, shaders[i]); // Attach our shaders to the shader program
 	}
 
 	// 
-	glBindAttribLocation(shaderProgram, 0, "position"); // Bind attribute 0 to the "position" variable in the vertex shader
+	glBindAttribLocation(shaderReference, 0, "position"); // Bind attribute 0 to the "position" variable in the vertex shader
 
 	// Link:
-	glLinkProgram(shaderProgram);
-	CheckShaderError(shaderProgram, GL_LINK_STATUS, true);
+	glLinkProgram(shaderReference);
+	CheckShaderError(shaderReference, GL_LINK_STATUS, true);
 
 	// Validate:
-	glValidateProgram(shaderProgram);
-	CheckShaderError(shaderProgram, GL_VALIDATE_STATUS, true);
+	glValidateProgram(shaderReference);
+	CheckShaderError(shaderReference, GL_VALIDATE_STATUS, true);
 
 
 	// Temp: Copy the values to the shader via public variabls
 	// TO DO: Pass these via a constructor, or setters
-	newShader.numShaders = NUM_SHADERS;
+	newShader.numShaders = numShaders;
 	newShader.shaders = shaders;
-	newShader.shaderProgram = shaderProgram;
+	newShader.shaderReference = shaderReference;
 
 
 	// TODO: Return -1 if we fail somehow, otherwise return the index we pushed
@@ -279,8 +273,11 @@ int RenderManager::CreateShader(string shaderName)
 
 }
 
-string RenderManager::LoadShader(const string& filepath)
+string RenderManager::LoadShaderFile(const string& filename)
 {
+	// Assemble the full shader file path:
+	string filepath = coreEngine->GetConfig()->shader.shaderDirectory + filename;
+
 	ifstream file;
 	file.open(filepath.c_str());
 
@@ -296,7 +293,7 @@ string RenderManager::LoadShader(const string& filepath)
 	}
 	else
 	{
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "RenderManager.LoadShader() failed: Could not open shader " + string(filepath) });
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "RenderManager.LoadShaderFile() failed: Could not open shader " + filepath });
 
 		return "";
 	}
@@ -305,7 +302,7 @@ string RenderManager::LoadShader(const string& filepath)
 }
 
 // TO DO: Handle failure!
-GLuint RenderManager::DoCreateShader(const string& text, GLenum shaderType)
+GLuint RenderManager::CreateGLShaderObject(const string& shaderCode, GLenum shaderType)
 {
 	GLuint shader = glCreateShader(shaderType);
 	if (shader == 0)
@@ -316,8 +313,8 @@ GLuint RenderManager::DoCreateShader(const string& text, GLenum shaderType)
 	const GLchar* shaderSourceStrings[1];
 	GLint shaderSourceStringLengths[1];
 
-	shaderSourceStrings[0] = text.c_str();
-	shaderSourceStringLengths[0] = (GLint)text.length();
+	shaderSourceStrings[0] = shaderCode.c_str();
+	shaderSourceStringLengths[0] = (GLint)shaderCode.length();
 
 	glShaderSource(shader, 1, shaderSourceStrings, shaderSourceStringLengths);
 	glCompileShader(shader);
