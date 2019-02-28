@@ -99,7 +99,7 @@ namespace BlazeEngine
 		//shaders.push_back(defaultShader); 
 		
 		// Index 0
-		shaders.push_back( CreateShader(coreEngine->GetConfig()->shader.defaultShader) );
+		CreateShader(coreEngine->GetConfig()->shader.defaultShader);
 		// TO DO: Push error shader to index 1...
 
 
@@ -111,6 +111,18 @@ namespace BlazeEngine
 		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Render manager shutting down..." });
 
 		glDeleteVertexArrays(1, &vertexArrayObject);
+
+		// Detach and delete shaders:
+		for (int i = 0; i < (int)shaders.size(); i++)
+		{
+			for (int j = 0; j < shaders.at(i).numShaders; j++)
+			{
+				glDetachShader(shaders.at(i).shaderProgram, shaders.at(i).shaders[i]);
+				glDeleteShader(shaders.at(i).shaderProgram);
+			}
+			// Delete the shader program:
+			glDeleteProgram(shaders.at(i).shaderProgram);
+		}
 
 		// Close our window:
 		SDL_GL_DeleteContext(glContext);
@@ -194,148 +206,170 @@ namespace BlazeEngine
 		{
 
 			// TO DO: Try and create a shader, and return the correct index:
-			shaders.push_back( CreateShader(shaderName) );
 
+			shaderIndex = CreateShader(shaderName);
 
-			shaderIndex = 0; // DEBUG: Set it as the default until we finish the logic
-			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "RenderManager.GetShaderIndex() could not find shader " + shaderName + ". Returning default (index 0)" });
-
-
-
-			// If all else fails, return the error shader:
-			// TBC...
-
+			if (shaderIndex >= 0)
+			{
+				return shaderIndex;
+			}
+			else // If all else fails, return the error shader:
+			{
+				return 1; // TO DO: Make error shader 0, default shader 1 ??????????
+			}
 		}
 
 		return shaderIndex;
 	}
 
-
-	//string RenderManager::LoadShader(const string& shaderName)
-	//{
-	//	string filePath = coreEngine->GetConfig()->shader.shaderDirectory + shaderName;
-	//	ifstream file;
-	//	file.open(filePath.c_str());
-
-	//	string output;
-	//	string line;
-	//	if (file.is_open())
-	//	{
-	//		while (file.good())
-	//		{
-	//			getline(file, line);
-	//			output.append(line + "\n");
-	//		}
-	//	}
-	//	else
-	//	{
-	//		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "RenderManager.LoadShader() could not load: " + filePath });
-	//	}
-
-	//	return output;
-	//}
-
-	// bool RenderManager::CheckShaderError(GLuint shader, GLuint flag, bool isProgram)
-	//{
-	//	GLint success = 0;
-	//	GLchar error[1024] = { 0 }; // Error buffer
-
-	//	if (isProgram)
-	//	{
-	//		glGetProgramiv(shader, flag, &success);
-	//	}
-	//	else
-	//	{
-	//		glGetShaderiv(shader, flag, &success);
-	//	}
-
-	//	if (success == GL_FALSE)
-	//	{
-	//		if (isProgram)
-	//		{
-	//			glGetProgramInfoLog(shader, sizeof(error), nullptr, error);
-	//		}
-	//		else
-	//		{
-	//			glGetShaderInfoLog(shader, sizeof(error), nullptr, error);
-	//		}
-
-	//		string errorAsString(error);
-	//		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "RenderManager.CheckShaderError(): " + errorAsString });
-
-	//		return false;
-	//	}
-	//	else
-	//	{
-	//		return true;
-	//	}
-	//}
-
-	////GLuint
-	//Shader RenderManager::CreateShader(const string& text, GLenum shaderType)
-	//{
-	//	Shader newShader();
-	//	newShader.shaderProgram = glCreateProgram();
-
-	//	
-
-
-
-
-	//	GLuint shader = glCreateShader(shaderType);
-	//	if (shader == 0)
-	//	{
-	//		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "RenderManager.CreateShader() failed" });
-	//	}
-
-	//	const GLchar* shaderSourceStrings[1];
-	//	GLint shaderSourceStringLengths[1];
-
-	//	shaderSourceStrings[0] = text.c_str();
-	//	shaderSourceStringLengths[0] = (GLint)text.length();
-
-	//	glShaderSource(shader, 1, shaderSourceStrings, shaderSourceStringLengths);
-	//	glCompileShader(shader);
-
-	//	if (!CheckShaderError(shader, GL_COMPILE_STATUS, false))
-	//	{
-	//		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "RenderManager.CheckShaderError() returned false"});
-	//	}
-
-	//	return shader;
-
-
-
-
-
-	//	shaders[0] = CreateShader(LoadShader(shaderName + ".vert"), GL_VERTEX_SHADER);
-	//	shaders[1] = CreateShader(LoadShader(shaderName + ".frag"), GL_FRAGMENT_SHADER);
-
-	//	for (int i = 0; i < NUM_SHADERS; i++)
-	//	{
-	//		glAttachShader(shaderProgram, shaders[i]); // Attach our shaders to the shader program
-	//	}
-
-	//	// 
-	//	glBindAttribLocation(shaderProgram, 0, "position"); // Bind attribute 0 to the "position" variable in the vertex shader
-
-	//	// Link:
-	//	glLinkProgram(shaderProgram);
-	//	CheckShaderError(shaderProgram, GL_LINK_STATUS, true, "Error: Shader program linking failed: ");
-
-	//	// Validate:
-	//	glValidateProgram(shaderProgram);
-	//	CheckShaderError(shaderProgram, GL_VALIDATE_STATUS, true, "Error: Shader program is invalid: ");
-	//}
-
-
-Shader RenderManager::CreateShader(string shaderName)
+int RenderManager::CreateShader(string shaderName)
 {
 	this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "RenderManager created shader " + shaderName });
 
 	// TEMP:
-	return Shader(coreEngine->GetConfig()->shader.shaderDirectory + shaderName);
+	Shader newShader(coreEngine->GetConfig()->shader.shaderDirectory + shaderName);
+
+
+	// UPDATED FLOW
+
+	// Shader vars:
+
+	//string shaderName; // <- copy this
+	GLuint shaderProgram;
+	static const unsigned int NUM_SHADERS = 2; // <- numShaders
+	//GLuint shaders[NUM_SHADERS];
+	GLuint* shaders = new GLuint[NUM_SHADERS];
+
+	
+	shaderProgram = glCreateProgram();
+
+	// TO DO: Handle failure in DoCreateShader() (returns "")
+	shaders[0] = DoCreateShader(LoadShader(shaderName + ".vert"), GL_VERTEX_SHADER);
+	shaders[1] = DoCreateShader(LoadShader(shaderName + ".frag"), GL_FRAGMENT_SHADER);
+
+	for (int i = 0; i < NUM_SHADERS; i++)
+	{
+		glAttachShader(shaderProgram, shaders[i]); // Attach our shaders to the shader program
+	}
+
+	// 
+	glBindAttribLocation(shaderProgram, 0, "position"); // Bind attribute 0 to the "position" variable in the vertex shader
+
+	// Link:
+	glLinkProgram(shaderProgram);
+	CheckShaderError(shaderProgram, GL_LINK_STATUS, true);
+
+	// Validate:
+	glValidateProgram(shaderProgram);
+	CheckShaderError(shaderProgram, GL_VALIDATE_STATUS, true);
+
+
+	// Temp: Copy the values to the shader via public variabls
+	// TO DO: Pass these via a constructor, or setters
+	newShader.numShaders = NUM_SHADERS;
+	newShader.shaders = shaders;
+	newShader.shaderProgram = shaderProgram;
+
+
+	// TODO: Return -1 if we fail somehow, otherwise return the index we pushed
+
+	// TEMP:
+	this->shaders.push_back(newShader);
+	return (int)this->shaders.size() - 1;
+
 }
+
+string RenderManager::LoadShader(const string& filepath)
+{
+	ifstream file;
+	file.open(filepath.c_str());
+
+	string output;
+	string line;
+	if (file.is_open())
+	{
+		while (file.good())
+		{
+			getline(file, line);
+			output.append(line + "\n");
+		}
+	}
+	else
+	{
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "RenderManager.LoadShader() failed: Could not open shader " + string(filepath) });
+
+		return "";
+	}
+
+	return output;
+}
+
+// TO DO: Handle failure!
+GLuint RenderManager::DoCreateShader(const string& text, GLenum shaderType)
+{
+	GLuint shader = glCreateShader(shaderType);
+	if (shader == 0)
+	{
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "RenderManager glCreateShader failed!" });
+	}
+
+	const GLchar* shaderSourceStrings[1];
+	GLint shaderSourceStringLengths[1];
+
+	shaderSourceStrings[0] = text.c_str();
+	shaderSourceStringLengths[0] = (GLint)text.length();
+
+	glShaderSource(shader, 1, shaderSourceStrings, shaderSourceStringLengths);
+	glCompileShader(shader);
+
+	CheckShaderError(shader, GL_COMPILE_STATUS, false);
+
+	return shader;
+}
+
+bool RenderManager::CheckShaderError(GLuint shader, GLuint flag, bool isProgram)
+{
+	GLint success = 0;
+	GLchar error[1024] = { 0 }; // Error buffer
+
+	if (isProgram)
+	{
+		glGetProgramiv(shader, flag, &success);
+	}
+	else
+	{
+		glGetShaderiv(shader, flag, &success);
+	}
+
+	if (success == GL_FALSE)
+	{
+		if (isProgram)
+		{
+			glGetProgramInfoLog(shader, sizeof(error), nullptr, error);
+		}
+		else
+		{
+			glGetShaderInfoLog(shader, sizeof(error), nullptr, error);
+		}
+
+		string errorAsString(error);
+
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "RenderManager.CheckShaderError() failed: " + errorAsString});
+
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+//void RenderManager::BindShader()
+//{
+//	glUseProgram(shaderProgram);
+//}
+
+
 
 void RenderManager::ClearWindow(vec4 clearColor)
 	{
