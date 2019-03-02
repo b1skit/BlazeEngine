@@ -70,12 +70,12 @@ namespace BlazeEngine
 		// Shaders:
 		vector<Shader> shaders;
 
-		int CreateShader(string shaderName);
+		int CreateShader(string shaderName); // TO DO: Make this return an unsigned int!!!!
 
 		string LoadShaderFile(const string& filepath);
 		GLuint CreateGLShaderObject(const string& text, GLenum shaderType); // TEMPORARY: WILL UPDATE THIS
 		bool CheckShaderError(GLuint shader, GLuint flag, bool isProgram);
-		//void BindShader(); // Set the GPU to use the vertex/fragement shaders defined by this Shader
+		void BindShader(int shaderIndex); // Set the GPU to use the vertex/fragement shaders defined by this Shader
 
 		// Private member functions:
 		void ClearWindow(vec4 clearColor);
