@@ -42,10 +42,8 @@ namespace BlazeEngine
 		// Member functions:
 		void LoadScene(string scenePath);
 
-		inline vector<Renderable const*> const* GetRenderables()
-		{
-			return &renderables;
-		}
+		inline vector<Renderable const*> const* GetRenderables() { return &renderables;	}
+		inline vector<Shader>* GetShaders() { return &shaders; } // SHOULD THIS RETURN CONST ?????
 		/*inline vector<Light> const* GetLights();
 		inline Camera const* GetCamera();*/
 
@@ -58,10 +56,22 @@ namespace BlazeEngine
 		vector<Renderable const*> renderables; // Pointers to statically allocated renderables held by GameObjects
 		vector<Mesh> meshes;
 		vector<Material> materials;
+		vector<Shader> shaders;
 
 		/*vector<Light> lights;*/
 		/*Camera mainCamera;*/
 
+
+
+		// Shaders:
+		/*vector<Shader> shaders;*/
+
+		unsigned int GetShaderIndex(string shaderName);
+		int CreateShader(string shaderName);
+		string LoadShaderFile(const string& filepath);
+		GLuint CreateGLShaderObject(const string& text, GLenum shaderType);
+		bool CheckShaderError(GLuint shader, GLuint flag, bool isProgram);
+		//void BindShader(int shaderIndex); // Set the active vertex/fragement shader
 	};
 
 }

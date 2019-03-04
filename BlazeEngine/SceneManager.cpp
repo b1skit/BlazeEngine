@@ -2,6 +2,9 @@
 #include "EventManager.h"
 #include "CoreEngine.h"
 
+#include <fstream>
+using std::ifstream;
+
 
 namespace BlazeEngine
 {
@@ -20,6 +23,12 @@ namespace BlazeEngine
 	{
 		EngineComponent::Startup(coreEngine);
 
+
+		// Initialize our Shaders to match the order of the SHADER enum:
+		CreateShader(coreEngine->GetConfig()->shader.errorShader);		// Index 0
+		CreateShader(coreEngine->GetConfig()->shader.defaultShader);	// Index 1
+
+
 		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Scene manager started!" });
 	}
 
@@ -27,9 +36,17 @@ namespace BlazeEngine
 	{
 		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Scene manager shutting down..." });
 
-		for (int i = 0; i < meshes.size(); i++)
+		for (int i = 0; i < (int)meshes.size(); i++)
 		{
 			delete meshes[i].Vertices();
+		}
+
+
+		// Detach and delete shaders:
+		for (int i = 0; i < (int)shaders.size(); i++)
+		{
+			// Delete the shader program:
+			glDeleteProgram(shaders.at(i).ShaderReference());
 		}
 	}
 
@@ -72,7 +89,7 @@ namespace BlazeEngine
 		vertices[2] = Vertex(vec3(0.0f, 0.5f, 0.0f));
 
 		// Create a material and shader:
-		unsigned int shaderIndex = coreEngine->BlazeRenderManager->GetShaderIndex(coreEngine->GetConfig()->shader.defaultShader);
+		unsigned int shaderIndex = GetShaderIndex(coreEngine->GetConfig()->shader.defaultShader);
 		
 		Material material( shaderIndex );
 		this->materials.push_back(material);
@@ -97,7 +114,228 @@ namespace BlazeEngine
 		
 		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
 		this->renderables.emplace_back(gameObjects[gameObjectIndex].GetRenderable()); 
+
+
+
+		// 2nd test mesh:
+		Vertex* vertices2 = new Vertex[3];
+
+		vertices2[0] = Vertex(vec3(-1.0f, 0.5f, 0.0f));
+		vertices2[1] = Vertex(vec3(-0.5f, 0.2f, 0.0f));
+		vertices2[2] = Vertex(vec3(0.0f, 0.5f, 0.0f));
+
+		// Create a material and shader:
+		int shaderIndex2 = GetShaderIndex(coreEngine->GetConfig()->shader.errorShader);
+
+		Material material2(shaderIndex2);
+		this->materials.push_back(material2);
+		int materialIndex2 = (int)this->materials.size() - 1;
+
+		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
+		Mesh mesh2(vertices2, 3, &(this->materials.at(materialIndex2)));
+		this->meshes.push_back(mesh2);
+		int meshIndex2 = (int)this->meshes.size() - 1; // Store the index so we can pass the address
+
+		// Assemble a list of all meshes held by a Renderable:
+		vector<Mesh*> viewMeshes2;
+		viewMeshes2.push_back(&(this->meshes.at(meshIndex2))); // Store the address of our mesh to pass to our Renderable
+		Renderable testRenderable2(viewMeshes2);
+
+		// Construct a GameObject:
+		GameObject testObject2("testObject2", testRenderable2);
+
+		// Add test objects to scene:
+		this->gameObjects.emplace_back(testObject2);
+		int gameObjectIndex2 = (int)this->gameObjects.size() - 1;
+
+		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
+		this->renderables.emplace_back(gameObjects[gameObjectIndex2].GetRenderable());
 	}
+
+
+
+
+
+
+	unsigned int SceneManager::GetShaderIndex(string shaderName)
+	{
+		// Return the index if it's found, or load the shader and return a new index, or return the error shader otherwise
+		int shaderIndex = -1;
+		for (int i = 0; i < shaders.size(); i++)
+		{
+			if (shaders.at(i).Name() == shaderName)
+			{
+				return i; // We're done!
+			}
+		}
+
+		// If we've made it this far, the shader was not found. Attempt to load it:
+		shaderIndex = CreateShader(shaderName);
+
+		if (shaderIndex >= 0)
+		{
+			return shaderIndex;
+		}
+		else // If all else fails, return the error shader:
+		{
+			return 0;
+		}
+	}
+
+	int SceneManager::CreateShader(string shaderName)
+	{
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Loading shader: " + shaderName });
+
+		GLuint shaderReference;
+		unsigned int numShaders = 2; // TO DO : Allow loading of geometry shaders?
+		GLuint* shaders = new GLuint[numShaders];
+
+		// Create an empty shader program object, and get its reference:
+		shaderReference = glCreateProgram();
+
+		// Load the shader files:
+		string vertexShader = LoadShaderFile(shaderName + ".vert");
+		string fragmentShader = LoadShaderFile(shaderName + ".frag");
+		if (vertexShader == "" || fragmentShader == "")
+		{
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "Creating shader failed while loading shader files" });
+			return -1;
+		}
+
+		// Create shader objects and attach them to the program objects:
+		shaders[0] = CreateGLShaderObject(vertexShader, GL_VERTEX_SHADER);
+		shaders[1] = CreateGLShaderObject(fragmentShader, GL_FRAGMENT_SHADER);
+		for (unsigned int i = 0; i < numShaders; i++)
+		{
+			glAttachShader(shaderReference, shaders[i]); // Attach our shaders to the shader program
+		}
+
+		// Associate our vertex attribute indexes with named variables:
+		glBindAttribLocation(shaderReference, 0, "position"); // Bind attribute 0 to the "position" variable in the vertex shader
+
+		// Link our program object:
+		glLinkProgram(shaderReference);
+		if (!CheckShaderError(shaderReference, GL_LINK_STATUS, true))
+		{
+			return -1;
+		}
+
+		// Validate our program objects can execute with our current OpenGL state:
+		glValidateProgram(shaderReference);
+		if (!CheckShaderError(shaderReference, GL_VALIDATE_STATUS, true))
+		{
+			return -1;
+		}
+
+
+
+		// Delete the shader objects now that they've been linked into the program object:
+		glDeleteShader(shaders[0]);
+		glDeleteShader(shaders[1]);
+		delete shaders;
+
+
+		/*Shader newShader(shaderName, shaderReference, numShaders, shaders);*/
+		Shader newShader(shaderName, shaderReference);
+
+		this->shaders.push_back(newShader);
+
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Successfully loaded " + shaderName });
+
+		return (int)this->shaders.size() - 1;
+	}
+
+	string SceneManager::LoadShaderFile(const string& filename)
+	{
+		// Assemble the full shader file path:
+		string filepath = coreEngine->GetConfig()->shader.shaderDirectory + filename;
+
+		ifstream file;
+		file.open(filepath.c_str());
+
+		string output;
+		string line;
+		if (file.is_open())
+		{
+			while (file.good())
+			{
+				getline(file, line);
+				output.append(line + "\n");
+			}
+		}
+		else
+		{
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "LoadShaderFile failed: Could not open shader " + filepath });
+
+			return "";
+		}
+
+		return output;
+	}
+
+	GLuint SceneManager::CreateGLShaderObject(const string& shaderCode, GLenum shaderType)
+	{
+		GLuint shader = glCreateShader(shaderType);
+		if (shader == 0)
+		{
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "glCreateShader failed!" });
+		}
+
+		const GLchar* shaderSourceStrings[1];
+		GLint shaderSourceStringLengths[1];
+
+		shaderSourceStrings[0] = shaderCode.c_str();
+		shaderSourceStringLengths[0] = (GLint)shaderCode.length();
+
+		glShaderSource(shader, 1, shaderSourceStrings, shaderSourceStringLengths);
+		glCompileShader(shader);
+
+		CheckShaderError(shader, GL_COMPILE_STATUS, false);
+
+		return shader;
+	}
+
+	bool SceneManager::CheckShaderError(GLuint shader, GLuint flag, bool isProgram)
+	{
+		GLint success = 0;
+		GLchar error[1024] = { 0 }; // Error buffer
+
+		if (isProgram)
+		{
+			glGetProgramiv(shader, flag, &success);
+		}
+		else
+		{
+			glGetShaderiv(shader, flag, &success);
+		}
+
+		if (success == GL_FALSE)
+		{
+			if (isProgram)
+			{
+				glGetProgramInfoLog(shader, sizeof(error), nullptr, error);
+			}
+			else
+			{
+				glGetShaderInfoLog(shader, sizeof(error), nullptr, error);
+			}
+
+			string errorAsString(error);
+
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "CheckShaderError failed: " + errorAsString });
+
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
+
+	//void RenderManager::BindShader(int shaderIndex)
+	//{
+	//	glUseProgram(shaders.at(shaderIndex).ShaderReference());
+	//}
 }
 
 

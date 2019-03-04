@@ -43,7 +43,7 @@ namespace BlazeEngine
 		// Member functions:
 		void Render(double alpha);
 
-		unsigned int GetShaderIndex(string shaderName);
+		/*unsigned int GetShaderIndex(string shaderName);*/
 
 		
 	private:
@@ -67,15 +67,16 @@ namespace BlazeEngine
 		GLuint vertexBufferObjects[VERTEX_BUFFER_SIZE];		// Buffer objects that hold vertices in GPU memory
 		GLuint vertexArrayObjects[VERTEX_BUFFER_SIZE];		// States needed to supply vertex data
 		GLuint elementBufferObjects[VERTEX_BUFFER_SIZE];	// Triangle vertex indices
+		/*GLuint indexBufferObjects[VERTEX_BUFFER_SIZE];*/
 
-		// Shaders:
-		vector<Shader> shaders;
+		//// Shaders:
+		//vector<Shader> shaders;
 
-		int CreateShader(string shaderName);
-		string LoadShaderFile(const string& filepath);
-		GLuint CreateGLShaderObject(const string& text, GLenum shaderType); // TEMPORARY: WILL UPDATE THIS
-		bool CheckShaderError(GLuint shader, GLuint flag, bool isProgram);
-		//void BindShader(int shaderIndex); // Set the active vertex/fragement shader
+		//int CreateShader(string shaderName);
+		//string LoadShaderFile(const string& filepath);
+		//GLuint CreateGLShaderObject(const string& text, GLenum shaderType);
+		//bool CheckShaderError(GLuint shader, GLuint flag, bool isProgram);
+		////void BindShader(int shaderIndex); // Set the active vertex/fragement shader
 
 		// Private member functions:
 		void ClearWindow(vec4 clearColor);
