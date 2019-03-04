@@ -22,8 +22,7 @@ namespace BlazeEngine
 		}
 
 		// Explicit constructor:
-		/*Vertex(const glm::vec3& position)*/
-		Vertex(glm::vec3 const& position)
+		Vertex(const glm::vec3& position)
 		{
 			this->position = position;
 			
@@ -65,16 +64,16 @@ namespace BlazeEngine
 		// Getters/Setters:
 		inline Vertex* Vertices() { return vertices; }
 		inline unsigned int NumVerts() { return this->numVerts; }
-
+		inline Material* GetMaterial() { return material; }
 
 	protected:
 
 
 	private:
-		Vertex* vertices;
+		Vertex* vertices = nullptr;		// Deallocated in SceneManager.Shutdown()
 		unsigned int numVerts;
 
-		Material* material;
+		Material* material = nullptr;	// Points to scene manager's statically allocated list of materials
 	};
 }
 

@@ -11,15 +11,16 @@ namespace BlazeEngine
 	class Shader
 	{
 	public:
-		Shader(const string shaderName, const GLuint shaderReference, const unsigned int numShaders, GLuint* shaders);
+		/*Shader(const string shaderName, const GLuint shaderReference, const unsigned int numShaders, GLuint* shaders);*/
+		Shader(const string shaderName, const GLuint shaderReference);
 		Shader(const Shader& existingShader);
 		~Shader();
 
 		// Getters/Setters:
 		inline string Name() { return shaderName; }
 		inline GLuint ShaderReference() { return shaderReference; }
-		inline unsigned int NumShaders() { return numShaders; }
-		inline GLuint* Shaders() { return shaders; };
+		/*inline unsigned int NumShaders() { return numShaders; }*/
+		/*inline GLuint* Shaders() { return shaders; };*/
 
 	protected:
 
@@ -27,8 +28,8 @@ namespace BlazeEngine
 	private:
 		string shaderName; // Extensionless filename of the shader. Will have ".vert" / ".frag" appended
 		GLuint shaderReference;
-		unsigned int numShaders;
-		GLuint* shaders;
+		/*unsigned int numShaders;*/
+		/*GLuint* shaders = nullptr;*/
 	};
 }
 

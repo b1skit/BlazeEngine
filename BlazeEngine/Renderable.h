@@ -30,9 +30,10 @@ namespace BlazeEngine
 			/*this->isStatic = renderable.isStatic;*/
 		}
 		
-		/*~Renderable()
+		~Renderable()
 		{
-		}*/
+
+		}
 
 		// Getters/Setters:
 		inline vector<Mesh*> const* ViewMeshes() const { return &viewMeshes; }
@@ -45,8 +46,8 @@ namespace BlazeEngine
 
 
 	private:
-		vector<Mesh*> viewMeshes;
-		Transform* transform; // The SceneObject that owns this Renderable must set the transform
+		vector<Mesh*> viewMeshes;	// Pointers to statically allocated Mesh objects held by the scene manager
+		Transform* transform;		// The SceneObject that owns this Renderable must set the transform
 
 		/*Mesh* boundsMesh;*/
 

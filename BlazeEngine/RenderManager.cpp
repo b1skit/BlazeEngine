@@ -43,7 +43,7 @@ namespace BlazeEngine
 		this->windowTitle = coreEngine->GetConfig()->renderer.windowTitle;
 
 		// Initialize SDL:
-		/*SDL_Init(SDL_INIT_VIDEO);*/ // Currently doing a global init... 
+		/*SDL_Init(SDL_INIT_VIDEO);*/ // TO DO: IMPLEMENT PER-COMPONENT INITIALIZATION
 
 		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
 		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
@@ -73,23 +73,18 @@ namespace BlazeEngine
 		}
 
 
-		// ??
-		glGenVertexArrays(1, &vertexArrayObject); // Size, target
-		glBindVertexArray(vertexArrayObject);
+		// Create and bind a vertex buffer to a buffer binding point allocated on the GPU suitable for vertices:
+		glGenBuffers(VERTEX_BUFFER_SIZE, vertexBufferObjects); // Generate vertex buffers 
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_POSITION]);
 
-		// Create and bind a vertex buffer:
-		glGenBuffers(VERTEX_BUFFER_SIZE, vertexArrayBuffers); // Allocate buffer on the GPU
-		glBindBuffer(GL_ARRAY_BUFFER, vertexArrayBuffers[VERTEX_BUFFER_POSITION]); // Tell OpenGl to interpret buffer as an array
-
-
+		// Generate and bind names for our Vertex Array Objects:
+		glGenVertexArrays(VERTEX_BUFFER_SIZE, vertexArrayObjects); // Allocate the required number of vertex array objects (VAO's)
+		glBindVertexArray(vertexArrayObjects[VERTEX_BUFFER_POSITION]);
 
 		// Tell OpenGL how to interpet the data we've put on the GPU:
-		glEnableVertexAttribArray(0); // Treat data as an array
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0); // Tell it how to read the array: attribute array, count (3 = 3 elements in vec3), data type, normalize?, space between steps(?), start offset
-
-		glBindVertexArray(0); // Prevent further vertex array object operations affecting our vertex array object
-
-		glBindVertexArray(vertexArrayObject);
+		int vertexAttributeIndex = 0;
+		glVertexAttribPointer(vertexAttributeIndex, 3, GL_FLOAT, GL_FALSE, 0, 0); // Define array of vertex attribute data: index, number of components (3 = 3 elements in vec3), type, should data be normalized?, stride, offset from start to 1st component
+		glEnableVertexAttribArray(vertexAttributeIndex); // Enable the vertex attribute
 
 
 		ClearWindow(vec4(0.79f, 0.32f, 0.0f, 1.0f));
@@ -103,16 +98,13 @@ namespace BlazeEngine
 	{
 		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Render manager shutting down..." });
 
-		glDeleteVertexArrays(1, &vertexArrayObject);
+		/*glDeleteVertexArrays(1, &vertexArrayObjects);*/
+		glDeleteVertexArrays(VERTEX_BUFFER_SIZE, vertexArrayObjects);
+		glDeleteBuffers(VERTEX_BUFFER_SIZE, vertexBufferObjects);
 
 		// Detach and delete shaders:
 		for (int i = 0; i < (int)shaders.size(); i++)
 		{
-			for (unsigned int j = 0; j < shaders.at(i).NumShaders(); j++)
-			{
-				glDetachShader(shaders.at(i).ShaderReference(), shaders.at(i).Shaders()[i]);
-				glDeleteShader(shaders.at(i).ShaderReference());
-			}
 			// Delete the shader program:
 			glDeleteProgram(shaders.at(i).ShaderReference());
 		}
@@ -141,35 +133,24 @@ namespace BlazeEngine
 			{
 				Mesh* mesh = renderables->at(i)->ViewMeshes()->at(j);
 
-				// ??
-				//glGenVertexArrays(1, &vertexArrayObject); // Size, target
-				//glBindVertexArray(vertexArrayObject);
-
-				// Allocate a vertex buffer:
-				//glGenBuffers(VERTEX_BUFFER_SIZE, vertexArrayBuffers); // Allocate buffer on the GPU
-				//glBindBuffer(GL_ARRAY_BUFFER, vertexArrayBuffers[VERTEX_BUFFER_POSITION]); // Tell OpenGl to interpret buffer as an array
-				//^^^ Moved to startup
-
 				// Copy vertex data into the buffer:
 				glBufferData(GL_ARRAY_BUFFER, mesh->NumVerts() * sizeof(mesh->Vertices()[0]), mesh->Vertices(), GL_STATIC_DRAW); // Put data into the buffer
-				// TODO: Define which obects that use GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW
+				// ^^ TODO: Define when/which obects should use GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW
 
-				//// Tell OpenGL how to interpet the data we've put on the GPU:
-				//glEnableVertexAttribArray(0); // Treat data as an array
-				//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0); // Tell it how to read the array: attribute array, count (3 = 3 elements in vec3), data type, normalize?, space between steps(?), start offset
+				// Set the active shader:
+				glUseProgram(shaders.at(1).ShaderReference()); // ...TO DO: Decide whether to use this directly, or via BindShader() ?
 
-				//glBindVertexArray(0); // Prevent further vertex array object operations affecting our vertex array object
+				// Bind the required VAO:
+				glBindVertexArray(vertexArrayObjects[VERTEX_BUFFER_POSITION]);
 
-				//glBindVertexArray(vertexArrayObject);
-
+				// Draw!
 				glDrawArrays(GL_TRIANGLES, 0, mesh->NumVerts()); // Type, start index, size
+
+
 
 				/*renderables->at(i)->GetTransform();*/
 			}
 		}
-
-		//// Copy vertices to the currently bound buffer:
-		//glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // SHOULDN'T THIS BE sizeof(vertices) * num of verts OR vertices[0] ????????
 
 		// Display the new frame:
 		SDL_GL_SwapWindow(glWindow);
@@ -204,155 +185,163 @@ namespace BlazeEngine
 		}
 	}
 
-int RenderManager::CreateShader(string shaderName)
-{
-	this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Loading shader: " + shaderName });
-
-	GLuint shaderReference;
-	unsigned int numShaders = 2;
-	GLuint* shaders = new GLuint[numShaders];
-
-	// Create an empty shader program object, and get its reference:
-	shaderReference = glCreateProgram();
-
-	// Load the shader files:
-	string vertexShader = LoadShaderFile(shaderName + ".vert");
-	string fragmentShader = LoadShaderFile(shaderName + ".frag");
-	if (vertexShader == "" || fragmentShader == "")
+	int RenderManager::CreateShader(string shaderName)
 	{
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "Creating shader failed while loading shader files"});
-		return -1;
-	}
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Loading shader: " + shaderName });
 
-	// Create shader objects and attach them to the program objects:
-	shaders[0] = CreateGLShaderObject(vertexShader, GL_VERTEX_SHADER);
-	shaders[1] = CreateGLShaderObject(fragmentShader, GL_FRAGMENT_SHADER);
-	for (unsigned int i = 0; i < numShaders; i++)
-	{
-		glAttachShader(shaderReference, shaders[i]); // Attach our shaders to the shader program
-	}
+		GLuint shaderReference;
+		unsigned int numShaders = 2; // TO DO : Allow loading of geometry shaders?
+		GLuint* shaders = new GLuint[numShaders];
 
-	// Associate our vertex attribute indexes with named variables:
-	glBindAttribLocation(shaderReference, 0, "position"); // Bind attribute 0 to the "position" variable in the vertex shader
+		// Create an empty shader program object, and get its reference:
+		shaderReference = glCreateProgram();
 
-	// Link our program object:
-	glLinkProgram(shaderReference);
-	if (!CheckShaderError(shaderReference, GL_LINK_STATUS, true))
-	{
-		return -1;
-	}
-
-	// Validate our program objects can execute with our current OpenGL state:
-	glValidateProgram(shaderReference);
-	if (!CheckShaderError(shaderReference, GL_VALIDATE_STATUS, true))
-	{
-		return -1;
-	}
-
-	Shader newShader(shaderName, shaderReference, numShaders, shaders);
-
-	this->shaders.push_back(newShader);
-
-	this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Finshed loading " + shaderName });
-
-	return (int)this->shaders.size() - 1;
-}
-
-string RenderManager::LoadShaderFile(const string& filename)
-{
-	// Assemble the full shader file path:
-	string filepath = coreEngine->GetConfig()->shader.shaderDirectory + filename;
-
-	ifstream file;
-	file.open(filepath.c_str());
-
-	string output;
-	string line;
-	if (file.is_open())
-	{
-		while (file.good())
+		// Load the shader files:
+		string vertexShader = LoadShaderFile(shaderName + ".vert");
+		string fragmentShader = LoadShaderFile(shaderName + ".frag");
+		if (vertexShader == "" || fragmentShader == "")
 		{
-			getline(file, line);
-			output.append(line + "\n");
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "Creating shader failed while loading shader files"});
+			return -1;
 		}
-	}
-	else
-	{
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "LoadShaderFile failed: Could not open shader " + filepath });
 
-		return "";
-	}
-
-	return output;
-}
-
-GLuint RenderManager::CreateGLShaderObject(const string& shaderCode, GLenum shaderType)
-{
-	GLuint shader = glCreateShader(shaderType);
-	if (shader == 0)
-	{
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "glCreateShader failed!" });
-	}
-
-	const GLchar* shaderSourceStrings[1];
-	GLint shaderSourceStringLengths[1];
-
-	shaderSourceStrings[0] = shaderCode.c_str();
-	shaderSourceStringLengths[0] = (GLint)shaderCode.length();
-
-	glShaderSource(shader, 1, shaderSourceStrings, shaderSourceStringLengths);
-	glCompileShader(shader);
-
-	CheckShaderError(shader, GL_COMPILE_STATUS, false);
-
-	return shader;
-}
-
-bool RenderManager::CheckShaderError(GLuint shader, GLuint flag, bool isProgram)
-{
-	GLint success = 0;
-	GLchar error[1024] = { 0 }; // Error buffer
-
-	if (isProgram)
-	{
-		glGetProgramiv(shader, flag, &success);
-	}
-	else
-	{
-		glGetShaderiv(shader, flag, &success);
-	}
-
-	if (success == GL_FALSE)
-	{
-		if (isProgram)
+		// Create shader objects and attach them to the program objects:
+		shaders[0] = CreateGLShaderObject(vertexShader, GL_VERTEX_SHADER);
+		shaders[1] = CreateGLShaderObject(fragmentShader, GL_FRAGMENT_SHADER);
+		for (unsigned int i = 0; i < numShaders; i++)
 		{
-			glGetProgramInfoLog(shader, sizeof(error), nullptr, error);
+			glAttachShader(shaderReference, shaders[i]); // Attach our shaders to the shader program
+		}
+
+		// Associate our vertex attribute indexes with named variables:
+		glBindAttribLocation(shaderReference, 0, "position"); // Bind attribute 0 to the "position" variable in the vertex shader
+
+		// Link our program object:
+		glLinkProgram(shaderReference);
+		if (!CheckShaderError(shaderReference, GL_LINK_STATUS, true))
+		{
+			return -1;
+		}
+
+		// Validate our program objects can execute with our current OpenGL state:
+		glValidateProgram(shaderReference);
+		if (!CheckShaderError(shaderReference, GL_VALIDATE_STATUS, true))
+		{
+			return -1;
+		}
+
+
+
+		// Delete the shader objects now that they've been linked into the program object:
+		glDeleteShader(shaders[0]);
+		glDeleteShader(shaders[1]);
+		delete shaders;
+
+
+		/*Shader newShader(shaderName, shaderReference, numShaders, shaders);*/
+		Shader newShader(shaderName, shaderReference);
+
+		this->shaders.push_back(newShader);
+
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Successfully loaded " + shaderName });
+
+		return (int)this->shaders.size() - 1;
+	}
+
+	string RenderManager::LoadShaderFile(const string& filename)
+	{
+		// Assemble the full shader file path:
+		string filepath = coreEngine->GetConfig()->shader.shaderDirectory + filename;
+
+		ifstream file;
+		file.open(filepath.c_str());
+
+		string output;
+		string line;
+		if (file.is_open())
+		{
+			while (file.good())
+			{
+				getline(file, line);
+				output.append(line + "\n");
+			}
 		}
 		else
 		{
-			glGetShaderInfoLog(shader, sizeof(error), nullptr, error);
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "LoadShaderFile failed: Could not open shader " + filepath });
+
+			return "";
 		}
 
-		string errorAsString(error);
-
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "CheckShaderError failed: " + errorAsString});
-
-		return false;
+		return output;
 	}
-	else
+
+	GLuint RenderManager::CreateGLShaderObject(const string& shaderCode, GLenum shaderType)
 	{
-		return true;
+		GLuint shader = glCreateShader(shaderType);
+		if (shader == 0)
+		{
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "glCreateShader failed!" });
+		}
+
+		const GLchar* shaderSourceStrings[1];
+		GLint shaderSourceStringLengths[1];
+
+		shaderSourceStrings[0] = shaderCode.c_str();
+		shaderSourceStringLengths[0] = (GLint)shaderCode.length();
+
+		glShaderSource(shader, 1, shaderSourceStrings, shaderSourceStringLengths);
+		glCompileShader(shader);
+
+		CheckShaderError(shader, GL_COMPILE_STATUS, false);
+
+		return shader;
 	}
-}
 
-void RenderManager::BindShader(int shaderIndex)
-{
-	glUseProgram(shaders.at(shaderIndex).ShaderReference());
-}
+	bool RenderManager::CheckShaderError(GLuint shader, GLuint flag, bool isProgram)
+	{
+		GLint success = 0;
+		GLchar error[1024] = { 0 }; // Error buffer
+
+		if (isProgram)
+		{
+			glGetProgramiv(shader, flag, &success);
+		}
+		else
+		{
+			glGetShaderiv(shader, flag, &success);
+		}
+
+		if (success == GL_FALSE)
+		{
+			if (isProgram)
+			{
+				glGetProgramInfoLog(shader, sizeof(error), nullptr, error);
+			}
+			else
+			{
+				glGetShaderInfoLog(shader, sizeof(error), nullptr, error);
+			}
+
+			string errorAsString(error);
+
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "CheckShaderError failed: " + errorAsString});
+
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
+
+	//void RenderManager::BindShader(int shaderIndex)
+	//{
+	//	glUseProgram(shaders.at(shaderIndex).ShaderReference());
+	//}
 
 
-
-void RenderManager::ClearWindow(vec4 clearColor)
+	void RenderManager::ClearWindow(vec4 clearColor)
 	{
 		// Set the initial color in both buffers:
 		glClearColor(GLclampf(clearColor.r), GLclampf(clearColor.g), GLclampf(clearColor.b), GLclampf(clearColor.a));
@@ -363,8 +352,6 @@ void RenderManager::ClearWindow(vec4 clearColor)
 		glClearColor(GLclampf(clearColor.r), GLclampf(clearColor.g), GLclampf(clearColor.b), GLclampf(clearColor.a));
 		glClear(GL_COLOR_BUFFER_BIT);
 	}
-
-
 }
 
 

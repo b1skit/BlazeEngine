@@ -7,4 +7,6 @@ void main()
 {
 	// Assign our position data to the predefined gl_Position output
     gl_Position = vec4(position.x, position.y, position.z, 1.0);
+
+	// TO DO: xform local->world->view
 }

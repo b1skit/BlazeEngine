@@ -18,6 +18,7 @@ namespace BlazeEngine
 	{
 		// System:
 		EVENT_LOG,
+		EVENT_DEBUG,
 		EVENT_ERROR,
 		EVENT_ENGINE_QUIT,
 		
@@ -54,6 +55,7 @@ namespace BlazeEngine
 	{
 		// System:
 		"EVENT_LOG", 
+		"EVENT_DEBUG",
 		"EVENT_ERROR", 
 		"EVENT_ENGINE_QUIT", 
 

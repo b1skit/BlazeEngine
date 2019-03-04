@@ -8,11 +8,6 @@ namespace BlazeEngine
 	SceneManager::~SceneManager()
 	{
 
-		// TEMP: Crashes if we do this in shutdown!?!?!
-		for (int i = 0; i < renderables.size(); i++)
-		{
-			delete renderables[i];
-		}
 	}
 
 	SceneManager& SceneManager::Instance()
@@ -36,12 +31,6 @@ namespace BlazeEngine
 		{
 			delete meshes[i].Vertices();
 		}
-
-		// TEMP: This crashes, but works in the destructor?!
-		/*for (int i = 0; i < renderables.size(); i++)
-		{
-			delete renderables[i];
-		}*/
 	}
 
 	void SceneManager::Update()

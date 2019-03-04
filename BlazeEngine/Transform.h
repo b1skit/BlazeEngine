@@ -27,6 +27,7 @@ namespace BlazeEngine
 		/*~Transform();*/
 
 		// Getters:
+		/*inline Transform* Parent() { return parent; }*/
 		vec3 LocalPosition();
 		vec3 WorldPosition();
 
@@ -46,6 +47,8 @@ namespace BlazeEngine
 
 
 	private:
+		/*Transform* parent = nullptr;*/
+
 		vec3 localPosition;
 		vec3 worldPosition;
 		

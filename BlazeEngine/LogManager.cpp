@@ -24,6 +24,7 @@ namespace BlazeEngine
 
 		// Subscribe to every event type:
 		this->coreEngine->BlazeEventManager->Subscribe(EVENT_LOG, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_DEBUG, this);
 		this->coreEngine->BlazeEventManager->Subscribe(EVENT_ERROR, this);
 		this->coreEngine->BlazeEventManager->Subscribe(EVENT_ENGINE_QUIT, this);
 

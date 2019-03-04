@@ -16,10 +16,7 @@ namespace BlazeEngine
 
 	Mesh::~Mesh()
 	{
-		//if (vertices)
-		//{
-		//	delete vertices;
-		//}
+
 	}
 
 }
