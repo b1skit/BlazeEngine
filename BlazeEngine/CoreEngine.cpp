@@ -5,6 +5,10 @@
 
 #include <string>
 
+// DEBUG:
+#include <iostream>
+using std::cout;
+using std::to_string;
 
 
 namespace BlazeEngine
@@ -41,6 +45,8 @@ namespace BlazeEngine
 		// TEMP: Must wait to start scene manager and load a scene until the renderer is called, since we need to initialize OpenGL in the RenderManager before creating shaders
 		BlazeSceneManager->Startup(this);
 		BlazeSceneManager->LoadScene(config.scene.scenePath);
+
+		//cout << "AFTER SCENE LOAD: = " << BlazeSceneManager->GetRenderables()->at(0)->ViewMeshes()->size() << " " << BlazeSceneManager->GetRenderables()->at(1)->ViewMeshes()->size() << "\n";
 
 		isRunning = true;
 

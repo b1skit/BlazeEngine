@@ -35,21 +35,13 @@ namespace BlazeEngine
 			objectID = AssignObjectID();
 		}
 
-		inline unsigned long GetObjectID()
-		{
-			return objectID;
-		}
+		// Getters/Setters:
+		inline unsigned long GetObjectID() { return objectID; }
 
-		inline string GetName()
-		{
-			return name;
-		}
+		inline string GetName() const { return name; }
 
 		// Used to hash objects when inserting into an unordered_map
-		inline string GetHashString()
-		{
-			return hashString;
-		}
+		inline string GetHashString() { return hashString; }
 
 		virtual void Update() = 0;
 

@@ -17,13 +17,14 @@
 
 using std::vector;
 
+
+
 namespace BlazeEngine
 {
 	class SceneManager : public EngineComponent, public EventListener
 	{
 	public:
-		SceneManager() : EngineComponent("SceneManager") {}
-
+		SceneManager(); // Reserve vector memory
 		~SceneManager();
 
 		// Singleton functionality:
@@ -63,15 +64,13 @@ namespace BlazeEngine
 
 
 
-		// Shaders:
-		/*vector<Shader> shaders;*/
-
+		// Shader functions:
 		unsigned int GetShaderIndex(string shaderName);
 		int CreateShader(string shaderName);
 		string LoadShaderFile(const string& filepath);
 		GLuint CreateGLShaderObject(const string& text, GLenum shaderType);
 		bool CheckShaderError(GLuint shader, GLuint flag, bool isProgram);
-		//void BindShader(int shaderIndex); // Set the active vertex/fragement shader
+		//void BindShader(int shaderIndex); // Set the active vertex/fragment shader
 	};
 
 }

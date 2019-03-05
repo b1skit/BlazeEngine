@@ -5,9 +5,24 @@
 #include <fstream>
 using std::ifstream;
 
+// DEBUG:
+#include <iostream>
+using std::cout;
+using std::to_string;
+
 
 namespace BlazeEngine
 {
+	SceneManager::SceneManager() : EngineComponent("SceneManager")
+	{
+		// TODO: Set these with meaningful values...
+		gameObjects.reserve(100);
+		renderables.reserve(100);
+		meshes.reserve(100);
+		materials.reserve(100);
+		shaders.reserve(100);
+	}
+
 	SceneManager::~SceneManager()
 	{
 
@@ -109,13 +124,11 @@ namespace BlazeEngine
 		GameObject testObject("testObject", testRenderable);
 		
 		// Add test objects to scene:
-		this->gameObjects.emplace_back(testObject);
+		this->gameObjects.push_back(testObject);
 		int gameObjectIndex = (int)this->gameObjects.size() - 1;
 		
 		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-		this->renderables.emplace_back(gameObjects[gameObjectIndex].GetRenderable()); 
-
-
+		this->renderables.push_back(gameObjects[gameObjectIndex].GetRenderable());
 
 		// 2nd test mesh:
 		Vertex* vertices2 = new Vertex[3];
@@ -145,11 +158,15 @@ namespace BlazeEngine
 		GameObject testObject2("testObject2", testRenderable2);
 
 		// Add test objects to scene:
-		this->gameObjects.emplace_back(testObject2);
+		this->gameObjects.push_back(testObject2); // nukes renderables[0].viewMeshes[0] ???????		
+		// Renderables is a POINTER to a renderable object, that isn't being copied correctly!!!
+
 		int gameObjectIndex2 = (int)this->gameObjects.size() - 1;
 
 		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-		this->renderables.emplace_back(gameObjects[gameObjectIndex2].GetRenderable());
+		this->renderables.push_back(gameObjects[gameObjectIndex2].GetRenderable());
+
+		//cout << "FINSIEHD SIZES = " << gameObjects[0].GetRenderable()->ViewMeshes()->size() << " " << gameObjects[1].GetRenderable()->ViewMeshes()->size() << "\n";
 	}
 
 
@@ -211,7 +228,8 @@ namespace BlazeEngine
 		}
 
 		// Associate our vertex attribute indexes with named variables:
-		glBindAttribLocation(shaderReference, 0, "position"); // Bind attribute 0 to the "position" variable in the vertex shader
+		glBindAttribLocation(shaderReference, 0, "position"); // Bind attribute 0 as "position" in the vertex shader
+		// TO DO: Bind other attributes (color, uv, etc)...
 
 		// Link our program object:
 		glLinkProgram(shaderReference);

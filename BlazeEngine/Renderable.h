@@ -7,12 +7,19 @@
 
 using std::vector;
 
+// DEBUG:
+#include <iostream>
+using std::cout;
+using std::to_string;
+
+
+
 namespace BlazeEngine
 {
 	class Renderable
 	{
 	public:
-		Renderable() { transform = nullptr; } // This should never be called, since we always need a view mesh...
+		Renderable() { transform = nullptr; }
 		
 		Renderable(vector<Mesh*> viewMeshes)
 		{
@@ -26,10 +33,39 @@ namespace BlazeEngine
 		Renderable(const Renderable& renderable)
 		{
 			this->viewMeshes = renderable.viewMeshes;
+			
+			if (renderable.transform == nullptr)
+			{
+				this->transform = nullptr;
+			}
+			//else
+			//{
+			//	/*this->transform = new Transform(renderable.transform);*/ // TO DO
+			//}
+			
 
 			/*this->isStatic = renderable.isStatic;*/
 		}
+
+		// Assignment operator:
+		/*Renderable& operator=(const Renderable& rhs) = default;*/
+		Renderable& operator=(const Renderable& rhs)
+		{
+			this->viewMeshes = rhs.viewMeshes;
+
+			if (rhs.transform == nullptr)
+			{
+				this->transform = nullptr;
+			}
+			//else
+			//{
+			//	/*this->transform = new Transform(renderable.transform);*/ // TO DO
+			//}
+
+			return *this;
+		}
 		
+
 		~Renderable()
 		{
 

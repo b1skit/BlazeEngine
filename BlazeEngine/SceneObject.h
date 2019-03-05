@@ -15,10 +15,13 @@ namespace BlazeEngine
 		SceneObject() : BlazeObject::BlazeObject("Unnamed SceneObject") {}
 		SceneObject(string newName) : BlazeObject::BlazeObject(newName) {}
 
-		inline Transform* GetTransform()
+		// Copy constructor:
+		SceneObject(const SceneObject& sceneObject) : BlazeObject(sceneObject.GetName())
 		{
-			return &transform;
+			this->transform = sceneObject.transform;
 		}
+
+		inline Transform* GetTransform() { return &transform; }
 
 	protected:
 		Transform transform;
