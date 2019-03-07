@@ -24,7 +24,7 @@ namespace BlazeEngine
 		Renderable(vector<Mesh*> viewMeshes)
 		{
 			this->viewMeshes = viewMeshes;
-			this->transform = nullptr;
+			this->transform = transform;
 
 			/*bool isStatic = false;*/
 		}
@@ -33,15 +33,7 @@ namespace BlazeEngine
 		Renderable(const Renderable& renderable)
 		{
 			this->viewMeshes = renderable.viewMeshes;
-			
-			if (renderable.transform == nullptr)
-			{
-				this->transform = nullptr;
-			}
-			//else
-			//{
-			//	/*this->transform = new Transform(renderable.transform);*/ // TO DO
-			//}
+			this->transform = renderable.transform;
 			
 
 			/*this->isStatic = renderable.isStatic;*/
@@ -52,15 +44,7 @@ namespace BlazeEngine
 		Renderable& operator=(const Renderable& rhs)
 		{
 			this->viewMeshes = rhs.viewMeshes;
-
-			if (rhs.transform == nullptr)
-			{
-				this->transform = nullptr;
-			}
-			//else
-			//{
-			//	/*this->transform = new Transform(renderable.transform);*/ // TO DO
-			//}
+			this->transform = rhs.transform;
 
 			return *this;
 		}

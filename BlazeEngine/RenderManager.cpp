@@ -142,6 +142,12 @@ namespace BlazeEngine
 			for (int j = 0; j < numViewMeshes; j++)
 			{
 				Mesh* mesh = renderables->at(i)->ViewMeshes()->at(j);
+				Transform* transform = renderables->at(i)->GetTransform();
+				unsigned int shaderIndex = mesh->GetMaterial()->GetShaderIndex();
+				
+				// Bind the required VAO:
+				glBindVertexArray(vertexArrayObject);
+
 
 				// Bind our position VBO as active:
 				glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_POSITION]); // Bind our VBO to GL_ARRAY_BUFFER
@@ -150,11 +156,20 @@ namespace BlazeEngine
 				glBufferData(GL_ARRAY_BUFFER, mesh->NumVerts() * sizeof(mesh->Vertices()[0]), mesh->Vertices(), GL_STATIC_DRAW); // Put data into the buffer
 				// ^^ TODO: Define when/which obects should use GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW
 
-				// Set the active shader: ...TO DO: Decide whether to use this directly, or via BindShader() ?
-				glUseProgram(shaders->at(renderables->at(i)->ViewMeshes()->at(j)->GetMaterial()->GetShaderIndex()).ShaderReference()); // ...TO DO: Decide whether to use this directly, or via BindShader() ?
 
-				// Bind the required VAO:
-				glBindVertexArray(vertexArrayObject);
+				
+
+				// Set the active shader: ...TO DO: Decide whether to use this directly, or via BindShader() ?
+				glUseProgram(shaders->at(shaderIndex).ShaderReference()); // ...TO DO: Decide whether to use this directly, or via BindShader() ?
+
+				
+				mat4 mvp = *coreEngine->BlazeSceneManager->MainCamera()->ViewProjection() * *transform->Model();
+				GLuint matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_projection");
+				glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
+		
+
+
+				
 
 				// Draw!
 				glDrawArrays(GL_TRIANGLES, 0, mesh->NumVerts()); // Type, start index, size

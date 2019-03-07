@@ -4,17 +4,22 @@ namespace BlazeEngine
 {
 	Transform::Transform()
 	{
-		localPosition = { 0,0,0 };
-		worldPosition = { 0,0,0 };
+		/*parent = nullptr;
+		children.reserve(10);*/
 
-		localRotation = { 0,0,0,0 };
-		worldRotation = { 0,0,0,0 };
+		/*localPosition		= { 0, 0, 0 };
+		worldPosition		= { 0, 0, 0 };*/
 
-		model = mat4();
-		view = mat4();
-		projection = mat4();
+		/*localRotation		= { 0,0,0,0 };
+		worldRotation		= { 0,0,0,0 };*/
 
-		isDirty = false;
+		model				= mat4( 1.0f );
+		/*view				= mat4( 1.0f );
+		projection			= mat4( 1.0f );
+		modelView			= mat4( 1.0f );
+		modelViewProjection = mat4( 1.0f );
+*/
+		//isDirty				= false; // TO DO: Implement this functionality
 	}
 
 
@@ -22,40 +27,40 @@ namespace BlazeEngine
 	//{
 	//}
 
-	vec3 Transform::LocalPosition()
-	{
-		return localPosition;
-	}
+	//vec3 Transform::LocalPosition()
+	//{
+	//	return localPosition;
+	//}
 
-	vec3 Transform::WorldPosition()
-	{
-		return worldPosition;
-	}
+	//vec3 Transform::WorldPosition()
+	//{
+	//	return worldPosition;
+	//}
 
-	quat Transform::LocalRotation()
-	{
-		return localRotation;
-	}
+	//quat Transform::LocalRotation()
+	//{
+	//	return localRotation;
+	//}
 
-	quat Transform::WorldRotation()
-	{
-		return worldRotation;
-	}
+	//quat Transform::WorldRotation()
+	//{
+	//	return worldRotation;
+	//}
 
-	mat4 Transform::Model()
-	{
-		return model;
-	}
+	//mat4 Transform::Model()
+	//{
+	//	return model;
+	//}
 
-	mat4 Transform::View()
-	{
-		return view;
-	}
+	//mat4 Transform::View()
+	//{
+	//	return view;
+	//}
 
-	mat4 Transform::Projection()
-	{
-		return projection;
-	}
+	//mat4 Transform::Projection()
+	//{
+	//	return projection;
+	//}
 
 	//void Transform::Translate(vec3 amount, SPACE space)
 	//{

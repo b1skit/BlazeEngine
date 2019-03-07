@@ -16,14 +16,23 @@ namespace BlazeEngine
 	class GameObject : public SceneObject
 	{
 	public:
-		GameObject() : SceneObject::SceneObject("Unnamed GameObject") {}
-		GameObject(string name) : SceneObject::SceneObject(name) {};
+		GameObject() : SceneObject::SceneObject("Unnamed GameObject")
+		{
+			this->renderable.SetTransform(&this->transform);
+		}
+		GameObject(string name) : SceneObject::SceneObject(name) 
+		{
+			this->renderable.SetTransform(&this->transform);
+		}
 		GameObject(string name, Renderable renderable);
 
 		// Copy constructor:
 		GameObject(const GameObject& gameObject)
 		{
 			this->renderable = gameObject.renderable;
+			this->transform = gameObject.transform;
+
+			this->renderable.SetTransform(&this->transform);
 		}
 
 		/*~GameObject();*/

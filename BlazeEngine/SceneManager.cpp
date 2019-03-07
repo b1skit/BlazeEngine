@@ -83,7 +83,7 @@ namespace BlazeEngine
 		// Flush any existing scene objects: (NOTE: Any objects that access these must be shut down first!)
 		// TO DO: Make sure we're deallocating everything before clearing the lists
 		//gameObjects.clear();
-		renderables.clear();
+		/*renderables.clear();*/
 		/*meshes.clear();*/  // TO DO: delete meshes.Vertices()
 		/*materials.clear();*/
 		/*lights.clear();
@@ -122,6 +122,8 @@ namespace BlazeEngine
 		
 		// Construct a GameObject:
 		GameObject testObject("testObject", testRenderable);
+
+		/*testObject.GetTransform()->LocalPosition() = vec3(1,2,3);*/
 		
 		// Add test objects to scene:
 		this->gameObjects.push_back(testObject);
@@ -228,8 +230,10 @@ namespace BlazeEngine
 		}
 
 		// Associate our vertex attribute indexes with named variables:
-		glBindAttribLocation(shaderReference, 0, "position"); // Bind attribute 0 as "position" in the vertex shader
+		glBindAttribLocation(shaderReference, 0, "in_position"); // Bind attribute 0 as "position" in the vertex shader
+		glBindAttribLocation(shaderReference, 1, "in_projection"); // Bind attribute 0 as "position" in the vertex shader
 		// TO DO: Bind other attributes (color, uv, etc)...
+		// TO DO: Replace indexes with an enum
 
 		// Link our program object:
 		glLinkProgram(shaderReference);
