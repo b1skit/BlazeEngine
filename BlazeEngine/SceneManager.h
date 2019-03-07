@@ -9,6 +9,7 @@
 #include "Shader.h"
 //#include "Light.h"
 #include "Camera.h"
+#include "PlayerObject.h"
 
 //class GameObject;
 //class SceneObject;
@@ -46,7 +47,7 @@ namespace BlazeEngine
 		inline vector<Renderable const*> const* GetRenderables() { return &renderables;	}
 		inline vector<Shader>* GetShaders() { return &shaders; } // SHOULD THIS RETURN CONST ?????
 		//inline vector<Light> const* GetLights();
-		inline Camera const* MainCamera() { return &mainCamera; }
+		inline Camera* MainCamera() { return mainCamera; }
 
 	protected:
 
@@ -60,8 +61,9 @@ namespace BlazeEngine
 		vector<Shader> shaders;
 
 		/*vector<Light> lights;*/
-		Camera mainCamera;
+		Camera* mainCamera;
 
+		PlayerObject player;
 
 
 		// Shader functions:

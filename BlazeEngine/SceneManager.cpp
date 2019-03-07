@@ -38,11 +38,11 @@ namespace BlazeEngine
 	{
 		EngineComponent::Startup(coreEngine);
 
-
 		// Initialize our Shaders to match the order of the SHADER enum:
 		CreateShader(coreEngine->GetConfig()->shader.errorShader);		// Index 0
 		CreateShader(coreEngine->GetConfig()->shader.defaultShader);	// Index 1
 
+		this->mainCamera = player.GetCamera();
 
 		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Scene manager started!" });
 	}
@@ -99,9 +99,9 @@ namespace BlazeEngine
 
 		// Allocate vertices: (Normally, we'll do this when loading a .FBX)
 		Vertex* vertices = new Vertex[3];
-		vertices[0] = Vertex(vec3(-0.5f, -0.5f, 0.0f));
-		vertices[1] = Vertex(vec3(0.5f, -0.5f, 0.0f));
-		vertices[2] = Vertex(vec3(0.0f, 0.5f, 0.0f));
+		vertices[0] = Vertex(vec3(-0.5f, -0.5f, -10.0f));
+		vertices[1] = Vertex(vec3(0.5f, -0.5f, -10.0f));
+		vertices[2] = Vertex(vec3(0.0f, 0.5f, -10.0f));
 
 		// Create a material and shader:
 		unsigned int shaderIndex = GetShaderIndex(coreEngine->GetConfig()->shader.defaultShader);
@@ -135,9 +135,9 @@ namespace BlazeEngine
 		// 2nd test mesh:
 		Vertex* vertices2 = new Vertex[3];
 
-		vertices2[0] = Vertex(vec3(-1.0f, 0.5f, 0.0f));
-		vertices2[1] = Vertex(vec3(-0.5f, 0.2f, 0.0f));
-		vertices2[2] = Vertex(vec3(0.0f, 0.5f, 0.0f));
+		vertices2[0] = Vertex(vec3(-1.0f, 0.5f, -10.0f));
+		vertices2[1] = Vertex(vec3(-0.5f, 0.2f, -10.0f));
+		vertices2[2] = Vertex(vec3(0.0f, 0.5f, -10.0f));
 
 		// Create a material and shader:
 		int shaderIndex2 = GetShaderIndex(coreEngine->GetConfig()->shader.errorShader);

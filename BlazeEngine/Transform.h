@@ -38,7 +38,7 @@ namespace BlazeEngine
 		/*quat LocalRotation();
 		quat WorldRotation();*/
 
-		inline mat4 const* Model() const { return &model; } // Local->World
+		inline mat4 const* Model() { return &model; } // Local->World
 
 		//inline mat4& View() { return view; } // World->View
 		//inline mat4& Projection() { return projection; } // View->Clip
