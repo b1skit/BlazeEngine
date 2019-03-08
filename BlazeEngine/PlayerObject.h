@@ -8,7 +8,7 @@ namespace BlazeEngine
 	class PlayerObject : public GameObject
 	{
 	public:
-		PlayerObject() : GameObject::GameObject("Player Object") {}
+		PlayerObject();
 		/*~PlayerObject();*/
 
 

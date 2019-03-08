@@ -92,7 +92,7 @@ typedef struct
 typedef struct
 {
     Uint32 flags;                       /**< ::SDL_MessageBoxFlags */
-    SDL_Window *window;                 /**< Parent window, can be NULL */
+    SDL_Window *window;                 /**< GetParent window, can be NULL */
     const char *title;                  /**< UTF-8 title */
     const char *message;                /**< UTF-8 message text */
 

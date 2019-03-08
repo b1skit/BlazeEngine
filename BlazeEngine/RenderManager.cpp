@@ -142,8 +142,12 @@ namespace BlazeEngine
 			for (int j = 0; j < numViewMeshes; j++)
 			{
 				Mesh* mesh = renderables->at(i)->ViewMeshes()->at(j);
-				Transform* transform = renderables->at(i)->GetTransform();
 				unsigned int shaderIndex = mesh->GetMaterial()->GetShaderIndex();
+
+				// Assemble the model matrix for this mesh:
+				Transform const* transform = renderables->at(i)->GetTransform();
+				mat4 model = renderables->at(i)->GetTransform()->Model();
+		
 				
 				// Bind the required VAO:
 				glBindVertexArray(vertexArrayObject);
@@ -163,7 +167,7 @@ namespace BlazeEngine
 				glUseProgram(shaders->at(shaderIndex).ShaderReference()); // ...TO DO: Decide whether to use this directly, or via BindShader() ?
 
 				
-				mat4 mvp = *coreEngine->BlazeSceneManager->MainCamera()->ViewProjection() * *transform->Model();
+				mat4 mvp = this->coreEngine->BlazeSceneManager->MainCamera()->ViewProjection() * model;
 				GLuint matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_projection");
 				glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
 		

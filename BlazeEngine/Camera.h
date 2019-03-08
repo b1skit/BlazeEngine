@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SceneObject.h"
+#include "glm.hpp"
 
 // Predeclaration:
 class CoreEngine;
@@ -36,17 +37,22 @@ namespace BlazeEngine
 		void HandleEvent(EventInfo const* eventInfo);
 
 		// Getters/Setters:
-		inline float FieldOfView() const { return fieldOfView; }
-		inline float Near() const { return near; }
-		inline float Far() const { return far; }
+		inline float const& FieldOfView() const { return fieldOfView; }
+		inline float const& Near() const { return near; }
+		inline float const& Far() const { return far; }
 
-		inline mat4 const* View() const { return &view; }
-		inline mat4 const* Projection() const { return &projection; }
-
-		inline mat4* ViewProjection() // SHOULD THIS RETURN A CONSTANT????????
+		mat4 const& View()
 		{
-			viewProjection = projection * view; // TO DO: ONLY COMPUTE THIS IF SOMETHING HAS CHANGED!!!
-			return &viewProjection; 
+			view = inverse(transform.Model());
+			return view;
+		}
+
+		inline mat4 const& Projection() const { return projection; }
+
+		inline mat4 const& ViewProjection()
+		{
+			viewProjection = projection * View(); // TO DO: ONLY COMPUTE THIS IF SOMETHING HAS CHANGED!!!
+			return viewProjection; 
 		}
 		
 
