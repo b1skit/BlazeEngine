@@ -3,6 +3,12 @@
 
 using std::find;
 
+
+// DEBUG:
+#include <iostream>
+using std::cout;
+
+
 namespace BlazeEngine
 {
 	Transform::Transform()
@@ -57,6 +63,7 @@ namespace BlazeEngine
 
 	void Transform::Translate(vec3 amount)
 	{
+		cout << "Recieved: " << amount.x << " " << amount.y << " " << amount.z << "\n";
 		this->model = glm::translate(model, amount);
 		this->position += amount;
 	}

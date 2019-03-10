@@ -63,6 +63,11 @@ namespace BlazeEngine
 
 		/*void SetScale(vec3 scale);*/
 		//void Scale(vec3 amount, SPACE space);
+
+		// Getters/Setters:
+		inline vec3 const& Forward() const { return forward; }
+		inline vec3 const& Right() const { return right; }
+		inline vec3 const& Up() const { return up; }
 		
 
 	protected:
@@ -77,15 +82,16 @@ namespace BlazeEngine
 
 		vec3 position;
 		
+		vec3 forward	= vec3(0.0f, 0.0f, -1.0f);	// OpenGL is right handed in object/world space, left handed in window (aka screen) space
+		vec3 right		= vec3(1.0f, 0.0f, 0.0f);
+		vec3 up			= vec3(0.0f, 1.0f, 0.0f);
+
 		/*quat localRotation;
 		quat worldRotation;*/
 
 		mat4 model = mat4( 1.0f );
-		/*mat4 view;
-		mat4 projection;
-		mat4 modelView;
-		mat4 modelViewProjection;*/
 
+		/*void Recalculate(); // TO DO: Implement this */
 		/*bool isDirty;*/
 
 		

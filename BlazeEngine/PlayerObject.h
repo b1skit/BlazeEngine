@@ -26,7 +26,7 @@ namespace BlazeEngine
 
 	private:
 		Camera playerCam;
-		float movementSpeed = 1.0f;
+		float movementSpeed = 0.2f;
 
 	};
 

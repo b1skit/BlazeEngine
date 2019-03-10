@@ -29,22 +29,47 @@ namespace BlazeEngine
 		GameObject::Update();
 
 		// TEMP: Hard code some stuff:
-		
+		vec3 direction = vec3(0.0f, 0.0f, 0.0f);
+		bool readInput = false;
+
+		if (InputManager::GetInput(INPUT_BUTTON_FORWARD))
+		{
+			direction += this->transform.Forward();
+			readInput = true;
+		}
+		if (InputManager::GetInput(INPUT_BUTTON_BACKWARD))
+		{
+			direction += this->transform.Forward() * -1.0f;
+			readInput = true;
+		}
 		if (InputManager::GetInput(INPUT_BUTTON_LEFT))
 		{
-			this->transform.Translate(vec3(-1,0,0));
+			direction += this->transform.Right() * -1.0f;
+			readInput = true;
 		}
 		if (InputManager::GetInput(INPUT_BUTTON_RIGHT))
 		{
-			this->transform.Translate(vec3(1, 0, 0));
+			direction += this->transform.Right();
+			readInput = true;
+		}
+		if (InputManager::GetInput(INPUT_BUTTON_UP))
+		{
+			direction += this->transform.Up();
+			readInput = true;
+		}
+		if (InputManager::GetInput(INPUT_BUTTON_DOWN))
+		{
+			direction += this->transform.Up() * -1.0f;
+			readInput = true;
 		}
 
-		/*vec3 direction(0, 0, 0);
+		if (readInput)
+		{
+			direction = glm::normalize(direction);
+			direction *= (float)(movementSpeed * TimeManager::DeltaTime());
 
-		direction += vec3 movementSpeed * (unsigned short)InputManager::GetInput(INPUT_BUTTON_FORWARD)*/
-
-		//this->transform.Translate(vec3(1,0,0) * (float)( movementSpeed * TimeManager::DeltaTime()));
-		
+			this->transform.Translate(direction);
+		}
 	}
 
 	//// EventListener interface:
