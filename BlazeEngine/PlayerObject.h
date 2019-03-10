@@ -16,14 +16,17 @@ namespace BlazeEngine
 		inline Camera* GetCamera() { return &playerCam; }
 
 		// BlazeObject interface:
-		void Update();
+		void Update() override;
+
+		//// EventListener interface:
+		//void HandleEvent(EventInfo const* eventInfo) override;
 
 	protected:
 
 
 	private:
 		Camera playerCam;
-
+		float movementSpeed = 1.0f;
 
 	};
 

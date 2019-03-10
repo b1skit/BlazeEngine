@@ -54,7 +54,7 @@ namespace BlazeEngine
 
 	private:
 		// The scene manager holds and provides access to all of the scene objects needed by the rest of the engine:
-		vector<GameObject> gameObjects;
+		vector<GameObject*> gameObjects;
 		vector<Renderable const*> renderables; // Pointers to statically allocated renderables held by GameObjects
 		vector<Mesh> meshes;
 		vector<Material> materials;
@@ -63,7 +63,7 @@ namespace BlazeEngine
 		/*vector<Light> lights;*/
 		Camera* mainCamera;
 
-		PlayerObject player;
+		/*PlayerObject player;*/
 
 
 		// Shader functions:

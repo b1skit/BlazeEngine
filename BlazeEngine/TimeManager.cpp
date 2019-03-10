@@ -4,11 +4,17 @@
 
 namespace BlazeEngine
 {
+	// Static values:
+	unsigned int TimeManager::startTime;
+	unsigned int TimeManager::prevTime;
+	unsigned int TimeManager::currentTime;
+	double TimeManager::deltaTime;
+
+
 	TimeManager::TimeManager() : EngineComponent("TimeManager")
 	{
 		startTime = prevTime = currentTime = SDL_GetTicks(); // TO DO: use the high res timer instead?
 	}
-
 
 	/*TimeManager::~TimeManager()
 	{
@@ -37,7 +43,7 @@ namespace BlazeEngine
 	{
 		prevTime = currentTime;
 		currentTime = SDL_GetTicks();
-		deltaTime = currentTime - prevTime;
+		deltaTime = (double)(currentTime - prevTime);
 	}
 }
 

@@ -59,19 +59,19 @@ namespace BlazeEngine
 	{
 		BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "CoreEngine beginning main game loop!" });
 
-		double elapsed = 0.0;	
+		// Initialize game loop timing:
+		double elapsed = 0.0;
+		BlazeTimeManager->Update();
 
 		while (isRunning)
 		{
 			BlazeInputManager->Update(); // Process input
 
 			BlazeTimeManager->Update();
-			elapsed += BlazeTimeManager->GetDeltaTimeMs();
+			elapsed += BlazeTimeManager->DeltaTime();
 
 			while (elapsed >= FIXED_TIMESTEP)
 			{
-				/*BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "Update loop called: " + std::to_string(elapsed)});*/
-
 				// Update components:
 				BlazeEventManager->Update(); // Clears SDL event queue: Must occur after any other component that listens to SDL events
 				BlazeLogManager->Update();

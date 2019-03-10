@@ -69,7 +69,7 @@ namespace BlazeEngine
 		void operator=(InputManager const&) = delete;
 
 		// Member functions:
-		bool GetInput(INPUT_BUTTON button);
+		static bool GetInput(INPUT_BUTTON button);
 		double GetMouseAxisInput(INPUT_AXIS axis);
 		
 		inline InputBindings const* GetInputBindings()
@@ -88,7 +88,7 @@ namespace BlazeEngine
 		void HandleEvent(EventInfo const* eventInfo);
 
 	private:
-		bool buttonStates[INPUT_NUM_BUTTON_INPUTS]; // Stores the state of buttons. Updated on key down/up
+		static bool buttonStates[INPUT_NUM_BUTTON_INPUTS]; // Stores the state of buttons. Updated on key down/up
 		double mouseAxisStates[INPUT_NUM_INPUT_AXIS];
 
 		// SDL2 event queue handling:

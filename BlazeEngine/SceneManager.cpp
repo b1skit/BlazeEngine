@@ -25,7 +25,10 @@ namespace BlazeEngine
 
 	SceneManager::~SceneManager()
 	{
-
+		for (int i = 0; i < gameObjects.size(); i++)
+		{
+			delete gameObjects.at(i);
+		}
 	}
 
 	SceneManager& SceneManager::Instance()
@@ -65,7 +68,10 @@ namespace BlazeEngine
 
 	void SceneManager::Update()
 	{
-		// TO DO: Update every game object
+		for (int i = 0; i < (int)gameObjects.size(); i++)
+		{
+			gameObjects.at(i)->Update();
+		}
 	}
 
 	void SceneManager::HandleEvent(EventInfo const * eventInfo)
@@ -119,7 +125,7 @@ namespace BlazeEngine
 		Renderable testRenderable(viewMeshes);
 		
 		// Construct a GameObject:
-		GameObject testObject("testObject", testRenderable);
+		GameObject* testObject = new GameObject("testObject", testRenderable);
 
 		/*testObject.GetTransform()->LocalPosition() = vec3(1,2,3);*/
 		
@@ -128,7 +134,7 @@ namespace BlazeEngine
 		int gameObjectIndex = (int)this->gameObjects.size() - 1;
 		
 		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-		this->renderables.push_back(gameObjects[gameObjectIndex].GetRenderable());
+		this->renderables.push_back(gameObjects[gameObjectIndex]->GetRenderable());
 
 		// 2nd test mesh:
 		Vertex* vertices2 = new Vertex[3];
@@ -155,7 +161,7 @@ namespace BlazeEngine
 		Renderable testRenderable2(viewMeshes2);
 
 		// Construct a GameObject:
-		GameObject testObject2("testObject2", testRenderable2);
+		GameObject* testObject2 = new GameObject("testObject2", testRenderable2);
 
 		// Add test objects to scene:
 		this->gameObjects.push_back(testObject2); // nukes renderables[0].viewMeshes[0] ???????		
@@ -164,10 +170,13 @@ namespace BlazeEngine
 		int gameObjectIndex2 = (int)this->gameObjects.size() - 1;
 
 		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-		this->renderables.push_back(gameObjects[gameObjectIndex2].GetRenderable());
+		this->renderables.push_back(gameObjects[gameObjectIndex2]->GetRenderable());
+
 
 		// Set up a player object:
-		this->mainCamera = player.GetCamera();
+		PlayerObject* player = new PlayerObject();
+		gameObjects.push_back(player);
+		this->mainCamera = player->GetCamera();
 		mainCamera->Initialize(
 			vec3(0, 0, 0),
 			(float)coreEngine->GetConfig()->renderer.windowXRes / (float)coreEngine->GetConfig()->renderer.windowYRes,

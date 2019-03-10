@@ -9,6 +9,11 @@
 
 namespace BlazeEngine
 {
+	// Static members:
+	bool InputManager::buttonStates[INPUT_NUM_BUTTON_INPUTS];
+
+
+	// Constructor:
 	InputManager::InputManager() : EngineComponent("InputManager")
 	{
 		for (int i = 0; i < INPUT_NUM_BUTTON_INPUTS; i++)
@@ -47,6 +52,25 @@ namespace BlazeEngine
 	{
 		EngineComponent::Startup(coreEngine);
 
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_BACKWARD, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_DOWN, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_FORWARD, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_LEFT, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_RIGHT, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_UP, this);
+
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_BACKWARD, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_DOWN, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_FORWARD, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_LEFT, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_RIGHT, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_UP_UP, this);
+
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_CLICK_LEFT, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_CLICK_RIGHT, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_MOVED, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_RELEASE_LEFT, this);
+		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_RELEASE_RIGHT, this);
 
 		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Input manager started!" });
 	}

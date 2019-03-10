@@ -7,12 +7,17 @@
 #include "SceneObject.h"
 #include "Renderable.h"
 
-// Predeclaration:
-class CoreEngine;
+// DEBUG:
+#include <iostream>
+using std::cout;
+using std::to_string;
 
 
 namespace BlazeEngine
 {
+	//// Predeclaration:
+	//class CoreEngine;
+
 	class GameObject : public SceneObject
 	{
 	public:
@@ -20,10 +25,12 @@ namespace BlazeEngine
 		{
 			this->renderable.SetTransform(&this->transform);
 		}
+
 		GameObject(string name) : SceneObject::SceneObject(name) 
 		{
 			this->renderable.SetTransform(&this->transform);
 		}
+
 		GameObject(string name, Renderable renderable);
 
 		// Copy constructor:
@@ -38,7 +45,7 @@ namespace BlazeEngine
 		/*~GameObject();*/
 
 		// BlazeObject interface:
-		void Update(){}
+		void Update() override { }
 
 		// EventListener interface:
 		void HandleEvent(EventInfo const* eventInfo) {}

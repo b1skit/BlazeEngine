@@ -2,7 +2,6 @@
 // Contains common fields and methods (Eg. identifiers) useful for all Blaze Engine objects
 
 #pragma once
-
 #include <string>
 //#include <unordered_map>
 
@@ -22,6 +21,9 @@ namespace BlazeEnginePrivate
 
 namespace BlazeEngine
 {
+	// Predeclarations:
+	class CoreEngine;
+
 	class BlazeObject
 	{
 	public:
@@ -31,6 +33,8 @@ namespace BlazeEngine
 			{
 				this->name = name;
 			}
+
+			this->coreEngine = coreEngine;
 
 			objectID = AssignObjectID();
 		}
@@ -47,7 +51,7 @@ namespace BlazeEngine
 
 	protected:
 		unsigned long objectID; // Hashed value
-
+		CoreEngine* coreEngine;
 	private:
 		string name = "unnamed";
 		string hashString;

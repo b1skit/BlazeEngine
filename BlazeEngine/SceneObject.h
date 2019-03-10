@@ -9,13 +9,10 @@
 
 namespace BlazeEngine
 {
-	// Predeclarations:
-	class CoreEngine;
-
 	class SceneObject : public BlazeObject, public EventListener
 	{
 	public:
-		SceneObject() : BlazeObject::BlazeObject("Unnamed SceneObject") {}
+		SceneObject() : BlazeObject::BlazeObject("Unnamed SceneObject") { this->coreEngine; }
 		SceneObject(string newName) : BlazeObject::BlazeObject(newName) {}
 
 		// Copy constructor:
@@ -24,6 +21,10 @@ namespace BlazeEngine
 			this->transform = sceneObject.transform;
 		}
 
+		// BlazeObject interface:
+		/*void Update() { BlazeObject::Update(); }*/
+
+		// Getters/Setters:
 		inline Transform* GetTransform() { return &transform; }
 
 

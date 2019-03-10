@@ -33,40 +33,44 @@ namespace BlazeEngine
 		//	return currentTime;
 		//}
 
-		// Get the time elapsed since the last frame, in seconds
-		inline double GetDeltaTimeSeconds()
-		{
-			return (double)GetDeltaTimeMs() * 0.001; // Convert: ms->sec
-		}
+		//// Get the time elapsed since the last frame, in seconds
+		//static double GetDeltaTimeSeconds()
+		//{
+		//	return (double)DeltaTime() * 0.001; // Convert: ms->sec
+		//}
 
-		// Get the time elapsed since the last frame, in milliseconds
-		inline unsigned int GetDeltaTimeMs()
+		// Get the time elapsed since the last frame, in ms
+		static inline double DeltaTime()
 		{
 			return deltaTime;
 		}
 
-		inline unsigned int GetTotalRunningTimeMs()
+		static unsigned int GetTotalRunningTimeMs()
 		{
 			return currentTime - startTime;
 		}
 
-		inline double GetTotalRunningTimeSeconds()
+		static double GetTotalRunningTimeSeconds()
 		{
 			return (double)GetTotalRunningTimeMs() * 0.001;
 		}
 
-
+		
 	protected:
 
 
 	private:
-		unsigned int startTime;
-		unsigned int prevTime;
-		unsigned int currentTime;
-		unsigned int deltaTime;
+		static unsigned int startTime;
+		static unsigned int prevTime;
+		static unsigned int currentTime;
+		static double deltaTime;
+
+		
 
 		/*double timeScale;*/
 	};
+
+	
 }
 
 
