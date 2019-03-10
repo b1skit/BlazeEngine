@@ -37,16 +37,11 @@ namespace BlazeEngine
 		BlazeTimeManager->Startup(this);
 		BlazeInputManager->Startup(this);
 
-		/*BlazeSceneManager->Startup(this);*/
-		/*BlazeSceneManager->LoadScene(config.scene.scenePath);*/
-
 		BlazeRenderManager->Startup(this);
 
-		// TEMP: Must wait to start scene manager and load a scene until the renderer is called, since we need to initialize OpenGL in the RenderManager before creating shaders
+		// Must wait to start scene manager and load a scene until the renderer is called, since we need to initialize OpenGL in the RenderManager before creating shaders
 		BlazeSceneManager->Startup(this);
 		BlazeSceneManager->LoadScene(config.scene.scenePath);
-
-		//cout << "AFTER SCENE LOAD: = " << BlazeSceneManager->GetRenderables()->at(0)->ViewMeshes()->size() << " " << BlazeSceneManager->GetRenderables()->at(1)->ViewMeshes()->size() << "\n";
 
 		isRunning = true;
 
@@ -65,7 +60,7 @@ namespace BlazeEngine
 
 		while (isRunning)
 		{
-			BlazeInputManager->Update(); // Process input
+			BlazeInputManager->Update(); // Note: Input processing occurs via events
 
 			BlazeTimeManager->Update();
 			elapsed += BlazeTimeManager->DeltaTime();
@@ -76,10 +71,9 @@ namespace BlazeEngine
 				BlazeEventManager->Update(); // Clears SDL event queue: Must occur after any other component that listens to SDL events
 				BlazeLogManager->Update();
 
-				BlazeSceneManager->Update();
+				BlazeSceneManager->Update(); // Updates all of the scene objects
 
 				// Update the time for the next iteration:
-				BlazeTimeManager->Update();
 				elapsed -= FIXED_TIMESTEP;
 			}
 			

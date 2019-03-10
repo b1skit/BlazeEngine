@@ -58,7 +58,7 @@ namespace BlazeEngine
 		// Getters/Setters:
 		inline vector<Mesh*> const* ViewMeshes() const { return &viewMeshes; }
 
-		inline Transform const* GetTransform() const { return transform; }
+		inline Transform* GetTransform() const { return transform; }
 		inline void SetTransform(Transform* transform) { this->transform = transform; }
 
 

@@ -74,42 +74,42 @@ namespace BlazeEngine
 					// Button input events:
 					if (currentSDLEvent.key.keysym.sym == inputBindings->Button_forward)
 					{
-						if (!coreEngine->BlazeInputManager->GetInput(INPUT_BUTTON_FORWARD))
+						if (!coreEngine->BlazeInputManager->GetInputState(INPUT_BUTTON_FORWARD))
 						{
 							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_FORWARD, this });
 						}
 					}
 					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_backward)
 					{
-						if (!coreEngine->BlazeInputManager->GetInput(INPUT_BUTTON_BACKWARD))
+						if (!coreEngine->BlazeInputManager->GetInputState(INPUT_BUTTON_BACKWARD))
 						{
 							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_BACKWARD, this });
 						}
 					}
 					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_left)
 					{
-						if (!coreEngine->BlazeInputManager->GetInput(INPUT_BUTTON_LEFT))
+						if (!coreEngine->BlazeInputManager->GetInputState(INPUT_BUTTON_LEFT))
 						{
 							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_LEFT, this });
 						}
 					}
 					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_right)
 					{
-						if (!coreEngine->BlazeInputManager->GetInput(INPUT_BUTTON_RIGHT))
+						if (!coreEngine->BlazeInputManager->GetInputState(INPUT_BUTTON_RIGHT))
 						{
 							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_RIGHT, this });
 						}
 					}
 					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_up)
 					{
-						if (!coreEngine->BlazeInputManager->GetInput(INPUT_BUTTON_UP))
+						if (!coreEngine->BlazeInputManager->GetInputState(INPUT_BUTTON_UP))
 						{
 							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_UP, this });
 						}
 					}
 					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_down)
 					{
-						if (!coreEngine->BlazeInputManager->GetInput(INPUT_BUTTON_DOWN))
+						if (!coreEngine->BlazeInputManager->GetInputState(INPUT_BUTTON_DOWN))
 						{
 							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_DOWN, this });
 						}
@@ -167,17 +167,37 @@ namespace BlazeEngine
 
 			case SDL_MOUSEBUTTONDOWN:
 			{
-				/*coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_MOUSEBUTTONDOWN detected!!!" });*/
+				switch (currentSDLEvent.button.button)
+				{
+				case SDL_BUTTON_LEFT:
+					Notify(new EventInfo{ EVENT_INPUT_MOUSE_CLICK_LEFT, this });
+					break;
+
+				case SDL_BUTTON_RIGHT:
+					Notify(new EventInfo{ EVENT_INPUT_MOUSE_CLICK_RIGHT, this });
+					break;
+				}				
+				
 				break;
 			}			
 			case SDL_MOUSEBUTTONUP:
 			{
-				/*coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_MOUSEBUTTONUP detected!!!" });*/
+				switch (currentSDLEvent.button.button)
+				{
+				case SDL_BUTTON_LEFT:
+					Notify(new EventInfo{ EVENT_INPUT_MOUSE_RELEASE_LEFT, this });
+					break;
+
+				case SDL_BUTTON_RIGHT:
+					Notify(new EventInfo{ EVENT_INPUT_MOUSE_RELEASE_RIGHT, this });
+					break;
+				}
+
 				break;
 			}			
 			case SDL_MOUSEMOTION:
 			{
-				/*coreEngine->BlazeEventManager->Notify(EventInfo{ EVENT_LOG, this, "SDL_MOUSEMOTION detected!!!" });*/
+				Notify(new EventInfo{ EVENT_INPUT_MOUSE_MOVED, this, "", &currentSDLEvent });				
 				break;
 			}
 				

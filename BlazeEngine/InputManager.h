@@ -10,7 +10,7 @@
 namespace BlazeEngine
 {
 	// Binary controls
-	enum INPUT_BUTTON
+	enum INPUT_STATE
 	{		
 		INPUT_BUTTON_FORWARD,
 		INPUT_BUTTON_BACKWARD,
@@ -21,10 +21,11 @@ namespace BlazeEngine
 
 		INPUT_MOUSE_LEFT,
 		INPUT_MOUSE_RIGHT,
+		INPUT_MOUSE_AXIS,
 
 		INPUT_BUTTON_QUIT, // Temporary: Hard code a quit button
 
-		INPUT_NUM_BUTTON_INPUTS // RESERVED: A count of the number of INPUT_BUTTON's
+		INPUT_NUM_STATES // RESERVED: A count of the number of INPUT_STATE's
 	};
 
 	// Analogue controls (eg. mouse movement)
@@ -68,9 +69,9 @@ namespace BlazeEngine
 		InputManager(InputManager const&) = delete; // Disallow copying of our Singleton
 		void operator=(InputManager const&) = delete;
 
-		// Member functions:
-		static bool GetInput(INPUT_BUTTON button);
-		double GetMouseAxisInput(INPUT_AXIS axis);
+		// Static member functions:
+		static bool GetInputState(INPUT_STATE button);
+		static double GetMouseAxisInput(INPUT_AXIS axis);
 		
 		inline InputBindings const* GetInputBindings()
 		{
@@ -88,8 +89,8 @@ namespace BlazeEngine
 		void HandleEvent(EventInfo const* eventInfo);
 
 	private:
-		static bool buttonStates[INPUT_NUM_BUTTON_INPUTS]; // Stores the state of buttons. Updated on key down/up
-		double mouseAxisStates[INPUT_NUM_INPUT_AXIS];
+		static bool buttonStates[INPUT_NUM_STATES]; // Stores the state of buttons. Updated on key down/up
+		static double mouseAxisStates[INPUT_NUM_INPUT_AXIS];
 
 		// SDL2 event queue handling:
 		const static int MAX_EVENTS = 10; // Max number of events to look for

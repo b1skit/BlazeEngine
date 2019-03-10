@@ -26,8 +26,13 @@ namespace BlazeEngine
 
 	private:
 		Camera playerCam;
-		float movementSpeed = 0.2f;
 
+		// Control configuration:
+		float movementSpeed = 0.2f;
+		
+		// TO DO: Initialize from core engine config
+		float mousePitchXSensitivity = -0.001f; 
+		float mouseYawYSensitivity = -0.001f;
 	};
 
 }

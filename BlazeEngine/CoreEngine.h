@@ -67,7 +67,6 @@ namespace BlazeEngine
 
 		// Engine component singletons public API:		
 		EventManager* const BlazeEventManager = &EventManager::Instance();
-		TimeManager* const BlazeTimeManager = &TimeManager::Instance();
 		InputManager* const BlazeInputManager = &InputManager::Instance();
 		SceneManager* const BlazeSceneManager = &SceneManager::Instance();
 		RenderManager* const BlazeRenderManager = &RenderManager::Instance();
@@ -95,6 +94,7 @@ namespace BlazeEngine
 
 		// Private engine component singletons:	
 		LogManager* const BlazeLogManager = &LogManager::Instance();
+		TimeManager* const BlazeTimeManager = &TimeManager::Instance();
 
 		// Engine control:
 		bool isRunning = false;

@@ -10,13 +10,14 @@
 namespace BlazeEngine
 {
 	// Static members:
-	bool InputManager::buttonStates[INPUT_NUM_BUTTON_INPUTS];
+	bool InputManager::buttonStates[INPUT_NUM_STATES];
+	double InputManager::mouseAxisStates[INPUT_NUM_INPUT_AXIS];
 
 
 	// Constructor:
 	InputManager::InputManager() : EngineComponent("InputManager")
 	{
-		for (int i = 0; i < INPUT_NUM_BUTTON_INPUTS; i++)
+		for (int i = 0; i < INPUT_NUM_STATES; i++)
 		{
 			buttonStates[i] = false;
 		}
@@ -38,7 +39,7 @@ namespace BlazeEngine
 		return *instance;
 	}
 
-	bool InputManager::GetInput(INPUT_BUTTON key)
+	bool InputManager::GetInputState(INPUT_STATE key)
 	{
 		return buttonStates[key];
 	}
@@ -82,7 +83,11 @@ namespace BlazeEngine
 
 	void InputManager::Update()
 	{
-		
+		buttonStates[INPUT_MOUSE_AXIS] = false;
+		for (int i = 0; i < INPUT_NUM_INPUT_AXIS; i++)
+		{
+			mouseAxisStates[i] = 0.0;
+		}
 	}
 
 	void InputManager::HandleEvent(EventInfo const * eventInfo)
@@ -131,6 +136,27 @@ namespace BlazeEngine
 		}
 		break;
 
+		case EVENT_INPUT_MOUSE_MOVED:
+		{
+			buttonStates[INPUT_MOUSE_AXIS] = true;
+			mouseAxisStates[INPUT_MOUSE_X] = eventInfo->SDL_event->motion.xrel;
+			mouseAxisStates[INPUT_MOUSE_Y] = eventInfo->SDL_event->motion.yrel;
+		}	
+		break;
+
+		case EVENT_INPUT_MOUSE_CLICK_LEFT:
+		case EVENT_INPUT_MOUSE_RELEASE_LEFT:
+		{
+			buttonStates[INPUT_MOUSE_LEFT] = !buttonStates[INPUT_MOUSE_LEFT];
+		}
+		break;
+
+		case EVENT_INPUT_MOUSE_CLICK_RIGHT:
+		case EVENT_INPUT_MOUSE_RELEASE_RIGHT:
+		{
+			buttonStates[INPUT_MOUSE_RIGHT] = !buttonStates[INPUT_MOUSE_RIGHT];
+		}
+		break;
 
 		default:
 			coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "ERROR: Default event generated in InputManager!" });
