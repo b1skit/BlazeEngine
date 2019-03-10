@@ -15,6 +15,9 @@ namespace BlazeEngine
 		// Getters/Setters:
 		inline Camera* GetCamera() { return &playerCam; }
 
+		// BlazeObject interface:
+		void Update();
+
 	protected:
 
 

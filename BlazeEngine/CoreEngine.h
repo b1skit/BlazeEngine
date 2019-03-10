@@ -21,10 +21,18 @@ namespace BlazeEngine
 		// Renderer config:
 		struct
 		{
-			string windowTitle;
-			int windowXRes;
-			int windowYRes;
+			string windowTitle = "Blaze Engine";
+			int windowXRes = 800;
+			int windowYRes = 600;
+
 		} renderer;
+
+		struct
+		{
+			float fieldOfView = 90.0f;
+			float near = 1.0f;
+			float far = 100.0f;
+		} viewCam;
 
 		struct
 		{

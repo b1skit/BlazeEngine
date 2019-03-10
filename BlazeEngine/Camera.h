@@ -12,25 +12,26 @@ namespace BlazeEngine
 	class Camera : public SceneObject
 	{
 	public:
-		Camera() : SceneObject::SceneObject("Unnamed GameObject")
+		Camera() : SceneObject::SceneObject("Camera Object")
 		{
-			view = mat4( 1.0f );
-			/*projection = mat4(1.0f);*/
+			//aspectRatio = 800.0f / 600.0f; // TO DO: HAVE THIS CONFIGURED BASED ON THE RESOLUTION!!!!
 
-			aspectRatio = 800.0f / 600.0f; // TO DO: HAVE THIS CONFIGURED BASED ON THE RESOLUTION!!!!
+			/*projection = glm::perspective(glm::radians(fieldOfView), aspectRatio, near, far);
+			
+			view = mat4(1.0f);
 
-			projection = glm::perspective(glm::radians(fieldOfView), aspectRatio, near, far);
+			viewProjection = projection * view;*/
 
-			viewProjection = mat4(1.0f);
+			Initialize(vec3(0,0,0), fieldOfView, aspectRatio, near, far); // Initialize with our default values...
 
 			/*isDirty = false;*/
 		}
 
 		/*~Camera();*/
 
+		void Initialize(vec3 position, float aspectRatio, float fieldOfView, float near, float far);
+
 		// BlazeObject interface:
-		void Startup(CoreEngine * coreEngine);
-		void Shutdown();
 		void Update();
 
 		// EventListener interface:
@@ -65,7 +66,7 @@ namespace BlazeEngine
 		float fieldOfView = 90.0f;
 		float near = 1.0f;
 		float far = 100.0f;
-		float aspectRatio;
+		float aspectRatio = 1.0f;
 
 		mat4 view;
 		mat4 projection;

@@ -42,8 +42,6 @@ namespace BlazeEngine
 		CreateShader(coreEngine->GetConfig()->shader.errorShader);		// Index 0
 		CreateShader(coreEngine->GetConfig()->shader.defaultShader);	// Index 1
 
-		this->mainCamera = player.GetCamera();
-
 		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Scene manager started!" });
 	}
 
@@ -168,7 +166,16 @@ namespace BlazeEngine
 		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
 		this->renderables.push_back(gameObjects[gameObjectIndex2].GetRenderable());
 
-		//cout << "FINSIEHD SIZES = " << gameObjects[0].GetRenderable()->ViewMeshes()->size() << " " << gameObjects[1].GetRenderable()->ViewMeshes()->size() << "\n";
+		// Set up a player object:
+		this->mainCamera = player.GetCamera();
+		mainCamera->Initialize(
+			vec3(0, 0, 0),
+			(float)coreEngine->GetConfig()->renderer.windowXRes / (float)coreEngine->GetConfig()->renderer.windowYRes,
+			coreEngine->GetConfig()->viewCam.fieldOfView, 
+			coreEngine->GetConfig()->viewCam.near, 
+			coreEngine->GetConfig()->viewCam.far
+			);
+		
 	}
 
 

@@ -11,25 +11,15 @@ namespace BlazeEngine
 	//GameObject::~GameObject()
 	//{
 	//}
-	   
-	void BlazeEngine::GameObject::Startup(CoreEngine * coreEngine)
-	{
 
-	}
+	//void BlazeEngine::GameObject::Update()
+	//{
 
-	void BlazeEngine::GameObject::Shutdown()
-	{
+	//}
 
-	}
+	//void BlazeEngine::GameObject::HandleEvent(EventInfo const * eventInfo)
+	//{
 
-	void BlazeEngine::GameObject::Update()
-	{
-
-	}
-
-	void BlazeEngine::GameObject::HandleEvent(EventInfo const * eventInfo)
-	{
-
-	}
+	//}
 }
 

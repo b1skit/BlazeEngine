@@ -9,6 +9,9 @@
 
 namespace BlazeEngine
 {
+	// Predeclarations:
+	class CoreEngine;
+
 	class SceneObject : public BlazeObject, public EventListener
 	{
 	public:
@@ -23,8 +26,10 @@ namespace BlazeEngine
 
 		inline Transform* GetTransform() { return &transform; }
 
+
 	protected:
 		Transform transform;
+		
 
 	private:
 		

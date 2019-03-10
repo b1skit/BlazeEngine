@@ -36,7 +36,7 @@ namespace BlazeEngine
 		// Get the time elapsed since the last frame, in seconds
 		inline double GetDeltaTimeSeconds()
 		{
-			return GetDeltaTimeMs() * 0.001; // Convert: ms->sec
+			return (double)GetDeltaTimeMs() * 0.001; // Convert: ms->sec
 		}
 
 		// Get the time elapsed since the last frame, in milliseconds
@@ -54,8 +54,6 @@ namespace BlazeEngine
 		{
 			return (double)GetTotalRunningTimeMs() * 0.001;
 		}
-
-		
 
 
 	protected:

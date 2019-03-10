@@ -38,12 +38,10 @@ namespace BlazeEngine
 		/*~GameObject();*/
 
 		// BlazeObject interface:
-		void Startup(CoreEngine * coreEngine);
-		void Shutdown();
-		void Update();
+		void Update(){}
 
 		// EventListener interface:
-		void HandleEvent(EventInfo const* eventInfo);
+		void HandleEvent(EventInfo const* eventInfo) {}
 
 		// Getters/Setters:
 		inline Renderable const* GetRenderable() { return &renderable; }

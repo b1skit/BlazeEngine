@@ -56,9 +56,7 @@ namespace BlazeEngine
 
 		// Functionality:
 		void Translate(vec3 amount);
-
-		/*void SetPosition(vec3 position);*/
-		//void Translate(vec3 amount, SPACE space);
+		void SetPosition(vec3 position);
 
 		/*void SetRotation(quat rotation);*/
 		//void Rotate(quat amount, SPACE space);
@@ -77,8 +75,7 @@ namespace BlazeEngine
 		Transform* parent = nullptr;
 		vector<Transform const*> children;
 
-		//vec3 localPosition;
-		//vec3 worldPosition;
+		vec3 position;
 		
 		/*quat localRotation;
 		quat worldRotation;*/

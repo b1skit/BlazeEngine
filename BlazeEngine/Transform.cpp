@@ -13,6 +13,8 @@ namespace BlazeEngine
 		/*localPosition		= { 0, 0, 0 };
 		worldPosition		= { 0, 0, 0 };*/
 
+		position = vec3(0, 0, 0);
+
 		/*localRotation		= { 0,0,0,0 };
 		worldRotation		= { 0,0,0,0 };*/
 
@@ -51,10 +53,21 @@ namespace BlazeEngine
 		this->parent = nullptr;
 	}
 
+
+
 	void Transform::Translate(vec3 amount)
 	{
 		this->model = glm::translate(model, amount);
+		this->position += amount;
 	}
+
+	void Transform::SetPosition(vec3 position)
+	{
+		this->model = glm::translate(mat4(1.0f), position);
+		this->position = position;
+	}
+
+
 
 	void Transform::RegisterChild(Transform const* child)
 	{

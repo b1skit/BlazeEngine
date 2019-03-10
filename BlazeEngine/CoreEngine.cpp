@@ -145,10 +145,8 @@ namespace BlazeEngine
 	void EngineConfig::LoadConfig(string path)
 	{
 		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, nullptr, "DEBUG: EngineConfig.LoadConfig() is not implemented. Using hard coded default values!" });
-		
-		renderer.windowTitle = "Blaze Engine";
-		renderer.windowXRes = 800;
-		renderer.windowYRes = 600;
+	
+		// TO DO: Implement config loading!
 	}
 
 	void EngineConfig::SaveConfig(string path)
