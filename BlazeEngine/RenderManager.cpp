@@ -74,7 +74,7 @@ namespace BlazeEngine
 		
 		// Configure SDL:
 		SDL_SetRelativeMouseMode(SDL_TRUE);	// Lock the mouse to the window
-		//glEnable(GL_DEPTH_TEST);			// Enable Z depth testing
+		glEnable(GL_DEPTH_TEST);			// Enable Z depth testing
 		//glDepthFunc(GL_LESS);				// How to sort Z
 		/*SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);*/
 
@@ -137,8 +137,8 @@ namespace BlazeEngine
 
 	void RenderManager::Render(double alpha)
 	{
-		// Clear the frame:
-		glClear(GL_COLOR_BUFFER_BIT);
+		// Clear the frame and depth buffer
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// TO DO: Loop by material, shader, mesh:
 		// Pre-store all vertices for the scene in (material, shader) buffers?
@@ -210,11 +210,11 @@ namespace BlazeEngine
 	{
 		// Set the initial color in both buffers:
 		glClearColor(GLclampf(clearColor.r), GLclampf(clearColor.g), GLclampf(clearColor.b), GLclampf(clearColor.a));
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		SDL_GL_SwapWindow(glWindow);
 
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 }
 
