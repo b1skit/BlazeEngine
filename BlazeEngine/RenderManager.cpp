@@ -4,8 +4,8 @@
 #include "Mesh.h"
 #include "Transform.h"
 
-//#include <fstream>
 
+#define GLM_FORCE_SWIZZLE
 #include "glm.hpp"
 #include "GL/glew.h"
 #include <GL/GL.h> // MUST follow glew.h...

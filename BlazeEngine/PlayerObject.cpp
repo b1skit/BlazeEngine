@@ -41,10 +41,10 @@ namespace BlazeEngine
 			// BUG HERE: This doesn't work correctly!
 			if (abs(this->transform.GetEulerRotation().x) < glm::half_pi<float>() || glm::sign<float>(currentXRotation) != glm::sign<float>(yAxis)) // pitch down
 			{
-				rotation.x = yAxis * mousePitchXSensitivity * TimeManager::DeltaTime();	// Pitch
+				rotation.x = yAxis * mousePitchXSensitivity * (float)TimeManager::DeltaTime();	// Pitch
 			}
 
-			rotation.y = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_X) * mouseYawYSensitivity * TimeManager::DeltaTime();			// Yaw
+			rotation.y = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_X) * mouseYawYSensitivity * (float)TimeManager::DeltaTime();			// Yaw
 	
 			this->transform.Rotate(rotation);
 		}

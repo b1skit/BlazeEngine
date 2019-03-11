@@ -6,6 +6,7 @@
 #include "Shader.h"
 #include <string>
 
+#define GLM_FORCE_SWIZZLE
 #include "glm.hpp"
 #include "SDL.h"
 
