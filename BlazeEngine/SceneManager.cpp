@@ -82,7 +82,7 @@ namespace BlazeEngine
 
 	void SceneManager::LoadScene(string scenePath)
 	{
-		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "Could not load " + scenePath + ", as SceneManager.LoadScene() is not implemented. Using a debug hard coded path for now!" });
+		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_DEBUG, this, "Could not load " + scenePath + ", as LoadScene() is not implemented. Using a debug hard coded path for now!" });
 
 		// Flush any existing scene objects: (NOTE: Any objects that access these must be shut down first!)
 		// TO DO: Make sure we're deallocating everything before clearing the lists

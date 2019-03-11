@@ -137,16 +137,13 @@ namespace BlazeEngine
 
 	void EngineConfig::LoadConfig(string path)
 	{
-		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, nullptr, "DEBUG: EngineConfig.LoadConfig() is not implemented. Using hard coded default values!" });
+		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_DEBUG, nullptr, "EngineConfig.LoadConfig() is not implemented. Using hard coded default values!" });
 	
 		// TO DO: Implement config loading!
 	}
 
 	void EngineConfig::SaveConfig(string path)
 	{
-		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, nullptr, "DEBUG: EngineConfig.SaveConfig() is not implemented. No data is being saved!\n" });
+		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_DEBUG, nullptr, "EngineConfig.SaveConfig() is not implemented. No data is being saved!\n" });
 	}
-
-	
-
 }
