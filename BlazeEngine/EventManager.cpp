@@ -210,6 +210,43 @@ namespace BlazeEngine
 			}// End switch
 		}
 
+		// Catch OpenGl errors:
+		GLenum glError;
+		string prefix = "OpenGL error: ";
+		while (glError = glGetError() != GL_NO_ERROR)
+		{
+			switch (glError)
+			{
+			case GL_INVALID_ENUM:
+				Notify(new EventInfo{ EVENT_ERROR, this, prefix + "GL_INVALID_ENUM" });
+				break;
+
+			case GL_INVALID_VALUE:
+				Notify(new EventInfo{ EVENT_ERROR, this, prefix + "GL_INVALID_VALUE" });
+				break;
+
+			case GL_INVALID_OPERATION:
+				Notify(new EventInfo{ EVENT_ERROR, this, prefix + "GL_INVALID_OPERATION" });
+				break;
+
+			case GL_INVALID_FRAMEBUFFER_OPERATION:
+				Notify(new EventInfo{ EVENT_ERROR, this, prefix + "GL_INVALID_FRAMEBUFFER_OPERATION" });
+				break;
+
+			case GL_OUT_OF_MEMORY:
+				Notify(new EventInfo{ EVENT_ERROR, this, prefix + "GL_OUT_OF_MEMORY" });
+				break;
+
+			case GL_STACK_UNDERFLOW:
+				Notify(new EventInfo{ EVENT_ERROR, this, prefix + "GL_OUT_OF_MEMORY" });
+				break;
+
+			case GL_STACK_OVERFLOW:
+				Notify(new EventInfo{ EVENT_ERROR, this, prefix + "GL_STACK_OVERFLOW" });
+				break;
+			}
+		}
+
 		// Loop through each type of event:
 		for (int currentEventType = 0; currentEventType < EVENT_NUM_EVENTS; currentEventType++)
 		{

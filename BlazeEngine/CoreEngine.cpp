@@ -94,20 +94,19 @@ namespace BlazeEngine
 		{
 			config.SaveConfig(configPath);
 		}		
-
+		
 		// Note: Shutdown order matters!
 		BlazeTimeManager->Shutdown();		
 		BlazeInputManager->Shutdown();
-
-		//BlazeSceneManager->Shutdown(); // 
 		
 		BlazeRenderManager->Shutdown();
 		
 		BlazeSceneManager->Shutdown();
-
+		
 		BlazeEventManager->Shutdown();
 
 		BlazeLogManager->Shutdown();
+		
 
 		return;
 	}

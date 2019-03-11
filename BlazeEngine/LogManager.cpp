@@ -23,10 +23,12 @@ namespace BlazeEngine
 		EngineComponent::Startup(coreEngine);
 
 		// Subscribe to every event type:
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_LOG, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_DEBUG, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_ERROR, this);
-		this->coreEngine->BlazeEventManager->Subscribe(EVENT_ENGINE_QUIT, this);
+		#if defined(LOG_VERBOSITY_DEBUG) || defined(LOG_VERBOSITY_ALL)
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_LOG, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_DEBUG, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_ERROR, this);
+			this->coreEngine->BlazeEventManager->Subscribe(EVENT_ENGINE_QUIT, this);
+		#endif	
 
 		#if defined(LOG_VERBOSITY_ALL)
 			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_BUTTON_DOWN_FORWARD, this);

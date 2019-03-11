@@ -27,7 +27,10 @@ namespace BlazeEngine
 {
 	RenderManager::~RenderManager()
 	{
-		
+		// Close our window in the destructor so we can still read any final OpenGL error messages before it is destroyed
+		SDL_GL_DeleteContext(glContext);
+		SDL_DestroyWindow(glWindow);
+		SDL_Quit();
 	}
 
 	RenderManager& RenderManager::Instance()
@@ -124,11 +127,6 @@ namespace BlazeEngine
 		glDeleteVertexArrays(VERTEX_BUFFER_SIZE, &vertexArrayObject);
 		glDeleteBuffers(VERTEX_BUFFER_SIZE, vertexBufferObjects);
 
-
-		// Close our window:
-		SDL_GL_DeleteContext(glContext);
-		SDL_DestroyWindow(glWindow);
-		SDL_Quit();
 	}
 
 	void RenderManager::Update()
