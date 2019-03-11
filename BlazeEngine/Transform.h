@@ -46,7 +46,7 @@ namespace BlazeEngine
 
 		void Rotate(vec3 eulerXYZ); // Euler rotation. Rotation order = x,y,z
 		inline vec3 const& GetEulerRotation() { return eulerRotation; }
-		/*void SetRotation(quat rotation);*/
+		void SetEulerRotation(vec3 eulerXYZ);
 		
 
 		/*void SetScale(vec3 scale);*/

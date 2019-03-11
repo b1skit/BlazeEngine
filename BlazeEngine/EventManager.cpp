@@ -244,6 +244,10 @@ namespace BlazeEngine
 			case GL_STACK_OVERFLOW:
 				Notify(new EventInfo{ EVENT_ERROR, this, prefix + "GL_STACK_OVERFLOW" });
 				break;
+
+			default:
+				Notify(new EventInfo{ EVENT_ERROR, this, prefix + to_string(glError) });
+				break;
 			}
 		}
 

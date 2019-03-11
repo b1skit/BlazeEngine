@@ -111,7 +111,7 @@ namespace BlazeEngine
 		glEnableVertexAttribArray(0); // Indicate that the vertex attribute at index 0 is being used
 
 		// Bind our index buffer:
-		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_INDEXES]);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_INDEXES]);
 
 		// Cleanup: Bind object 0 to GL_ARRAY_BUFFER to unbind vertexBufferObjects[VERTEX_BUFFER_POSITION]
 		glBindBuffer(GL_ARRAY_BUFFER, 0); 
@@ -175,7 +175,11 @@ namespace BlazeEngine
 				// ^^ TODO: Define when/which obects should use GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW
 
 
-				
+
+				//// Bind our index VBO as active:
+				//glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->NumIndices() * sizeof(GLubyte), mesh->Indices(), GL_STATIC_DRAW);
+
+
 
 				// Set the active shader: ...TO DO: Decide whether to use this directly, or via BindShader() ?
 				glUseProgram(shaders->at(shaderIndex).ShaderReference()); // ...TO DO: Decide whether to use this directly, or via BindShader() ?
@@ -184,13 +188,18 @@ namespace BlazeEngine
 				mat4 mvp = this->coreEngine->BlazeSceneManager->MainCamera()->ViewProjection() * model;
 				GLuint matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_mvp");
 				glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
-		
 
 
-				
 
 				// Draw!
 				glDrawArrays(GL_TRIANGLES, 0, mesh->NumVerts()); // Type, start index, size
+
+
+
+				///* Invoke glDrawElements telling it to draw a triangle strip using 6 indicies */
+				//glDrawElements(GL_TRIANGLE_STRIP, mesh->NumIndices(), GL_UNSIGNED_BYTE, 0);
+
+
 
 				glBindBuffer(GL_ARRAY_BUFFER, 0); // Cleanup: Bind object 0 to GL_ARRAY_BUFFER to unbind vertexBufferObjects[VERTEX_BUFFER_POSITION]
 			}

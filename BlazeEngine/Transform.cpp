@@ -111,6 +111,34 @@ namespace BlazeEngine
 		eulerRotation.z = glm::fmod<float>(eulerRotation.z, glm::two_pi<float>());
 	}
 
+	void Transform::SetEulerRotation(vec3 eulerXYZ)
+	{
+		this->rotation = mat4(1.0f);
+
+		if (eulerXYZ.x != 0)
+		{
+			this->rotation = glm::rotate(this->rotation, eulerXYZ.x, WORLD_RIGHT);
+		}
+		if (eulerXYZ.y != 0)
+		{
+			this->rotation = glm::rotate(this->rotation, eulerXYZ.y, WORLD_UP);
+		}
+		if (eulerXYZ.z != 0)
+		{
+			this->rotation = glm::rotate(this->rotation, eulerXYZ.z, WORLD_FORWARD);
+		}
+
+		// Update our local CS axis:
+		this->forward = (rotation * vec4(WORLD_FORWARD, 0)).xyz();
+		this->right = (rotation * vec4(WORLD_RIGHT, 0)).xyz();
+		this->up = (rotation * vec4(WORLD_UP, 0)).xyz();
+
+		this->eulerRotation = eulerXYZ;
+		eulerRotation.x = glm::fmod<float>(eulerRotation.x, glm::two_pi<float>());
+		eulerRotation.y = glm::fmod<float>(eulerRotation.y, glm::two_pi<float>());
+		eulerRotation.z = glm::fmod<float>(eulerRotation.z, glm::two_pi<float>());
+	}
+
 
 
 	void Transform::RegisterChild(Transform* child)

@@ -52,40 +52,33 @@ namespace BlazeEngine
 
 		// Handle direction:
 		vec3 direction = vec3(0.0f, 0.0f, 0.0f);
-		bool readInput = false;
 
 		if (InputManager::GetInputState(INPUT_BUTTON_FORWARD))
 		{
 			direction += this->transform.Forward();
-			readInput = true;
 		}
 		if (InputManager::GetInputState(INPUT_BUTTON_BACKWARD))
 		{
 			direction += this->transform.Forward() * -1.0f;
-			readInput = true;
 		}
 		if (InputManager::GetInputState(INPUT_BUTTON_LEFT))
 		{
 			direction += this->transform.Right() * -1.0f;
-			readInput = true;
 		}
 		if (InputManager::GetInputState(INPUT_BUTTON_RIGHT))
 		{
 			direction += this->transform.Right();
-			readInput = true;
 		}
 		if (InputManager::GetInputState(INPUT_BUTTON_UP))
 		{
 			direction += this->transform.Up();
-			readInput = true;
 		}
 		if (InputManager::GetInputState(INPUT_BUTTON_DOWN))
 		{
 			direction += this->transform.Up() * -1.0f;
-			readInput = true;
 		}
 
-		if (readInput)
+		if (glm::length(direction) != 0.0f)
 		{
 			direction = glm::normalize(direction);
 			direction *= (float)(movementSpeed * TimeManager::DeltaTime());
@@ -93,7 +86,11 @@ namespace BlazeEngine
 			this->transform.Translate(direction);
 		}
 
-		
+		if (InputManager::GetInputState(INPUT_MOUSE_LEFT))
+		{
+			this->transform.SetPosition(vec3(0, 0, 0));
+			this->transform.SetEulerRotation(vec3(0, 0, 0));
+		}
 
 
 

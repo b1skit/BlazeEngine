@@ -49,6 +49,7 @@ namespace BlazeEngine
 	class Mesh
 	{
 	public:
+		/*Mesh(Vertex* vertices, unsigned int numVerts, GLubyte* indices, unsigned int numIndices, Material* material);*/
 		Mesh(Vertex* vertices, unsigned int numVerts, Material* material);
 		~Mesh();
 
@@ -61,10 +62,14 @@ namespace BlazeEngine
 			this->material = mesh.material;
 		}
 
+
 		// Getters/Setters:
 		inline Vertex* Vertices() { return vertices; }
 		inline unsigned int NumVerts() { return this->numVerts; }
 		inline Material* GetMaterial() { return material; }
+		inline GLubyte* Indices() { return indices; }
+		inline unsigned int NumIndices() { return numIndices; }
+
 
 	protected:
 
@@ -72,6 +77,9 @@ namespace BlazeEngine
 	private:
 		Vertex* vertices = nullptr;		// Deallocated in SceneManager.Shutdown()
 		unsigned int numVerts;
+
+		GLubyte* indices = nullptr;
+		unsigned int numIndices;
 
 		Material* material = nullptr;	// Points to scene manager's statically allocated list of materials
 	};

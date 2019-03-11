@@ -54,9 +54,17 @@ namespace BlazeEngine
 
 		for (int i = 0; i < (int)meshes.size(); i++)
 		{
-			delete meshes[i].Vertices();
+			if (meshes[i].Vertices())
+			{
+				delete meshes[i].Vertices();
+			}
+			
+			if (meshes[i].Indices())
+			{
+				delete meshes[i].Indices();
+			}
+			
 		}
-
 
 		// Detach and delete shaders:
 		for (int i = 0; i < (int)shaders.size(); i++)
@@ -103,9 +111,9 @@ namespace BlazeEngine
 
 		// Allocate vertices: (Normally, we'll do this when loading a .FBX)
 		Vertex* vertices = new Vertex[3];
-		vertices[0] = Vertex(vec3(-0.5f, -0.5f, -10.0f));
-		vertices[1] = Vertex(vec3(0.5f, -0.5f, -10.0f));
-		vertices[2] = Vertex(vec3(0.0f, 0.5f, -10.0f));
+		vertices[0] = Vertex(vec3(-0.5f, -0.5f, -20.0f));
+		vertices[1] = Vertex(vec3(0.5f, -0.5f, -20.0f));
+		vertices[2] = Vertex(vec3(0.0f, 0.5f, -20.0f));
 
 		// Create a material and shader:
 		unsigned int shaderIndex = GetShaderIndex(coreEngine->GetConfig()->shader.defaultShader);
@@ -172,6 +180,9 @@ namespace BlazeEngine
 		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
 		this->renderables.push_back(gameObjects[gameObjectIndex2]->GetRenderable());
 
+
+
+
 		//Vertex* cubeVerts = new Vertex[12];
 		//cubeVerts[0] = Vertex(vec3(-1.0f, 1.0f, 1.0f));
 		//cubeVerts[1] = Vertex(vec3(-1.0f, -1.0f, 1.0f));
@@ -182,31 +193,54 @@ namespace BlazeEngine
 		//cubeVerts[6] = Vertex(vec3(1.0f, 1.0f, -1.0f));
 		//cubeVerts[7] = Vertex(vec3(-1.0f, 1.0f, -1.0f));
 
-		/*1
-		0,1,3
-		2
-		3,1,2
-		3
-		7,4,0
-		4
-		0,4,1
-		5
-		3,2,5
-		6
-		3,5,6
-		7
-		7,0,3
-		8
-		7,3,6
-		9
-		1,4,2
-		10
-		2,4,5
-		11
-		7,6,4
-		12
-		6,5,4
-		*/
+		//GLubyte* cubeIndices = new GLubyte[36] 
+		//{
+		//	0, 1, 3, 
+		//	3, 1, 2, 
+		//	7, 4, 0, 
+		//	0, 4, 1, 
+		//	3, 2, 5, 
+		//	3, 5, 6, 
+		//	7, 0, 3, 
+		//	7, 3, 6, 
+		//	1, 4, 2, 
+		//	2, 4, 5, 
+		//	7, 6, 4, 
+		//	6, 5, 4,
+		//};
+
+		//// Create a material and shader:
+		//unsigned int shaderIndex = GetShaderIndex(coreEngine->GetConfig()->shader.defaultShader);
+
+		//Material material(shaderIndex);
+		//this->materials.push_back(material);
+		//int materialIndex = (int)this->materials.size() - 1;
+
+		//// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
+		//Mesh mesh(cubeVerts, 12, cubeIndices, 36, &(this->materials.at(materialIndex)));
+		//this->meshes.push_back(mesh);
+		//int meshIndex = (int)this->meshes.size() - 1; // Store the index so we can pass the address
+
+		//// Assemble a list of all meshes held by a Renderable:
+		//vector<Mesh*> viewMeshes;
+		//viewMeshes.push_back(&(this->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
+		//Renderable testRenderable(viewMeshes);
+
+		//// Construct a GameObject:
+		//GameObject* testObject = new GameObject("cubeObject", testRenderable);
+
+		//// Add test objects to scene:
+		//this->gameObjects.push_back(testObject);
+		//int gameObjectIndex = (int)this->gameObjects.size() - 1;
+
+		//// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
+		//this->renderables.push_back(gameObjects[gameObjectIndex]->GetRenderable());
+
+
+
+
+
+
 
 
 

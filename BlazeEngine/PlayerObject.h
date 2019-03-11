@@ -28,7 +28,7 @@ namespace BlazeEngine
 		Camera playerCam;
 
 		// Control configuration:
-		float movementSpeed = 0.2f;
+		float movementSpeed = 0.01f;
 		
 		// TO DO: Initialize from core engine config
 		float mousePitchXSensitivity = -0.001f; 
