@@ -70,11 +70,19 @@ namespace BlazeEngine
 		glContext = SDL_GL_CreateContext(glWindow);
 		
 		// Configure SDL:
-		SDL_SetRelativeMouseMode(SDL_TRUE);
+		SDL_SetRelativeMouseMode(SDL_TRUE);	// Lock the mouse to the window
+		//glEnable(GL_DEPTH_TEST);			// Enable Z depth testing
+		//glDepthFunc(GL_LESS);				// How to sort Z
+		/*SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);*/
+
+		// /* Enable multisampling for a nice antialiased effect */
+		//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+		//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+
 		/*SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);*/
+		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);*/
+		
 		
 		//// Make our buffer swap syncronized with the monitor's vertical refresh:
 		//SDL_GL_SetSwapInterval(1);
@@ -98,6 +106,9 @@ namespace BlazeEngine
 		// Tell OpenGL how to interpet the data we'll put on the GPU:
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0); // Define array of vertex attribute data: index, number of components (3 = 3 elements in vec3), type, should data be normalized?, stride, offset from start to 1st component
 		glEnableVertexAttribArray(0); // Indicate that the vertex attribute at index 0 is being used
+
+		// Bind our index buffer:
+		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_INDEXES]);
 
 		// Cleanup: Bind object 0 to GL_ARRAY_BUFFER to unbind vertexBufferObjects[VERTEX_BUFFER_POSITION]
 		glBindBuffer(GL_ARRAY_BUFFER, 0); 
@@ -173,7 +184,7 @@ namespace BlazeEngine
 
 				
 				mat4 mvp = this->coreEngine->BlazeSceneManager->MainCamera()->ViewProjection() * model;
-				GLuint matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_projection");
+				GLuint matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_mvp");
 				glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
 		
 

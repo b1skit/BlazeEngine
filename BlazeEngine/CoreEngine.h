@@ -29,7 +29,7 @@ namespace BlazeEngine
 
 		struct
 		{
-			float fieldOfView = 90.0f;
+			float fieldOfView = 60.0f;
 			float near = 1.0f;
 			float far = 100.0f;
 		} viewCam;

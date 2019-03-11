@@ -172,6 +172,43 @@ namespace BlazeEngine
 		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
 		this->renderables.push_back(gameObjects[gameObjectIndex2]->GetRenderable());
 
+		//Vertex* cubeVerts = new Vertex[12];
+		//cubeVerts[0] = Vertex(vec3(-1.0f, 1.0f, 1.0f));
+		//cubeVerts[1] = Vertex(vec3(-1.0f, -1.0f, 1.0f));
+		//cubeVerts[2] = Vertex(vec3(1.0f, -1.0f, 1.0f));
+		//cubeVerts[3] = Vertex(vec3(1.0f, 1.0f, 1.0f));
+		//cubeVerts[4] = Vertex(vec3(-1.0f, -1.0f, -1.0f));
+		//cubeVerts[5] = Vertex(vec3(1.0f, -1.0f, -1.0f));
+		//cubeVerts[6] = Vertex(vec3(1.0f, 1.0f, -1.0f));
+		//cubeVerts[7] = Vertex(vec3(-1.0f, 1.0f, -1.0f));
+
+		/*1
+		0,1,3
+		2
+		3,1,2
+		3
+		7,4,0
+		4
+		0,4,1
+		5
+		3,2,5
+		6
+		3,5,6
+		7
+		7,0,3
+		8
+		7,3,6
+		9
+		1,4,2
+		10
+		2,4,5
+		11
+		7,6,4
+		12
+		6,5,4
+		*/
+
+
 
 		// Set up a player object:
 		PlayerObject* player = new PlayerObject();
@@ -247,7 +284,7 @@ namespace BlazeEngine
 
 		// Associate our vertex attribute indexes with named variables:
 		glBindAttribLocation(shaderReference, 0, "in_position"); // Bind attribute 0 as "position" in the vertex shader
-		glBindAttribLocation(shaderReference, 1, "in_projection"); // Bind attribute 0 as "position" in the vertex shader
+		glBindAttribLocation(shaderReference, 1, "in_mvp"); // Bind attribute 0 as "position" in the vertex shader
 		// TO DO: Bind other attributes (color, uv, etc)...
 		// TO DO: Replace indexes with an enum
 

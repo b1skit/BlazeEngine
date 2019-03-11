@@ -49,11 +49,9 @@ namespace BlazeEngine
 		this->model = this->translation * this->rotation * this->scale;
 		mat4 combinedModel = model;
 
-		Transform* currentParent = this->parent;
-		while (currentParent != nullptr) // TO DO: Optimize this (with dirty bit)
+		if (this->parent != nullptr)
 		{
-			combinedModel = currentParent->Model() * combinedModel;
-			currentParent = currentParent->GetParent();
+			combinedModel = this->parent->Model() * combinedModel;
 		}
 
 		return combinedModel;

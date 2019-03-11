@@ -16,14 +16,6 @@ namespace BlazeEngine
 	public:
 		Camera() : SceneObject::SceneObject("Camera Object")
 		{
-			//aspectRatio = 800.0f / 600.0f; // TO DO: HAVE THIS CONFIGURED BASED ON THE RESOLUTION!!!!
-
-			/*projection = glm::perspective(glm::radians(fieldOfView), aspectRatio, near, far);
-			
-			view = mat4(1.0f);
-
-			viewProjection = projection * view;*/
-
 			Initialize(vec3(0,0,0), fieldOfView, aspectRatio, near, far); // Initialize with our default values...
 
 			/*isDirty = false;*/
