@@ -213,7 +213,7 @@ namespace BlazeEngine
 		// Catch OpenGl errors:
 		GLenum glError;
 		string prefix = "OpenGL error: ";
-		while (glError = glGetError() != GL_NO_ERROR)
+		while ((glError = glGetError()) != GL_NO_ERROR)
 		{
 			switch (glError)
 			{
@@ -243,9 +243,6 @@ namespace BlazeEngine
 
 			case GL_STACK_OVERFLOW:
 				Notify(new EventInfo{ EVENT_ERROR, this, prefix + "GL_STACK_OVERFLOW" });
-				break;
-
-			case 1: //Override?!?!
 				break;
 
 			default:
