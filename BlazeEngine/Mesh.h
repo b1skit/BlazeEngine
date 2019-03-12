@@ -54,14 +54,7 @@ namespace BlazeEngine
 		~Mesh();
 
 		// Copy constructor:
-		Mesh(const Mesh& mesh)
-		{
-			this->vertices = mesh.vertices;
-			this->numVerts = mesh.numVerts;
-
-			this->material = mesh.material;
-		}
-
+		Mesh(const Mesh& mesh) = default;
 
 		// Getters/Setters:
 		inline Vertex* Vertices() { return vertices; }

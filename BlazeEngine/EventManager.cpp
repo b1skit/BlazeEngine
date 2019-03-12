@@ -213,7 +213,7 @@ namespace BlazeEngine
 		// Catch OpenGl errors:
 		GLenum glError;
 		string prefix = "OpenGL error: ";
-		while ((glError = glGetError()) != GL_NO_ERROR)
+		while ((glError = glGetError()) != GL_NO_ERROR) // TO DO: REPLACE THIS WITH AN OPENGL ERROR HANDLING CALLBACK FUNCTION
 		{
 			switch (glError)
 			{

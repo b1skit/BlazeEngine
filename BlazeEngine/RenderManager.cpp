@@ -186,8 +186,6 @@ namespace BlazeEngine
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_INDEXES]);
 				glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->NumIndices() * sizeof(mesh->Indices()[0]), mesh->Indices(), GL_STATIC_DRAW);
 
-
-
 				// Set the active shader: ...TO DO: Decide whether to use this directly, or via BindShader() ?
 				glUseProgram(shaders->at(shaderIndex).ShaderReference()); // ...TO DO: Decide whether to use this directly, or via BindShader() ?
 
@@ -199,12 +197,12 @@ namespace BlazeEngine
 
 
 				// Draw!
-				glDrawArrays(GL_TRIANGLES, 0, mesh->NumVerts()); // Type, start index, size
+				//glDrawArrays(GL_TRIANGLES, 0, mesh->NumVerts()); // Type, start index, size
 
 
 
 				/* Invoke glDrawElements telling it to draw a triangle strip using 6 indicies */
-				//glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, (void*)(0));
+				glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, (void*)(0));
 				// ^^^ GL_TRIANGLE_STRIP ??
 				// GL_UNSIGNED_BYTE
 				// mesh->NumIndices()
