@@ -69,7 +69,7 @@ namespace BlazeEngine
 		GLuint vertexBufferObjects[VERTEX_BUFFER_SIZE];		// Buffer objects that hold vertices in GPU memory
 		//GLuint vertexArrayObjects[VERTEX_BUFFER_SIZE];		// States needed to supply vertex data
 		GLuint vertexArrayObject;
-		GLuint elementBufferObjects[VERTEX_BUFFER_SIZE];	// Triangle vertex indices
+		//GLuint elementBufferObjects[VERTEX_BUFFER_SIZE];	// Triangle vertex indices
 		/*GLuint indexBufferObjects[VERTEX_BUFFER_SIZE];*/
 
 		//// Shaders:

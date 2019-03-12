@@ -115,6 +115,11 @@ namespace BlazeEngine
 		vertices[1] = Vertex(vec3(0.5f, -0.5f, -20.0f));
 		vertices[2] = Vertex(vec3(0.0f, 0.5f, -20.0f));
 
+		GLubyte* vertexIndices = new GLubyte[3] 
+		{
+			0, 1, 2
+		};
+
 		// Create a material and shader:
 		unsigned int shaderIndex = GetShaderIndex(coreEngine->GetConfig()->shader.defaultShader);
 		
@@ -123,7 +128,7 @@ namespace BlazeEngine
 		int materialIndex = (int)this->materials.size() - 1;
 
 		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		Mesh mesh(vertices, 3, &(this->materials.at(materialIndex)));
+		Mesh mesh(vertices, 3, vertexIndices, 3, &(this->materials.at(materialIndex)));
 		this->meshes.push_back(mesh);
 		int meshIndex = (int)this->meshes.size() - 1; // Store the index so we can pass the address
 
@@ -151,6 +156,12 @@ namespace BlazeEngine
 		vertices2[1] = Vertex(vec3(-0.5f, 0.2f, -10.0f));
 		vertices2[2] = Vertex(vec3(0.0f, 0.5f, -10.0f));
 
+		GLubyte* vertexIndices2 = new GLubyte[3]
+		{
+			/*0, 1, 2*/
+			2, 1, 0 // TEMP: REVERSED!!!!
+		};
+
 		// Create a material and shader:
 		int shaderIndex2 = GetShaderIndex(coreEngine->GetConfig()->shader.errorShader);
 
@@ -159,7 +170,7 @@ namespace BlazeEngine
 		int materialIndex2 = (int)this->materials.size() - 1;
 
 		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		Mesh mesh2(vertices2, 3, &(this->materials.at(materialIndex2)));
+		Mesh mesh2(vertices2, 3,vertexIndices2, 3, &(this->materials.at(materialIndex2)));
 		this->meshes.push_back(mesh2);
 		int meshIndex2 = (int)this->meshes.size() - 1; // Store the index so we can pass the address
 

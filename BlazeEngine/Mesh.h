@@ -49,8 +49,8 @@ namespace BlazeEngine
 	class Mesh
 	{
 	public:
-		/*Mesh(Vertex* vertices, unsigned int numVerts, GLubyte* indices, unsigned int numIndices, Material* material);*/
-		Mesh(Vertex* vertices, unsigned int numVerts, Material* material);
+		Mesh(Vertex* vertices, unsigned int numVerts, GLubyte* indices, unsigned int numIndices, Material* material);
+		/*Mesh(Vertex* vertices, unsigned int numVerts, Material* material);*/
 		~Mesh();
 
 		// Copy constructor:

@@ -74,8 +74,7 @@ namespace BlazeEngine
 		
 		// Configure SDL:
 		SDL_SetRelativeMouseMode(SDL_TRUE);	// Lock the mouse to the window
-		glEnable(GL_DEPTH_TEST);			// Enable Z depth testing
-		//glDepthFunc(GL_LESS);				// How to sort Z
+
 		/*SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);*/
 
 		// /* Enable multisampling for a nice antialiased effect */
@@ -85,10 +84,16 @@ namespace BlazeEngine
 		/*SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);*/
-		
-		
+
+
 		//// Make our buffer swap syncronized with the monitor's vertical refresh:
 		//SDL_GL_SetSwapInterval(1);
+
+		// Configure OpenGL:
+		glEnable(GL_DEPTH_TEST);			// Enable Z depth testing
+		//glDepthFunc(GL_LESS);				// How to sort Z
+		
+		
 
 		// Initialize glew:
 		GLenum glStatus = glewInit();
@@ -105,12 +110,14 @@ namespace BlazeEngine
 		// Create and bind a vertex buffer to a buffer binding point allocated on the GPU suitable for vertices:
 		glGenBuffers(1, &vertexBufferObjects[VERTEX_BUFFER_POSITION]); // Create a vertex position buffer object and store its handle
 		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_POSITION]); // Bind our VBO to GL_ARRAY_BUFFER
+		glEnableClientState(GL_VERTEX_ARRAY); // SHOULD WE CALL THIS ONCE, OR EVERY FRAME? (undone in Shutdown())
 
 		// Tell OpenGL how to interpet the data we'll put on the GPU:
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0); // Define array of vertex attribute data: index, number of components (3 = 3 elements in vec3), type, should data be normalized?, stride, offset from start to 1st component
 		glEnableVertexAttribArray(0); // Indicate that the vertex attribute at index 0 is being used
 
 		// Bind our index buffer:
+		glGenBuffers(1, &vertexBufferObjects[VERTEX_BUFFER_INDEXES]);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_INDEXES]);
 
 		// Cleanup: Bind object 0 to GL_ARRAY_BUFFER to unbind vertexBufferObjects[VERTEX_BUFFER_POSITION]
@@ -127,6 +134,7 @@ namespace BlazeEngine
 		glDeleteVertexArrays(VERTEX_BUFFER_SIZE, &vertexArrayObject);
 		glDeleteBuffers(VERTEX_BUFFER_SIZE, vertexBufferObjects);
 
+		glDisableClientState(GL_VERTEX_ARRAY);
 	}
 
 	void RenderManager::Update()
@@ -167,17 +175,16 @@ namespace BlazeEngine
 				glBindVertexArray(vertexArrayObject);
 
 
-				// Bind our position VBO as active:
+				// Bind our position VBO as active and copy vertex data into the buffer
 				glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_POSITION]); // Bind our VBO to GL_ARRAY_BUFFER
-
-				// Copy vertex data into the buffer:
 				glBufferData(GL_ARRAY_BUFFER, mesh->NumVerts() * sizeof(mesh->Vertices()[0]), mesh->Vertices(), GL_STATIC_DRAW); // Put data into the buffer
 				// ^^ TODO: Define when/which obects should use GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW
 
 
 
-				//// Bind our index VBO as active:
-				//glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->NumIndices() * sizeof(GLubyte), mesh->Indices(), GL_STATIC_DRAW);
+				// Bind our index VBO as active:
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_INDEXES]);
+				glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->NumIndices() * sizeof(mesh->Indices()[0]), mesh->Indices(), GL_STATIC_DRAW);
 
 
 
@@ -196,12 +203,15 @@ namespace BlazeEngine
 
 
 
-				///* Invoke glDrawElements telling it to draw a triangle strip using 6 indicies */
-				//glDrawElements(GL_TRIANGLE_STRIP, mesh->NumIndices(), GL_UNSIGNED_BYTE, 0);
-
+				/* Invoke glDrawElements telling it to draw a triangle strip using 6 indicies */
+				//glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, (void*)(0));
+				// ^^^ GL_TRIANGLE_STRIP ??
+				// GL_UNSIGNED_BYTE
+				// mesh->NumIndices()
 
 
 				glBindBuffer(GL_ARRAY_BUFFER, 0); // Cleanup: Bind object 0 to GL_ARRAY_BUFFER to unbind vertexBufferObjects[VERTEX_BUFFER_POSITION]
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 			}
 		}
 
