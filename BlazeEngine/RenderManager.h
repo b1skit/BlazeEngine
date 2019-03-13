@@ -60,7 +60,9 @@ namespace BlazeEngine
 		enum
 		{
 			VERTEX_BUFFER_POSITION,
+			VERTEX_BUFFER_NORMAL,
 			VERTEX_BUFFER_COLOR,
+			VERTEX_BUFFER_UV,
 			VERTEX_BUFFER_INDEXES,
 
 			VERTEX_BUFFER_SIZE, // Reserved: Number of buffers to allocate

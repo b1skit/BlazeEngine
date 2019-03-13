@@ -118,6 +118,17 @@ namespace BlazeEngine
 		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0); // Define array of vertex attribute data: index, number of components (3 = 3 elements in vec3), type, should data be normalized?, stride, offset from start to 1st component
 		//glEnableVertexAttribArray(0); // Indicate that the vertex attribute at index 0 is being used
 
+		
+		// Create and bind the color buffer:
+		glGenBuffers(1, &vertexBufferObjects[VERTEX_BUFFER_COLOR]);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_COLOR]);
+
+
+
+		// TO DO: OTHER BUFFERS
+
+
+
 		// Bind our index buffer:
 		glGenBuffers(1, &vertexBufferObjects[VERTEX_BUFFER_INDEXES]);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_INDEXES]);
@@ -180,6 +191,9 @@ namespace BlazeEngine
 				glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_POSITION]);		// TO DO: Define when/which obects should use GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW ??
 				glBufferData(GL_ARRAY_BUFFER, mesh->NumVerts() * sizeof(Vertex), &mesh->Vertices()[0].position.x, GL_STATIC_DRAW); // <- should we be null checking?
 
+				//// Colors:
+				//glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_COLOR]);
+				//glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
 
 				// Bind our index VBO as active:
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_INDEXES]);

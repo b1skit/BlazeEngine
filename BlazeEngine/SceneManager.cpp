@@ -116,10 +116,10 @@ namespace BlazeEngine
 		// Allocate vertices: (Normally, we'll do this when loading a .FBX)
 		int numVerts = 4;
 		Vertex* vertices = new Vertex[numVerts];
-		vertices[0] = Vertex(vec3(-0.5f, -0.5f, -20.0f));
-		vertices[1] = Vertex(vec3(0.5f, -0.5f, -20.0f));
-		vertices[2] = Vertex(vec3(0.0f, 0.5f, -20.0f));
-		vertices[3] = Vertex(vec3(0.0f, -1.0f, -20.0f));
+		vertices[0] = Vertex(vec3(-0.5f, -0.5f, -20.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
+		vertices[1] = Vertex(vec3(0.5f, -0.5f, -20.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
+		vertices[2] = Vertex(vec3(0.0f, 0.5f, -20.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
+		vertices[3] = Vertex(vec3(0.0f, -1.0f, -20.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
 
 		int numIndices = 6;
 		GLubyte* vertexIndices = new GLubyte[numIndices]
@@ -160,9 +160,9 @@ namespace BlazeEngine
 		// 2nd test mesh:
 		Vertex* vertices2 = new Vertex[3];
 
-		vertices2[0] = Vertex(vec3(-1.0f, 0.5f, -10.0f));
-		vertices2[1] = Vertex(vec3(-0.5f, 0.2f, -10.0f));
-		vertices2[2] = Vertex(vec3(0.0f, 0.5f, -10.0f));
+		vertices2[0] = Vertex(vec3(-1.0f, 0.5f, -10.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
+		vertices2[1] = Vertex(vec3(-0.5f, 0.2f, -10.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
+		vertices2[2] = Vertex(vec3(0.0f, 0.5f, -10.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
 
 		GLubyte* vertexIndices2 = new GLubyte[3]
 		{
@@ -337,8 +337,10 @@ namespace BlazeEngine
 
 		// Associate our vertex attribute indexes with named variables:
 		glBindAttribLocation(shaderReference, 0, "in_position"); // Bind attribute 0 as "position" in the vertex shader
-		glBindAttribLocation(shaderReference, 1, "in_mvp"); // Bind attribute 0 as "position" in the vertex shader
-		// TO DO: Bind other attributes (color, uv, etc)...
+		glBindAttribLocation(shaderReference, 1, "in_normal");
+		glBindAttribLocation(shaderReference, 2, "in_color");
+		glBindAttribLocation(shaderReference, 3, "in_uv0");
+		glBindAttribLocation(shaderReference, 4, "in_mvp"); // Bind attribute1 as "position" in the vertex shader
 		// TO DO: Replace indexes with an enum
 
 		// Link our program object:
@@ -355,15 +357,12 @@ namespace BlazeEngine
 			return -1;
 		}
 
-
-
 		// Delete the shader objects now that they've been linked into the program object:
 		glDeleteShader(shaders[0]);
 		glDeleteShader(shaders[1]);
 		delete shaders;
 
 
-		/*Shader newShader(shaderName, shaderReference, numShaders, shaders);*/
 		Shader newShader(shaderName, shaderReference);
 
 		this->shaders.push_back(newShader);

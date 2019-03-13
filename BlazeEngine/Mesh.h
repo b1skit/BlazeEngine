@@ -8,6 +8,7 @@
 //using glm::vec2;
 using glm::vec3;
 using glm::vec4;
+using glm::vec2;
 
 
 namespace BlazeEngine
@@ -18,31 +19,36 @@ namespace BlazeEngine
 		// TO DO: Figure out an elegant way to initialize vertices with all of their attributes...
 		Vertex()
 		{
-			position = vec3(0, 0, 0); 
+			position = vec3(0.0f, 0.0f, 0.0f); 
+			normal = vec3(0.0f, 0.0f, 0.0f);
+			color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+			uv0 = vec2(0.0f, 0.0f);
 		}
 
-		// Explicit constructor:
-		Vertex(const glm::vec3& position)
+		 //Explicit constructor:
+		Vertex(const vec3& position, const vec3& normal, const vec4& color, const vec2& uv0)
 		{
 			this->position = position;
-			
+			this->normal = normal;
+			this->color = color;
+			this->uv0 = uv0;
 		}
 
 		// Copy constructor:
-		Vertex(const Vertex& vertex)
-		{
+		Vertex(const Vertex& vertex) = default;
+		/*{
 			this->position = vertex.position;
-
-		}
+		}*/
 
 		vec3 position;
+		vec3 normal;
+		vec4 color;
+		vec2 uv0;
 	protected:
 
 
 	private:
-		//vec3 position;
-		/*vec4 color;*/
-		/*vec2 UV;*/
+
 
 	};
 
