@@ -35,11 +35,12 @@ namespace BlazeEngine
 
 		}
 
+		vec3 position;
 	protected:
 
 
 	private:
-		vec3 position;
+		//vec3 position;
 		/*vec4 color;*/
 		/*vec2 UV;*/
 

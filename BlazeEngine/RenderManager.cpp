@@ -113,8 +113,10 @@ namespace BlazeEngine
 		glEnableClientState(GL_VERTEX_ARRAY); // SHOULD WE CALL THIS ONCE, OR EVERY FRAME? (undone in Shutdown())
 
 		// Tell OpenGL how to interpet the data we'll put on the GPU:
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0); // Define array of vertex attribute data: index, number of components (3 = 3 elements in vec3), type, should data be normalized?, stride, offset from start to 1st component
-		glEnableVertexAttribArray(0); // Indicate that the vertex attribute at index 0 is being used
+		//glVertexPointer(3, GL_FLOAT, 0, 0); // GLint size, GLenum type, GLsizei stride, const GLvoid * pointer);
+		glVertexPointer(3, GL_FLOAT, sizeof(Vertex), (void*)(0)); // GLint size, GLenum type, GLsizei stride, const GLvoid * pointer);
+		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0); // Define array of vertex attribute data: index, number of components (3 = 3 elements in vec3), type, should data be normalized?, stride, offset from start to 1st component
+		//glEnableVertexAttribArray(0); // Indicate that the vertex attribute at index 0 is being used
 
 		// Bind our index buffer:
 		glGenBuffers(1, &vertexBufferObjects[VERTEX_BUFFER_INDEXES]);
@@ -169,27 +171,25 @@ namespace BlazeEngine
 				// Assemble the model matrix for this mesh:
 				Transform const* transform = renderables->at(i)->GetTransform();
 				mat4 model = renderables->at(i)->GetTransform()->Model();
-		
-				
+
+
 				// Bind the required VAO:
 				glBindVertexArray(vertexArrayObject);
 
-
 				// Bind our position VBO as active and copy vertex data into the buffer
-				glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_POSITION]); // Bind our VBO to GL_ARRAY_BUFFER
-				glBufferData(GL_ARRAY_BUFFER, mesh->NumVerts() * sizeof(mesh->Vertices()[0]), mesh->Vertices(), GL_STATIC_DRAW); // Put data into the buffer
-				// ^^ TODO: Define when/which obects should use GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW
-
+				glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_POSITION]);		// TO DO: Define when/which obects should use GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW ??
+				glBufferData(GL_ARRAY_BUFFER, mesh->NumVerts() * sizeof(Vertex), &mesh->Vertices()[0].position.x, GL_STATIC_DRAW); // <- should we be null checking?
 
 
 				// Bind our index VBO as active:
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_INDEXES]);
-				glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->NumIndices() * sizeof(mesh->Indices()[0]), mesh->Indices(), GL_STATIC_DRAW);
+				glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->NumIndices() * sizeof(GLubyte), &mesh->Indices()[0], GL_STATIC_DRAW);
 
+			
 				// Set the active shader: ...TO DO: Decide whether to use this directly, or via BindShader() ?
 				glUseProgram(shaders->at(shaderIndex).ShaderReference()); // ...TO DO: Decide whether to use this directly, or via BindShader() ?
 
-				
+				// Updload the mvp to the shader:
 				mat4 mvp = this->coreEngine->BlazeSceneManager->MainCamera()->ViewProjection() * model;
 				GLuint matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_mvp");
 				glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
@@ -199,14 +199,11 @@ namespace BlazeEngine
 				// Draw!
 				//glDrawArrays(GL_TRIANGLES, 0, mesh->NumVerts()); // Type, start index, size
 
-
-
 				/* Invoke glDrawElements telling it to draw a triangle strip using 6 indicies */
-				glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, (void*)(0));
+				glDrawElements(GL_TRIANGLE_STRIP, mesh->NumIndices(), GL_UNSIGNED_BYTE, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type,const GLvoid * indices);
 				// ^^^ GL_TRIANGLE_STRIP ??
 				// GL_UNSIGNED_BYTE
 				// mesh->NumIndices()
-
 
 				glBindBuffer(GL_ARRAY_BUFFER, 0); // Cleanup: Bind object 0 to GL_ARRAY_BUFFER to unbind vertexBufferObjects[VERTEX_BUFFER_POSITION]
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);

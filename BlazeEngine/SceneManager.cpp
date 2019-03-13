@@ -106,18 +106,26 @@ namespace BlazeEngine
 
 		// Create a new game object for every item in the .FBX:
 		// ...
+		// TO DO: Guard file loading flow with exception handling
+
+
+
 
 		// DEBUG: HARD CODE SOME OBJECTS TO WORK WITH:
 
 		// Allocate vertices: (Normally, we'll do this when loading a .FBX)
-		Vertex* vertices = new Vertex[3];
+		int numVerts = 4;
+		Vertex* vertices = new Vertex[numVerts];
 		vertices[0] = Vertex(vec3(-0.5f, -0.5f, -20.0f));
 		vertices[1] = Vertex(vec3(0.5f, -0.5f, -20.0f));
 		vertices[2] = Vertex(vec3(0.0f, 0.5f, -20.0f));
+		vertices[3] = Vertex(vec3(0.0f, -1.0f, -20.0f));
 
-		GLubyte* vertexIndices = new GLubyte[3] 
+		int numIndices = 6;
+		GLubyte* vertexIndices = new GLubyte[numIndices]
 		{
-			0, 1, 2
+			0, 1, 2,
+			0, 3, 1,
 		};
 
 		// Create a material and shader:
@@ -128,7 +136,7 @@ namespace BlazeEngine
 		int materialIndex = (int)this->materials.size() - 1;
 
 		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		Mesh mesh(vertices, 3, vertexIndices, 3, &(this->materials.at(materialIndex)));
+		Mesh mesh(vertices, numVerts, vertexIndices, numIndices, &(this->materials.at(materialIndex)));
 		this->meshes.push_back(mesh);
 		int meshIndex = (int)this->meshes.size() - 1; // Store the index so we can pass the address
 
