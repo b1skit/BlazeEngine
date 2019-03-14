@@ -46,7 +46,7 @@ namespace BlazeEngine
 
 	mat4 Transform::Model()
 	{
-		this->model = this->translation * this->rotation * this->scale;
+		this->model = this->translation * this->scale * this->rotation;
 		mat4 combinedModel = model;
 
 		if (this->parent != nullptr)
@@ -56,6 +56,8 @@ namespace BlazeEngine
 
 		return combinedModel;
 	}
+
+
 
 	void Transform::SetParent(Transform* parent)
 	{

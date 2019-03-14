@@ -36,9 +36,9 @@ namespace BlazeEngine
 
 		struct
 		{
-			string shaderDirectory = "./Shaders/";
-			string defaultShader = "defaultShader";
-			string errorShader = "errorShader";
+			string shaderDirectory	= "./Shaders/";
+			string defaultShader	= "defaultShader";
+			string errorShader		= "errorShader";
 		} shader;
 
 		// Scene config:

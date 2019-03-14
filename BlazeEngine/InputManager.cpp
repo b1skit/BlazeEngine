@@ -11,7 +11,7 @@ namespace BlazeEngine
 {
 	// Static members:
 	bool InputManager::buttonStates[INPUT_NUM_STATES];
-	double InputManager::mouseAxisStates[INPUT_NUM_INPUT_AXIS];
+	int InputManager::mouseAxisStates[INPUT_NUM_INPUT_AXIS];
 
 
 	// Constructor:
@@ -24,7 +24,7 @@ namespace BlazeEngine
 
 		for (int i = 0; i < INPUT_NUM_INPUT_AXIS; i++)
 		{
-			mouseAxisStates[i] = 0.0;
+			mouseAxisStates[i] = 0;
 		}
 	}
 
@@ -44,7 +44,7 @@ namespace BlazeEngine
 		return buttonStates[key];
 	}
 
-	double InputManager::GetMouseAxisInput(INPUT_AXIS axis)
+	int InputManager::GetMouseAxisInput(INPUT_AXIS axis)
 	{
 		return mouseAxisStates[axis];
 	}
@@ -86,7 +86,7 @@ namespace BlazeEngine
 		buttonStates[INPUT_MOUSE_AXIS] = false;
 		for (int i = 0; i < INPUT_NUM_INPUT_AXIS; i++)
 		{
-			mouseAxisStates[i] = 0.0;
+			mouseAxisStates[i] = 0;
 		}
 	}
 
@@ -138,9 +138,35 @@ namespace BlazeEngine
 
 		case EVENT_INPUT_MOUSE_MOVED:
 		{
+			int xRel, yRel = 0;
+			SDL_GetRelativeMouseState(&xRel, &yRel);
+
 			buttonStates[INPUT_MOUSE_AXIS] = true;
-			mouseAxisStates[INPUT_MOUSE_X] = eventInfo->SDL_event->motion.xrel;
-			mouseAxisStates[INPUT_MOUSE_Y] = eventInfo->SDL_event->motion.yrel;
+			mouseAxisStates[INPUT_MOUSE_X] = xRel;
+			mouseAxisStates[INPUT_MOUSE_Y] = yRel;
+
+
+			//TO DO: REMOVE THE SDL_event FROM EVENT PACKAGE!!!!!
+			// ALSO: SET THE DEFAULT STRING AS A NULLPTR
+
+
+			//if (eventInfo->SDL_event->motion.which != SDL_TOUCH_MOUSEID)
+			//{
+			//	
+			//	
+			//	
+
+			//	/*if (eventInfo->SDL_event->motion.yrel > 15 || eventInfo->SDL_event->motion.yrel < -15)
+			//		cout << "WTF?\n";*/
+
+			///*	cout << "event:\n";
+			//	cout << eventInfo->SDL_event->motion.xrel << " " << eventInfo->SDL_event->motion.yrel << "\n";
+			//	cout << x << " " << y << "\n";*/
+
+			//	/*cout << eventInfo->SDL_event->type << " " << eventInfo->SDL_event->motion.which << " " << eventInfo->SDL_event->motion.state << "\n";
+
+			//	cout << "actual: " << eventInfo->SDL_event->motion.x << " " << eventInfo->SDL_event->motion.y << "\n";*/
+			//}			
 		}	
 		break;
 

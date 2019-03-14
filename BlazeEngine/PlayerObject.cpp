@@ -35,17 +35,21 @@ namespace BlazeEngine
 		{
 			// neg pitchup, pos pitch down
 			vec3 rotation = vec3(0.0f, 0.0f, 0.0f);
-			float yAxis = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_Y);
+			/*float yAxis = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_Y);*/
 			float currentXRotation = this->transform.GetEulerRotation().x;
 
-			// BUG HERE: This doesn't work correctly!
-			if (abs(this->transform.GetEulerRotation().x) < glm::half_pi<float>() || glm::sign<float>(currentXRotation) != glm::sign<float>(yAxis)) // pitch down
-			{
-				rotation.x = yAxis * mousePitchXSensitivity * (float)TimeManager::DeltaTime();	// Pitch
-			}
+			//// BUG HERE: This doesn't work correctly!
+			//if (abs(this->transform.GetEulerRotation().x) < glm::half_pi<float>() || glm::sign<float>(currentXRotation) != glm::sign<float>(yAxis)) // pitch down
+			//{
+			//	rotation.x = yAxis * mousePitchXSensitivity * (float)TimeManager::DeltaTime();	// Pitch
+			//}
+			rotation.x = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_Y) * mousePitchXSensitivity * (float)TimeManager::DeltaTime();	// Pitch
 
-			rotation.y = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_X) * mouseYawYSensitivity * (float)TimeManager::DeltaTime();			// Yaw
+			rotation.y = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_X) * mouseYawYSensitivity * (float)TimeManager::DeltaTime();	// Yaw
 	
+			cout << InputManager::GetMouseAxisInput(INPUT_MOUSE_X) << " " << InputManager::GetMouseAxisInput(INPUT_MOUSE_Y) << "\n";
+
+
 			this->transform.Rotate(rotation);
 		}
 

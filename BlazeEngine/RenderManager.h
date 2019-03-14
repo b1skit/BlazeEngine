@@ -68,21 +68,10 @@ namespace BlazeEngine
 			VERTEX_BUFFER_SIZE, // Reserved: Number of buffers to allocate
 		};
 
-		GLuint vertexBufferObjects[VERTEX_BUFFER_SIZE];		// Buffer objects that hold vertices in GPU memory
-		//GLuint vertexArrayObjects[VERTEX_BUFFER_SIZE];		// States needed to supply vertex data
 		GLuint vertexArrayObject;
-		//GLuint elementBufferObjects[VERTEX_BUFFER_SIZE];	// Triangle vertex indices
-		/*GLuint indexBufferObjects[VERTEX_BUFFER_SIZE];*/
-
-		//// Shaders:
-		//vector<Shader> shaders;
-
-		//int CreateShader(string shaderName);
-		//string LoadShaderFile(const string& filepath);
-		//GLuint CreateGLShaderObject(const string& text, GLenum shaderType);
-		//bool CheckShaderError(GLuint shader, GLuint flag, bool isProgram);
-		////void BindShader(int shaderIndex); // Set the active vertex/fragement shader
-
+		GLuint vertexBufferObjects[VERTEX_BUFFER_SIZE];		// Buffer objects that hold vertices in GPU memory
+		
+	
 		// Private member functions:
 		void ClearWindow(vec4 clearColor);
 
