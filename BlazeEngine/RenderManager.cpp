@@ -4,6 +4,8 @@
 #include "Mesh.h"
 #include "Transform.h"
 
+//#include <stddef.h>
+
 
 #define GLM_FORCE_SWIZZLE
 #include "glm.hpp"
@@ -114,18 +116,31 @@ namespace BlazeEngine
 
 		// Tell OpenGL how to interpet the data we'll put on the GPU:
 		//glVertexPointer(3, GL_FLOAT, 0, 0); // GLint size, GLenum type, GLsizei stride, const GLvoid * pointer);
-		glVertexPointer(3, GL_FLOAT, sizeof(Vertex), (void*)(0)); // GLint size, GLenum type, GLsizei stride, const GLvoid * pointer);
-		//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0); // Define array of vertex attribute data: index, number of components (3 = 3 elements in vec3), type, should data be normalized?, stride, offset from start to 1st component
-		//glEnableVertexAttribArray(0); // Indicate that the vertex attribute at index 0 is being used
-
+		//glVertexPointer(3, GL_FLOAT, sizeof(Vertex), (void*)(0)); // GLint size, GLenum type, GLsizei stride, const GLvoid * pointer);
 		
-		// Create and bind the color buffer:
+		glEnableVertexAttribArray(0); // Indicate that the vertex attribute at index 0 is being used
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0); // Define array of vertex attribute data: index, number of components (3 = 3 elements in vec3), type, should data be normalized?, stride, offset from start to 1st component
+		
+
+
+		// Normals:
+		glGenBuffers(1, &vertexBufferObjects[VERTEX_BUFFER_NORMAL]);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+
+
+		// Color buffer:
 		glGenBuffers(1, &vertexBufferObjects[VERTEX_BUFFER_COLOR]);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_COLOR]);
-
-
-
-		// TO DO: OTHER BUFFERS
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
+		
+		//glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_COLOR]);
+		
+		// UV's:
+		glGenBuffers(1, &vertexBufferObjects[VERTEX_BUFFER_UV]);
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+		
 
 
 
@@ -214,7 +229,7 @@ namespace BlazeEngine
 				//glDrawArrays(GL_TRIANGLES, 0, mesh->NumVerts()); // Type, start index, size
 
 				/* Invoke glDrawElements telling it to draw a triangle strip using 6 indicies */
-				glDrawElements(GL_TRIANGLE_STRIP, mesh->NumIndices(), GL_UNSIGNED_BYTE, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type,const GLvoid * indices);
+				glDrawElements(GL_TRIANGLES, mesh->NumIndices(), GL_UNSIGNED_BYTE, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type,const GLvoid * indices);
 				// ^^^ GL_TRIANGLE_STRIP ??
 				// GL_UNSIGNED_BYTE
 				// mesh->NumIndices()

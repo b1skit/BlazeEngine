@@ -22,16 +22,16 @@ namespace BlazeEngine
 			position = vec3(0.0f, 0.0f, 0.0f); 
 			normal = vec3(0.0f, 0.0f, 0.0f);
 			color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
-			uv0 = vec2(0.0f, 0.0f);
+			uv = vec2(0.0f, 0.0f);
 		}
 
 		 //Explicit constructor:
-		Vertex(const vec3& position, const vec3& normal, const vec4& color, const vec2& uv0)
+		Vertex(const vec3& position, const vec3& normal, const vec4& color, const vec2& uv)
 		{
 			this->position = position;
 			this->normal = normal;
 			this->color = color;
-			this->uv0 = uv0;
+			this->uv = uv;
 		}
 
 		// Copy constructor:
@@ -43,7 +43,7 @@ namespace BlazeEngine
 		vec3 position;
 		vec3 normal;
 		vec4 color;
-		vec2 uv0;
+		vec2 uv;
 	protected:
 
 

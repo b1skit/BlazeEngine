@@ -111,149 +111,149 @@ namespace BlazeEngine
 
 
 
-		// DEBUG: HARD CODE SOME OBJECTS TO WORK WITH:
+		//// DEBUG: HARD CODE SOME OBJECTS TO WORK WITH:
 
-		// Allocate vertices: (Normally, we'll do this when loading a .FBX)
-		int numVerts = 4;
-		Vertex* vertices = new Vertex[numVerts];
-		vertices[0] = Vertex(vec3(-0.5f, -0.5f, -20.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-		vertices[1] = Vertex(vec3(0.5f, -0.5f, -20.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-		vertices[2] = Vertex(vec3(0.0f, 0.5f, -20.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-		vertices[3] = Vertex(vec3(0.0f, -1.0f, -20.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
+		//// Allocate vertices: (Normally, we'll do this when loading a .FBX)
+		//int numVerts = 4;
+		//Vertex* vertices = new Vertex[numVerts];
+		//vertices[0] = Vertex(vec3(-0.5f, -0.5f, -20.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
+		//vertices[1] = Vertex(vec3(0.5f, -0.5f, -20.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
+		//vertices[2] = Vertex(vec3(0.0f, 0.5f, -20.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
+		//vertices[3] = Vertex(vec3(0.0f, -1.0f, -20.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
 
-		int numIndices = 6;
-		GLubyte* vertexIndices = new GLubyte[numIndices]
-		{
-			0, 1, 2,
-			0, 3, 1,
-		};
-
-		// Create a material and shader:
-		unsigned int shaderIndex = GetShaderIndex(coreEngine->GetConfig()->shader.defaultShader);
-		
-		Material material( shaderIndex );
-		this->materials.push_back(material);
-		int materialIndex = (int)this->materials.size() - 1;
-
-		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		Mesh mesh(vertices, numVerts, vertexIndices, numIndices, &(this->materials.at(materialIndex)));
-		this->meshes.push_back(mesh);
-		int meshIndex = (int)this->meshes.size() - 1; // Store the index so we can pass the address
-
-		// Assemble a list of all meshes held by a Renderable:
-		vector<Mesh*> viewMeshes;
-		viewMeshes.push_back( &(this->meshes.at(meshIndex)) ); // Store the address of our mesh to pass to our Renderable
-		Renderable testRenderable(viewMeshes);
-		
-		// Construct a GameObject:
-		GameObject* testObject = new GameObject("testObject", testRenderable);
-
-		/*testObject.GetTransform()->LocalPosition() = vec3(1,2,3);*/
-		
-		// Add test objects to scene:
-		this->gameObjects.push_back(testObject);
-		int gameObjectIndex = (int)this->gameObjects.size() - 1;
-		
-		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-		this->renderables.push_back(gameObjects[gameObjectIndex]->GetRenderable());
-
-		// 2nd test mesh:
-		Vertex* vertices2 = new Vertex[3];
-
-		vertices2[0] = Vertex(vec3(-1.0f, 0.5f, -10.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-		vertices2[1] = Vertex(vec3(-0.5f, 0.2f, -10.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-		vertices2[2] = Vertex(vec3(0.0f, 0.5f, -10.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-
-		GLubyte* vertexIndices2 = new GLubyte[3]
-		{
-			/*0, 1, 2*/
-			2, 1, 0 // TEMP: REVERSED!!!!
-		};
-
-		// Create a material and shader:
-		int shaderIndex2 = GetShaderIndex(coreEngine->GetConfig()->shader.errorShader);
-
-		Material material2(shaderIndex2);
-		this->materials.push_back(material2);
-		int materialIndex2 = (int)this->materials.size() - 1;
-
-		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		Mesh mesh2(vertices2, 3,vertexIndices2, 3, &(this->materials.at(materialIndex2)));
-		this->meshes.push_back(mesh2);
-		int meshIndex2 = (int)this->meshes.size() - 1; // Store the index so we can pass the address
-
-		// Assemble a list of all meshes held by a Renderable:
-		vector<Mesh*> viewMeshes2;
-		viewMeshes2.push_back(&(this->meshes.at(meshIndex2))); // Store the address of our mesh to pass to our Renderable
-		Renderable testRenderable2(viewMeshes2);
-
-		// Construct a GameObject:
-		GameObject* testObject2 = new GameObject("testObject2", testRenderable2);
-
-		// Add test objects to scene:
-		this->gameObjects.push_back(testObject2); // nukes renderables[0].viewMeshes[0] ???????		
-		// Renderables is a POINTER to a renderable object, that isn't being copied correctly!!!
-
-		int gameObjectIndex2 = (int)this->gameObjects.size() - 1;
-
-		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-		this->renderables.push_back(gameObjects[gameObjectIndex2]->GetRenderable());
-
-
-
-
-		//Vertex* cubeVerts = new Vertex[12];
-		//cubeVerts[0] = Vertex(vec3(-1.0f, 1.0f, 1.0f));
-		//cubeVerts[1] = Vertex(vec3(-1.0f, -1.0f, 1.0f));
-		//cubeVerts[2] = Vertex(vec3(1.0f, -1.0f, 1.0f));
-		//cubeVerts[3] = Vertex(vec3(1.0f, 1.0f, 1.0f));
-		//cubeVerts[4] = Vertex(vec3(-1.0f, -1.0f, -1.0f));
-		//cubeVerts[5] = Vertex(vec3(1.0f, -1.0f, -1.0f));
-		//cubeVerts[6] = Vertex(vec3(1.0f, 1.0f, -1.0f));
-		//cubeVerts[7] = Vertex(vec3(-1.0f, 1.0f, -1.0f));
-
-		//GLubyte* cubeIndices = new GLubyte[36] 
+		//int numIndices = 6;
+		//GLubyte* vertexIndices = new GLubyte[numIndices]
 		//{
-		//	0, 1, 3, 
-		//	3, 1, 2, 
-		//	7, 4, 0, 
-		//	0, 4, 1, 
-		//	3, 2, 5, 
-		//	3, 5, 6, 
-		//	7, 0, 3, 
-		//	7, 3, 6, 
-		//	1, 4, 2, 
-		//	2, 4, 5, 
-		//	7, 6, 4, 
-		//	6, 5, 4,
+		//	0, 1, 2,
+		//	0, 3, 1,
 		//};
 
 		//// Create a material and shader:
 		//unsigned int shaderIndex = GetShaderIndex(coreEngine->GetConfig()->shader.defaultShader);
-
-		//Material material(shaderIndex);
+		//
+		//Material material( shaderIndex );
 		//this->materials.push_back(material);
 		//int materialIndex = (int)this->materials.size() - 1;
 
 		//// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		//Mesh mesh(cubeVerts, 12, cubeIndices, 36, &(this->materials.at(materialIndex)));
+		//Mesh mesh(vertices, numVerts, vertexIndices, numIndices, &(this->materials.at(materialIndex)));
 		//this->meshes.push_back(mesh);
 		//int meshIndex = (int)this->meshes.size() - 1; // Store the index so we can pass the address
 
 		//// Assemble a list of all meshes held by a Renderable:
 		//vector<Mesh*> viewMeshes;
-		//viewMeshes.push_back(&(this->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
+		//viewMeshes.push_back( &(this->meshes.at(meshIndex)) ); // Store the address of our mesh to pass to our Renderable
 		//Renderable testRenderable(viewMeshes);
-
+		//
 		//// Construct a GameObject:
-		//GameObject* testObject = new GameObject("cubeObject", testRenderable);
+		//GameObject* testObject = new GameObject("testObject", testRenderable);
 
+		///*testObject.GetTransform()->LocalPosition() = vec3(1,2,3);*/
+		//
 		//// Add test objects to scene:
 		//this->gameObjects.push_back(testObject);
 		//int gameObjectIndex = (int)this->gameObjects.size() - 1;
-
+		//
 		//// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
 		//this->renderables.push_back(gameObjects[gameObjectIndex]->GetRenderable());
+
+		//// 2nd test mesh:
+		//Vertex* vertices2 = new Vertex[3];
+
+		//vertices2[0] = Vertex(vec3(-1.0f, 0.5f, -10.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
+		//vertices2[1] = Vertex(vec3(-0.5f, 0.2f, -10.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
+		//vertices2[2] = Vertex(vec3(0.0f, 0.5f, -10.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
+
+		//GLubyte* vertexIndices2 = new GLubyte[3]
+		//{
+		//	/*0, 1, 2*/
+		//	2, 1, 0 // TEMP: REVERSED!!!!
+		//};
+
+		//// Create a material and shader:
+		//int shaderIndex2 = GetShaderIndex(coreEngine->GetConfig()->shader.errorShader);
+
+		//Material material2(shaderIndex2);
+		//this->materials.push_back(material2);
+		//int materialIndex2 = (int)this->materials.size() - 1;
+
+		//// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
+		//Mesh mesh2(vertices2, 3,vertexIndices2, 3, &(this->materials.at(materialIndex2)));
+		//this->meshes.push_back(mesh2);
+		//int meshIndex2 = (int)this->meshes.size() - 1; // Store the index so we can pass the address
+
+		//// Assemble a list of all meshes held by a Renderable:
+		//vector<Mesh*> viewMeshes2;
+		//viewMeshes2.push_back(&(this->meshes.at(meshIndex2))); // Store the address of our mesh to pass to our Renderable
+		//Renderable testRenderable2(viewMeshes2);
+
+		//// Construct a GameObject:
+		//GameObject* testObject2 = new GameObject("testObject2", testRenderable2);
+
+		//// Add test objects to scene:
+		//this->gameObjects.push_back(testObject2); // nukes renderables[0].viewMeshes[0] ???????		
+		//// Renderables is a POINTER to a renderable object, that isn't being copied correctly!!!
+
+		//int gameObjectIndex2 = (int)this->gameObjects.size() - 1;
+
+		//// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
+		//this->renderables.push_back(gameObjects[gameObjectIndex2]->GetRenderable());
+
+
+
+
+		Vertex* cubeVerts = new Vertex[12];
+		cubeVerts[0] = Vertex(vec3(-1.0f, 1.0f, -3.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f));
+		cubeVerts[1] = Vertex(vec3(-1.0f, -1.0f, -3.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
+		cubeVerts[2] = Vertex(vec3(1.0f, -1.0f, -3.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 1.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f));
+		cubeVerts[3] = Vertex(vec3(1.0f, 1.0f, -3.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
+		cubeVerts[4] = Vertex(vec3(-1.0f, -1.0f, -5.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 0.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f));
+		cubeVerts[5] = Vertex(vec3(1.0f, -1.0f, -5.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 0.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
+		cubeVerts[6] = Vertex(vec3(1.0f, 1.0f, -5.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f));
+		cubeVerts[7] = Vertex(vec3(-1.0f, 1.0f, -5.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
+
+		GLubyte* cubeIndices = new GLubyte[36] 
+		{
+			0, 1, 3, 
+			3, 1, 2, 
+			7, 4, 0, 
+			0, 4, 1, 
+			3, 2, 5, 
+			3, 5, 6, 
+			7, 0, 3, 
+			7, 3, 6, 
+			1, 4, 2, 
+			2, 4, 5, 
+			7, 6, 4, 
+			6, 5, 4,
+		};
+
+		// Create a material and shader:
+		unsigned int shaderIndex = GetShaderIndex(coreEngine->GetConfig()->shader.defaultShader);
+
+		Material material(shaderIndex);
+		this->materials.push_back(material);
+		int materialIndex = (int)this->materials.size() - 1;
+
+		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
+		Mesh mesh(cubeVerts, 12, cubeIndices, 36, &(this->materials.at(materialIndex)));
+		this->meshes.push_back(mesh);
+		int meshIndex = (int)this->meshes.size() - 1; // Store the index so we can pass the address
+
+		// Assemble a list of all meshes held by a Renderable:
+		vector<Mesh*> viewMeshes;
+		viewMeshes.push_back(&(this->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
+		Renderable testRenderable(viewMeshes);
+
+		// Construct a GameObject:
+		GameObject* testObject = new GameObject("cubeObject", testRenderable);
+
+		// Add test objects to scene:
+		this->gameObjects.push_back(testObject);
+		int gameObjectIndex = (int)this->gameObjects.size() - 1;
+
+		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
+		this->renderables.push_back(gameObjects[gameObjectIndex]->GetRenderable());
 
 
 
