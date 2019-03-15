@@ -6,7 +6,6 @@ namespace BlazeEngine
 	{
 	}
 
-
 	Camera::~Camera()
 	{
 	}*/
@@ -24,14 +23,11 @@ namespace BlazeEngine
 		View(); // Internally initialize the view matrix
 		viewProjection = projection * view;
 	}
-
 	void Camera::Update()
 	{
 	}
-
 	void Camera::HandleEvent(EventInfo const * eventInfo)
 	{
 	}
-
 }
 

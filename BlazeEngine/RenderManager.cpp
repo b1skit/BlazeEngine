@@ -253,6 +253,14 @@ namespace BlazeEngine
 				}
 				
 
+				// Upload light data:
+				vec3 debugAmbientColor = vec3(0.5f, 0.1f, 0.5f);
+				matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "ambient");
+				if (matrixID >= 0)
+				{
+					glUniform3f(matrixID, debugAmbientColor.x, debugAmbientColor.y, debugAmbientColor.z);
+				}
+
 
 				// Draw!
 				//glDrawArrays(GL_TRIANGLES, 0, mesh->NumVerts()); // Type, start index, size

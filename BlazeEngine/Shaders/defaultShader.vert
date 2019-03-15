@@ -6,10 +6,15 @@ layout (location = 1) in vec3 in_normal;
 layout (location = 2) in vec4 in_color;
 layout (location = 3) in vec2 in_uv0;
 
-//uniform mat4 in_model;
-//uniform mat4 in_view;
-//uniform mat4 in_projection;
-//uniform mat4 in_mv;
+uniform vec3 ambient;
+uniform vec3 keyPosition;
+uniform vec4 keyColor;
+uniform float keyIntensity;
+
+uniform mat4 in_model;
+uniform mat4 in_view;
+uniform mat4 in_projection;
+uniform mat4 in_mv;
 uniform mat4 in_mvp;
 
 out vec4 vertexColor;
@@ -19,5 +24,5 @@ void main()
 	// Assign our position data to the predefined gl_Position output
     gl_Position = in_mvp * vec4(in_position.x, in_position.y, in_position.z, 1.0);
 
-	vertexColor = in_color;
+	vertexColor = in_color * ambient;
 }

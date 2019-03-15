@@ -21,6 +21,9 @@ namespace BlazeEngine
 		meshes.reserve(100);
 		materials.reserve(100);
 		shaders.reserve(100);
+
+		/*forwardLights.reserve(100);*/
+		/*deferredLights.reserve(100);*/
 	}
 
 	SceneManager::~SceneManager()
@@ -98,7 +101,7 @@ namespace BlazeEngine
 		/*renderables.clear();*/
 		/*meshes.clear();*/  // TO DO: delete meshes.Vertices()
 		/*materials.clear();*/
-		/*lights.clear();
+		/*forwardLights.clear();
 		mainCamera = Camera();*/
 		
 		// Load our .FBX:
@@ -261,6 +264,10 @@ namespace BlazeEngine
 
 
 
+		//// Set up a light:
+		//Light key(LIGHT_DIRECTIONAL, vec4(1.0f, 1.0f, 1.0f, 1.0f), 1.0f);
+		//forwardLights.emplace_back(key);
+
 
 
 		// Set up a player object:
@@ -345,6 +352,10 @@ namespace BlazeEngine
 		glBindAttribLocation(shaderReference, 6, "in_projection");
 		glBindAttribLocation(shaderReference, 7, "in_mv");
 		glBindAttribLocation(shaderReference, 8, "in_mvp");
+		glBindAttribLocation(shaderReference, 9, "ambient");
+		glBindAttribLocation(shaderReference, 10, "keyPosition");
+		glBindAttribLocation(shaderReference, 11, "keyColor");
+		glBindAttribLocation(shaderReference, 12, "keyIntensity");
 		// TO DO: Replace indexes with an enum
 
 		// Link our program object:

@@ -7,7 +7,7 @@
 #include "Renderable.h"
 //#include "Material.h"
 #include "Shader.h"
-//#include "Light.h"
+#include "Light.h"
 #include "Camera.h"
 #include "PlayerObject.h"
 
@@ -46,7 +46,10 @@ namespace BlazeEngine
 
 		inline vector<Renderable const*> const* GetRenderables() { return &renderables;	}
 		inline vector<Shader>* GetShaders() { return &shaders; } // SHOULD THIS RETURN CONST ?????
-		//inline vector<Light> const* GetLights();
+		
+		/*inline vector<Light> const& GetForwardLights() { return forwardLights; }*/
+		/*inline vec3 const& GetAmbient() { return ambientLight; }*/
+		
 		inline Camera* MainCamera() { return mainCamera; }
 
 	protected:
@@ -60,8 +63,17 @@ namespace BlazeEngine
 		vector<Material> materials;
 		vector<Shader> shaders;
 
-		/*vector<Light> lights;*/
-		Camera* mainCamera;
+
+		// Scene Lights:
+		/*vector<Light> forwardLights;*/
+		/*vector<Light> deferredLights;*/
+
+		/*vec3 ambientLight = vec3(1.0f, 1.0f, 1.0f);*/
+
+		Camera* mainCamera; // Main camera: Currently points towards player object cam
+		/*vector<Camera> sceneCameras;*/ // Various render cams
+
+		// TO DO: BREAK THIS OUT INTO A SCENE OBJECT^^^^^
 
 
 		// Shader functions:
