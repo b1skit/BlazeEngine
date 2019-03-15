@@ -87,9 +87,7 @@ namespace BlazeEngine
 	{
 		EVENT_TYPE type;
 		BlazeObject* generator;
-		string eventMessage = ""; // Default to empty message
-
-		SDL_Event* SDL_event = nullptr;
+		string* eventMessage = nullptr;
 	};
 
 

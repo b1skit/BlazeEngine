@@ -45,12 +45,12 @@ namespace BlazeEngine
 		CreateShader(coreEngine->GetConfig()->shader.errorShader);		// Index 0
 		CreateShader(coreEngine->GetConfig()->shader.defaultShader);	// Index 1
 
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Scene manager started!" });
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Scene manager started!") });
 	}
 
 	void SceneManager::Shutdown()
 	{
-		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Scene manager shutting down..." });
+		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Scene manager shutting down...") });
 
 		for (int i = 0; i < (int)meshes.size(); i++)
 		{
@@ -90,7 +90,7 @@ namespace BlazeEngine
 
 	void SceneManager::LoadScene(string scenePath)
 	{
-		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_DEBUG, this, "Could not load " + scenePath + ", as LoadScene() is not implemented. Using a debug hard coded path for now!" });
+		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_DEBUG, this, new string("Could not load " + scenePath + ", as LoadScene() is not implemented. Using a debug hard coded path for now!") });
 
 		// Flush any existing scene objects: (NOTE: Any objects that access these must be shut down first!)
 		// TO DO: Make sure we're deallocating everything before clearing the lists
@@ -309,7 +309,7 @@ namespace BlazeEngine
 
 	int SceneManager::CreateShader(string shaderName)
 	{
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Loading shader: " + shaderName });
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Loading shader: " + shaderName) });
 
 		GLuint shaderReference;
 		unsigned int numShaders = 2; // TO DO : Allow loading of geometry shaders?
@@ -323,7 +323,7 @@ namespace BlazeEngine
 		string fragmentShader = LoadShaderFile(shaderName + ".frag");
 		if (vertexShader == "" || fragmentShader == "")
 		{
-			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "Creating shader failed while loading shader files" });
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, new string("Creating shader failed while loading shader files") });
 			return -1;
 		}
 
@@ -367,7 +367,7 @@ namespace BlazeEngine
 
 		this->shaders.push_back(newShader);
 
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Successfully loaded " + shaderName });
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Successfully loaded " + shaderName) });
 
 		return (int)this->shaders.size() - 1;
 	}
@@ -392,7 +392,7 @@ namespace BlazeEngine
 		}
 		else
 		{
-			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "LoadShaderFile failed: Could not open shader " + filepath });
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, new string("LoadShaderFile failed: Could not open shader " + filepath) });
 
 			return "";
 		}
@@ -405,7 +405,7 @@ namespace BlazeEngine
 		GLuint shader = glCreateShader(shaderType);
 		if (shader == 0)
 		{
-			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "glCreateShader failed!" });
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, new string("glCreateShader failed!") });
 		}
 
 		const GLchar* shaderSourceStrings[1];
@@ -449,7 +449,7 @@ namespace BlazeEngine
 
 			string errorAsString(error);
 
-			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "CheckShaderError failed: " + errorAsString });
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, new string("CheckShaderError failed: " + errorAsString) });
 
 			return false;
 		}

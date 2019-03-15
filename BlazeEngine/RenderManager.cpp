@@ -45,7 +45,7 @@ namespace BlazeEngine
 	{
 		EngineComponent::Startup(coreEngine);
 
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Render manager started!" });
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Render manager started!") });
 
 		// Cache the relevant config data:
 		this->xRes = coreEngine->GetConfig()->renderer.windowXRes;
@@ -101,7 +101,7 @@ namespace BlazeEngine
 		GLenum glStatus = glewInit();
 		if (glStatus != GLEW_OK)
 		{
-			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, "Render manager start failed: glStatus not ok!" });
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Render manager start failed: glStatus not ok!") });
 			return;
 		}
 
@@ -157,7 +157,7 @@ namespace BlazeEngine
 
 	void RenderManager::Shutdown()
 	{
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Render manager shutting down..." });
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Render manager shutting down...") });
 
 		glDeleteVertexArrays(VERTEX_BUFFER_SIZE, &vertexArrayObject);
 		glDeleteBuffers(VERTEX_BUFFER_SIZE, vertexBufferObjects);

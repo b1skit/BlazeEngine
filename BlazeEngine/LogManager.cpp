@@ -51,12 +51,12 @@ namespace BlazeEngine
 			this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_MOVED, this);
 		#endif
 
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Log manager started!" });
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Log manager started!") });
 	}
 
 	void LogManager::Shutdown()
 	{
-		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Log manager shutting down..." });
+		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Log manager shutting down...") });
 	}
 
 	void LogManager::Update()
@@ -78,7 +78,7 @@ namespace BlazeEngine
 			cout << "_unknown_ (null event generator)";
 		}
 
-		if (eventInfo->eventMessage.length() > 0)
+		if (eventInfo->eventMessage && eventInfo->eventMessage->length() > 0)
 		{
 			cout << ": " << eventInfo->eventMessage;
 		}

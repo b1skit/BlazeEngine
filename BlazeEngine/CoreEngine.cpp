@@ -31,7 +31,7 @@ namespace BlazeEngine
 		BlazeEventManager->Startup(this);		
 		BlazeLogManager->Startup(this);
 
-		BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "CoreEngine started!" }, true);
+		BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("CoreEngine started!") }, true);
 		BlazeEventManager->Subscribe(EVENT_ENGINE_QUIT, this);
 
 		BlazeTimeManager->Startup(this);
@@ -52,7 +52,7 @@ namespace BlazeEngine
 	// Main game loop
 	void CoreEngine::Run()
 	{
-		BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "CoreEngine beginning main game loop!" });
+		BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("CoreEngine beginning main game loop!") });
 
 		// Initialize game loop timing:
 		double elapsed = 0.0;
@@ -88,7 +88,7 @@ namespace BlazeEngine
 
 	void CoreEngine::Shutdown()
 	{
-		BlazeEventManager->Notify(new EventInfo{EVENT_LOG, this, "CoreEngine shutting down..."});
+		BlazeEventManager->Notify(new EventInfo{EVENT_LOG, this, new string("CoreEngine shutting down...") });
 
 		if (configDirty)
 		{
@@ -127,7 +127,7 @@ namespace BlazeEngine
 			break;
 
 		default:
-			BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "ERROR: Default event generated in CoreEngine!" });
+			BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, new string("ERROR: Default event generated in CoreEngine!") });
 			break;
 		}
 
@@ -137,13 +137,13 @@ namespace BlazeEngine
 
 	void EngineConfig::LoadConfig(string path)
 	{
-		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_DEBUG, nullptr, "EngineConfig.LoadConfig() is not implemented. Using hard coded default values!" });
+		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_DEBUG, nullptr, new string("EngineConfig.LoadConfig() is not implemented. Using hard coded default values!") });
 	
 		// TO DO: Implement config loading!
 	}
 
 	void EngineConfig::SaveConfig(string path)
 	{
-		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_DEBUG, nullptr, "EngineConfig.SaveConfig() is not implemented. No data is being saved!\n" });
+		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_DEBUG, nullptr, new string("EngineConfig.SaveConfig() is not implemented. No data is being saved!\n") });
 	}
 }

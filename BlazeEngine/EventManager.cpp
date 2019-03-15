@@ -38,14 +38,14 @@ namespace BlazeEngine
 	{
 		EngineComponent::Startup(coreEngine);
 
-		Notify(new EventInfo{ EVENT_LOG, this, "Event manager started!" });
+		Notify(new EventInfo{ EVENT_LOG, this, new string("Event manager started!") });
 	}
 
 	void EventManager::Shutdown()
 	{
 		Update(); // Run one last update
 
-		Notify(new EventInfo{ EVENT_LOG, this, "Event manager shutting down..." });
+		Notify(new EventInfo{ EVENT_LOG, this, new string("Event manager shutting down...") });
 	}
 
 	void EventManager::Update()
@@ -60,7 +60,7 @@ namespace BlazeEngine
 			{
 			case SDL_QUIT:
 			{
-				Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, "Received SDL_QUIT event" });
+				Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Received SDL_QUIT event") });
 				break;
 			}
 
@@ -197,7 +197,7 @@ namespace BlazeEngine
 			}			
 			case SDL_MOUSEMOTION:
 			{
-				Notify(new EventInfo{ EVENT_INPUT_MOUSE_MOVED, this, "", &currentSDLEvent });				
+				Notify(new EventInfo{ EVENT_INPUT_MOUSE_MOVED, this, nullptr });				
 				break;
 			}
 				
@@ -210,7 +210,7 @@ namespace BlazeEngine
 			}// End switch
 		}
 
-		// Catch OpenGl errors:
+		// Catch OpenGl error events:
 		GLenum glError;
 		string prefix = "OpenGL error: ";
 		while ((glError = glGetError()) != GL_NO_ERROR) // TO DO: REPLACE THIS WITH AN OPENGL ERROR HANDLING CALLBACK FUNCTION
@@ -218,35 +218,35 @@ namespace BlazeEngine
 			switch (glError)
 			{
 			case GL_INVALID_ENUM:
-				Notify(new EventInfo{ EVENT_ERROR, this, prefix + "GL_INVALID_ENUM" });
+				Notify(new EventInfo{ EVENT_ERROR, this, new string(prefix + "GL_INVALID_ENUM") });
 				break;
 
 			case GL_INVALID_VALUE:
-				Notify(new EventInfo{ EVENT_ERROR, this, prefix + "GL_INVALID_VALUE" });
+				Notify(new EventInfo{ EVENT_ERROR, this, new string(prefix + "GL_INVALID_VALUE") });
 				break;
 
 			case GL_INVALID_OPERATION:
-				Notify(new EventInfo{ EVENT_ERROR, this, prefix + "GL_INVALID_OPERATION" });
+				Notify(new EventInfo{ EVENT_ERROR, this, new string(prefix + "GL_INVALID_OPERATION") });
 				break;
 
 			case GL_INVALID_FRAMEBUFFER_OPERATION:
-				Notify(new EventInfo{ EVENT_ERROR, this, prefix + "GL_INVALID_FRAMEBUFFER_OPERATION" });
+				Notify(new EventInfo{ EVENT_ERROR, this, new string(prefix + "GL_INVALID_FRAMEBUFFER_OPERATION") });
 				break;
 
 			case GL_OUT_OF_MEMORY:
-				Notify(new EventInfo{ EVENT_ERROR, this, prefix + "GL_OUT_OF_MEMORY" });
+				Notify(new EventInfo{ EVENT_ERROR, this, new string(prefix + "GL_OUT_OF_MEMORY") });
 				break;
 
 			case GL_STACK_UNDERFLOW:
-				Notify(new EventInfo{ EVENT_ERROR, this, prefix + "GL_OUT_OF_MEMORY" });
+				Notify(new EventInfo{ EVENT_ERROR, this, new string(prefix + "GL_OUT_OF_MEMORY") });
 				break;
 
 			case GL_STACK_OVERFLOW:
-				Notify(new EventInfo{ EVENT_ERROR, this, prefix + "GL_STACK_OVERFLOW" });
+				Notify(new EventInfo{ EVENT_ERROR, this, new string(prefix + "GL_STACK_OVERFLOW") });
 				break;
 
 			default:
-				Notify(new EventInfo{ EVENT_ERROR, this, prefix + to_string(glError) });
+				Notify(new EventInfo{ EVENT_ERROR, this, new string(prefix + to_string(glError)) });
 				break;
 			}
 		}
@@ -266,6 +266,10 @@ namespace BlazeEngine
 				}
 				
 				// Deallocate the event:
+				if (eventQueues[currentEventType][currentEvent]->eventMessage != nullptr)
+				{
+					delete eventQueues[currentEventType][currentEvent]->eventMessage;
+				}
 				delete eventQueues[currentEventType][currentEvent];
 			}
 

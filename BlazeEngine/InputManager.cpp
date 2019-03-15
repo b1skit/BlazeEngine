@@ -73,12 +73,12 @@ namespace BlazeEngine
 		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_RELEASE_LEFT, this);
 		this->coreEngine->BlazeEventManager->Subscribe(EVENT_INPUT_MOUSE_RELEASE_RIGHT, this);
 
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Input manager started!" });
+		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Input manager started!") });
 	}
 
 	void InputManager::Shutdown()
 	{
-		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, "Input manager shutting down..." });
+		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Input manager shutting down...") });
 	}
 
 	void InputManager::Update()
@@ -144,12 +144,6 @@ namespace BlazeEngine
 			buttonStates[INPUT_MOUSE_AXIS] = true;
 			mouseAxisStates[INPUT_MOUSE_X] = (float)xRel;
 			mouseAxisStates[INPUT_MOUSE_Y] = (float)yRel;
-
-			//TO DO: REMOVE THE SDL_event FROM EVENT PACKAGE!!!!!
-			// ALSO: SET THE DEFAULT STRING AS A NULLPTR
-
-
-				
 		}	
 		break;
 
@@ -168,7 +162,7 @@ namespace BlazeEngine
 		break;
 
 		default:
-			coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, "ERROR: Default event generated in InputManager!" });
+			coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, new string("ERROR: Default event generated in InputManager!") });
 			break;
 		}
 	}
