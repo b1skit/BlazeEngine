@@ -31,8 +31,8 @@ namespace BlazeEngine
 			vec3 yaw(0.0f, 0.0f, 0.0f);
 			vec3 pitch(0.0f, 0.0f, 0.0f);
 
-			yaw.y = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_X) * mouseYawYSensitivity * (float)TimeManager::DeltaTime();	// Yaw
-			pitch.x = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_Y) * mousePitchXSensitivity * (float)TimeManager::DeltaTime();	// Pitch
+			yaw.y = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_X) * (float)TimeManager::DeltaTime();
+			pitch.x = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_Y) * (float)TimeManager::DeltaTime();
 
 			this->transform.Rotate(yaw);
 			this->playerCam.GetTransform()->Rotate(pitch);

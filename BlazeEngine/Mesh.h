@@ -57,7 +57,6 @@ namespace BlazeEngine
 	{
 	public:
 		Mesh(Vertex* vertices, unsigned int numVerts, GLubyte* indices, unsigned int numIndices, Material* material);
-		/*Mesh(Vertex* vertices, unsigned int numVerts, Material* material);*/
 		~Mesh();
 
 		// Copy constructor:
@@ -76,10 +75,10 @@ namespace BlazeEngine
 
 	private:
 		Vertex* vertices = nullptr;		// Deallocated in SceneManager.Shutdown()
-		unsigned int numVerts;
+		unsigned int numVerts = -1;
 
 		GLubyte* indices = nullptr;
-		unsigned int numIndices;
+		unsigned int numIndices = -1;
 
 		Material* material = nullptr;	// Points to scene manager's statically allocated list of materials
 	};

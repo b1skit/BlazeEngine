@@ -46,7 +46,14 @@ namespace BlazeEngine
 
 	float InputManager::GetMouseAxisInput(INPUT_AXIS axis)
 	{
-		return mouseAxisStates[axis];
+		if (axis == INPUT_MOUSE_X)
+		{
+			return mouseAxisStates[INPUT_MOUSE_X] * CoreEngine::GetCoreEngine()->GetConfig()->input.mousePitchSensitivity;
+		}
+		else
+		{
+			return mouseAxisStates[INPUT_MOUSE_Y] * CoreEngine::GetCoreEngine()->GetConfig()->input.mouseYawSensitivity;
+		}
 	}
 	
 	void InputManager::Startup(CoreEngine* coreEngine)

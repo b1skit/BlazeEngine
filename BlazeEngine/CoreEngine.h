@@ -41,6 +41,12 @@ namespace BlazeEngine
 			string errorShader		= "errorShader";
 		} shader;
 
+		struct
+		{
+			float mousePitchSensitivity = -0.001f;
+			float mouseYawSensitivity = -0.001f;
+		} input;
+
 		// Scene config:
 		struct
 		{
@@ -86,7 +92,7 @@ namespace BlazeEngine
 		// EventListener interface:
 		void HandleEvent(EventInfo const* eventInfo);
 
-
+		static CoreEngine* GetCoreEngine() { return coreEngine; }
 	private:	
 		// Constants:
 		const double FIXED_TIMESTEP = 1000.0 / 120.0; // Regular step size, in ms
@@ -95,6 +101,8 @@ namespace BlazeEngine
 		// Private engine component singletons:	
 		LogManager* const BlazeLogManager = &LogManager::Instance();
 		TimeManager* const BlazeTimeManager = &TimeManager::Instance();
+
+		static CoreEngine* coreEngine;
 
 		// Engine control:
 		bool isRunning = false;

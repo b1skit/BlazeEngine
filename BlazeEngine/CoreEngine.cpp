@@ -13,8 +13,14 @@ using std::to_string;
 
 namespace BlazeEngine
 {
+	// Static members:
+	CoreEngine* CoreEngine::coreEngine;
+
+
 	CoreEngine::CoreEngine(string configPath) : BlazeObject("CoreEngine")
 	{
+		coreEngine = this;
+
 		this->configPath = configPath;
 		config.LoadConfig(this->configPath);
 
