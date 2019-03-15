@@ -63,8 +63,6 @@ namespace BlazeEngine
 		/*vector<Light> lights;*/
 		Camera* mainCamera;
 
-		/*PlayerObject player;*/
-
 
 		// Shader functions:
 		unsigned int GetShaderIndex(string shaderName);

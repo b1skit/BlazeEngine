@@ -6,6 +6,10 @@ layout (location = 1) in vec3 in_normal;
 layout (location = 2) in vec4 in_color;
 layout (location = 3) in vec2 in_uv0;
 
+//uniform mat4 in_model;
+//uniform mat4 in_view;
+//uniform mat4 in_projection;
+//uniform mat4 in_mv;
 uniform mat4 in_mvp;
 
 out vec4 vertexColor;

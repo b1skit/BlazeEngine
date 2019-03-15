@@ -340,7 +340,11 @@ namespace BlazeEngine
 		glBindAttribLocation(shaderReference, 1, "in_normal");
 		glBindAttribLocation(shaderReference, 2, "in_color");
 		glBindAttribLocation(shaderReference, 3, "in_uv0");
-		glBindAttribLocation(shaderReference, 4, "in_mvp"); // Bind attribute1 as "position" in the vertex shader
+		glBindAttribLocation(shaderReference, 4, "in_model");
+		glBindAttribLocation(shaderReference, 5, "in_view");
+		glBindAttribLocation(shaderReference, 6, "in_projection");
+		glBindAttribLocation(shaderReference, 7, "in_mv");
+		glBindAttribLocation(shaderReference, 8, "in_mvp");
 		// TO DO: Replace indexes with an enum
 
 		// Link our program object:

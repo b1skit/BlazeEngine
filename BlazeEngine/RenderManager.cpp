@@ -195,8 +195,8 @@ namespace BlazeEngine
 				unsigned int shaderIndex = mesh->GetMaterial()->GetShaderIndex();
 
 				// Assemble the model matrix for this mesh:
-				Transform const* transform = renderables->at(i)->GetTransform();
-				mat4 model = renderables->at(i)->GetTransform()->Model();
+				//Transform const* transform = renderables->at(i)->GetTransform();
+				
 
 
 				// Bind the required VAO:
@@ -218,11 +218,40 @@ namespace BlazeEngine
 				// Set the active shader: ...TO DO: Decide whether to use this directly, or via BindShader() ?
 				glUseProgram(shaders->at(shaderIndex).ShaderReference()); // ...TO DO: Decide whether to use this directly, or via BindShader() ?
 
-				// Updload the mvp to the shader:
+				// Updload transformations to the shader:
+				mat4 model = renderables->at(i)->GetTransform()->Model();
+				mat4 view = this->coreEngine->BlazeSceneManager->MainCamera()->View();
+				mat4 projection = this->coreEngine->BlazeSceneManager->MainCamera()->Projection();
+				mat4 mv = view * model;
 				mat4 mvp = this->coreEngine->BlazeSceneManager->MainCamera()->ViewProjection() * model;
-				GLuint matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_mvp");
-				glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
 
+
+				GLuint matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_model");
+				if (matrixID >= 0)
+				{
+					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &model[0][0]);
+				}
+				matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_view");
+				if (matrixID >= 0)
+				{
+					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &view[0][0]);
+				}				
+				matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_projection");
+				if (matrixID >= 0)
+				{
+					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &projection[0][0]);
+				}
+				matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_mv");
+				if (matrixID >= 0)
+				{
+					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mv[0][0]);
+				}
+				matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_mvp");
+				if (matrixID >= 0)
+				{
+					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
+				}
+				
 
 
 				// Draw!

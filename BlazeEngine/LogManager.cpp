@@ -80,7 +80,7 @@ namespace BlazeEngine
 
 		if (eventInfo->eventMessage && eventInfo->eventMessage->length() > 0)
 		{
-			cout << ": " << eventInfo->eventMessage;
+			cout << ": " << *eventInfo->eventMessage;
 		}
 
 		cout << std::endl;
