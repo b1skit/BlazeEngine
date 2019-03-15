@@ -11,7 +11,7 @@ namespace BlazeEngine
 {
 	// Static members:
 	bool InputManager::buttonStates[INPUT_NUM_STATES];
-	int InputManager::mouseAxisStates[INPUT_NUM_INPUT_AXIS];
+	float InputManager::mouseAxisStates[INPUT_NUM_INPUT_AXIS];
 
 
 	// Constructor:
@@ -44,7 +44,7 @@ namespace BlazeEngine
 		return buttonStates[key];
 	}
 
-	int InputManager::GetMouseAxisInput(INPUT_AXIS axis)
+	float InputManager::GetMouseAxisInput(INPUT_AXIS axis)
 	{
 		return mouseAxisStates[axis];
 	}
@@ -142,31 +142,14 @@ namespace BlazeEngine
 			SDL_GetRelativeMouseState(&xRel, &yRel);
 
 			buttonStates[INPUT_MOUSE_AXIS] = true;
-			mouseAxisStates[INPUT_MOUSE_X] = xRel;
-			mouseAxisStates[INPUT_MOUSE_Y] = yRel;
-
+			mouseAxisStates[INPUT_MOUSE_X] = (float)xRel;
+			mouseAxisStates[INPUT_MOUSE_Y] = (float)yRel;
 
 			//TO DO: REMOVE THE SDL_event FROM EVENT PACKAGE!!!!!
 			// ALSO: SET THE DEFAULT STRING AS A NULLPTR
 
 
-			//if (eventInfo->SDL_event->motion.which != SDL_TOUCH_MOUSEID)
-			//{
-			//	
-			//	
-			//	
-
-			//	/*if (eventInfo->SDL_event->motion.yrel > 15 || eventInfo->SDL_event->motion.yrel < -15)
-			//		cout << "WTF?\n";*/
-
-			///*	cout << "event:\n";
-			//	cout << eventInfo->SDL_event->motion.xrel << " " << eventInfo->SDL_event->motion.yrel << "\n";
-			//	cout << x << " " << y << "\n";*/
-
-			//	/*cout << eventInfo->SDL_event->type << " " << eventInfo->SDL_event->motion.which << " " << eventInfo->SDL_event->motion.state << "\n";
-
-			//	cout << "actual: " << eventInfo->SDL_event->motion.x << " " << eventInfo->SDL_event->motion.y << "\n";*/
-			//}			
+				
 		}	
 		break;
 

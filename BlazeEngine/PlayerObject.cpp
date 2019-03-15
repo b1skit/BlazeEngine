@@ -12,47 +12,31 @@ using std::to_string;
 
 namespace BlazeEngine
 {
-	//PlayerObject::PlayerObject()
-	//{
-	//}
-
-
-	//PlayerObject::~PlayerObject()
-	//{
-	//}
-
 	PlayerObject::PlayerObject() : GameObject::GameObject("Player Object")
 	{
 		this->playerCam.GetTransform()->SetParent(&this->transform);
 	}
 
+	//PlayerObject::~PlayerObject()
+	//{
+	//}
+
 	void PlayerObject::Update()
 	{
 		GameObject::Update();
 
-		// Handle view orientation: (pitch + yaw)
+		// Handle first person view orientation: (pitch + yaw)
 		if (InputManager::GetInputState(INPUT_MOUSE_AXIS))
 		{
-			// neg pitchup, pos pitch down
-			vec3 rotation = vec3(0.0f, 0.0f, 0.0f);
-			/*float yAxis = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_Y);*/
-			float currentXRotation = this->transform.GetEulerRotation().x;
+			vec3 yaw(0.0f, 0.0f, 0.0f);
+			vec3 pitch(0.0f, 0.0f, 0.0f);
 
-			//// BUG HERE: This doesn't work correctly!
-			//if (abs(this->transform.GetEulerRotation().x) < glm::half_pi<float>() || glm::sign<float>(currentXRotation) != glm::sign<float>(yAxis)) // pitch down
-			//{
-			//	rotation.x = yAxis * mousePitchXSensitivity * (float)TimeManager::DeltaTime();	// Pitch
-			//}
-			rotation.x = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_Y) * mousePitchXSensitivity * (float)TimeManager::DeltaTime();	// Pitch
+			yaw.y = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_X) * mouseYawYSensitivity * (float)TimeManager::DeltaTime();	// Yaw
+			pitch.x = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_Y) * mousePitchXSensitivity * (float)TimeManager::DeltaTime();	// Pitch
 
-			rotation.y = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_X) * mouseYawYSensitivity * (float)TimeManager::DeltaTime();	// Yaw
-	
-			cout << InputManager::GetMouseAxisInput(INPUT_MOUSE_X) << " " << InputManager::GetMouseAxisInput(INPUT_MOUSE_Y) << "\n";
-
-
-			this->transform.Rotate(rotation);
+			this->transform.Rotate(yaw);
+			this->playerCam.GetTransform()->Rotate(pitch);
 		}
-
 
 		// Handle direction:
 		vec3 direction = vec3(0.0f, 0.0f, 0.0f);
@@ -94,55 +78,8 @@ namespace BlazeEngine
 		{
 			this->transform.SetPosition(vec3(0, 0, 0));
 			this->transform.SetEulerRotation(vec3(0, 0, 0));
+			this->playerCam.GetTransform()->SetEulerRotation(vec3(0, 0, 0));
 		}
-
-
-
-		//// test rota:
-		//vec3 direction = vec3(0.0f, 0.0f, 0.0f);
-		//bool readInput = false;
-
-		//if (InputManager::GetInputState(INPUT_BUTTON_FORWARD))
-		//{
-		//	direction += Transform::WORLD_FORWARD;
-		//	readInput = true;
-		//}
-		//if (InputManager::GetInputState(INPUT_BUTTON_BACKWARD))
-		//{
-		//	direction += Transform::WORLD_FORWARD * -1.0f;
-		//	readInput = true;
-		//}
-		//if (InputManager::GetInputState(INPUT_BUTTON_LEFT))
-		//{
-		//	direction += Transform::WORLD_RIGHT * -1.0f;
-		//	readInput = true;
-		//}
-		//if (InputManager::GetInputState(INPUT_BUTTON_RIGHT))
-		//{
-		//	direction += Transform::WORLD_RIGHT;
-		//	readInput = true;
-		//}
-		//if (InputManager::GetInputState(INPUT_BUTTON_UP))
-		//{
-		//	direction += Transform::WORLD_UP;
-		//	readInput = true;
-		//}
-		//if (InputManager::GetInputState(INPUT_BUTTON_DOWN))
-		//{
-		//	direction += Transform::WORLD_UP * -1.0f;
-		//	readInput = true;
-		//}
-
-		//if (readInput)
-		//{
-		//	cout << "Direction 1 = " << direction.x << " " << direction.y << " " << direction.z << "\n";
-		//	direction = glm::normalize(direction);
-		//	direction *= (float)(movementSpeed * 0.1 * TimeManager::DeltaTime());
-
-		//	cout << "Direction 2 = " << direction.x << " " << direction.y << " " << direction.z << "\n";
-
-		//	this->transform.Rotate(direction);
-		//}
 	}
 
 	//// EventListener interface:

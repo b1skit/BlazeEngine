@@ -71,7 +71,7 @@ namespace BlazeEngine
 
 		// Static member functions:
 		static bool GetInputState(INPUT_STATE button);
-		static int GetMouseAxisInput(INPUT_AXIS axis);
+		static float GetMouseAxisInput(INPUT_AXIS axis);
 		
 		inline InputBindings const* GetInputBindings()
 		{
@@ -90,7 +90,7 @@ namespace BlazeEngine
 
 	private:
 		static bool buttonStates[INPUT_NUM_STATES]; // Stores the state of buttons. Updated on key down/up
-		static int mouseAxisStates[INPUT_NUM_INPUT_AXIS];
+		static float mouseAxisStates[INPUT_NUM_INPUT_AXIS];
 
 		// SDL2 event queue handling:
 		const static int MAX_EVENTS = 10; // Max number of events to look for
