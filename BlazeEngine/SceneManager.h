@@ -22,6 +22,38 @@ using std::vector;
 
 namespace BlazeEngine
 {
+	// Container for all scene data:
+	struct Scene
+	{
+		Scene()
+		{
+			// TODO: Set these with meaningful values...
+			gameObjects.reserve(100);
+			renderables.reserve(100);
+			meshes.reserve(100);
+
+			/*forwardLights.reserve(100);*/
+			/*deferredLights.reserve(100);*/
+		}
+
+		// Cameras:
+		Camera* mainCamera; // Main camera: Currently points towards player object cam
+		/*vector<Camera> sceneCameras;*/ // Various render cams
+
+		// Meshes and scene objects:
+		vector<GameObject*> gameObjects;
+		vector<Renderable const*> renderables; // Pointers to statically allocated renderables held by GameObjects
+		vector<Mesh> meshes;
+
+		// Scene Lights:
+		/*vector<Light> forwardLights;*/
+		/*vector<Light> deferredLights;*/
+
+		vec3 ambientLight = vec3(1.0f, 1.0f, 1.0f);
+	};
+
+
+	// Scene Manager: Manages scenes
 	class SceneManager : public EngineComponent, public EventListener
 	{
 	public:
@@ -44,36 +76,22 @@ namespace BlazeEngine
 		// Member functions:
 		void LoadScene(string scenePath);
 
-		inline vector<Renderable const*> const* GetRenderables() { return &renderables;	}
+		inline vector<Renderable const*> const* GetRenderables() { return &currentScene->renderables;	}
 		inline vector<Shader>* GetShaders() { return &shaders; } // SHOULD THIS RETURN CONST ?????
 		
 		/*inline vector<Light> const& GetForwardLights() { return forwardLights; }*/
-		/*inline vec3 const& GetAmbient() { return ambientLight; }*/
+		inline vec3 const& GetAmbient() { return currentScene->ambientLight; }
 		
-		inline Camera* MainCamera() { return mainCamera; }
+		inline Camera* MainCamera() { return currentScene->mainCamera; }
 
 	protected:
 
 
 	private:
-		// The scene manager holds and provides access to all of the scene objects needed by the rest of the engine:
-		vector<GameObject*> gameObjects;
-		vector<Renderable const*> renderables; // Pointers to statically allocated renderables held by GameObjects
-		vector<Mesh> meshes;
 		vector<Material> materials;
 		vector<Shader> shaders;
 
-
-		// Scene Lights:
-		/*vector<Light> forwardLights;*/
-		/*vector<Light> deferredLights;*/
-
-		/*vec3 ambientLight = vec3(1.0f, 1.0f, 1.0f);*/
-
-		Camera* mainCamera; // Main camera: Currently points towards player object cam
-		/*vector<Camera> sceneCameras;*/ // Various render cams
-
-		// TO DO: BREAK THIS OUT INTO A SCENE OBJECT^^^^^
+		Scene* currentScene = nullptr;
 
 
 		// Shader functions:
@@ -84,6 +102,5 @@ namespace BlazeEngine
 		bool CheckShaderError(GLuint shader, GLuint flag, bool isProgram);
 		//void BindShader(int shaderIndex); // Set the active vertex/fragment shader
 	};
-
 }
 

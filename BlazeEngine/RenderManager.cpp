@@ -254,12 +254,20 @@ namespace BlazeEngine
 				
 
 				// Upload light data:
-				vec3 debugAmbientColor = vec3(0.5f, 0.1f, 0.5f);
 				matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "ambient");
 				if (matrixID >= 0)
 				{
-					glUniform3f(matrixID, debugAmbientColor.x, debugAmbientColor.y, debugAmbientColor.z);
+					glUniform3f
+					(
+						matrixID, 
+						coreEngine->BlazeSceneManager->GetAmbient().x, 
+						coreEngine->BlazeSceneManager->GetAmbient().y,
+						coreEngine->BlazeSceneManager->GetAmbient().z
+					);
 				}
+				// TO DO: Upload ambient light data only once
+
+
 
 
 				// Draw!

@@ -15,23 +15,12 @@ namespace BlazeEngine
 {
 	SceneManager::SceneManager() : EngineComponent("SceneManager")
 	{
-		// TODO: Set these with meaningful values...
-		gameObjects.reserve(100);
-		renderables.reserve(100);
-		meshes.reserve(100);
-		materials.reserve(100);
-		shaders.reserve(100);
-
-		/*forwardLights.reserve(100);*/
-		/*deferredLights.reserve(100);*/
+		
 	}
 
 	SceneManager::~SceneManager()
 	{
-		for (int i = 0; i < gameObjects.size(); i++)
-		{
-			delete gameObjects.at(i);
-		}
+		
 	}
 
 	SceneManager& SceneManager::Instance()
@@ -44,6 +33,9 @@ namespace BlazeEngine
 	{
 		EngineComponent::Startup(coreEngine);
 
+		materials.reserve(100);
+		shaders.reserve(100);
+
 		// Initialize our Shaders to match the order of the SHADER enum:
 		CreateShader(coreEngine->GetConfig()->shader.errorShader);		// Index 0
 		CreateShader(coreEngine->GetConfig()->shader.defaultShader);	// Index 1
@@ -55,18 +47,27 @@ namespace BlazeEngine
 	{
 		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Scene manager shutting down...") });
 
-		for (int i = 0; i < (int)meshes.size(); i++)
+		for (int i = 0; i < (int)currentScene->meshes.size(); i++)
 		{
-			if (meshes[i].Vertices())
+			if (currentScene->meshes[i].Vertices())
 			{
-				delete meshes[i].Vertices();
+				delete currentScene->meshes[i].Vertices();
 			}
 			
-			if (meshes[i].Indices())
+			if (currentScene->meshes[i].Indices())
 			{
-				delete meshes[i].Indices();
+				delete currentScene->meshes[i].Indices();
+			}
+
+			for (int i = 0; i < currentScene->gameObjects.size(); i++)
+			{
+				delete currentScene->gameObjects.at(i);
 			}
 			
+			if (currentScene)
+			{
+				delete currentScene;
+			}
 		}
 
 		// Detach and delete shaders:
@@ -79,9 +80,9 @@ namespace BlazeEngine
 
 	void SceneManager::Update()
 	{
-		for (int i = 0; i < (int)gameObjects.size(); i++)
+		for (int i = 0; i < (int)currentScene->gameObjects.size(); i++)
 		{
-			gameObjects.at(i)->Update();
+			currentScene->gameObjects.at(i)->Update();
 		}
 	}
 
@@ -94,6 +95,14 @@ namespace BlazeEngine
 	void SceneManager::LoadScene(string scenePath)
 	{
 		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_DEBUG, this, new string("Could not load " + scenePath + ", as LoadScene() is not implemented. Using a debug hard coded path for now!") });
+
+		if (currentScene)
+		{
+			coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_DEBUG, this, new string("WARNING: Current scene already exists. Debug deallocation is to just delete it!") });
+			delete currentScene;
+		}
+		currentScene = new Scene();
+
 
 		// Flush any existing scene objects: (NOTE: Any objects that access these must be shut down first!)
 		// TO DO: Make sure we're deallocating everything before clearing the lists
@@ -240,23 +249,23 @@ namespace BlazeEngine
 
 		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
 		Mesh mesh(cubeVerts, 12, cubeIndices, 36, &(this->materials.at(materialIndex)));
-		this->meshes.push_back(mesh);
-		int meshIndex = (int)this->meshes.size() - 1; // Store the index so we can pass the address
+		currentScene->meshes.push_back(mesh);
+		int meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address
 
 		// Assemble a list of all meshes held by a Renderable:
 		vector<Mesh*> viewMeshes;
-		viewMeshes.push_back(&(this->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
+		viewMeshes.push_back(&(currentScene->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
 		Renderable testRenderable(viewMeshes);
 
 		// Construct a GameObject:
 		GameObject* testObject = new GameObject("cubeObject", testRenderable);
 
 		// Add test objects to scene:
-		this->gameObjects.push_back(testObject);
-		int gameObjectIndex = (int)this->gameObjects.size() - 1;
+		currentScene->gameObjects.push_back(testObject);
+		int gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
 
 		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-		this->renderables.push_back(gameObjects[gameObjectIndex]->GetRenderable());
+		currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
 
 
 
@@ -272,9 +281,9 @@ namespace BlazeEngine
 
 		// Set up a player object:
 		PlayerObject* player = new PlayerObject();
-		gameObjects.push_back(player);
-		this->mainCamera = player->GetCamera();
-		mainCamera->Initialize(
+		currentScene->gameObjects.push_back(player);
+		currentScene->mainCamera = player->GetCamera();
+		currentScene->mainCamera->Initialize(
 			vec3(0, 0, 0),
 			(float)coreEngine->GetConfig()->renderer.windowXRes / (float)coreEngine->GetConfig()->renderer.windowYRes,
 			coreEngine->GetConfig()->viewCam.fieldOfView, 
