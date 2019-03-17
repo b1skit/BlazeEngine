@@ -15,9 +15,6 @@ using std::to_string;
 
 namespace BlazeEngine
 {
-	//// Predeclaration:
-	//class CoreEngine;
-
 	class GameObject : public SceneObject
 	{
 	public:

@@ -1,17 +1,12 @@
 // Renderable interface: For objects drawn by the RenderManager 
 #pragma once
 
-#include <vector>
+
 #include "Mesh.h"
 #include "Transform.h"
+#include <vector>
 
 using std::vector;
-
-// DEBUG:
-#include <iostream>
-using std::cout;
-using std::to_string;
-
 
 
 namespace BlazeEngine
@@ -24,31 +19,7 @@ namespace BlazeEngine
 		Renderable(vector<Mesh*> viewMeshes)
 		{
 			this->viewMeshes = viewMeshes;
-			this->transform = transform;
-
-			/*bool isStatic = false;*/
 		}
-
-		// Copy constructor:
-		Renderable(const Renderable& renderable)
-		{
-			this->viewMeshes = renderable.viewMeshes;
-			this->transform = renderable.transform;
-			
-
-			/*this->isStatic = renderable.isStatic;*/
-		}
-
-		// Assignment operator:
-		/*Renderable& operator=(const Renderable& rhs) = default;*/
-		Renderable& operator=(const Renderable& rhs)
-		{
-			this->viewMeshes = rhs.viewMeshes;
-			this->transform = rhs.transform;
-
-			return *this;
-		}
-		
 
 		~Renderable()
 		{
@@ -59,7 +30,7 @@ namespace BlazeEngine
 		inline vector<Mesh*> const* ViewMeshes() const { return &viewMeshes; }
 
 		inline Transform* GetTransform() const { return transform; }
-		inline void SetTransform(Transform* transform) { this->transform = transform; }
+		void SetTransform(Transform* transform);
 
 
 	protected:

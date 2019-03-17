@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Material.h"
-
 #include <glm.hpp>
 #include <GL/glew.h>
 
@@ -13,6 +11,11 @@ using glm::vec2;
 
 namespace BlazeEngine
 {
+	// Pre-declarations:
+	class Transform;
+
+
+	// Vertex structure:
 	struct Vertex
 	{
 	public:
@@ -56,7 +59,7 @@ namespace BlazeEngine
 	class Mesh
 	{
 	public:
-		Mesh(Vertex* vertices, unsigned int numVerts, GLubyte* indices, unsigned int numIndices, Material* material);
+		Mesh(Vertex* vertices, unsigned int numVerts, GLubyte* indices, unsigned int numIndices, unsigned int materialIndex);
 		~Mesh();
 
 		// Copy constructor:
@@ -65,9 +68,14 @@ namespace BlazeEngine
 		// Getters/Setters:
 		inline Vertex* Vertices() { return vertices; }
 		inline unsigned int NumVerts() { return this->numVerts; }
-		inline Material* GetMaterial() { return material; }
+		
+		inline unsigned int GetMaterialIndex() { return materialIndex; }
+		
 		inline GLubyte* Indices() { return indices; }
 		inline unsigned int NumIndices() { return numIndices; }
+		
+		inline Transform* GetTransform() { return transform; }
+		inline void SetTransform(Transform* transform) { this->transform = transform; }
 
 
 	protected:
@@ -80,7 +88,9 @@ namespace BlazeEngine
 		GLubyte* indices = nullptr;
 		unsigned int numIndices = -1;
 
-		Material* material = nullptr;	// Points to scene manager's statically allocated list of materials
+		unsigned int materialIndex;
+
+		Transform* transform = nullptr;
 	};
 }
 

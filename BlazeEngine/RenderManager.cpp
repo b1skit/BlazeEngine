@@ -179,67 +179,98 @@ namespace BlazeEngine
 		// TO DO: Loop by material, shader, mesh:
 		// Pre-store all vertices for the scene in (material, shader) buffers?
 
+		// TO DO: Merge ALL meshes using the same material into a single draw call
 
-		// Loop through every renderable:
-		vector<Renderable const*> const* renderables = coreEngine->BlazeSceneManager->GetRenderables();
-		vector<Shader>* shaders = coreEngine->BlazeSceneManager->GetShaders(); // TO DO: Cache these off during Startup() ?
 
-		for (int i = 0; i < renderables->size(); i++)
+		vector<Shader>* shaders = coreEngine->BlazeSceneManager->GetShaders();
+
+
+		// Assemble common (model independent) matrices:
+		mat4 view = this->coreEngine->BlazeSceneManager->MainCamera()->View();
+		mat4 projection = this->coreEngine->BlazeSceneManager->MainCamera()->Projection();
+		
+
+		unsigned int numMaterials = coreEngine->BlazeSceneManager->NumMaterials();
+		for (unsigned int currentMaterialIndex = 0; currentMaterialIndex < numMaterials; currentMaterialIndex++)
 		{
-			// Loop through every view mesh:
-			int numViewMeshes = (int)renderables->at(i)->ViewMeshes()->size();
+			Material* currentMaterial = coreEngine->BlazeSceneManager->GetMaterial(currentMaterialIndex);
+			// TO DO: Material setup: texture uploads etc
 
-			for (int j = 0; j < numViewMeshes; j++)
+
+
+
+			// Bind the required VAO:
+			glBindVertexArray(vertexArrayObject);
+
+			// Setup the current shader:
+			unsigned int shaderIndex = coreEngine->BlazeSceneManager->GetShaderIndex(currentMaterialIndex);
+			glUseProgram(shaders->at(shaderIndex).ShaderReference()); // ...TO DO: Decide whether to use this directly, or via BindShader() ?
+
+			// Upload common shaders:
+			GLuint matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_view");
+			if (matrixID >= 0)
 			{
-				Mesh* mesh = renderables->at(i)->ViewMeshes()->at(j);
-				unsigned int shaderIndex = mesh->GetMaterial()->GetShaderIndex();
+				glUniformMatrix4fv(matrixID, 1, GL_FALSE, &view[0][0]);
+			}
+			matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_projection");
+			if (matrixID >= 0)
+			{
+				glUniformMatrix4fv(matrixID, 1, GL_FALSE, &projection[0][0]);
+			}
 
-				// Assemble the model matrix for this mesh:
-				//Transform const* transform = renderables->at(i)->GetTransform();
+			// Upload ambient light data:
+			matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "ambient");
+			if (matrixID >= 0)
+			{
+				glUniform3f
+				(
+					matrixID,
+					coreEngine->BlazeSceneManager->GetAmbient().x,
+					coreEngine->BlazeSceneManager->GetAmbient().y,
+					coreEngine->BlazeSceneManager->GetAmbient().z
+				);
+			}
+
+
+			//// Upload key light:
+			//matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "keyPosition");
+			//if (matrixID >= 0)
+			//{
+			//	glUniform3f
+			//	(
+			//		matrixID,
+			//		coreEngine->BlazeSceneManager->GetAmbient().x,
+			//		coreEngine->BlazeSceneManager->GetAmbient().y,
+			//		coreEngine->BlazeSceneManager->GetAmbient().z
+			//	);
+			//}
+
+
+			// Loop through each mesh:
+			vector<Mesh*> const* materialMeshes = coreEngine->BlazeSceneManager->GetRenderMeshes(currentMaterialIndex);
+			unsigned int numMeshes = (unsigned int)materialMeshes->size();
+			for (unsigned int j = 0; j < numMeshes; j++)
+			{
+				Mesh* currentMesh = materialMeshes->at(j);
+
+				// Assemble model-specific matrices:
+				mat4 model = currentMesh->GetTransform()->Model();
+				mat4 mv = view * model;
+				mat4 mvp = this->coreEngine->BlazeSceneManager->MainCamera()->ViewProjection() * model;
 				
-
-
-				// Bind the required VAO:
-				glBindVertexArray(vertexArrayObject);
-
 				// Bind our position VBO as active and copy vertex data into the buffer
 				glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_POSITION]);		// TO DO: Define when/which obects should use GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW ??
-				glBufferData(GL_ARRAY_BUFFER, mesh->NumVerts() * sizeof(Vertex), &mesh->Vertices()[0].position.x, GL_STATIC_DRAW); // <- should we be null checking?
-
-				//// Colors:
-				//glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_COLOR]);
-				//glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
+				glBufferData(GL_ARRAY_BUFFER, currentMesh->NumVerts() * sizeof(Vertex), &currentMesh->Vertices()[0].position.x, GL_STATIC_DRAW); // <- should we be null checking?
 
 				// Bind our index VBO as active:
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexBufferObjects[VERTEX_BUFFER_INDEXES]);
-				glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->NumIndices() * sizeof(GLubyte), &mesh->Indices()[0], GL_STATIC_DRAW);
+				glBufferData(GL_ELEMENT_ARRAY_BUFFER, currentMesh->NumIndices() * sizeof(GLubyte), &currentMesh->Indices()[0], GL_STATIC_DRAW);
 
-			
-				// Set the active shader: ...TO DO: Decide whether to use this directly, or via BindShader() ?
-				glUseProgram(shaders->at(shaderIndex).ShaderReference()); // ...TO DO: Decide whether to use this directly, or via BindShader() ?
-
-				// Updload transformations to the shader:
-				mat4 model = renderables->at(i)->GetTransform()->Model();
-				mat4 view = this->coreEngine->BlazeSceneManager->MainCamera()->View();
-				mat4 projection = this->coreEngine->BlazeSceneManager->MainCamera()->Projection();
-				mat4 mv = view * model;
-				mat4 mvp = this->coreEngine->BlazeSceneManager->MainCamera()->ViewProjection() * model;
-
-
-				GLuint matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_model");
+				// Upload mesh-specific matrices:
+				matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_model");
 				if (matrixID >= 0)
 				{
 					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &model[0][0]);
-				}
-				matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_view");
-				if (matrixID >= 0)
-				{
-					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &view[0][0]);
-				}				
-				matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_projection");
-				if (matrixID >= 0)
-				{
-					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &projection[0][0]);
 				}
 				matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_mv");
 				if (matrixID >= 0)
@@ -251,45 +282,20 @@ namespace BlazeEngine
 				{
 					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
 				}
-				
-
-				// Upload light data:
-				matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "ambient");
-				if (matrixID >= 0)
-				{
-					glUniform3f
-					(
-						matrixID, 
-						coreEngine->BlazeSceneManager->GetAmbient().x, 
-						coreEngine->BlazeSceneManager->GetAmbient().y,
-						coreEngine->BlazeSceneManager->GetAmbient().z
-					);
-				}
-				// TO DO: Upload ambient light data only once
 
 
 
 
-				// Draw!
-				//glDrawArrays(GL_TRIANGLES, 0, mesh->NumVerts()); // Type, start index, size
+				glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_BYTE, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type,const GLvoid * indices);
 
-				/* Invoke glDrawElements telling it to draw a triangle strip using 6 indicies */
-				glDrawElements(GL_TRIANGLES, mesh->NumIndices(), GL_UNSIGNED_BYTE, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type,const GLvoid * indices);
-				// ^^^ GL_TRIANGLE_STRIP ??
-				// GL_UNSIGNED_BYTE
-				// mesh->NumIndices()
-
-				glBindBuffer(GL_ARRAY_BUFFER, 0); // Cleanup: Bind object 0 to GL_ARRAY_BUFFER to unbind vertexBufferObjects[VERTEX_BUFFER_POSITION]
+				// Cleanup: 
+				glBindBuffer(GL_ARRAY_BUFFER, 0); //Bind object 0 to GL_ARRAY_BUFFER to unbind vertexBufferObjects[VERTEX_BUFFER_POSITION]
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 			}
 		}
 
 		// Display the new frame:
 		SDL_GL_SwapWindow(glWindow);
-
-
-		// DEBUG:
-		//SDL_Delay((unsigned int)(1000.0 / 60.0));
 	}
 
 

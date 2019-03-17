@@ -5,14 +5,11 @@
 #include "SceneObject.h"
 #include "GameObject.h"
 #include "Renderable.h"
-//#include "Material.h"
+#include "Material.h"
 #include "Shader.h"
 #include "Light.h"
-#include "Camera.h"
 #include "PlayerObject.h"
 
-//class GameObject;
-//class SceneObject;
 
 #include <vector>
 
@@ -22,6 +19,10 @@ using std::vector;
 
 namespace BlazeEngine
 {
+	// Pre-declarations:
+	class Camera;
+
+
 	// Container for all scene data:
 	struct Scene
 	{
@@ -45,7 +46,7 @@ namespace BlazeEngine
 		vector<Renderable const*> renderables; // Pointers to statically allocated renderables held by GameObjects
 		vector<Mesh> meshes;
 
-		// Scene Lights:
+		// Scene Lights: A scene can have ???
 		/*vector<Light> forwardLights;*/
 		/*vector<Light> deferredLights;*/
 
@@ -76,9 +77,15 @@ namespace BlazeEngine
 		// Member functions:
 		void LoadScene(string scenePath);
 
+		inline unsigned int NumMaterials() { return currentMaterialCount; }
+		inline Material* GetMaterial(unsigned int materialIndex) { return materials[materialIndex]; }
+		inline vector<Mesh*> const* GetRenderMeshes(unsigned int materialIndex) { return &materialMeshLists.at(materialIndex); } // TO DO: BOunds checking?
+
 		inline vector<Renderable const*> const* GetRenderables() { return &currentScene->renderables;	}
 		inline vector<Shader>* GetShaders() { return &shaders; } // SHOULD THIS RETURN CONST ?????
 		
+		inline unsigned int GetShaderIndex(unsigned int materialIndex) { return materials[materialIndex]->GetShaderIndex(); } // TO DO: Bounds checking?
+
 		/*inline vector<Light> const& GetForwardLights() { return forwardLights; }*/
 		inline vec3 const& GetAmbient() { return currentScene->ambientLight; }
 		
@@ -88,11 +95,22 @@ namespace BlazeEngine
 
 
 	private:
-		vector<Material> materials;
-		vector<Shader> shaders;
+		// Material management:
+		const unsigned int MAX_MATERIALS = 100; // TO DO: Replace this with something dynamic?
+		unsigned int currentMaterialCount = 0;
+		Material** materials = nullptr;
+		unsigned int AddMaterial(Material* newMaterial);
+
+		vector<vector<Mesh*>> materialMeshLists;
+		void AssembleMaterialMeshLists();
+
+		
+		vector<Shader> shaders; // TO DO: Replace with a dynamic array
 
 		Scene* currentScene = nullptr;
 
+
+		
 
 		// Shader functions:
 		unsigned int GetShaderIndex(string shaderName);
@@ -100,7 +118,6 @@ namespace BlazeEngine
 		string LoadShaderFile(const string& filepath);
 		GLuint CreateGLShaderObject(const string& text, GLenum shaderType);
 		bool CheckShaderError(GLuint shader, GLuint flag, bool isProgram);
-		//void BindShader(int shaderIndex); // Set the active vertex/fragment shader
 	};
 }
 

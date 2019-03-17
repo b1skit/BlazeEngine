@@ -7,6 +7,7 @@ namespace BlazeEngine
 	class Material
 	{
 	public:
+		Material() { shaderIndex = 0; }
 		Material(unsigned int shaderIndex);
 		~Material();
 
@@ -19,10 +20,10 @@ namespace BlazeEngine
 
 	private:
 		unsigned int shaderIndex;
-		//Texture* albedo;
-		//Texture* normal;
-		//Texture* roughness; // Or metalness?
-		//Texture* ambientOcclusion;
+		//Texture* albedo = nullptr;
+		//Texture* normal = nullptr;
+		//Texture* roughness = nullptr; // Or metalness?
+		//Texture* ambientOcclusion = nullptr;
 	};
 }
 

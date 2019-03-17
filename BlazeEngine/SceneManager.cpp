@@ -33,7 +33,27 @@ namespace BlazeEngine
 	{
 		EngineComponent::Startup(coreEngine);
 
-		materials.reserve(100);
+		// Initialize materials:
+		if (materials)
+		{
+			for (unsigned int i = 0; i < MAX_MATERIALS; i++)
+			{
+				if (materials[i])
+				{
+					delete materials[i];
+				}
+			}
+			delete[] materials;
+		}
+		materials = new Material*[MAX_MATERIALS];
+		for (unsigned int i = 0; i < MAX_MATERIALS; i++)
+		{
+			materials[i] = nullptr;
+		}
+		currentMaterialCount = 0;
+
+
+		// Initialize shaders:
 		shaders.reserve(100);
 
 		// Initialize our Shaders to match the order of the SHADER enum:
@@ -57,6 +77,19 @@ namespace BlazeEngine
 			if (currentScene->meshes[i].Indices())
 			{
 				delete currentScene->meshes[i].Indices();
+			}
+
+			if (materials)
+			{
+				for (unsigned int i = 0; i < MAX_MATERIALS; i++)
+				{
+					if (materials[i])
+					{
+						delete materials[i];
+					}
+				}
+				delete [] materials;
+				currentMaterialCount = 0;
 			}
 
 			for (int i = 0; i < currentScene->gameObjects.size(); i++)
@@ -243,12 +276,11 @@ namespace BlazeEngine
 		// Create a material and shader:
 		unsigned int shaderIndex = GetShaderIndex(coreEngine->GetConfig()->shader.defaultShader);
 
-		Material material(shaderIndex);
-		this->materials.push_back(material);
-		int materialIndex = (int)this->materials.size() - 1;
+		Material* newMaterial = new Material(shaderIndex);
+		unsigned int materialIndex = AddMaterial(newMaterial);
 
 		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		Mesh mesh(cubeVerts, 12, cubeIndices, 36, &(this->materials.at(materialIndex)));
+		Mesh mesh(cubeVerts, 12, cubeIndices, 36, materialIndex);
 		currentScene->meshes.push_back(mesh);
 		int meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address
 
@@ -259,6 +291,7 @@ namespace BlazeEngine
 
 		// Construct a GameObject:
 		GameObject* testObject = new GameObject("cubeObject", testRenderable);
+		
 
 		// Add test objects to scene:
 		currentScene->gameObjects.push_back(testObject);
@@ -270,7 +303,8 @@ namespace BlazeEngine
 
 
 
-
+		// Assemble material lists:
+		AssembleMaterialMeshLists();
 
 
 		//// Set up a light:
@@ -293,10 +327,49 @@ namespace BlazeEngine
 		
 	}
 
+	unsigned int SceneManager::AddMaterial(Material * newMaterial)
+	{
+		/*for (int i = 0; i < currentMaterialCount; i++)
+		{
+			
+		}*/
+		// TO DO: Check if a material exists, and return it if it does
+
+		// Otherwise, add a new material:
+		if (currentMaterialCount == MAX_MATERIALS)
+		{
+			coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, new string("Cannot add any new materials: Max materials have been added! Returning material at index 0") });
+			return 0; // Error: Return first material
+		}
+
+		materials[currentMaterialCount] = newMaterial;
+		unsigned int newIndex = currentMaterialCount;
+		currentMaterialCount++;
+
+		return newIndex; // Return the previous index
+	}
 
 
 
 
+
+
+	void SceneManager::AssembleMaterialMeshLists()
+	{
+		materialMeshLists.clear();
+		materialMeshLists.resize(MAX_MATERIALS);
+		for (int i = 0; i < (int)currentScene->renderables.size(); i++)
+		{
+			for (int j = 0; j < (int)currentScene->renderables.at(i)->ViewMeshes()->size(); j++)
+			{
+				unsigned int materialIndex = currentScene->renderables.at(i)->ViewMeshes()->at(j)->GetMaterialIndex();
+				Mesh* viewMesh = currentScene->renderables.at(i)->ViewMeshes()->at(j);
+				materialMeshLists.at(materialIndex).emplace_back(viewMesh);
+			}
+		}
+
+		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Finished assembling material mesh lists") });
+	}
 
 	unsigned int SceneManager::GetShaderIndex(string shaderName)
 	{
