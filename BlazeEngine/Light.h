@@ -20,11 +20,14 @@ namespace BlazeEngine
 		LIGHT_SPOT,
 		LIGHT_AREA,
 		LIGHT_TUBE,
+
+		NUM_LIGHT_TYPES // Resereved: The number of light types
 	};
 
 	class Light : public SceneObject
 	{
 	public:
+		Light(){} // Default constructor
 		Light(LIGHT_TYPE type, vec4 color, float intensity);
 
 		inline vec4 const& Color() { return color; }
@@ -35,6 +38,12 @@ namespace BlazeEngine
 
 		// EventListener interface:
 		void HandleEvent(EventInfo const* eventInfo);
+
+		// Getters/Setters:
+		inline vec4 const& Color() const { return color; }
+		inline float const& Intensity() const { return intensity; }
+		inline LIGHT_TYPE const& Type() const { return type; }
+		inline Transform const& GetTransform() const { return transform; } // Directional lights shine forward (Z+)
 
 	protected:
 

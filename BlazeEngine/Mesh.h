@@ -47,6 +47,8 @@ namespace BlazeEngine
 		vec3 normal;
 		vec4 color;
 		vec2 uv;
+
+
 	protected:
 
 

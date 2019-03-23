@@ -59,17 +59,14 @@ namespace BlazeEngine
 		
 		enum
 		{
-			VERTEX_BUFFER_POSITION,
-			VERTEX_BUFFER_NORMAL,
-			VERTEX_BUFFER_COLOR,
-			VERTEX_BUFFER_UV,
-			VERTEX_BUFFER_INDEXES,
+			BUFFER_VERTICES,
+			BUFFER_INDEXES,
 
-			VERTEX_BUFFER_SIZE, // Reserved: Number of buffers to allocate
+			BUFFER_COUNT, // Reserved: Number of buffers to allocate
 		};
 
 		GLuint vertexArrayObject;
-		GLuint vertexBufferObjects[VERTEX_BUFFER_SIZE];		// Buffer objects that hold vertices in GPU memory
+		GLuint vertexBufferObjects[BUFFER_COUNT];		// Buffer objects that hold vertices in GPU memory
 		
 	
 		// Private member functions:
