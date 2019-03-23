@@ -44,7 +44,10 @@ namespace BlazeEngine
 		void Translate(vec3 amount);
 		void SetPosition(vec3 position);
 
-		void Rotate(vec3 eulerXYZ); // Euler rotation. Rotation order = x,y,z
+		// Rotate about the world X, Y, Z axis, in that order
+		// eulerXYZ = Rotation angles about each axis, in RADIANS
+		void Rotate(vec3 eulerXYZ);
+
 		inline vec3 const& GetEulerRotation() { return eulerRotation; }
 		void SetEulerRotation(vec3 eulerXYZ);
 		
@@ -57,10 +60,10 @@ namespace BlazeEngine
 		inline vec3 const& Right() const { return right; }
 		inline vec3 const& Up() const { return up; }
 
-		// Camera-relative (RHCS) static constants:
-		static const vec3 WORLD_RIGHT;		// +X
-		static const vec3 WORLD_UP;			// +Y
-		static const vec3 WORLD_FORWARD;	// -Z
+		// World CS axis: BlazeEngine always uses a RHCS
+		static const vec3 WORLD_X;		// +X
+		static const vec3 WORLD_Y;		// +Y
+		static const vec3 WORLD_Z;		// +Z
 		
 
 	protected:
@@ -76,10 +79,10 @@ namespace BlazeEngine
 		vec3 position		= vec3(0.0f, 0.0f, 0.0f);
 		vec3 eulerRotation	= vec3(0.0f, 0.0f, 0.0f);	// Current Euler angles about the local axis, in Radians
 		
-		// Local CS axis: OpenGL == RHCS in object/world space, LHCS in window (screen) space
-		vec3 forward	= vec3(0.0f, 0.0f, -1.0f);
-		vec3 right		= vec3(1.0f, 0.0f, 0.0f);
-		vec3 up			= vec3(0.0f, 1.0f, 0.0f);
+		// Local CS axis: BlazeEngine always uses a RHCS
+		vec3 right		= WORLD_X;
+		vec3 up			= WORLD_Y;
+		vec3 forward	= WORLD_Z;
 
 		/*quat localRotation;
 		quat worldRotation;*/

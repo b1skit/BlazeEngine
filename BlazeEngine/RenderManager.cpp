@@ -18,6 +18,9 @@
 //using std::ifstream;
 using glm::vec3;
 using glm::vec4;
+using glm::mat3;
+using glm::mat4;
+
 
 // DEBUG:
 #include <iostream>
@@ -211,49 +214,25 @@ namespace BlazeEngine
 			matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "ambient");
 			if (matrixID >= 0)
 			{
-				glUniform3f
-				(
-					matrixID,
-					coreEngine->BlazeSceneManager->GetAmbient().x,
-					coreEngine->BlazeSceneManager->GetAmbient().y,
-					coreEngine->BlazeSceneManager->GetAmbient().z
-				);
+				glUniform3fv(matrixID, 1, &coreEngine->BlazeSceneManager->GetAmbient()[0]);
 			}
 
-
-			// Upload key light:
+			// Upload key light forward direction in world space:
 			matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "keyDirection");
 			if (matrixID >= 0)
 			{
-				glUniform3f
-				(
-					matrixID,
-					coreEngine->BlazeSceneManager->GetKeyLight().GetTransform().Forward().x,
-					coreEngine->BlazeSceneManager->GetKeyLight().GetTransform().Forward().y,
-					coreEngine->BlazeSceneManager->GetKeyLight().GetTransform().Forward().z
-				);
+				vec3 keyDirection = coreEngine->BlazeSceneManager->GetKeyLight().GetTransform().Forward() * -1.0f; // Reverse the direction: Points surface->light
+				glUniform3fv(matrixID, 1, &keyDirection[0]);
 			}
 			matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "keyColor");
 			if (matrixID >= 0)
 			{
-				// Seems I can't upload more than one uniform3f ?????
-
-				//glUniform3f
-				//(
-				//	matrixID,
-				//	coreEngine->BlazeSceneManager->GetKeyLight().Color().x,
-				//	coreEngine->BlazeSceneManager->GetKeyLight().Color().y,
-				//	coreEngine->BlazeSceneManager->GetKeyLight().Color().z
-				//);
+				glUniform4fv(matrixID, 1, &coreEngine->BlazeSceneManager->GetKeyLight().Color().r);
 			}
 			matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "keyIntensity");
 			if (matrixID >= 0)
 			{
-				glUniform1f
-				(
-					matrixID,
-					coreEngine->BlazeSceneManager->GetKeyLight().Intensity()
-				);
+				glUniform1f(matrixID, coreEngine->BlazeSceneManager->GetKeyLight().Intensity());
 			}
 
 			// Loop through each mesh:
@@ -266,7 +245,9 @@ namespace BlazeEngine
 				// Assemble model-specific matrices:
 				mat4 model = currentMesh->GetTransform()->Model();
 				mat4 mv = view * model;
-				mat4 mvp = this->coreEngine->BlazeSceneManager->MainCamera()->ViewProjection() * model;
+				mat4 mvp = coreEngine->BlazeSceneManager->MainCamera()->ViewProjection() * model;
+				
+				mat3 mv_it = glm::transpose(glm::inverse(mat3(mv)));
 				
 				// Bind our position VBO as active and copy vertex data into the buffer
 				glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[BUFFER_VERTICES]);		// TO DO: Define when/which obects should use GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW ??
@@ -291,15 +272,7 @@ namespace BlazeEngine
 				if (matrixID >= 0)
 				{
 					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
-				}
-
-
-				/*cout << "currentMesh has " << currentMesh->NumVerts() << " verts and " << currentMesh->NumIndices() << "\n";
-				for (int i = 0; i < currentMesh->NumVerts(); i++)
-				{
-					cout << currentMesh->Vertices()[i].position.x << " " << currentMesh->Vertices()[i].position.y << " " << currentMesh->Vertices()[i].position.z << "\n";
-				}*/
-				
+				}				
 
 				glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_BYTE, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type,const GLvoid * indices);
 

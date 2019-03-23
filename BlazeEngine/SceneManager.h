@@ -89,7 +89,7 @@ namespace BlazeEngine
 		inline unsigned int GetShaderIndex(unsigned int materialIndex) { return materials[materialIndex]->GetShaderIndex(); } // TO DO: Bounds checking?
 
 		inline vec3 const& GetAmbient() { return currentScene->ambientLight; }
-		inline Light const& GetKeyLight() { return currentScene->keyLight; }
+		inline Light& GetKeyLight() { return currentScene->keyLight; }
 		/*inline vector<Light> const& GetForwardLights() { return forwardLights; }*/
 		
 		inline Camera* MainCamera() { return currentScene->mainCamera; }

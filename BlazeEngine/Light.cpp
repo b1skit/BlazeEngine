@@ -8,9 +8,11 @@ namespace BlazeEngine
 		this->color = color;
 		this->intensity = intensity;
 	}
+
 	void Light::Update()
 	{
 	}
+
 	void Light::HandleEvent(EventInfo const * eventInfo)
 	{
 	}

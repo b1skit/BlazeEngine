@@ -41,9 +41,14 @@ namespace BlazeEngine
 
 		// Getters/Setters:
 		inline vec4 const& Color() const { return color; }
+		inline void SetColor(vec4 color) { this->color = color; }
+
 		inline float const& Intensity() const { return intensity; }
+		inline void SetIntensity(float intensity) { this->intensity = intensity; }
+
 		inline LIGHT_TYPE const& Type() const { return type; }
-		inline Transform const& GetTransform() const { return transform; } // Directional lights shine forward (Z+)
+
+		inline Transform& GetTransform() { return transform; } // Directional lights shine forward (Z+)
 
 	protected:
 

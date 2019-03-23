@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 core
 
 // Built-in input variables:
 // in vec4 gl_FragCoord; //  location of the fragment in window space. 

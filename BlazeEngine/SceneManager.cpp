@@ -358,33 +358,6 @@ namespace BlazeEngine
 			21, 22, 23,
 		};
 
-/*
-		Vertex* cubeVerts = new Vertex[12];
-		cubeVerts[0] = Vertex(vec3(-1.0f, 1.0f, -3.0f), vec3(0.0f, 0.0f, 1.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f));
-		cubeVerts[1] = Vertex(vec3(-1.0f, -1.0f, -3.0f), vec3(0.0f, 0.0f, 1.0f), vec4(0.0f, 0.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-		cubeVerts[2] = Vertex(vec3(1.0f, -1.0f, -3.0f), vec3(-1.0f, 0.0f, 0.0f), vec4(0.0f, 1.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f));
-		cubeVerts[3] = Vertex(vec3(1.0f, 1.0f, -3.0f), vec3(-1.0f, 0.0f, 0.0f), vec4(0.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-		cubeVerts[4] = Vertex(vec3(-1.0f, -1.0f, -5.0f), vec3(1.0f, 0.0f, 0.0f), vec4(1.0f, 0.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f));
-		cubeVerts[5] = Vertex(vec3(1.0f, -1.0f, -5.0f), vec3(1.0f, 0.0f, 0.0f), vec4(1.0f, 0.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-		cubeVerts[6] = Vertex(vec3(1.0f, 1.0f, -5.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 0.0f, 1.0f), vec2(0.0f, 0.0f));
-		cubeVerts[7] = Vertex(vec3(-1.0f, 1.0f, -5.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-
-		GLubyte* cubeIndices = new GLubyte[36] 
-		{
-			0, 1, 3, 
-			3, 1, 2, 
-			7, 4, 0, 
-			0, 4, 1, 
-			3, 2, 5, 
-			3, 5, 6, 
-			7, 0, 3, 
-			7, 3, 6, 
-			1, 4, 2, 
-			2, 4, 5, 
-			7, 6, 4, 
-			6, 5, 4,
-		};*/
-
 		// Create a material and shader:
 		unsigned int shaderIndex = GetShaderIndex(coreEngine->GetConfig()->shader.defaultShader);
 
@@ -419,11 +392,13 @@ namespace BlazeEngine
 		AssembleMaterialMeshLists();
 
 
+
 		// Set up lights:
 		currentScene->ambientLight = vec3(0.5, 0.5, 0.5);
 		currentScene->keyLight = Light(LIGHT_DIRECTIONAL, vec4(1.0f, 1.0f, 1.0f, 1.0f), 1.0f);
-		
-
+		currentScene->keyLight.GetTransform().Rotate(vec3(3.14f/4.0f, 3.14f/8.0f, 0)); // Rotation in radians
+		currentScene->keyLight.SetColor(vec4(0,1,0,1));
+		currentScene->keyLight.SetIntensity(2.0f);
 
 
 		// Set up a player object:
@@ -537,21 +512,22 @@ namespace BlazeEngine
 			glAttachShader(shaderReference, shaders[i]); // Attach our shaders to the shader program
 		}
 
-		// Associate our vertex attribute indexes with named variables:
-		glBindAttribLocation(shaderReference, 0, "in_position"); // Bind attribute 0 as "position" in the vertex shader
-		glBindAttribLocation(shaderReference, 1, "in_normal");
-		glBindAttribLocation(shaderReference, 2, "in_color");
-		glBindAttribLocation(shaderReference, 3, "in_uv0");
-		glBindAttribLocation(shaderReference, 4, "in_model");
-		glBindAttribLocation(shaderReference, 5, "in_view");
-		glBindAttribLocation(shaderReference, 6, "in_projection");
-		glBindAttribLocation(shaderReference, 7, "in_mv");
-		glBindAttribLocation(shaderReference, 8, "in_mvp");
-		glBindAttribLocation(shaderReference, 9, "ambient");
-		glBindAttribLocation(shaderReference, 10, "keyDirection");
-		glBindAttribLocation(shaderReference, 11, "keyColor");
-		glBindAttribLocation(shaderReference, 12, "keyIntensity");
-		// TO DO: Replace indexes with an enum
+		//// Associate our vertex attribute indexes with named variables:
+		//glBindAttribLocation(shaderReference, 0, "in_position"); // Bind attribute 0 as "position" in the vertex shader
+		//glBindAttribLocation(shaderReference, 1, "in_normal");
+		//glBindAttribLocation(shaderReference, 2, "in_color");
+		//glBindAttribLocation(shaderReference, 3, "in_uv0");
+		//glBindAttribLocation(shaderReference, 4, "in_model");
+		//glBindAttribLocation(shaderReference, 5, "in_view");
+		//glBindAttribLocation(shaderReference, 6, "in_projection");
+		//glBindAttribLocation(shaderReference, 7, "in_mv");
+		//glBindAttribLocation(shaderReference, 8, "in_mvp");
+		//glBindAttribLocation(shaderReference, 9, "ambient");
+		//glBindAttribLocation(shaderReference, 10, "keyDirection");
+		//glBindAttribLocation(shaderReference, 11, "keyColor");
+		//glBindAttribLocation(shaderReference, 12, "keyIntensity");
+		//// TO DO: Replace indexes with an enum??
+		//// This isn't really needed, as we explicitely define locations in the shader...
 
 		// Link our program object:
 		glLinkProgram(shaderReference);

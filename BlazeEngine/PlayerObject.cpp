@@ -43,11 +43,11 @@ namespace BlazeEngine
 
 		if (InputManager::GetInputState(INPUT_BUTTON_FORWARD))
 		{
-			direction += this->transform.Forward();
+			direction += this->transform.Forward()  * -1.0f;
 		}
 		if (InputManager::GetInputState(INPUT_BUTTON_BACKWARD))
 		{
-			direction += this->transform.Forward() * -1.0f;
+			direction += this->transform.Forward();
 		}
 		if (InputManager::GetInputState(INPUT_BUTTON_LEFT))
 		{
