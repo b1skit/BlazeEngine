@@ -32,7 +32,7 @@ namespace BlazeEngine
 
 	Shader* Shader::CreateShader(string shaderName)
 	{
-		CoreEngine::GetCoreEngine()->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Loading shader: " + shaderName) });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Loading shader: " + shaderName) });
 
 		GLuint shaderReference;
 		unsigned int numShaders = 2; // TO DO : Allow loading of geometry shaders?
@@ -46,7 +46,7 @@ namespace BlazeEngine
 		string fragmentShader = LoadShaderFile(shaderName + ".frag");
 		if (vertexShader == "" || fragmentShader == "")
 		{
-			CoreEngine::GetCoreEngine()->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("Creating shader failed while loading shader files") });
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("Creating shader failed while loading shader files") });
 			return nullptr;
 		}
 
@@ -96,7 +96,7 @@ namespace BlazeEngine
 
 		Shader* newShader = new Shader(shaderName, shaderReference);
 
-		CoreEngine::GetCoreEngine()->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Successfully loaded " + shaderName) });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Successfully loaded " + shaderName) });
 
 		return newShader;
 	}
@@ -121,7 +121,7 @@ namespace BlazeEngine
 		}
 		else
 		{
-			CoreEngine::GetCoreEngine()->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("LoadShaderFile failed: Could not open shader " + filepath) });
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("LoadShaderFile failed: Could not open shader " + filepath) });
 
 			return "";
 		}
@@ -134,7 +134,7 @@ namespace BlazeEngine
 		GLuint shader = glCreateShader(shaderType);
 		if (shader == 0)
 		{
-			CoreEngine::GetCoreEngine()->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("glCreateShader failed!") });
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("glCreateShader failed!") });
 		}
 
 		const GLchar* shaderSourceStrings[1];
@@ -178,7 +178,7 @@ namespace BlazeEngine
 
 			string errorAsString(error);
 
-			CoreEngine::GetCoreEngine()->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("CheckShaderError failed: " + errorAsString) });
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("CheckShaderError failed: " + errorAsString) });
 
 			return false;
 		}

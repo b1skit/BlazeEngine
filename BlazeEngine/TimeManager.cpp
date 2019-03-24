@@ -27,16 +27,15 @@ namespace BlazeEngine
 		return *instance;
 	}
 
-	void TimeManager::Startup(CoreEngine * coreEngine)
+	void TimeManager::Startup()
 	{
-		EngineComponent::Startup(coreEngine);
 
-		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("TimeManager started!") });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("TimeManager started!") });
 	}
 
 	void TimeManager::Shutdown()
 	{
-		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Time manager shutting down...") });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Time manager shutting down...") });
 	}
 
 	void TimeManager::Update()

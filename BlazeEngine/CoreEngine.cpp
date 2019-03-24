@@ -14,7 +14,12 @@ using std::to_string;
 namespace BlazeEngine
 {
 	// Static members:
-	CoreEngine* CoreEngine::coreEngine;
+	CoreEngine* CoreEngine::coreEngine; // Assigned in constructor
+
+	EventManager* CoreEngine::BlazeEventManager = &EventManager::Instance();
+	InputManager* CoreEngine::BlazeInputManager = &InputManager::Instance();
+	SceneManager* CoreEngine::BlazeSceneManager = &SceneManager::Instance();
+	RenderManager* CoreEngine::BlazeRenderManager = &RenderManager::Instance();
 
 
 	CoreEngine::CoreEngine(string configPath) : BlazeObject("CoreEngine")
@@ -34,19 +39,19 @@ namespace BlazeEngine
 	void CoreEngine::Startup()
 	{
 		// Initialize BlazeEngine:
-		BlazeEventManager->Startup(this);		
-		BlazeLogManager->Startup(this);
+		BlazeEventManager->Startup();	
+		BlazeLogManager->Startup();
 
 		BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("CoreEngine started!") }, true);
 		BlazeEventManager->Subscribe(EVENT_ENGINE_QUIT, this);
 
-		BlazeTimeManager->Startup(this);
-		BlazeInputManager->Startup(this);
+		BlazeTimeManager->Startup();
+		BlazeInputManager->Startup();
 
-		BlazeRenderManager->Startup(this);
+		BlazeRenderManager->Startup();
 
 		// Must wait to start scene manager and load a scene until the renderer is called, since we need to initialize OpenGL in the RenderManager before creating shaders
-		BlazeSceneManager->Startup(this);
+		BlazeSceneManager->Startup();
 		BlazeSceneManager->LoadScene(config.scene.scenePath);
 
 		isRunning = true;
@@ -143,13 +148,13 @@ namespace BlazeEngine
 
 	void EngineConfig::LoadConfig(string path)
 	{
-		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_DEBUG, nullptr, new string("EngineConfig.LoadConfig() is not implemented. Using hard coded default values!") });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_DEBUG, nullptr, new string("EngineConfig.LoadConfig() is not implemented. Using hard coded default values!") });
 	
 		// TO DO: Implement config loading!
 	}
 
 	void EngineConfig::SaveConfig(string path)
 	{
-		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_DEBUG, nullptr, new string("EngineConfig.SaveConfig() is not implemented. No data is being saved!\n") });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_DEBUG, nullptr, new string("EngineConfig.SaveConfig() is not implemented. No data is being saved!\n") });
 	}
 }

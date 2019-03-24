@@ -73,11 +73,12 @@ namespace BlazeEngine
 	public:
 		CoreEngine(string configPath);
 
-		// Engine component singletons public API:		
-		EventManager* const BlazeEventManager = &EventManager::Instance();
-		InputManager* const BlazeInputManager = &InputManager::Instance();
-		SceneManager* const BlazeSceneManager = &SceneManager::Instance();
-		RenderManager* const BlazeRenderManager = &RenderManager::Instance();
+		// Static Engine component singletons getters:		
+		static inline CoreEngine*		GetCoreEngine()		{ return coreEngine; }
+		static inline EventManager*		GetEventManager()	{ return BlazeEventManager; }
+		static inline InputManager*		GetInputManager()	{ return BlazeInputManager; }
+		static inline SceneManager*		GetSceneManager()	{ return BlazeSceneManager; }
+		static inline RenderManager*	GetRenderManager()	{ return BlazeRenderManager; }
 		
 		// Lifetime flow:
 		void Startup();
@@ -94,7 +95,7 @@ namespace BlazeEngine
 		// EventListener interface:
 		void HandleEvent(EventInfo const* eventInfo);
 
-		static CoreEngine* GetCoreEngine() { return coreEngine; }
+		
 	private:	
 		// Constants:
 		const double FIXED_TIMESTEP = 1000.0 / 120.0; // Regular step size, in ms
@@ -104,7 +105,13 @@ namespace BlazeEngine
 		LogManager* const BlazeLogManager = &LogManager::Instance();
 		TimeManager* const BlazeTimeManager = &TimeManager::Instance();
 
+		// Static Engine component singletons
 		static CoreEngine* coreEngine;
+		static EventManager* BlazeEventManager;
+		static InputManager* BlazeInputManager;
+		static SceneManager* BlazeSceneManager;
+		static RenderManager* BlazeRenderManager;
+		
 
 		// Engine control:
 		bool isRunning = false;

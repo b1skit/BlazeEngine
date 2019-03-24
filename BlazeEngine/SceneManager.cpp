@@ -26,10 +26,8 @@ namespace BlazeEngine
 		return *instance;
 	}
 
-	void SceneManager::Startup(CoreEngine* coreEngine)
+	void SceneManager::Startup()
 	{
-		EngineComponent::Startup(coreEngine);
-
 		// Initialize materials:
 		if (materials)
 		{
@@ -60,24 +58,24 @@ namespace BlazeEngine
 
 		// Initialize our Shaders to match the order of the SHADER enum:
 		// Load error shader (Shader index 0):
-		int loadedShaderIndex = GetShaderIndex(coreEngine->GetConfig()->shader.errorShader);
+		int loadedShaderIndex = GetShaderIndex(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShader);
 		if (loadedShaderIndex != 0 || shaders[0] == nullptr || currentShaderCount != 1)
 		{
-			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Shader 0 (Error shader) could not be loaded!") });
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Shader 0 (Error shader) could not be loaded!") });
 		}
 		// Load default shader (Shader index 1):
-		loadedShaderIndex = GetShaderIndex(coreEngine->GetConfig()->shader.defaultShader);
+		loadedShaderIndex = GetShaderIndex(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShader);
 		if (loadedShaderIndex != 1 || shaders[1] == nullptr || currentShaderCount != 2)
 		{
-			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, new string("Warning: Shader 1 (Default shader) could not be loaded!") });
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Warning: Shader 1 (Default shader) could not be loaded!") });
 		}
 
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Scene manager started!") });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Scene manager started!") });
 	}
 
 	void SceneManager::Shutdown()
 	{
-		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Scene manager shutting down...") });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Scene manager shutting down...") });
 
 		for (int i = 0; i < (int)currentScene->meshes.size(); i++)
 		{
@@ -143,11 +141,11 @@ namespace BlazeEngine
 
 	void SceneManager::LoadScene(string scenePath)
 	{
-		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_DEBUG, this, new string("Could not load " + scenePath + ", as LoadScene() is not implemented. Using a debug hard coded path for now!") });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_DEBUG, this, new string("Could not load " + scenePath + ", as LoadScene() is not implemented. Using a debug hard coded path for now!") });
 
 		if (currentScene)
 		{
-			coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_DEBUG, this, new string("WARNING: Current scene already exists. Debug deallocation is to just delete it!") });
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_DEBUG, this, new string("WARNING: Current scene already exists. Debug deallocation is to just delete it!") });
 			delete currentScene;
 		}
 		currentScene = new Scene();
@@ -375,7 +373,7 @@ namespace BlazeEngine
 		};
 
 		// Create a material and shader:
-		unsigned int shaderIndex = GetShaderIndex(coreEngine->GetConfig()->shader.defaultShader);
+		unsigned int shaderIndex = GetShaderIndex(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShader);
 
 		Material* newMaterial = new Material(shaderIndex);
 		unsigned int materialIndex = AddMaterial(newMaterial);
@@ -422,10 +420,10 @@ namespace BlazeEngine
 		currentScene->mainCamera = player->GetCamera();
 		currentScene->mainCamera->Initialize(
 			vec3(0, 0, 0),
-			(float)coreEngine->GetConfig()->renderer.windowXRes / (float)coreEngine->GetConfig()->renderer.windowYRes,
-			coreEngine->GetConfig()->viewCam.fieldOfView, 
-			coreEngine->GetConfig()->viewCam.near, 
-			coreEngine->GetConfig()->viewCam.far
+			(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
+			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.fieldOfView,
+			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.near,
+			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.far
 			);
 
 		player->GetTransform()->SetPosition(vec3(0.0f, 0.0f, 4.0f));
@@ -443,7 +441,7 @@ namespace BlazeEngine
 		// Otherwise, add a new material:
 		if (currentMaterialCount == MAX_MATERIALS)
 		{
-			coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, new string("Cannot add any new materials: Max materials have been added! Returning material at index 0") });
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Cannot add any new materials: Max materials have been added! Returning material at index 0") });
 			return 0; // Error: Return first material
 		}
 
@@ -473,7 +471,7 @@ namespace BlazeEngine
 			}
 		}
 
-		coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Finished assembling material mesh lists") });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Finished assembling material mesh lists") });
 	}
 
 	unsigned int SceneManager::GetShaderIndex(string shaderName)

@@ -22,7 +22,7 @@ namespace BlazeEngine
 		void operator=(LogManager const&) = delete;		
 
 		// EngineComponent interface:
-		void Startup(CoreEngine * coreEngine);
+		void Startup();
 		void Shutdown();
 		void Update();
 

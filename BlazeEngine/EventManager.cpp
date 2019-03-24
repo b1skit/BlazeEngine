@@ -34,9 +34,8 @@ namespace BlazeEngine
 		return *instance;
 	}
 
-	void EventManager::Startup(CoreEngine* coreEngine)
+	void EventManager::Startup()
 	{
-		EngineComponent::Startup(coreEngine);
 
 		Notify(new EventInfo{ EVENT_LOG, this, new string("Event manager started!") });
 	}
@@ -68,48 +67,48 @@ namespace BlazeEngine
 			{
 				int numKeys = 0;
 				const Uint8* keyboardState = SDL_GetKeyboardState(&numKeys);
-				InputBindings const* inputBindings = coreEngine->BlazeInputManager->GetInputBindings();
+				InputBindings const* inputBindings = CoreEngine::GetInputManager()->GetInputBindings();
 				if (numKeys > 0)
 				{
 					// Button input events:
 					if (currentSDLEvent.key.keysym.sym == inputBindings->Button_forward)
 					{
-						if (!coreEngine->BlazeInputManager->GetInputState(INPUT_BUTTON_FORWARD))
+						if (!CoreEngine::GetInputManager()->GetInputState(INPUT_BUTTON_FORWARD))
 						{
 							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_FORWARD, this });
 						}
 					}
 					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_backward)
 					{
-						if (!coreEngine->BlazeInputManager->GetInputState(INPUT_BUTTON_BACKWARD))
+						if (!CoreEngine::GetInputManager()->GetInputState(INPUT_BUTTON_BACKWARD))
 						{
 							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_BACKWARD, this });
 						}
 					}
 					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_left)
 					{
-						if (!coreEngine->BlazeInputManager->GetInputState(INPUT_BUTTON_LEFT))
+						if (!CoreEngine::GetInputManager()->GetInputState(INPUT_BUTTON_LEFT))
 						{
 							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_LEFT, this });
 						}
 					}
 					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_right)
 					{
-						if (!coreEngine->BlazeInputManager->GetInputState(INPUT_BUTTON_RIGHT))
+						if (!CoreEngine::GetInputManager()->GetInputState(INPUT_BUTTON_RIGHT))
 						{
 							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_RIGHT, this });
 						}
 					}
 					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_up)
 					{
-						if (!coreEngine->BlazeInputManager->GetInputState(INPUT_BUTTON_UP))
+						if (!CoreEngine::GetInputManager()->GetInputState(INPUT_BUTTON_UP))
 						{
 							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_UP, this });
 						}
 					}
 					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_down)
 					{
-						if (!coreEngine->BlazeInputManager->GetInputState(INPUT_BUTTON_DOWN))
+						if (!CoreEngine::GetInputManager()->GetInputState(INPUT_BUTTON_DOWN))
 						{
 							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_DOWN, this });
 						}
@@ -127,7 +126,7 @@ namespace BlazeEngine
 			{
 				int numKeys = 0;
 				const Uint8* keyboardState = SDL_GetKeyboardState(&numKeys);
-				InputBindings const* inputBindings = coreEngine->BlazeInputManager->GetInputBindings();
+				InputBindings const* inputBindings = CoreEngine::GetInputManager()->GetInputBindings();
 				if (numKeys > 0)
 				{
 					// Button input events:

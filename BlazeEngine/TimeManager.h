@@ -20,7 +20,7 @@ namespace BlazeEngine
 		void operator=(TimeManager const&) = delete;
 		
 		// EngineComponent interface:
-		void Startup(CoreEngine* coreEngine);
+		void Startup();
 
 		void Shutdown();
 

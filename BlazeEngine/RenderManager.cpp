@@ -41,16 +41,14 @@ namespace BlazeEngine
 		return *instance;
 	}
 
-	void RenderManager::Startup(CoreEngine * coreEngine)
+	void RenderManager::Startup()
 	{
-		EngineComponent::Startup(coreEngine);
-
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Render manager started!") });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Render manager started!") });
 
 		// Cache the relevant config data:
-		this->xRes = coreEngine->GetConfig()->renderer.windowXRes;
-		this->yRes = coreEngine->GetConfig()->renderer.windowYRes;
-		this->windowTitle = coreEngine->GetConfig()->renderer.windowTitle;
+		this->xRes = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes;
+		this->yRes = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes;
+		this->windowTitle = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowTitle;
 
 		// Initialize SDL:
 		/*SDL_Init(SDL_INIT_VIDEO);*/ // TO DO: IMPLEMENT PER-COMPONENT INITIALIZATION
@@ -64,7 +62,7 @@ namespace BlazeEngine
 
 		// Create a window:
 		glWindow = SDL_CreateWindow(
-			coreEngine->GetConfig()->renderer.windowTitle.c_str(), 
+			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowTitle.c_str(),
 			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
 			xRes, 
 			yRes, 
@@ -101,7 +99,7 @@ namespace BlazeEngine
 		GLenum glStatus = glewInit();
 		if (glStatus != GLEW_OK)
 		{
-			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Render manager start failed: glStatus not ok!") });
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Render manager start failed: glStatus not ok!") });
 			return;
 		}
 
@@ -146,7 +144,7 @@ namespace BlazeEngine
 
 	void RenderManager::Shutdown()
 	{
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Render manager shutting down...") });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Render manager shutting down...") });
 
 		glDeleteVertexArrays(BUFFER_COUNT, &vertexArrayObject);
 		glDeleteBuffers(BUFFER_COUNT, vertexBufferObjects);
@@ -172,17 +170,17 @@ namespace BlazeEngine
 
 
 		// Get the current list of shaders:
-		Shader const* const* shaders = coreEngine->BlazeSceneManager->GetShaders();
+		Shader const* const* shaders = CoreEngine::GetSceneManager()->GetShaders();
 
 		// Assemble common (model independent) matrices:
-		mat4 view = this->coreEngine->BlazeSceneManager->MainCamera()->View();
-		mat4 projection = this->coreEngine->BlazeSceneManager->MainCamera()->Projection();
+		mat4 view = CoreEngine::GetSceneManager()->MainCamera()->View();
+		mat4 projection = CoreEngine::GetSceneManager()->MainCamera()->Projection();
 		
 
-		unsigned int numMaterials = coreEngine->BlazeSceneManager->NumMaterials();
+		unsigned int numMaterials = CoreEngine::GetSceneManager()->NumMaterials();
 		for (unsigned int currentMaterialIndex = 0; currentMaterialIndex < numMaterials; currentMaterialIndex++)
 		{
-			Material* currentMaterial = coreEngine->BlazeSceneManager->GetMaterial(currentMaterialIndex);
+			Material* currentMaterial = CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
 			// TO DO: Material setup: texture uploads etc
 
 
@@ -192,7 +190,7 @@ namespace BlazeEngine
 			glBindVertexArray(vertexArrayObject);
 
 			// Setup the current shader:
-			unsigned int shaderIndex = coreEngine->BlazeSceneManager->GetShaderIndex(currentMaterialIndex); // TO DO: Check if the shader at the given index is valid, display an error if it's not?
+			unsigned int shaderIndex = CoreEngine::GetSceneManager()->GetShaderIndex(currentMaterialIndex); // TO DO: Check if the shader at the given index is valid, display an error if it's not?
 
 			glUseProgram(shaders[shaderIndex]->ShaderReference()); // ...TO DO: Decide whether to use this directly, or via BindShader() ?
 
@@ -212,29 +210,29 @@ namespace BlazeEngine
 			matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "ambient");
 			if (matrixID >= 0)
 			{
-				glUniform4fv(matrixID, 1, &coreEngine->BlazeSceneManager->GetAmbient()[0]);
+				glUniform4fv(matrixID, 1, &CoreEngine::GetSceneManager()->GetAmbient()[0]);
 			}
 
 			// Upload key key light direction (world space):
 			matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "keyDirection");
 			if (matrixID >= 0)
 			{
-				vec3 keyDirection = coreEngine->BlazeSceneManager->GetKeyLight().GetTransform().Forward() * -1.0f; // Reverse the direction: Points surface->light
+				vec3 keyDirection = CoreEngine::GetSceneManager()->GetKeyLight().GetTransform().Forward() * -1.0f; // Reverse the direction: Points surface->light
 				glUniform3fv(matrixID, 1, &keyDirection[0]);
 			}
 			matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "keyColor");
 			if (matrixID >= 0)
 			{
-				glUniform4fv(matrixID, 1, &coreEngine->BlazeSceneManager->GetKeyLight().Color().r);
+				glUniform4fv(matrixID, 1, &CoreEngine::GetSceneManager()->GetKeyLight().Color().r);
 			}
 			matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "keyIntensity");
 			if (matrixID >= 0)
 			{
-				glUniform1f(matrixID, coreEngine->BlazeSceneManager->GetKeyLight().Intensity());
+				glUniform1f(matrixID, CoreEngine::GetSceneManager()->GetKeyLight().Intensity());
 			}
 
 			// Loop through each mesh:
-			vector<Mesh*> const* materialMeshes = coreEngine->BlazeSceneManager->GetRenderMeshes(currentMaterialIndex);
+			vector<Mesh*> const* materialMeshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
 			unsigned int numMeshes = (unsigned int)materialMeshes->size();
 			for (unsigned int j = 0; j < numMeshes; j++)
 			{
@@ -243,7 +241,7 @@ namespace BlazeEngine
 				// Assemble model-specific matrices:
 				mat4 model = currentMesh->GetTransform()->Model();
 				mat4 mv = view * model;
-				mat4 mvp = coreEngine->BlazeSceneManager->MainCamera()->ViewProjection() * model;
+				mat4 mvp = CoreEngine::GetSceneManager()->MainCamera()->ViewProjection() * model;
 				
 				mat3 mv_it = glm::transpose(glm::inverse(mat3(mv)));
 				

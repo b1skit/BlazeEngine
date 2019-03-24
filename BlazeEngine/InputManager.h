@@ -79,7 +79,7 @@ namespace BlazeEngine
 		}
 
 		// EngineComponent interface:
-		void Startup(CoreEngine* coreEngine);
+		void Startup();
 
 		void Shutdown();
 

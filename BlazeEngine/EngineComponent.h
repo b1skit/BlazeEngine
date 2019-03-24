@@ -20,10 +20,7 @@ namespace BlazeEngine
 		}
 
 		// We can't control the order constructors are called, so this function should be called to start the object
-		virtual void Startup(CoreEngine* coreEngine)
-		{
-			this->coreEngine = coreEngine;
-		}
+		virtual void Startup() = 0;
 		
 		virtual void Shutdown() = 0;
 
@@ -31,9 +28,10 @@ namespace BlazeEngine
 
 
 	protected:
-		CoreEngine* coreEngine;
+
 
 	private:
+
 
 	};
 }

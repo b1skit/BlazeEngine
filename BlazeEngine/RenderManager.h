@@ -37,7 +37,7 @@ namespace BlazeEngine
 		void operator=(RenderManager const&) = delete;
 
 		// EngineComponent interface:
-		void Startup(CoreEngine * coreEngine);
+		void Startup();
 
 		void Shutdown();
 

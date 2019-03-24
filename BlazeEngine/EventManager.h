@@ -103,7 +103,7 @@ namespace BlazeEngine
 		void operator=(EventManager const&) = delete;
 		
 		// EngineComponent interface:
-		void Startup(CoreEngine* coreEngine);
+		void Startup();
 		void Shutdown();
 		void Update();
 
