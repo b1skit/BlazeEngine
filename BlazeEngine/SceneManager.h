@@ -84,7 +84,8 @@ namespace BlazeEngine
 
 		inline vector<Renderable const*> const* GetRenderables() { return &currentScene->renderables;	}
 
-		inline vector<Shader>* GetShaders() { return &shaders; } // SHOULD THIS RETURN CONST ?????
+		//inline vector<Shader>* GetShaders() { return &shaders; } // SHOULD THIS RETURN CONST ?????
+		inline Shader const* const* GetShaders() const { return shaders; }
 		
 		inline unsigned int GetShaderIndex(unsigned int materialIndex) { return materials[materialIndex]->GetShaderIndex(); } // TO DO: Bounds checking?
 
@@ -98,8 +99,11 @@ namespace BlazeEngine
 
 
 	private:
+		// Scene management:
+		Scene* currentScene = nullptr;
+
 		// Material management:
-		const unsigned int MAX_MATERIALS = 100; // TO DO: Replace this with something dynamic?
+		const unsigned int MAX_MATERIALS = 100; // TO DO: Replace this with something configurable/dynamic?
 		unsigned int currentMaterialCount = 0;
 		Material** materials = nullptr;
 		unsigned int AddMaterial(Material* newMaterial);
@@ -107,20 +111,19 @@ namespace BlazeEngine
 		vector<vector<Mesh*>> materialMeshLists;
 		void AssembleMaterialMeshLists();
 
-		
-		vector<Shader> shaders; // TO DO: Replace with a dynamic array
+		// Texture management:
 
-		Scene* currentScene = nullptr;
+
+		// Shader management:		
+		const unsigned int MAX_SHADERS = 100; // TO DO: Replace this with something configurable/dynamic?
+		Shader** shaders;
+		unsigned int currentShaderCount = 0;
 
 
 		
 
 		// Shader functions:
 		unsigned int GetShaderIndex(string shaderName);
-		int CreateShader(string shaderName);
-		string LoadShaderFile(const string& filepath);
-		GLuint CreateGLShaderObject(const string& text, GLenum shaderType);
-		bool CheckShaderError(GLuint shader, GLuint flag, bool isProgram);
 	};
 }
 

@@ -2,9 +2,6 @@
 #include "EventManager.h"
 #include "CoreEngine.h"
 
-#include <fstream>
-using std::ifstream;
-
 // DEBUG:
 #include <iostream>
 using std::cout;
@@ -54,11 +51,26 @@ namespace BlazeEngine
 
 
 		// Initialize shaders:
-		shaders.reserve(100);
+		shaders = new Shader*[MAX_SHADERS];
+		for (unsigned int i = 0; i < MAX_SHADERS; i++)
+		{
+			shaders[i] = nullptr;
+		}
+		currentShaderCount = 0;
 
 		// Initialize our Shaders to match the order of the SHADER enum:
-		CreateShader(coreEngine->GetConfig()->shader.errorShader);		// Index 0
-		CreateShader(coreEngine->GetConfig()->shader.defaultShader);	// Index 1
+		// Load error shader (Shader index 0):
+		int loadedShaderIndex = GetShaderIndex(coreEngine->GetConfig()->shader.errorShader);
+		if (loadedShaderIndex != 0 || shaders[0] == nullptr || currentShaderCount != 1)
+		{
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Shader 0 (Error shader) could not be loaded!") });
+		}
+		// Load default shader (Shader index 1):
+		loadedShaderIndex = GetShaderIndex(coreEngine->GetConfig()->shader.defaultShader);
+		if (loadedShaderIndex != 1 || shaders[1] == nullptr || currentShaderCount != 2)
+		{
+			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, new string("Warning: Shader 1 (Default shader) could not be loaded!") });
+		}
 
 		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Scene manager started!") });
 	}
@@ -103,12 +115,16 @@ namespace BlazeEngine
 			}
 		}
 
-		// Detach and delete shaders:
-		for (int i = 0; i < (int)shaders.size(); i++)
+		for (unsigned int i = 0; i < currentShaderCount; i++)
 		{
-			// Delete the shader program:
-			glDeleteProgram(shaders.at(i).ShaderReference());
+			if (shaders[i])
+			{
+				glDeleteProgram(shaders[i]->ShaderReference());
+				delete shaders[i];
+			}
 		}
+		delete[] shaders;
+		currentShaderCount = 0;
 	}
 
 	void SceneManager::Update()
@@ -464,19 +480,24 @@ namespace BlazeEngine
 	{
 		// Return the index if it's found, or load the shader and return a new index, or return the error shader otherwise
 		int shaderIndex = -1;
-		for (int i = 0; i < shaders.size(); i++)
+		for (unsigned int i = 0; i < MAX_SHADERS; i++)
 		{
-			if (shaders.at(i).Name() == shaderName)
+			if (shaders[i] && shaders[i]->Name() == shaderName)
 			{
 				return i; // We're done!
 			}
 		}
 
 		// If we've made it this far, the shader was not found. Attempt to load it:
-		shaderIndex = CreateShader(shaderName);
+		Shader* shader = Shader::CreateShader(shaderName);
 
-		if (shaderIndex >= 0)
+		if (shader != nullptr)
 		{
+			shaderIndex = currentShaderCount; // Cache the insertion index
+
+			shaders[currentShaderCount] = shader;
+			currentShaderCount++;
+
 			return shaderIndex;
 		}
 		else // If all else fails, return the error shader:
@@ -484,172 +505,6 @@ namespace BlazeEngine
 			return 0;
 		}
 	}
-
-	int SceneManager::CreateShader(string shaderName)
-	{
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Loading shader: " + shaderName) });
-
-		GLuint shaderReference;
-		unsigned int numShaders = 2; // TO DO : Allow loading of geometry shaders?
-		GLuint* shaders = new GLuint[numShaders];
-
-		// Create an empty shader program object, and get its reference:
-		shaderReference = glCreateProgram();
-
-		// Load the shader files:
-		string vertexShader = LoadShaderFile(shaderName + ".vert");
-		string fragmentShader = LoadShaderFile(shaderName + ".frag");
-		if (vertexShader == "" || fragmentShader == "")
-		{
-			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, new string("Creating shader failed while loading shader files") });
-			return -1;
-		}
-
-		// Create shader objects and attach them to the program objects:
-		shaders[0] = CreateGLShaderObject(vertexShader, GL_VERTEX_SHADER);
-		shaders[1] = CreateGLShaderObject(fragmentShader, GL_FRAGMENT_SHADER);
-		for (unsigned int i = 0; i < numShaders; i++)
-		{
-			glAttachShader(shaderReference, shaders[i]); // Attach our shaders to the shader program
-		}
-
-		//// Associate our vertex attribute indexes with named variables:
-		//glBindAttribLocation(shaderReference, 0, "in_position"); // Bind attribute 0 as "position" in the vertex shader
-		//glBindAttribLocation(shaderReference, 1, "in_normal");
-		//glBindAttribLocation(shaderReference, 2, "in_color");
-		//glBindAttribLocation(shaderReference, 3, "in_uv0");
-		//glBindAttribLocation(shaderReference, 4, "in_model");
-		//glBindAttribLocation(shaderReference, 5, "in_view");
-		//glBindAttribLocation(shaderReference, 6, "in_projection");
-		//glBindAttribLocation(shaderReference, 7, "in_mv");
-		//glBindAttribLocation(shaderReference, 8, "in_mvp");
-		//glBindAttribLocation(shaderReference, 9, "ambient");
-		//glBindAttribLocation(shaderReference, 10, "keyDirection");
-		//glBindAttribLocation(shaderReference, 11, "keyColor");
-		//glBindAttribLocation(shaderReference, 12, "keyIntensity");
-		//// TO DO: Replace indexes with an enum??
-		//// This isn't really needed, as we explicitely define locations in the shader...
-
-		// Link our program object:
-		glLinkProgram(shaderReference);
-		if (!CheckShaderError(shaderReference, GL_LINK_STATUS, true))
-		{
-			return -1;
-		}
-
-		// Validate our program objects can execute with our current OpenGL state:
-		glValidateProgram(shaderReference);
-		if (!CheckShaderError(shaderReference, GL_VALIDATE_STATUS, true))
-		{
-			return -1;
-		}
-
-		// Delete the shader objects now that they've been linked into the program object:
-		glDeleteShader(shaders[0]);
-		glDeleteShader(shaders[1]);
-		delete shaders;
-
-
-		Shader newShader(shaderName, shaderReference);
-
-		this->shaders.push_back(newShader);
-
-		this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("Successfully loaded " + shaderName) });
-
-		return (int)this->shaders.size() - 1;
-	}
-
-	string SceneManager::LoadShaderFile(const string& filename)
-	{
-		// Assemble the full shader file path:
-		string filepath = coreEngine->GetConfig()->shader.shaderDirectory + filename;
-
-		ifstream file;
-		file.open(filepath.c_str());
-
-		string output;
-		string line;
-		if (file.is_open())
-		{
-			while (file.good())
-			{
-				getline(file, line);
-				output.append(line + "\n");
-			}
-		}
-		else
-		{
-			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, new string("LoadShaderFile failed: Could not open shader " + filepath) });
-
-			return "";
-		}
-
-		return output;
-	}
-
-	GLuint SceneManager::CreateGLShaderObject(const string& shaderCode, GLenum shaderType)
-	{
-		GLuint shader = glCreateShader(shaderType);
-		if (shader == 0)
-		{
-			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, new string("glCreateShader failed!") });
-		}
-
-		const GLchar* shaderSourceStrings[1];
-		GLint shaderSourceStringLengths[1];
-
-		shaderSourceStrings[0] = shaderCode.c_str();
-		shaderSourceStringLengths[0] = (GLint)shaderCode.length();
-
-		glShaderSource(shader, 1, shaderSourceStrings, shaderSourceStringLengths);
-		glCompileShader(shader);
-
-		CheckShaderError(shader, GL_COMPILE_STATUS, false);
-
-		return shader;
-	}
-
-	bool SceneManager::CheckShaderError(GLuint shader, GLuint flag, bool isProgram)
-	{
-		GLint success = 0;
-		GLchar error[1024] = { 0 }; // Error buffer
-
-		if (isProgram)
-		{
-			glGetProgramiv(shader, flag, &success);
-		}
-		else
-		{
-			glGetShaderiv(shader, flag, &success);
-		}
-
-		if (success == GL_FALSE)
-		{
-			if (isProgram)
-			{
-				glGetProgramInfoLog(shader, sizeof(error), nullptr, error);
-			}
-			else
-			{
-				glGetShaderInfoLog(shader, sizeof(error), nullptr, error);
-			}
-
-			string errorAsString(error);
-
-			this->coreEngine->BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, new string("CheckShaderError failed: " + errorAsString) });
-
-			return false;
-		}
-		else
-		{
-			return true;
-		}
-	}
-
-	//void RenderManager::BindShader(int shaderIndex)
-	//{
-	//	glUseProgram(shaders.at(shaderIndex).ShaderReference());
-	//}
 }
 
 

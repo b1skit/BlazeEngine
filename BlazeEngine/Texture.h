@@ -1,5 +1,8 @@
 #pragma once
 
+#include <GL/glew.h>
+//#include "glm.hpp"
+
 #include <string>
 
 using std::string;
@@ -26,7 +29,7 @@ namespace BlazeEngine
 		int width;
 		int height;
 
-
+		GLuint textureID;
 	};
 }
 

@@ -4,8 +4,6 @@
 #include "Mesh.h"
 #include "Transform.h"
 
-//#include <stddef.h>
-
 
 #define GLM_FORCE_SWIZZLE
 #include "glm.hpp"
@@ -15,7 +13,6 @@
 #include "SDL.h"
 #undef main // Required to prevent SDL from redefining main...
 
-//using std::ifstream;
 using glm::vec3;
 using glm::vec4;
 using glm::mat3;
@@ -174,8 +171,8 @@ namespace BlazeEngine
 		// TO DO: Merge ALL meshes using the same material into a single draw call
 
 
-		vector<Shader>* shaders = coreEngine->BlazeSceneManager->GetShaders();
-
+		// Get the current list of shaders:
+		Shader const* const* shaders = coreEngine->BlazeSceneManager->GetShaders();
 
 		// Assemble common (model independent) matrices:
 		mat4 view = this->coreEngine->BlazeSceneManager->MainCamera()->View();
@@ -195,41 +192,42 @@ namespace BlazeEngine
 			glBindVertexArray(vertexArrayObject);
 
 			// Setup the current shader:
-			unsigned int shaderIndex = coreEngine->BlazeSceneManager->GetShaderIndex(currentMaterialIndex);
-			glUseProgram(shaders->at(shaderIndex).ShaderReference()); // ...TO DO: Decide whether to use this directly, or via BindShader() ?
+			unsigned int shaderIndex = coreEngine->BlazeSceneManager->GetShaderIndex(currentMaterialIndex); // TO DO: Check if the shader at the given index is valid, display an error if it's not?
+
+			glUseProgram(shaders[shaderIndex]->ShaderReference()); // ...TO DO: Decide whether to use this directly, or via BindShader() ?
 
 			// Upload common shader matrices:
-			GLuint matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_view");
+			GLuint matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_view");
 			if (matrixID >= 0)
 			{
 				glUniformMatrix4fv(matrixID, 1, GL_FALSE, &view[0][0]);
 			}
-			matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_projection");
+			matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_projection");
 			if (matrixID >= 0)
 			{
 				glUniformMatrix4fv(matrixID, 1, GL_FALSE, &projection[0][0]);
 			}
 
 			// Upload ambient light data:
-			matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "ambient");
+			matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "ambient");
 			if (matrixID >= 0)
 			{
 				glUniform4fv(matrixID, 1, &coreEngine->BlazeSceneManager->GetAmbient()[0]);
 			}
 
-			// Upload key light forward direction in world space:
-			matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "keyDirection");
+			// Upload key key light direction (world space):
+			matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "keyDirection");
 			if (matrixID >= 0)
 			{
 				vec3 keyDirection = coreEngine->BlazeSceneManager->GetKeyLight().GetTransform().Forward() * -1.0f; // Reverse the direction: Points surface->light
 				glUniform3fv(matrixID, 1, &keyDirection[0]);
 			}
-			matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "keyColor");
+			matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "keyColor");
 			if (matrixID >= 0)
 			{
 				glUniform4fv(matrixID, 1, &coreEngine->BlazeSceneManager->GetKeyLight().Color().r);
 			}
-			matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "keyIntensity");
+			matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "keyIntensity");
 			if (matrixID >= 0)
 			{
 				glUniform1f(matrixID, coreEngine->BlazeSceneManager->GetKeyLight().Intensity());
@@ -258,17 +256,17 @@ namespace BlazeEngine
 				glBufferData(GL_ELEMENT_ARRAY_BUFFER, currentMesh->NumIndices() * sizeof(GLubyte), &currentMesh->Indices()[0], GL_STATIC_DRAW);
 
 				// Upload mesh-specific matrices:
-				matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_model");
+				matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_model");
 				if (matrixID >= 0)
 				{
 					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &model[0][0]);
 				}
-				matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_mv");
+				matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_mv");
 				if (matrixID >= 0)
 				{
 					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mv[0][0]);
 				}
-				matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "in_mvp");
+				matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_mvp");
 				if (matrixID >= 0)
 				{
 					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
