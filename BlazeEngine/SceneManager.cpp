@@ -400,21 +400,6 @@ namespace BlazeEngine
 		currentScene->keyLight.SetColor(vec4(0,1,0,1));
 		currentScene->keyLight.SetIntensity(2.0f);
 
-		vec3 test(0, 0, 1);
-		cout << "test initial vals: " << test.x << " " << test.y << " " << test.z << "\n";
-
-		Transform::RotateVector(test, 3.14f / 4.0f, vec3(1, 0, 0) );
-		cout << "Rotated test: " << test.x << " " << test.y << " " << test.z << "\n";
-
-		Transform::RotateVector(test, 3.14 /4.0f, vec3(1, 0, 0));
-		cout << "Rotated test: " << test.x << " " << test.y << " " << test.z << "\n";
-
-		Transform::RotateVector(test, 3.14 / 4.0f, vec3(1, 0, 0));
-		cout << "Rotated test: " << test.x << " " << test.y << " " << test.z << "\n";
-		
-		Transform::RotateVector(test, 3.14 / 4.0f, vec3(1, 0, 0));
-		cout << "Rotated test: " << test.x << " " << test.y << " " << test.z << "\n";
-
 		// Set up a player object:
 		PlayerObject* player = new PlayerObject();
 		currentScene->gameObjects.push_back(player);
@@ -426,6 +411,8 @@ namespace BlazeEngine
 			coreEngine->GetConfig()->viewCam.near, 
 			coreEngine->GetConfig()->viewCam.far
 			);
+
+		player->GetTransform()->SetPosition(vec3(0.0f, 0.0f, 4.0f));
 		
 	}
 
