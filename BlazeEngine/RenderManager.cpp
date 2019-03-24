@@ -165,7 +165,7 @@ namespace BlazeEngine
 
 	void RenderManager::Render(double alpha)
 	{
-		// Clear the frame and depth buffer
+		// Clear the color and depth buffers
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// TO DO: Loop by material, shader, mesh:
@@ -214,7 +214,7 @@ namespace BlazeEngine
 			matrixID = glGetUniformLocation(shaders->at(shaderIndex).ShaderReference(), "ambient");
 			if (matrixID >= 0)
 			{
-				glUniform3fv(matrixID, 1, &coreEngine->BlazeSceneManager->GetAmbient()[0]);
+				glUniform4fv(matrixID, 1, &coreEngine->BlazeSceneManager->GetAmbient()[0]);
 			}
 
 			// Upload key light forward direction in world space:

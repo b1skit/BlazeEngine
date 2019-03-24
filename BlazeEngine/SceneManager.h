@@ -50,7 +50,7 @@ namespace BlazeEngine
 		/*vector<Light> forwardLights;*/
 		/*vector<Light> deferredLights;*/
 
-		vec3 ambientLight = vec3(1.0f, 1.0f, 1.0f);
+		vec4 ambientLight = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 		Light keyLight;
 	};
 
@@ -88,7 +88,7 @@ namespace BlazeEngine
 		
 		inline unsigned int GetShaderIndex(unsigned int materialIndex) { return materials[materialIndex]->GetShaderIndex(); } // TO DO: Bounds checking?
 
-		inline vec3 const& GetAmbient() { return currentScene->ambientLight; }
+		inline vec4 const& GetAmbient() { return currentScene->ambientLight; }
 		inline Light& GetKeyLight() { return currentScene->keyLight; }
 		/*inline vector<Light> const& GetForwardLights() { return forwardLights; }*/
 		

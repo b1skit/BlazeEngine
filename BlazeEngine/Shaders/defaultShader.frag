@@ -8,7 +8,7 @@
 in vec4 vertexColor;
 in vec3 fragNormal;
 
-uniform vec3 ambient;
+uniform vec4 ambient;
 
 uniform vec3 keyDirection;
 uniform vec4 keyColor;
@@ -23,13 +23,8 @@ uniform mat4 in_mvp;
 out vec4 FragColor;
 
 void main()
-{
-//	FragColor = vertexColor;
-
-	
-	FragColor = vertexColor * ambient;
-
-	vec4 nothing = keyColor * keyIntensity * max(0, dot(keyDirection, fragNormal) );
+{	
+	FragColor = vertexColor;
 
 	// Do we need to specify locations for frag shader?
 	// How do we link outputs from vert to inputs in frag?

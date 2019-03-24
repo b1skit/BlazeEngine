@@ -6,7 +6,7 @@ layout (location = 1) in vec3 in_normal;
 layout (location = 2) in vec4 in_color;
 layout (location = 3) in vec2 in_uv0;
 
-uniform vec3 ambient;
+uniform vec4 ambient;
 
 uniform vec3 keyDirection;	// World space normalized vector pointing towards key light
 uniform vec4 keyColor;

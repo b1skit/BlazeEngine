@@ -388,13 +388,13 @@ namespace BlazeEngine
 
 
 
-		// Assemble material lists:
+		// Assemble material mesh lists:
 		AssembleMaterialMeshLists();
 
 
 
 		// Set up lights:
-		currentScene->ambientLight = vec3(0.5, 0.5, 0.5);
+		currentScene->ambientLight = vec4(0.5, 0.5, 0.5, 1.0f);
 		currentScene->keyLight = Light(LIGHT_DIRECTIONAL, vec4(1.0f, 1.0f, 1.0f, 1.0f), 1.0f);
 		currentScene->keyLight.GetTransform().Rotate(vec3(3.14f/4.0f, 3.14f/8.0f, 0)); // Rotation in radians
 		currentScene->keyLight.SetColor(vec4(0,1,0,1));
