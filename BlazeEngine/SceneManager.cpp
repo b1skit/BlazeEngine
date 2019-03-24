@@ -296,8 +296,8 @@ namespace BlazeEngine
 			// Front face:
 			Vertex(positions[0], normals[0], colors[0], uvs[1]), // HINT: position index should = color index
 			Vertex(positions[1], normals[0], colors[1], uvs[0]), // All UV's should be used once per face
-			Vertex(positions[2], normals[0], colors[2], uvs[3]), //2
-			Vertex(positions[3], normals[0], colors[3], uvs[2]), //3
+			Vertex(positions[2], normals[0], colors[2], uvs[2]), //2
+			Vertex(positions[3], normals[0], colors[3], uvs[3]), //3
 
 			// Left face:
 			Vertex(positions[4], normals[2], colors[4], uvs[1]), //4
