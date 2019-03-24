@@ -7,6 +7,7 @@
 #include "gtx/common.hpp"
 
 using glm::normalize;
+using glm::rotate;
 
 using std::find;
 
@@ -147,6 +148,14 @@ namespace BlazeEngine
 	}
 
 
+	// CURRENT TASK: NEED TO TEST THIS... IS IT ROTATING THE WRONG WAY??!?!
+	vec3& Transform::RotateVector(vec3& targetVector, float const & radians, vec3 const & axis)
+	{
+		mat4 rotation = glm::rotate(mat4(1.0f), radians, axis);
+		
+		targetVector = (rotation * vec4(targetVector, 0.0f)).xyz();
+		return targetVector;
+	}
 
 	void Transform::RegisterChild(Transform* child)
 	{

@@ -31,6 +31,7 @@ namespace BlazeEngine
 			vec3 yaw(0.0f, 0.0f, 0.0f);
 			vec3 pitch(0.0f, 0.0f, 0.0f);
 
+			// Compute rotation amounts, in radians:
 			yaw.y = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_X) * (float)TimeManager::DeltaTime();
 			pitch.x = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_Y) * (float)TimeManager::DeltaTime();
 
@@ -43,11 +44,17 @@ namespace BlazeEngine
 
 		if (InputManager::GetInputState(INPUT_BUTTON_FORWARD))
 		{
-			direction += this->transform.Forward()  * -1.0f;
+			vec3 forward = this->transform.Forward();
+			Transform::RotateVector(forward, this->playerCam.GetTransform()->GetEulerRotation().x, this->transform.Right());
+
+			direction += forward  * -1.0f;			
 		}
 		if (InputManager::GetInputState(INPUT_BUTTON_BACKWARD))
 		{
-			direction += this->transform.Forward();
+			vec3 forward = this->transform.Forward();
+			Transform::RotateVector(forward, this->playerCam.GetTransform()->GetEulerRotation().x, this->transform.Right());
+
+			direction += forward;
 		}
 		if (InputManager::GetInputState(INPUT_BUTTON_LEFT))
 		{
@@ -74,6 +81,8 @@ namespace BlazeEngine
 			this->transform.Translate(direction);
 		}
 
+
+		// Reset the cam back to the origin if the player has clicked the lmb
 		if (InputManager::GetInputState(INPUT_MOUSE_LEFT))
 		{
 			this->transform.SetPosition(vec3(0, 0, 0));

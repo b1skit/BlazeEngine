@@ -60,11 +60,16 @@ namespace BlazeEngine
 		inline vec3 const& Right() const { return right; }
 		inline vec3 const& Up() const { return up; }
 
+
 		// World CS axis: BlazeEngine always uses a RHCS
 		static const vec3 WORLD_X;		// +X
 		static const vec3 WORLD_Y;		// +Y
 		static const vec3 WORLD_Z;		// +Z
 		
+		// Static helper functions:
+		//-------------------------
+		// Rotate a targetVector about an axis by radians
+		static vec3& RotateVector(vec3& targetVector, float const & radians, vec3 const & axis);
 
 	protected:
 		// Helper functions for SetParent()/Unparent():
