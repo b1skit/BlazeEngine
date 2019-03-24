@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Shader.h"
+#include "Texture.h"
 
 namespace BlazeEngine
 {
@@ -20,10 +21,11 @@ namespace BlazeEngine
 
 	private:
 		unsigned int shaderIndex;
-		//Texture* albedo = nullptr;
-		//Texture* normal = nullptr;
-		//Texture* roughness = nullptr; // Or metalness?
-		//Texture* ambientOcclusion = nullptr;
+
+		Texture* albedo = nullptr;
+		Texture* normal = nullptr;
+		Texture* roughness = nullptr; // Or metalness?
+		Texture* ambientOcclusion = nullptr;
 	};
 }
 

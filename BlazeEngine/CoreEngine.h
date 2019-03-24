@@ -50,7 +50,9 @@ namespace BlazeEngine
 		// Scene config:
 		struct
 		{
-			string scenePath = "./Scenes/testScene"; // DEBUG: hard coded scene path
+			string sceneRoot = "./Scenes/"; // Root path: All assets stored here
+
+			string scenePath = sceneRoot + "testScene"; // DEBUG: hard coded scene path
 		} scene;
 		
 		// TO DO: Add button config for inputmanager

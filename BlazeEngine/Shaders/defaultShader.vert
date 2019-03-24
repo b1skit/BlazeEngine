@@ -34,6 +34,4 @@ void main()
 	float nDotL = max(0, dot(fragNormal, keyDirection));	
 
 	vertexColor += nDotL * keyColor * keyIntensity;
-
-	vertexColor = vec4(in_uv0, 0, 1.0);
 }
