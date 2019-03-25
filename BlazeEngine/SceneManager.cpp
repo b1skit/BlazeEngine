@@ -29,24 +29,12 @@ namespace BlazeEngine
 	void SceneManager::Startup()
 	{
 		// Initialize materials:
-		if (materials)
-		{
-			for (unsigned int i = 0; i < MAX_MATERIALS; i++)
-			{
-				if (materials[i])
-				{
-					delete materials[i];
-				}
-			}
-			delete[] materials;
-		}
 		materials = new Material*[MAX_MATERIALS];
 		for (unsigned int i = 0; i < MAX_MATERIALS; i++)
 		{
 			materials[i] = nullptr;
 		}
 		currentMaterialCount = 0;
-
 
 		// Initialize shaders:
 		shaders = new Shader*[MAX_SHADERS];
@@ -58,13 +46,13 @@ namespace BlazeEngine
 
 		// Initialize our Shaders to match the order of the SHADER enum:
 		// Load error shader (Shader index 0):
-		int loadedShaderIndex = GetShaderIndex(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShader);
+		int loadedShaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName);
 		if (loadedShaderIndex != 0 || shaders[0] == nullptr || currentShaderCount != 1)
 		{
 			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Shader 0 (Error shader) could not be loaded!") });
 		}
 		// Load default shader (Shader index 1):
-		loadedShaderIndex = GetShaderIndex(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShader);
+		loadedShaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
 		if (loadedShaderIndex != 1 || shaders[1] == nullptr || currentShaderCount != 2)
 		{
 			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Warning: Shader 1 (Default shader) could not be loaded!") });
@@ -188,7 +176,7 @@ namespace BlazeEngine
 		//};
 
 		//// Create a material and shader:
-		//unsigned int shaderIndex = GetShaderIndex(coreEngine->GetConfig()->shader.defaultShader);
+		//unsigned int shaderIndex = GetShaderIndexFromShaderName(coreEngine->GetConfig()->shader.defaultShaderName);
 		//
 		//Material material( shaderIndex );
 		//this->materials.push_back(material);
@@ -205,12 +193,12 @@ namespace BlazeEngine
 		//Renderable testRenderable(viewMeshes);
 		//
 		//// Construct a GameObject:
-		//GameObject* testObject = new GameObject("testObject", testRenderable);
+		//GameObject* cubeObject = new GameObject("cubeObject", testRenderable);
 
-		///*testObject.GetTransform()->LocalPosition() = vec3(1,2,3);*/
+		///*cubeObject.GetTransform()->LocalPosition() = vec3(1,2,3);*/
 		//
 		//// Add test objects to scene:
-		//this->gameObjects.push_back(testObject);
+		//this->gameObjects.push_back(cubeObject);
 		//int gameObjectIndex = (int)this->gameObjects.size() - 1;
 		//
 		//// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
@@ -230,7 +218,7 @@ namespace BlazeEngine
 		//};
 
 		//// Create a material and shader:
-		//int shaderIndex2 = GetShaderIndex(coreEngine->GetConfig()->shader.errorShader);
+		//int shaderIndex2 = GetShaderIndexFromShaderName(coreEngine->GetConfig()->shader.errorShaderName);
 
 		//Material material2(shaderIndex2);
 		//this->materials.push_back(material2);
@@ -373,9 +361,15 @@ namespace BlazeEngine
 		};
 
 		// Create a material and shader:
-		unsigned int shaderIndex = GetShaderIndex(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShader);
+		unsigned int shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
 
-		Material* newMaterial = new Material(shaderIndex);
+		Material* newMaterial = new Material("testMaterial", shaderIndex);
+
+		// Create textures and assign them to the material:
+		Texture* testAlbedo = Texture::LoadTextureFromPath("./debug/invalid/path");
+		newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
+
+		// Add the material to our material list:
 		unsigned int materialIndex = AddMaterial(newMaterial);
 
 		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
@@ -388,12 +382,12 @@ namespace BlazeEngine
 		viewMeshes.push_back(&(currentScene->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
 		Renderable testRenderable(viewMeshes);
 
-		// Construct a GameObject:
-		GameObject* testObject = new GameObject("cubeObject", testRenderable);
+		// Construct a GameObject for the cube:
+		GameObject* cubeObject = new GameObject("cubeObject", testRenderable);
 		
 
-		// Add test objects to scene:
-		currentScene->gameObjects.push_back(testObject);
+		// Add cube object to scene:
+		currentScene->gameObjects.push_back(cubeObject);
 		int gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
 
 		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
@@ -430,13 +424,32 @@ namespace BlazeEngine
 		
 	}
 
-	unsigned int SceneManager::AddMaterial(Material * newMaterial)
+	
+	int SceneManager::GetMaterial(string materialName)
 	{
-		/*for (int i = 0; i < currentMaterialCount; i++)
+		// Check if a material with the same name exists, and return it if it does:
+		int materialIndex = FindMaterialIndex(materialName);
+		if (materialIndex != -1)
 		{
-			
-		}*/
-		// TO DO: Check if a material exists, and return it if it does
+			return materialIndex;
+		}
+		
+		// If we've made it this far, no material with the given name exists. Create it:
+		Material* newMaterial = new Material(materialName, GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName)); // Assign the default shader
+
+		return AddMaterial(newMaterial, false);
+	}
+
+	unsigned int SceneManager::AddMaterial(Material* newMaterial, bool checkForExisting) // checkForExisting = true by default
+	{
+		if (checkForExisting) // Check if a material with the same name exists, and return it if it does
+		{
+			int materialIndex = FindMaterialIndex(newMaterial->Name());
+			if (materialIndex != -1)
+			{
+				return materialIndex;
+			}
+		}			
 
 		// Otherwise, add a new material:
 		if (currentMaterialCount == MAX_MATERIALS)
@@ -452,9 +465,17 @@ namespace BlazeEngine
 		return newIndex; // Return the previous index
 	}
 
-
-
-
+	int SceneManager::FindMaterialIndex(string materialName)
+	{
+		for (unsigned int i = 0; i < MAX_MATERIALS; i++)
+		{
+			if (materials[i] && materials[i]->Name() == materialName)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
 
 
 	void SceneManager::AssembleMaterialMeshLists()
@@ -474,7 +495,12 @@ namespace BlazeEngine
 		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Finished assembling material mesh lists") });
 	}
 
-	unsigned int SceneManager::GetShaderIndex(string shaderName)
+
+
+	// Shader management:		
+	//*******************
+
+	unsigned int SceneManager::GetShaderIndexFromShaderName(string shaderName)
 	{
 		// Return the index if it's found, or load the shader and return a new index, or return the error shader otherwise
 		int shaderIndex = -1;

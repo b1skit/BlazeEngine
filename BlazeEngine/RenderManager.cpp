@@ -91,6 +91,9 @@ namespace BlazeEngine
 
 		// Configure OpenGL:
 		glEnable(GL_DEPTH_TEST);			// Enable Z depth testing
+		glFrontFace(GL_CCW);				// Counter-clockwise vertex winding (OpenGL default)
+		glEnable(GL_CULL_FACE);				// Enable face culling
+		glCullFace(GL_BACK);				// Cull back faces
 		//glDepthFunc(GL_LESS);				// How to sort Z
 		
 		
@@ -127,6 +130,8 @@ namespace BlazeEngine
 		glEnableVertexAttribArray(3);
 		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
 		
+		// Samplers:
+		glCreateSamplers(1, &vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]);
 
 
 
@@ -180,19 +185,36 @@ namespace BlazeEngine
 		unsigned int numMaterials = CoreEngine::GetSceneManager()->NumMaterials();
 		for (unsigned int currentMaterialIndex = 0; currentMaterialIndex < numMaterials; currentMaterialIndex++)
 		{
-			Material* currentMaterial = CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
-			// TO DO: Material setup: texture uploads etc
-
-
-
-
 			// Bind the required VAO:
 			glBindVertexArray(vertexArrayObject);
 
 			// Setup the current shader:
-			unsigned int shaderIndex = CoreEngine::GetSceneManager()->GetShaderIndex(currentMaterialIndex); // TO DO: Check if the shader at the given index is valid, display an error if it's not?
+			unsigned int shaderIndex = CoreEngine::GetSceneManager()->GetMaterialShaderIndex(currentMaterialIndex); // TO DO: Check if the shader at the given index is valid, display an error if it's not?
 
 			glUseProgram(shaders[shaderIndex]->ShaderReference()); // ...TO DO: Decide whether to use this directly, or via BindShader() ?
+
+
+
+			Material* currentMaterial = CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
+
+			// Bind textures:
+			Texture const* albedo = currentMaterial->GetTexture(TEXTURE_ALBEDO);
+			glBindTexture(GL_TEXTURE_2D, albedo->TextureID());
+			//glBindTextureUnit(vertexBufferObjects[BUFFER_ALBEDO_SAMPLER], albedo->TextureID()); // <-- doesn't work...
+
+			// Specify texture storage:
+			/*glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, (GLsizei)albedo->Width(), (GLsizei)albedo->Height());*/
+			/*glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, 256, 256);*/
+			// ^^^GL_INVALID_OPERATION ???
+
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, albedo->Width(), albedo->Height(), GL_RGBA, GL_FLOAT, &albedo->Texels()[0][0]);
+			// ^^ Weird corrupted texture?
+
+			/*glTextureSubImage2D(GL_TEXTURE_2D, 0, 0, 0, albedo->Width(), albedo->Height(), GL_RGBA, GL_FLOAT, &albedo->Texels()[0][0]);*/
+			// ^^^GL_INVALID_OPERATION ??? 
+			
+
+			
 
 			// Upload common shader matrices:
 			GLuint matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_view");
@@ -276,6 +298,9 @@ namespace BlazeEngine
 				glBindBuffer(GL_ARRAY_BUFFER, 0); //Bind object 0 to GL_ARRAY_BUFFER to unbind vertexBufferObjects[BUFFER_VERTICES]
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 			}
+
+			// Cleanup:
+			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 
 		// Display the new frame:

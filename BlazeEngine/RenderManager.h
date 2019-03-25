@@ -46,7 +46,7 @@ namespace BlazeEngine
 		// Member functions:
 		void Render(double alpha);
 
-		/*unsigned int GetShaderIndex(string shaderName);*/
+		/*unsigned int GetShaderIndexFromShaderName(string shaderName);*/
 
 		
 	private:
@@ -63,6 +63,8 @@ namespace BlazeEngine
 		{
 			BUFFER_VERTICES,
 			BUFFER_INDEXES,
+
+			BUFFER_ALBEDO_SAMPLER, // ?????????????
 
 			BUFFER_COUNT, // Reserved: Number of buffers to allocate
 		};

@@ -2,14 +2,10 @@
 // Contains common fields and methods (Eg. identifiers) useful for all Blaze Engine objects
 
 #pragma once
-#include <string>
-//#include <unordered_map>
 
-//#include <iostream> // DEBUG
-//using std::cout;
+#include <string>
 
 using std::string;
-//using std::unordered_map;
 
 
 // Global variables: These should never be modified directly.

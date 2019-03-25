@@ -96,7 +96,7 @@ namespace BlazeEngine
 
 		Shader* newShader = new Shader(shaderName, shaderReference);
 
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Successfully loaded " + shaderName) });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Successfully loaded " + shaderName + "!") });
 
 		return newShader;
 	}

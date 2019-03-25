@@ -11,6 +11,7 @@ namespace BlazeEngine
 {
 	// ENGINE CONFIG:
 	// TO DO: Implement loading/saving of this object...
+	// TO DO: Make various fields const ?
 	struct EngineConfig
 	{
 		EngineConfig(CoreEngine* coreEngine)
@@ -21,38 +22,39 @@ namespace BlazeEngine
 		// Renderer config:
 		struct
 		{
-			string windowTitle = "Blaze Engine";
-			int windowXRes = 800;
-			int windowYRes = 600;
+			string windowTitle	= "Blaze Engine";
+			int windowXRes		= 800;
+			int windowYRes		= 600;
 
 		} renderer;
 
 		struct
 		{
-			float fieldOfView = 60.0f;
-			float near = 1.0f;
-			float far = 100.0f;
+			float fieldOfView	= 60.0f;
+			float near			= 1.0f;
+			float far			= 100.0f;
 		} viewCam;
 
 		struct
 		{
-			string shaderDirectory	= "./Shaders/";
-			string defaultShader	= "defaultShader";
-			string errorShader		= "errorShader";
+			const string shaderDirectory	= "./Shaders/";
+			const string errorShaderName	= "errorShader";
+			const string defaultShaderName	= "defaultShader";
 		} shader;
 
 		struct
 		{
 			float mousePitchSensitivity = -0.001f;
-			float mouseYawSensitivity = -0.001f;
+			float mouseYawSensitivity	= -0.001f;
 		} input;
 
 		// Scene config:
 		struct
 		{
-			string sceneRoot = "./Scenes/"; // Root path: All assets stored here
+			const string sceneRoot			= "./Scenes/";	// Root path: All assets stored here
+			const string texturesDirectory	= "Textures/";	// Default texture location, within a given scene directory
 
-			string scenePath = sceneRoot + "testScene"; // DEBUG: hard coded scene path
+			string scenePath		= sceneRoot + "testScene"; // DEBUG: hard coded scene path
 		} scene;
 		
 		// TO DO: Add button config for inputmanager

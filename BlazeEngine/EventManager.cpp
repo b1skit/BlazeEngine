@@ -5,6 +5,16 @@
 #include "CoreEngine.h"
 #include "SDL.h"
 
+// DEBUG: Spew notification messages as they're recieved.
+// Useful for debugging when an issue occurs before we can print it normally
+//#define RAW_OUTPUT
+#if defined(RAW_OUTPUT)
+	#include <string>
+	#include <iostream>
+	using std::string;
+	using std::cout;
+#endif
+
 
 namespace BlazeEngine
 {
@@ -293,6 +303,38 @@ namespace BlazeEngine
 
 	void EventManager::Notify(EventInfo const* eventInfo, bool pushToFront)
 	{
+		#if defined(RAW_OUTPUT)
+			if (eventInfo)
+			{
+				if (eventInfo->generator)
+				{
+					if (eventInfo->eventMessage)
+					{
+						cout << "RAW OUTPUT: " << eventInfo->generator << " " << *eventInfo->eventMessage << "\n";
+					}
+					else
+					{
+						cout << "RAW OUTPUT: " << eventInfo->generator << " " << "nullptr" << "\n";
+					}
+				}
+				else
+				{
+					if (eventInfo->eventMessage)
+					{
+						cout << "RAW OUTPUT: " << "nullptr" << " " << *eventInfo->eventMessage << "\n";
+					}
+					else
+					{
+						cout << "RAW OUTPUT: " << "nullptr" << " " << "nullptr" << "\n";
+					}
+				}
+			}
+			else
+			{
+				cout << "RAW OUTPUT: Received NULL eventInfo...\n";
+			}			
+		#endif
+
 		if (pushToFront)
 		{
 			vector<EventInfo const*>::iterator iterator = eventQueues[(int)eventInfo->type].begin();

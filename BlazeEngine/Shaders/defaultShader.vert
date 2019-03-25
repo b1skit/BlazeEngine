@@ -18,14 +18,29 @@ uniform mat4 in_projection; // View -> Projection
 uniform mat4 in_mv;			// View * Model
 uniform mat4 in_mvp;		// Projection * View * Model
 
+uniform sampler2D albedo;
+uniform sampler2D normal;
+uniform sampler2D roughness;
+uniform sampler2D metallic;
+uniform sampler2D ambientOcclusion;
+
+
 out vec4 vertexColor;
 out vec3 fragNormal;
-//out vec2 uv0;
+out vec2 uv0;
+
+// TO DO: Implement structures to pass through each stage...
+//out VS_OUT
+//{
+//	vec2 uv0;
+//} vs_out;
 
 void main()
 {
 	// Assign our position data to the predefined gl_Position output
     gl_Position = in_mvp * vec4(in_position.x, in_position.y, in_position.z, 1.0);
+
+	// TO DO: Replace gl_Position with an out ^^^ (deprecated!)
 
 	vertexColor = in_color * ambient;
 
@@ -34,4 +49,6 @@ void main()
 	float nDotL = max(0, dot(fragNormal, keyDirection));	
 
 	vertexColor += nDotL * keyColor * keyIntensity;
+
+	uv0 = in_uv0;
 }

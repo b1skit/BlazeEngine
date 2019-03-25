@@ -87,7 +87,7 @@ namespace BlazeEngine
 		//inline vector<Shader>* GetShaders() { return &shaders; } // SHOULD THIS RETURN CONST ?????
 		inline Shader const* const* GetShaders() const { return shaders; }
 		
-		inline unsigned int GetShaderIndex(unsigned int materialIndex) { return materials[materialIndex]->GetShaderIndex(); } // TO DO: Bounds checking?
+		inline unsigned int GetMaterialShaderIndex(unsigned int materialIndex) { return materials[materialIndex]->ShaderIndex(); } // TO DO: Bounds checking?
 
 		inline vec4 const& GetAmbient() { return currentScene->ambientLight; }
 		inline Light& GetKeyLight() { return currentScene->keyLight; }
@@ -100,30 +100,45 @@ namespace BlazeEngine
 
 	private:
 		// Scene management:
+		//******************
 		Scene* currentScene = nullptr;
 
 		// Material management:
+		//*********************
 		const unsigned int MAX_MATERIALS = 100; // TO DO: Replace this with something configurable/dynamic?
 		unsigned int currentMaterialCount = 0;
 		Material** materials = nullptr;
-		unsigned int AddMaterial(Material* newMaterial);
 
+		// Finds an existing material, or creates one using the default shader if none exists
+		int GetMaterial(string materialName);
+
+		// Add a material to the material array
+		// Warning: Material name MUST be unique if checkForExisting == false
+		unsigned int AddMaterial(Material* newMaterial, bool checkForExisting = true);
+		
+		// Returns index of material with matching name, or -1 otherwise
+		int FindMaterialIndex(string materialName); 
+
+		// Helper function: Compiles vectors filled with meshes that use each material
+		void AssembleMaterialMeshLists(); 
 		vector<vector<Mesh*>> materialMeshLists;
-		void AssembleMaterialMeshLists();
+
 
 		// Texture management:
+		//********************
+		const unsigned int MAX_TEXTURES = 100; // TO DO: Replace this with something configurable/dynamic?
+		unsigned int currentTextureCount = 0;
+		Texture** textures = nullptr;
 
 
 		// Shader management:		
+		//*******************
 		const unsigned int MAX_SHADERS = 100; // TO DO: Replace this with something configurable/dynamic?
 		Shader** shaders;
 		unsigned int currentShaderCount = 0;
 
-
-		
-
-		// Shader functions:
-		unsigned int GetShaderIndex(string shaderName);
+		// Finds an existing shader index, or creates one if none exists
+		unsigned int GetShaderIndexFromShaderName(string shaderName);
 	};
 }
 
