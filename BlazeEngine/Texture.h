@@ -17,16 +17,21 @@ namespace BlazeEngine
 		Texture(int width, int height);
 		~Texture();
 
-		// TO DO: Deep copy copy constructor, equals operator...
+		Texture& operator=(Texture const& rhs);
 
 		// Getters/Setters:
 		inline unsigned int const& Width() const { return width; }
 		inline unsigned int const& Height() const { return height; }
 		inline GLuint const& TextureID() const { return textureID; }
-		inline vec4 const* const* Texels() const { return texels; }
+
+		// Get/set a texel value:
+		// Returns texels[0] if u = [0, width - 1], v = [0, height - 1] are out of bounds.
+		vec4& Texel(unsigned int u, unsigned int v);
 
 		// Static functions:
-		// 
+		//------------------
+		
+		// Load a texture object from a (relative) path:
 		static Texture* LoadTextureFromPath(string texturePath);
 
 	protected:
@@ -40,7 +45,8 @@ namespace BlazeEngine
 
 		GLuint textureID;
 
-		vec4** texels; // Accessed by [height][width] = [row][col] (Is this best??)
+		vec4* texels = nullptr;
+		unsigned int numTexels;
 	};
 }
 

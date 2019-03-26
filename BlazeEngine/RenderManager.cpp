@@ -198,7 +198,7 @@ namespace BlazeEngine
 			Material* currentMaterial = CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
 
 			// Bind textures:
-			Texture const* albedo = currentMaterial->GetTexture(TEXTURE_ALBEDO);
+			Texture* albedo = currentMaterial->GetTexture(TEXTURE_ALBEDO);
 			glBindTexture(GL_TEXTURE_2D, albedo->TextureID());
 			//glBindTextureUnit(vertexBufferObjects[BUFFER_ALBEDO_SAMPLER], albedo->TextureID()); // <-- doesn't work...
 
@@ -207,7 +207,7 @@ namespace BlazeEngine
 			/*glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, 256, 256);*/
 			// ^^^GL_INVALID_OPERATION ???
 
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, albedo->Width(), albedo->Height(), GL_RGBA, GL_FLOAT, &albedo->Texels()[0][0]);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, albedo->Width(), albedo->Height(), GL_RGBA, GL_FLOAT, &albedo->Texel(0, 0).x);
 			// ^^ Weird corrupted texture?
 
 			/*glTextureSubImage2D(GL_TEXTURE_2D, 0, 0, 0, albedo->Width(), albedo->Height(), GL_RGBA, GL_FLOAT, &albedo->Texels()[0][0]);*/

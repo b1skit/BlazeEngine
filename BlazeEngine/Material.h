@@ -27,7 +27,7 @@ namespace BlazeEngine
 		// Getters/Setters:
 		inline unsigned int ShaderIndex() { return shaderIndex; }
 		inline string const& Name() { return name; }
-		inline Texture const* GetTexture(TEXTURE_TYPE textureIndex) { return textures[textureIndex]; }
+		inline Texture* GetTexture(TEXTURE_TYPE textureIndex) { return textures[textureIndex]; }
 		
 		void SetTexture(Texture* texture, TEXTURE_TYPE textureIndex);
 

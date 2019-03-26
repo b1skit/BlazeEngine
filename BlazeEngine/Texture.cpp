@@ -12,47 +12,42 @@ using std::to_string;
 
 namespace BlazeEngine
 {
+	// Constructor:
 	Texture::Texture(int width, int height)
 	{
 		this->width = width;
 		this->height = height;
+		this->numTexels = width * height;
 
-		texels = new vec4*[height];
-		for (int row = 0; row < height; row++)
+		// Initialize the texture:
+		texels = new vec4[numTexels];
+		for (unsigned int i = 0; i < numTexels; i++)
 		{
-			texels[row] = new vec4[width];
+			texels[i] = vec4(0.0f, 0.0f, 0.0f, 1.0f); // Black
 		}
+
 
 		// DEBUG: Fill texels with generated values
 		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_DEBUG, nullptr, new string("Filling texture with dummy values!") });
 
-		// Simple debug: Fill with 100% red
+		// Fill with an interpolated gradient:
+		vec4 tl(1, 1, 1, 1);
+		vec4 tr(0, 0, 1, 1);
+		vec4 bl(0, 1, 0, 1);
+		vec4 br(1, 0, 0, 1);
 		for (int row = 0; row < height; row++)
 		{
+			float vertDelta = (float)((float)row / (float)height);
+			vec4 startCol = (vertDelta * bl) + ((1.0f - vertDelta) * tl);
+			vec4 endCol = (vertDelta * br) + ((1.0f - vertDelta) * tr);
+
 			for (int col = 0; col < width; col++)
 			{
-				texels[row][col] = vec4(1, 0, 0, 1);
+				float horDelta = (float)((float)col / (float)width);
+
+				Texel(row, col) = (horDelta * endCol) + ((1.0f - horDelta) * startCol);
 			}
 		}
-
-		//// Fill with an interpolated gradient:
-		//vec4 tl(1, 1, 1, 1);
-		//vec4 tr(0, 0, 1, 1);
-		//vec4 bl(0, 1, 0, 1);
-		//vec4 br(1, 0, 0, 1);
-		//for (int row = 0; row < height; row++)
-		//{
-		//	float vertDelta = (float)((float)row / (float)height);
-		//	vec4 startCol = (vertDelta * bl) + ((1.0f - vertDelta) * tl);
-		//	vec4 endCol = (vertDelta * br) + ((1.0f - vertDelta) * tr);
-
-		//	for (int col = 0; col < width; col++)
-		//	{
-		//		float horDelta = (float)((float)col / (float)width);
-
-		//		texels[row][col] = (horDelta * endCol) + ((1.0f - horDelta) * startCol);
-		//	}
-		//}
 	}
 
 
@@ -62,17 +57,47 @@ namespace BlazeEngine
 
 		if (texels)
 		{
-			for (unsigned int row = 0; row < height; row++)
-			{
-				if (texels[row])
-				{
-					delete texels[row];
-				}				
-			}
-			delete [] texels;
+			delete[] texels;
 		}
 	}
 
+	Texture& BlazeEngine::Texture::operator=(Texture const& rhs)
+	{
+		if (this == &rhs)
+		{
+			return *this;
+		}
+
+		this->width		= rhs.width;
+		this->height	= rhs.height;
+		this->textureID = rhs.textureID;
+		this->numTexels = rhs.numTexels;
+
+		if (this->texels != nullptr)
+		{
+			delete[] texels;
+		}
+
+		this->texels = new vec4[this->numTexels];
+		for (unsigned int i = 0; i < this->numTexels; i++)
+		{
+			this->texels[i] = rhs.texels[i];
+		}
+	}
+
+
+	vec4& BlazeEngine::Texture::Texel(unsigned int u, unsigned int v)
+	{
+		if (u >= width || v >= height)
+		{
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("Invalid texture access! Cannot access texel (" + to_string(u) + ", " + to_string(v) + " in a texture of size " + to_string(width) + "x" + to_string(height) ) });
+
+			// Try and return the safest option:
+			return texels[0];
+		}
+
+		return texels[(u * width) + v];
+	}
 
 	Texture* Texture::LoadTextureFromPath(string texturePath)
 	{
