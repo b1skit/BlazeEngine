@@ -108,24 +108,23 @@ namespace BlazeEngine
 
 		Texture* texture = new Texture(width, height);
 
-		GLuint textureID;
-		//glGenTextures(1, &textureID);
-		glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
-		if (!glIsTexture(textureID))
+		glCreateTextures(texture->target, 1, &texture->textureID);
+		if (!glIsTexture(texture->textureID))
 		{
 			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("OpenGL failed to create texture. Returning null") });
 			return nullptr;
 		}
 
-		texture->SetTextureID(textureID);
-
 		// Bind the texture, and specify its storage details:
-		glBindTexture(GL_TEXTURE_2D, textureID);
+		glBindTexture(texture->target, texture->textureID);
 		/*glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, (GLsizei)width, (GLsizei)height);*/
-		glTextureStorage2D(textureID, 1, GL_RGBA32F, (GLsizei)width, (GLsizei)height);
+		glTextureStorage2D(texture->textureID, 1, texture->internalFormat, (GLsizei)texture->width, (GLsizei)texture->height);
+
+		// Upload to the GPU:
+		glTexSubImage2D(texture->target, 0, 0, 0, texture->width, texture->height, texture->format, texture->type, &texture->Texel(0, 0).r);
 
 		// Cleanup:
-		glBindTexture(GL_TEXTURE_2D, 0);		
+		glBindTexture(texture->target, 0);
 
 		return texture;
 	}

@@ -23,6 +23,7 @@ namespace BlazeEngine
 		inline unsigned int const& Width() const { return width; }
 		inline unsigned int const& Height() const { return height; }
 		inline GLuint const& TextureID() const { return textureID; }
+		inline GLenum const& Target() const { return target; }
 
 		// Get/set a texel value:
 		// Returns texels[0] if u = [0, width - 1], v = [0, height - 1] are out of bounds.
@@ -35,15 +36,23 @@ namespace BlazeEngine
 		static Texture* LoadTextureFromPath(string texturePath);
 
 	protected:
-		inline void SetTextureID(GLuint textureID) { this->textureID = textureID; }
+		/*inline void SetTextureID(GLuint textureID) { this->textureID = textureID; }*/ // Unnecessary?
 
 
 	private:
-		unsigned int width;	// # Cols
-		unsigned int height; // # Rows
-		// TO DO: Initialize with some starting value? ^^
+		unsigned int width	= 1;		// # Cols
+		unsigned int height = 1;		// # Rows
 
 		GLuint textureID;
+
+		// TO DO: Make these configurable/dynamically set based on loaded file??
+		/*GLint level;
+		GLint xoffset;
+		GLint yoffset;*/
+		GLenum target			= GL_TEXTURE_2D;
+		GLenum internalFormat	= GL_RGBA32F;
+		GLenum format			= GL_RGBA;
+		GLenum type				= GL_FLOAT;
 
 		vec4* texels = nullptr;
 		unsigned int numTexels;

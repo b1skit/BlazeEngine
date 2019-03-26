@@ -169,7 +169,7 @@ namespace BlazeEngine
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// TO DO: Loop by material, shader, mesh:
-		// Pre-store all vertices for the scene in (material, shader) buffers?
+		// Pre-store all vertices for the scene in (material, shader) buffers!
 
 		// TO DO: Merge ALL meshes using the same material into a single draw call
 
@@ -199,22 +199,10 @@ namespace BlazeEngine
 
 			// Bind textures:
 			Texture* albedo = currentMaterial->GetTexture(TEXTURE_ALBEDO);
-			glBindTexture(GL_TEXTURE_2D, albedo->TextureID());
-			//glBindTextureUnit(vertexBufferObjects[BUFFER_ALBEDO_SAMPLER], albedo->TextureID()); // <-- doesn't work...
+			glBindTexture(albedo->Target(), albedo->TextureID());
 
-			// Specify texture storage:
-			/*glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, (GLsizei)albedo->Width(), (GLsizei)albedo->Height());*/
-			/*glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, 256, 256);*/
-			// ^^^GL_INVALID_OPERATION ???
+			// TO DO: Bind multiple textures (normal, etc)
 
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, albedo->Width(), albedo->Height(), GL_RGBA, GL_FLOAT, &albedo->Texel(0, 0).x);
-			// ^^ Weird corrupted texture?
-
-			/*glTextureSubImage2D(GL_TEXTURE_2D, 0, 0, 0, albedo->Width(), albedo->Height(), GL_RGBA, GL_FLOAT, &albedo->Texels()[0][0]);*/
-			// ^^^GL_INVALID_OPERATION ??? 
-			
-
-			
 
 			// Upload common shader matrices:
 			GLuint matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_view");
