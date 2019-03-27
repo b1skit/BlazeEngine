@@ -37,8 +37,8 @@ namespace BlazeEngine
 
 
 	private:
-		vector<Mesh*> viewMeshes;	// Pointers to statically allocated Mesh objects held by the scene manager
-		Transform* transform;		// The SceneObject that owns this Renderable must set the transform
+		vector<Mesh*> viewMeshes;			// Pointers to statically allocated Mesh objects held by the scene manager
+		Transform* transform = nullptr;		// The SceneObject that owns this Renderable must set the transform
 
 		/*Mesh* boundsMesh;*/
 

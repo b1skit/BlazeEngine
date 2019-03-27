@@ -61,45 +61,50 @@ namespace BlazeEngine
 		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Scene manager started!") });
 	}
 
+
 	void SceneManager::Shutdown()
 	{
 		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Scene manager shutting down...") });
 
+		// Cleanup the scene:
 		for (int i = 0; i < (int)currentScene->meshes.size(); i++)
 		{
 			if (currentScene->meshes[i].Vertices())
 			{
 				delete currentScene->meshes[i].Vertices();
 			}
-			
+
 			if (currentScene->meshes[i].Indices())
 			{
 				delete currentScene->meshes[i].Indices();
 			}
+		}
 
-			if (materials)
-			{
-				for (unsigned int i = 0; i < MAX_MATERIALS; i++)
-				{
-					if (materials[i])
-					{
-						delete materials[i];
-					}
-				}
-				delete [] materials;
-				currentMaterialCount = 0;
-			}
-
-			for (int i = 0; i < currentScene->gameObjects.size(); i++)
+		for (int i = 0; i < currentScene->gameObjects.size(); i++)
+		{
+			if (currentScene->gameObjects.at(i))
 			{
 				delete currentScene->gameObjects.at(i);
 			}
-			
-			if (currentScene)
-			{
-				delete currentScene;
-			}
 		}
+
+		if (currentScene)
+		{
+			delete currentScene;
+		}
+		
+		if (materials)
+		{
+			for (unsigned int i = 0; i < MAX_MATERIALS; i++)
+			{
+				if (materials[i])
+				{
+					delete materials[i];
+				}
+			}
+			delete[] materials;
+			currentMaterialCount = 0;
+		}		
 
 		for (unsigned int i = 0; i < currentShaderCount; i++)
 		{
@@ -113,6 +118,7 @@ namespace BlazeEngine
 		currentShaderCount = 0;
 	}
 
+
 	void SceneManager::Update()
 	{
 		for (int i = 0; i < (int)currentScene->gameObjects.size(); i++)
@@ -121,11 +127,12 @@ namespace BlazeEngine
 		}
 	}
 
+
 	void SceneManager::HandleEvent(EventInfo const * eventInfo)
 	{
-
 		return;
 	}
+
 
 	void SceneManager::LoadScene(string scenePath)
 	{
@@ -133,7 +140,8 @@ namespace BlazeEngine
 
 		if (currentScene)
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_DEBUG, this, new string("WARNING: Current scene already exists. Debug deallocation is to just delete it!") });
+			// TO DO: Write a destructor/cleanup correctly when deleting a scene
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_DEBUG, this, new string("WARNING: Current scene already exists. Debug deallocation is to just delete it, but this is likely leaking memory!") });
 			delete currentScene;
 		}
 		currentScene = new Scene();
@@ -158,212 +166,13 @@ namespace BlazeEngine
 
 
 
-		//// DEBUG: HARD CODE SOME OBJECTS TO WORK WITH:
+		// DEBUG: HARD CODE SOME OBJECTS TO WORK WITH:
 
-		//// Allocate vertices: (Normally, we'll do this when loading a .FBX)
-		//int numVerts = 4;
-		//Vertex* vertices = new Vertex[numVerts];
-		//vertices[0] = Vertex(vec3(-0.5f, -0.5f, -20.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-		//vertices[1] = Vertex(vec3(0.5f, -0.5f, -20.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-		//vertices[2] = Vertex(vec3(0.0f, 0.5f, -20.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-		//vertices[3] = Vertex(vec3(0.0f, -1.0f, -20.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-
-		//int numIndices = 6;
-		//GLubyte* vertexIndices = new GLubyte[numIndices]
-		//{
-		//	0, 1, 2,
-		//	0, 3, 1,
-		//};
-
-		//// Create a material and shader:
-		//unsigned int shaderIndex = GetShaderIndexFromShaderName(coreEngine->GetConfig()->shader.defaultShaderName);
-		//
-		//Material material( shaderIndex );
-		//this->materials.push_back(material);
-		//int materialIndex = (int)this->materials.size() - 1;
-
-		//// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		//Mesh mesh(vertices, numVerts, vertexIndices, numIndices, &(this->materials.at(materialIndex)));
-		//this->meshes.push_back(mesh);
-		//int meshIndex = (int)this->meshes.size() - 1; // Store the index so we can pass the address
-
-		//// Assemble a list of all meshes held by a Renderable:
-		//vector<Mesh*> viewMeshes;
-		//viewMeshes.push_back( &(this->meshes.at(meshIndex)) ); // Store the address of our mesh to pass to our Renderable
-		//Renderable testRenderable(viewMeshes);
-		//
-		//// Construct a GameObject:
-		//GameObject* cubeObject = new GameObject("cubeObject", testRenderable);
-
-		///*cubeObject.GetTransform()->LocalPosition() = vec3(1,2,3);*/
-		//
-		//// Add test objects to scene:
-		//this->gameObjects.push_back(cubeObject);
-		//int gameObjectIndex = (int)this->gameObjects.size() - 1;
-		//
-		//// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-		//this->renderables.push_back(gameObjects[gameObjectIndex]->GetRenderable());
-
-		//// 2nd test mesh:
-		//Vertex* vertices2 = new Vertex[3];
-
-		//vertices2[0] = Vertex(vec3(-1.0f, 0.5f, -10.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-		//vertices2[1] = Vertex(vec3(-0.5f, 0.2f, -10.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-		//vertices2[2] = Vertex(vec3(0.0f, 0.5f, -10.0f), vec3(0.0f, 0.0f, 0.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f), vec2(0.0f, 0.0f));
-
-		//GLubyte* vertexIndices2 = new GLubyte[3]
-		//{
-		//	/*0, 1, 2*/
-		//	2, 1, 0 // TEMP: REVERSED!!!!
-		//};
-
-		//// Create a material and shader:
-		//int shaderIndex2 = GetShaderIndexFromShaderName(coreEngine->GetConfig()->shader.errorShaderName);
-
-		//Material material2(shaderIndex2);
-		//this->materials.push_back(material2);
-		//int materialIndex2 = (int)this->materials.size() - 1;
-
-		//// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		//Mesh mesh2(vertices2, 3,vertexIndices2, 3, &(this->materials.at(materialIndex2)));
-		//this->meshes.push_back(mesh2);
-		//int meshIndex2 = (int)this->meshes.size() - 1; // Store the index so we can pass the address
-
-		//// Assemble a list of all meshes held by a Renderable:
-		//vector<Mesh*> viewMeshes2;
-		//viewMeshes2.push_back(&(this->meshes.at(meshIndex2))); // Store the address of our mesh to pass to our Renderable
-		//Renderable testRenderable2(viewMeshes2);
-
-		//// Construct a GameObject:
-		//GameObject* testObject2 = new GameObject("testObject2", testRenderable2);
-
-		//// Add test objects to scene:
-		//this->gameObjects.push_back(testObject2); // nukes renderables[0].viewMeshes[0] ???????		
-		//// Renderables is a POINTER to a renderable object, that isn't being copied correctly!!!
-
-		//int gameObjectIndex2 = (int)this->gameObjects.size() - 1;
-
-		//// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-		//this->renderables.push_back(gameObjects[gameObjectIndex2]->GetRenderable());
-
-	
-		
-
-		// Note: BlazeEngine uses a RHCS in all cases
-		vec3 positions[8];
-		// "Front" side:
-		positions[0] = vec3(-1.0f, 1.0f, 1.0f);		
-		positions[1] = vec3(-1.0f, -1.0f, 1.0f);
-		positions[2] = vec3(1.0f, -1.0f, 1.0f);
-		positions[3] = vec3(1.0f, 1.0f, 1.0f);
-		// "Back" side:
-		positions[4] = vec3(-1.0f, 1.0f, -1.0f);	
-		positions[5] = vec3(-1.0f, -1.0f, -1.0f);
-		positions[6] = vec3(1.0f, -1.0f, -1.0f);
-		positions[7] = vec3(1.0f, 1.0f, -1.0f);
-		
-		vec3 normals[6]
-		{
-			vec3(0.0f, 0.0f, 1.0f),		// Front = 0
-			vec3(0.0f, 0.0f, -1.0f),	// Back = 1
-			vec3(-1.0f, 0.0f, 0.0f),	// Left = 2
-			vec3(1.0f, 0.0f, 0.0f),		// Right = 3
-			vec3(0.0f, 1.0f, 0.0f),		// Up = 4
-			vec3(0.0f, -1.0f, 0.0f),	// Down = 5
-		};
-
-		vec4 colors[8]
-		{
-			vec4(0.0f, 0.0f, 0.0f, 1.0f),
-			vec4(0.0f, 0.0f, 1.0f, 1.0f),
-			vec4(0.0f, 1.0f, 0.0f, 1.0f),
-			vec4(0.0f, 1.0f, 1.0f, 1.0f),
-			vec4(1.0f, 0.0f, 0.0f, 1.0f),
-			vec4(1.0f, 0.0f, 1.0f, 1.0f),
-			vec4(1.0f, 1.0f, 0.0f, 1.0f),
-			vec4(1.0f, 1.0f, 1.0f, 1.0f),
-		};
-
-		vec2 uvs[4]
-		{
-			vec2(0.0f, 0.0f),
-			vec2(0.0f, 1.0f),
-			vec2(1.0f, 0.0f),
-			vec2(1.0f, 1.0f),
-		};
-
-		int numVerts = 24;
-		Vertex* cubeVerts = new Vertex[numVerts]
-		{
-			// Front face:
-			Vertex(positions[0], normals[0], colors[0], uvs[1]), // HINT: position index should = color index
-			Vertex(positions[1], normals[0], colors[1], uvs[0]), // All UV's should be used once per face
-			Vertex(positions[2], normals[0], colors[2], uvs[2]), //2
-			Vertex(positions[3], normals[0], colors[3], uvs[3]), //3
-
-			// Left face:
-			Vertex(positions[4], normals[2], colors[4], uvs[1]), //4
-			Vertex(positions[5], normals[2], colors[5], uvs[0]),
-			Vertex(positions[1], normals[2], colors[1], uvs[2]),
-			Vertex(positions[0], normals[2], colors[0], uvs[3]), //7
-
-			// Right face:
-			Vertex(positions[3], normals[3], colors[3], uvs[1]), //8
-			Vertex(positions[2], normals[3], colors[2], uvs[0]),
-			Vertex(positions[6], normals[3], colors[6], uvs[2]),
-			Vertex(positions[7], normals[3], colors[7], uvs[3]), //11
-
-			// Top face:
-			Vertex(positions[4], normals[4], colors[4], uvs[1]), //12
-			Vertex(positions[0], normals[4], colors[0], uvs[0]),
-			Vertex(positions[3], normals[4], colors[3], uvs[2]),
-			Vertex(positions[7], normals[4], colors[7], uvs[3]), //15
-
-			// Bottom face:
-			Vertex(positions[1], normals[5], colors[1], uvs[1]), //16
-			Vertex(positions[5], normals[5], colors[5], uvs[0]),
-			Vertex(positions[6], normals[5], colors[6], uvs[2]),
-			Vertex(positions[2], normals[5], colors[2], uvs[3]), //19
-
-			// Back face:
-			Vertex(positions[7], normals[1], colors[7], uvs[1]), //20
-			Vertex(positions[6], normals[1], colors[6], uvs[0]),
-			Vertex(positions[5], normals[1], colors[5], uvs[2]),
-			Vertex(positions[4], normals[1], colors[4], uvs[3]), //23
-		};
-
-		int numIndices = 36;
-		GLubyte* cubeIndices = new GLubyte[numIndices] // 6 faces * 2 tris * 3 indices 
-		{
-			// Front face:
-			0, 1, 3,
-			1, 2, 3,
-
-			// Left face:
-			4, 5, 7,
-			7, 5, 6,
-
-			// Right face:
-			8, 9, 11,
-			9, 10, 11,
-
-			// Top face:
-			12, 13, 15,
-			13, 14, 15,
-
-			// Bottom face:
-			16, 17, 19,
-			17, 18, 19,
-
-			// Back face:
-			20, 21, 23,
-			21, 22, 23,
-		};
 
 		// Create a material and shader:
 		unsigned int shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
 
-		Material* newMaterial = new Material("testMaterial", shaderIndex);
+		Material* newMaterial = new Material("testMaterial1", shaderIndex);
 
 		// Create textures and assign them to the material:
 		Texture* testAlbedo = Texture::LoadTextureFromPath("./debug/invalid/path");
@@ -373,7 +182,9 @@ namespace BlazeEngine
 		unsigned int materialIndex = AddMaterial(newMaterial);
 
 		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		Mesh mesh(cubeVerts, numVerts, cubeIndices, numIndices, materialIndex);
+		Mesh mesh = Mesh::CreateCube();
+		mesh.MaterialIndex() = materialIndex;
+
 		currentScene->meshes.push_back(mesh);
 		int meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address
 
@@ -383,7 +194,9 @@ namespace BlazeEngine
 		Renderable testRenderable(viewMeshes);
 
 		// Construct a GameObject for the cube:
-		GameObject* cubeObject = new GameObject("cubeObject", testRenderable);
+		GameObject* cubeObject = new GameObject("cubeObject1", testRenderable);
+
+		cubeObject->GetTransform()->SetPosition(vec3(-3, 0,0));
 		
 
 		// Add cube object to scene:
@@ -392,6 +205,91 @@ namespace BlazeEngine
 
 		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
 		currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
+
+
+
+		// Assemble a second cube:
+
+		// Create a material and shader:
+		shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
+
+		newMaterial = new Material("testMaterial2", shaderIndex);
+
+		// Create textures and assign them to the material:
+		testAlbedo = Texture::LoadTextureFromPath("./another/invalid/path");
+		newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
+
+		// Add the material to our material list:
+		materialIndex = AddMaterial(newMaterial);
+
+		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
+		mesh = Mesh::CreateCube();
+		mesh.MaterialIndex() = materialIndex;
+
+		currentScene->meshes.push_back(mesh);
+		meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address
+
+		// Assemble a list of all meshes held by a Renderable:
+		viewMeshes.clear();
+		viewMeshes.push_back(&(currentScene->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
+		testRenderable = Renderable(viewMeshes);
+
+		// Construct a GameObject for the cube:
+		cubeObject = new GameObject("cubeObject2", testRenderable);
+
+		cubeObject->GetTransform()->SetPosition(vec3(3, 0, 0));
+		cubeObject->GetTransform()->SetEulerRotation(vec3(0.5f,0.5f,0.5f));
+
+
+		// Add cube object to scene:
+		currentScene->gameObjects.push_back(cubeObject);
+		gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
+
+		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
+		currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
+
+
+
+		// Assemble a third cube:
+
+		// Create a material and shader:
+		shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
+
+		newMaterial = new Material("testMaterial2", shaderIndex);
+
+		// Create textures and assign them to the material:
+		testAlbedo = Texture::LoadTextureFromPath("./another/invalid/path");
+		newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
+
+		// Add the material to our material list:
+		materialIndex = AddMaterial(newMaterial);
+
+		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
+		mesh = Mesh::CreateCube();
+		mesh.MaterialIndex() = materialIndex;
+
+		currentScene->meshes.push_back(mesh);
+		meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address
+
+		// Assemble a list of all meshes held by a Renderable:
+		viewMeshes.clear();
+		viewMeshes.push_back(&(currentScene->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
+		testRenderable = Renderable(viewMeshes);
+
+		// Construct a GameObject for the cube:
+		cubeObject = new GameObject("cubeObject2", testRenderable);
+
+		cubeObject->GetTransform()->SetPosition(vec3(0, -5, -5));
+		cubeObject->GetTransform()->SetEulerRotation(vec3(-0.3f, 0.3f, -0.3f));
+
+
+		// Add cube object to scene:
+		currentScene->gameObjects.push_back(cubeObject);
+		gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
+
+		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
+		currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
+
 
 
 
@@ -486,13 +384,21 @@ namespace BlazeEngine
 		{
 			for (int j = 0; j < (int)currentScene->renderables.at(i)->ViewMeshes()->size(); j++)
 			{
-				unsigned int materialIndex = currentScene->renderables.at(i)->ViewMeshes()->at(j)->GetMaterialIndex();
 				Mesh* viewMesh = currentScene->renderables.at(i)->ViewMeshes()->at(j);
-				materialMeshLists.at(materialIndex).emplace_back(viewMesh);
+				int materialIndex = viewMesh->MaterialIndex();
+				if (materialIndex < 0)
+				{
+					CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("AssembleMaterialMeshLists() is skipping a mesh with no material!") });
+
+				}
+				else
+				{
+					materialMeshLists.at(materialIndex).emplace_back(viewMesh);
+				}
 			}
 		}
 
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Finished assembling material mesh lists") });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Finished adding " + to_string(materialMeshLists.size()) + " meshes to material mesh lists") });
 	}
 
 

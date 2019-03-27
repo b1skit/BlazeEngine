@@ -48,7 +48,6 @@ namespace BlazeEngine
 		vec4 color;
 		vec2 uv;
 
-
 	protected:
 
 
@@ -61,7 +60,7 @@ namespace BlazeEngine
 	class Mesh
 	{
 	public:
-		Mesh(Vertex* vertices, unsigned int numVerts, GLubyte* indices, unsigned int numIndices, unsigned int materialIndex);
+		Mesh(Vertex* vertices, unsigned int numVerts, GLubyte* indices, unsigned int numIndices, int materialIndex = -1);
 		~Mesh();
 
 		// Copy constructor:
@@ -71,7 +70,7 @@ namespace BlazeEngine
 		inline Vertex* Vertices() { return vertices; }
 		inline unsigned int NumVerts() { return this->numVerts; }
 		
-		inline unsigned int GetMaterialIndex() { return materialIndex; }
+		inline int& MaterialIndex() { return materialIndex; }
 		
 		inline GLubyte* Indices() { return indices; }
 		inline unsigned int NumIndices() { return numIndices; }
@@ -79,6 +78,10 @@ namespace BlazeEngine
 		inline Transform* GetTransform() { return transform; }
 		inline void SetTransform(Transform* transform) { this->transform = transform; }
 
+		// Static functions:
+
+		// Create a simple cube mesh aligned to +/-1 on all axis'
+		static Mesh CreateCube();
 
 	protected:
 
@@ -87,12 +90,12 @@ namespace BlazeEngine
 		Vertex* vertices = nullptr;		// Deallocated in SceneManager.Shutdown()
 		unsigned int numVerts = -1;
 
-		GLubyte* indices = nullptr;
+		GLubyte* indices = nullptr;		// Deallocated in SceneManager.Shutdown()
 		unsigned int numIndices = -1;
 
-		unsigned int materialIndex;
+		int materialIndex = -1;
 
-		Transform* transform = nullptr;
+		Transform* transform = nullptr;	// Pointer to statically allocated Transform held by SceneObject superclass
 	};
 }
 

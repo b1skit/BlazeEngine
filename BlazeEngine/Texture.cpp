@@ -83,6 +83,8 @@ namespace BlazeEngine
 		{
 			this->texels[i] = rhs.texels[i];
 		}
+
+		return *this;
 	}
 
 

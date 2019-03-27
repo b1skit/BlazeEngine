@@ -45,13 +45,13 @@ namespace BlazeEngine
 	{
 		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Render manager started!") });
 
+		// Initialize SDL:
+		/*SDL_Init(SDL_INIT_VIDEO);*/ // TO DO: IMPLEMENT PER-COMPONENT INITIALIZATION
+
 		// Cache the relevant config data:
 		this->xRes = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes;
 		this->yRes = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes;
 		this->windowTitle = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowTitle;
-
-		// Initialize SDL:
-		/*SDL_Init(SDL_INIT_VIDEO);*/ // TO DO: IMPLEMENT PER-COMPONENT INITIALIZATION
 
 		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
 		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
@@ -68,9 +68,21 @@ namespace BlazeEngine
 			yRes, 
 			SDL_WINDOW_OPENGL
 		);
+		if (glWindow == NULL)
+		{
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Could not create window") });
+			return;
+		}
 
-		// Create an OpenGL context:
+		// Create an OpenGL context and make it current:
 		glContext = SDL_GL_CreateContext(glWindow);
+		if (glContext == NULL)
+		{
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Could not create OpenGL context") });
+			return;
+		}
+		SDL_GL_MakeCurrent(glWindow, glContext);
+
 		
 		// Configure SDL:
 		SDL_SetRelativeMouseMode(SDL_TRUE);	// Lock the mouse to the window

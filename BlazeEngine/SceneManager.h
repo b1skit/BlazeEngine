@@ -37,6 +37,8 @@ namespace BlazeEngine
 			/*deferredLights.reserve(100);*/
 		}
 
+		// TO DO: Write a destructor
+
 		// Cameras:
 		Camera* mainCamera; // Main camera: Currently points towards player object cam
 		/*vector<Camera> sceneCameras;*/ // Various render cams
