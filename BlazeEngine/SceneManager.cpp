@@ -1,11 +1,12 @@
 #include "SceneManager.h"
 #include "EventManager.h"
 #include "CoreEngine.h"
+//#include "Texture.h"
 
-// DEBUG:
-#include <iostream>
-using std::cout;
-using std::to_string;
+//// DEBUG:
+//#include <iostream>
+//using std::cout;
+//using std::to_string;
 
 
 namespace BlazeEngine

@@ -81,8 +81,11 @@ namespace BlazeEngine
 			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Could not create OpenGL context") });
 			return;
 		}
-		SDL_GL_MakeCurrent(glWindow, glContext);
-
+		if (SDL_GL_MakeCurrent(glWindow, glContext) < 0)
+		{
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Failed to make OpenGL context current") });
+			return;
+		}
 		
 		// Configure SDL:
 		SDL_SetRelativeMouseMode(SDL_TRUE);	// Lock the mouse to the window
@@ -141,11 +144,9 @@ namespace BlazeEngine
 		// UV's:
 		glEnableVertexAttribArray(3);
 		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-		
+
 		// Samplers:
 		glCreateSamplers(1, &vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]);
-
-
 
 		// Bind our index buffer:
 		glGenBuffers(1, &vertexBufferObjects[BUFFER_INDEXES]);
