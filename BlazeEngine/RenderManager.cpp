@@ -141,8 +141,8 @@ namespace BlazeEngine
 
 
 		// Create and bind our Vertex Array Object:
-		glGenVertexArrays(1, &vertexArrayObject);
-		glBindVertexArray(vertexArrayObject);		
+		glGenVertexArrays(1, &standardVertexVAO);
+		glBindVertexArray(standardVertexVAO);		
 
 		// Create and bind a vertex buffer:
 		glGenBuffers(1, &vertexBufferObjects[BUFFER_VERTICES]);
@@ -154,7 +154,7 @@ namespace BlazeEngine
 		
 		// Normals:
 		glEnableVertexAttribArray(VERTEX_NORMAL);
-		glVertexAttribPointer(VERTEX_NORMAL, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+		glVertexAttribPointer(VERTEX_NORMAL, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
 		// Color buffer:
 		glEnableVertexAttribArray(VERTEX_COLOR);
@@ -163,17 +163,6 @@ namespace BlazeEngine
 		// UV's:
 		glEnableVertexAttribArray(VERTEX_UV);
 		glVertexAttribPointer(VERTEX_UV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-
-		
-		// Create and bind texture samplers:
-		//glGenSamplers(1, &vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]); // TO DO: Use a differnt array to contain sampler objects...
-		//glBindSampler(0, vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]); // Assign to index/unit 0
-		//if (!glIsSampler(vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]))
-		//{
-		//	CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Could not create sampler") });
-		//}
-		// TO DO: Set sampler parameters? glSamplerParameter???
-
 
 		// Bind our index buffer:
 		glGenBuffers(1, &vertexBufferObjects[BUFFER_INDEXES]);
@@ -193,10 +182,8 @@ namespace BlazeEngine
 	{
 		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Render manager shutting down...") });
 
-		glDeleteVertexArrays(BUFFER_COUNT, &vertexArrayObject);
+		glDeleteVertexArrays(BUFFER_COUNT, &standardVertexVAO);
 		glDeleteBuffers(BUFFER_COUNT, vertexBufferObjects);
-
-		/*glDeleteSamplers(1, &vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]);*/
 	}
 
 	void RenderManager::Update()
@@ -227,7 +214,7 @@ namespace BlazeEngine
 		for (unsigned int currentMaterialIndex = 0; currentMaterialIndex < numMaterials; currentMaterialIndex++)
 		{
 			// Bind the required VAO:
-			glBindVertexArray(vertexArrayObject);
+			glBindVertexArray(standardVertexVAO);
 
 			// Get the current material:
 			Material* currentMaterial = CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
@@ -380,7 +367,7 @@ namespace BlazeEngine
 				glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_BYTE, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type,const GLvoid * indices);
 
 				// Cleanup: 
-				glBindBuffer(GL_ARRAY_BUFFER, 0); //Bind object 0 to GL_ARRAY_BUFFER to unbind vertexBufferObjects[BUFFER_VERTICES]
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 			}
 

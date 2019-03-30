@@ -35,13 +35,6 @@ namespace BlazeEngine
 		VERTEX_NUM_ATTRIBUTES	// RESERVED: The total number of vertex attributes
 	};
 
-	//enum SAMPLER
-	//{
-	//	SAMPLER_ALBEDO, // ?????
-	//	
-
-	//	SAMPLER_COUNT	// RESERVED: The total number of samplers 
-	//};
 	
 	class RenderManager : public EngineComponent
 	{
@@ -83,12 +76,11 @@ namespace BlazeEngine
 			BUFFER_VERTICES,
 			BUFFER_INDEXES,
 
-			//BUFFER_ALBEDO_SAMPLER, // ?????????????
-
 			BUFFER_COUNT, // Reserved: Number of buffers to allocate
 		};
 
-		GLuint vertexArrayObject;
+		GLuint standardVertexVAO;
+
 		GLuint vertexBufferObjects[BUFFER_COUNT];		// Buffer objects that hold vertices in GPU memory
 		
 	
