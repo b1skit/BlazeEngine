@@ -145,7 +145,6 @@ namespace BlazeEngine
 		// Upload to the GPU:
 		glTexSubImage2D(texture->target, 0, 0, 0, texture->width, texture->height, texture->format, texture->type, &texture->Texel(0, 0).r);
 		
-
 		// Cleanup:
 		glBindTexture(texture->target, 0);
 

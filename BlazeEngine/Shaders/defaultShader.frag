@@ -21,7 +21,13 @@ uniform mat4 in_projection;
 uniform mat4 in_mv;
 uniform mat4 in_mvp;
 
-layout (location = 0) uniform sampler2D albedo;
+//layout (location = 0) uniform sampler2D albedo;
+//layout (location = 1) uniform sampler2D normal;
+//layout (location = 2) uniform sampler2D roughness;
+//layout (location = 3) uniform sampler2D metallic;
+//layout (location = 4) uniform sampler2D ambientOcclusion;
+
+uniform sampler2D albedo;
 uniform sampler2D normal;
 uniform sampler2D roughness;
 uniform sampler2D metallic;
@@ -31,15 +37,11 @@ out vec4 FragColor;
 
 void main()
 {	
-//	FragColor = vertexColor;
+	FragColor = texture(albedo, uv0);
 
-//	FragColor = texelFetch(albedo, ivec2(uv0.xy), 0);
-//	FragColor = texture(albedo, uv0);
-	FragColor = texture2D(albedo, uv0);
-	
-	
-//	FragColor = vec4(uv0, 0,1); // Confirmed: UV's work!
+//	FragColor = texture(normal, uv0);
+//	FragColor = texture(roughness, uv0);
+//	FragColor = texture(metallic, uv0);
+//	FragColor = texture(ambientOcclusion, uv0);
 
-	// Do we need to specify locations for frag shader? 
-	// How do we link outputs from vert to inputs in frag? -> Using similar names!
 } 

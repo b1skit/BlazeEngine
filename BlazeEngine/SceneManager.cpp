@@ -176,9 +176,25 @@ namespace BlazeEngine
 		Material* newMaterial = new Material("testMaterial1", shaderIndex);
 
 		// Create textures and assign them to the material:
-		Texture* testAlbedo = Texture::LoadTextureFromPath("./debug/invalid/path");
-		testAlbedo->Fill(vec4(1, 0, 0, 1));
+		Texture* testAlbedo = Texture::LoadTextureFromPath("./debug/invalid/albedo/path");
 		newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
+		testAlbedo->Fill(vec4(1, 1, 1, 1));
+
+		Texture* testNormal = Texture::LoadTextureFromPath(".debug/invalid/normal/path");
+		newMaterial->SetTexture(testNormal, TEXTURE_NORMAL);
+		testNormal->Fill(vec4(0, 0, 1, 1));
+		
+		Texture* testRoughness = Texture::LoadTextureFromPath(".debug/invalid/rough/path");
+		newMaterial->SetTexture(testRoughness, TEXTURE_ROUGHNESS);
+		testRoughness->Fill(vec4(1, 1, 0, 1));
+
+		Texture* testMetallic = Texture::LoadTextureFromPath(".debug/invalid/metal/path");
+		newMaterial->SetTexture(testMetallic, TEXTURE_METALLIC);
+		testMetallic->Fill(vec4(0, 1, 1, 1));
+
+		Texture* testAmbientOcclusion = Texture::LoadTextureFromPath(".debug/invalid/AO/path");
+		newMaterial->SetTexture(testAmbientOcclusion, TEXTURE_AMBIENT_OCCLUSION);
+		testAmbientOcclusion->Fill(vec4(0.5, 0.5, 0.5, 1));
 
 		// Add the material to our material list:
 		unsigned int materialIndex = AddMaterial(newMaterial);
@@ -213,13 +229,13 @@ namespace BlazeEngine
 		// Assemble a second cube:
 
 		// Create a material and shader:
-		shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
+		shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName, false); // Force creation of a new shader
 
 		newMaterial = new Material("testMaterial2", shaderIndex);
 
 		// Create textures and assign them to the material:
 		testAlbedo = Texture::LoadTextureFromPath("./another/invalid/path");
-		testAlbedo->Fill(vec4(0, 1, 0, 1));
+		//testAlbedo->Fill(vec4(0, 1, 0, 1));
 		newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
 
 		// Add the material to our material list:
@@ -256,13 +272,12 @@ namespace BlazeEngine
 		// Assemble a third cube:
 
 		// Create a material and shader:
-		shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
+		shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName); // Use the error shader
 
 		newMaterial = new Material("testMaterial3", shaderIndex);
 
 		// Create textures and assign them to the material:
 		testAlbedo = Texture::LoadTextureFromPath("./another/invalid/path");
-		testAlbedo->Fill(vec4(0,0,1,1));
 		newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
 
 		// Add the material to our material list:
@@ -411,21 +426,23 @@ namespace BlazeEngine
 	// Shader management:		
 	//*******************
 
-	unsigned int SceneManager::GetShaderIndexFromShaderName(string shaderName)
+	unsigned int SceneManager::GetShaderIndexFromShaderName(string shaderName, bool findExisting)
 	{
-		// Return the index if it's found, or load the shader and return a new index, or return the error shader otherwise
-		int shaderIndex = -1;
-		for (unsigned int i = 0; i < MAX_SHADERS; i++)
+		if (findExisting)
 		{
-			if (shaders[i] && shaders[i]->Name() == shaderName)
+			// Return the index if it's found, or load the shader and return a new index, or return the error shader otherwise
+			for (unsigned int i = 0; i < MAX_SHADERS; i++)
 			{
-				return i; // We're done!
+				if (shaders[i] && shaders[i]->Name() == shaderName)
+				{
+					return i; // We're done!
+				}
 			}
-		}
+		}		
 
 		// If we've made it this far, the shader was not found. Attempt to load it:
 		Shader* shader = Shader::CreateShader(shaderName);
-
+		int shaderIndex = -1;
 		if (shader != nullptr)
 		{
 			shaderIndex = currentShaderCount; // Cache the insertion index

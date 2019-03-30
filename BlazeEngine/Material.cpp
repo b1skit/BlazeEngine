@@ -1,6 +1,10 @@
 #include "Material.h"
 #include "CoreEngine.h"
 
+#include <string>
+using std::to_string;
+
+
 namespace BlazeEngine
 {
 	Material::Material(string name, unsigned int shaderIndex)
@@ -12,6 +16,18 @@ namespace BlazeEngine
 		for (int i = 0; i < TEXTURE_COUNT; i++)
 		{
 			textures[i] = nullptr;
+		}
+
+		// Create samplers:
+		glGenSamplers(TEXTURE_COUNT, &samplers[0]); // TO DO: Use a differnt array to contain sampler objects...
+		for (int i = 0; i < TEXTURE_COUNT; i++)
+		{
+			glBindSampler(i, samplers[i]);
+			if (!glIsSampler(samplers[i]))
+			{
+				CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("Material could not create sampler #" + to_string(i)) });
+			}
+			glBindSampler(i, 0);
 		}
 	}
 
@@ -28,6 +44,8 @@ namespace BlazeEngine
 			}
 			delete[] textures;
 		}
+
+		glDeleteSamplers(TEXTURE_COUNT, samplers);		
 	}
 
 	void Material::SetTexture(Texture* texture, TEXTURE_TYPE textureIndex)

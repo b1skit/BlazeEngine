@@ -139,8 +139,8 @@ namespace BlazeEngine
 		Shader** shaders;
 		unsigned int currentShaderCount = 0;
 
-		// Finds an existing shader index, or creates one if none exists
-		unsigned int GetShaderIndexFromShaderName(string shaderName);
+		// Finds an existing shader index, or create one if none exists/if findExisting == false
+		unsigned int GetShaderIndexFromShaderName(string shaderName, bool findExisting = true);
 	};
 }
 

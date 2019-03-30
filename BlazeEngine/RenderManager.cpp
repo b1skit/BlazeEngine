@@ -166,12 +166,12 @@ namespace BlazeEngine
 
 		
 		// Create and bind texture samplers:
-		glGenSamplers(1, &vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]); // TO DO: Use a differnt array to contain sampler objects...
-		glBindSampler(0, vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]); // Assign to index/unit 0
-		if (!glIsSampler(vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]))
-		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Could not create sampler") });
-		}
+		//glGenSamplers(1, &vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]); // TO DO: Use a differnt array to contain sampler objects...
+		//glBindSampler(0, vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]); // Assign to index/unit 0
+		//if (!glIsSampler(vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]))
+		//{
+		//	CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Could not create sampler") });
+		//}
 		// TO DO: Set sampler parameters? glSamplerParameter???
 
 
@@ -196,7 +196,7 @@ namespace BlazeEngine
 		glDeleteVertexArrays(BUFFER_COUNT, &vertexArrayObject);
 		glDeleteBuffers(BUFFER_COUNT, vertexBufferObjects);
 
-		glDeleteSamplers(1, &vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]);
+		/*glDeleteSamplers(1, &vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]);*/
 	}
 
 	void RenderManager::Update()
@@ -236,14 +236,70 @@ namespace BlazeEngine
 			unsigned int shaderIndex = currentMaterial->ShaderIndex();
 			glUseProgram(shaders[shaderIndex]->ShaderReference()); // ...TO DO: Decide whether to use this directly, or via BindShader() ?
 
+			// Bind the samplers:
+			for (int i = 0; i < TEXTURE_COUNT; i++)
+			{
+				glBindSampler(i, currentMaterial->Samplers(i));
+			}
+			
 
 			// Bind textures:
 			Texture* albedo = currentMaterial->GetTexture(TEXTURE_ALBEDO);
-			glBindTexture(albedo->Target(), albedo->TextureID());
-
-
-			// TO DO: Bind multiple textures (normal, etc)
-
+			if (albedo)
+			{
+				GLuint samplerLocation = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "albedo");
+				if (samplerLocation >= 0)
+				{
+					glUniform1i(samplerLocation, TEXTURE_ALBEDO);
+				}
+				glActiveTexture(GL_TEXTURE0 + TEXTURE_ALBEDO);
+				glBindTexture(albedo->Target(), albedo->TextureID());
+			}
+			Texture* normal = currentMaterial->GetTexture(TEXTURE_NORMAL);
+			if (normal)
+			{
+				GLuint samplerLocation = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "normal");
+				if (samplerLocation >= 0)
+				{
+					glUniform1i(samplerLocation, TEXTURE_NORMAL);
+				}
+				glActiveTexture(GL_TEXTURE0 + TEXTURE_NORMAL);
+				glBindTexture(normal->Target(), normal->TextureID());
+			}
+			Texture* roughness = currentMaterial->GetTexture(TEXTURE_ROUGHNESS);
+			if (roughness)
+			{
+				GLuint samplerLocation = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "roughness");
+				if (samplerLocation >= 0)
+				{
+					glUniform1i(samplerLocation, TEXTURE_ROUGHNESS);
+				}
+				glActiveTexture(GL_TEXTURE0 + TEXTURE_ROUGHNESS);
+				glBindTexture(roughness->Target(), roughness->TextureID());
+			}
+			Texture* metallic = currentMaterial->GetTexture(TEXTURE_METALLIC);
+			if (metallic)
+			{
+				GLuint samplerLocation = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "metallic");
+				if (samplerLocation >= 0)
+				{
+					glUniform1i(samplerLocation, TEXTURE_METALLIC);
+				}
+				glActiveTexture(GL_TEXTURE0 + TEXTURE_METALLIC);
+				glBindTexture(metallic->Target(), metallic->TextureID());
+			}
+			Texture* ambient = currentMaterial->GetTexture(TEXTURE_AMBIENT_OCCLUSION);
+			if (ambient)
+			{
+				GLuint samplerLocation = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "ambientOcclusion");
+				if (samplerLocation >= 0)
+				{
+					glUniform1i(samplerLocation, TEXTURE_AMBIENT_OCCLUSION);
+				}
+				glActiveTexture(GL_TEXTURE0 + TEXTURE_AMBIENT_OCCLUSION);
+				glBindTexture(ambient->Target(), ambient->TextureID());
+			}
+						
 
 			// Upload common shader matrices:
 			GLuint matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_view");
@@ -329,7 +385,14 @@ namespace BlazeEngine
 			}
 
 			// Cleanup:
-			glBindTexture(GL_TEXTURE_2D, 0);
+			for (int i = 0; i < TEXTURE_COUNT; i++)
+			{
+				if (currentMaterial->GetTexture((TEXTURE_TYPE)i) != nullptr)
+				{
+					glBindTexture(currentMaterial->GetTexture((TEXTURE_TYPE)i)->Target(), 0);
+				}		
+				glBindSampler(i, 0); // Assign to index/unit 0
+			}
 		}
 
 		// Display the new frame:

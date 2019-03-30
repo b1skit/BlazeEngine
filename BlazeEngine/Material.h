@@ -28,7 +28,8 @@ namespace BlazeEngine
 		inline unsigned int ShaderIndex() { return shaderIndex; }
 		inline string const& Name() { return name; }
 		inline Texture* GetTexture(TEXTURE_TYPE textureIndex) { return textures[textureIndex]; }
-		
+		inline GLuint const& Samplers(unsigned int textureType) { return samplers[textureType]; }
+
 		void SetTexture(Texture* texture, TEXTURE_TYPE textureIndex);
 
 	protected:
@@ -36,9 +37,12 @@ namespace BlazeEngine
 
 	private:
 		unsigned int shaderIndex;
+
 		string name; // Must be unique: Identifies this material
 
 		Texture** textures = nullptr;
+
+		GLuint samplers[TEXTURE_COUNT];
 	};
 }
 
