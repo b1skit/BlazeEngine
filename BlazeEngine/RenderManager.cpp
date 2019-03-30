@@ -6,7 +6,6 @@
 
 
 #include "SDL.h"
-//#include <SDL_egl.h>
 #include "GL/glew.h"
 #include <GL/GL.h> // MUST follow glew.h...
 
@@ -140,41 +139,6 @@ namespace BlazeEngine
 		//glDepthFunc(GL_LESS);				// How to sort Z
 
 
-		// Create and bind our Vertex Array Object:
-		glGenVertexArrays(1, &standardVertexVAO);
-		glBindVertexArray(standardVertexVAO);		
-
-		// Create and bind a vertex buffer:
-		glGenBuffers(1, &vertexBufferObjects[BUFFER_VERTICES]);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[BUFFER_VERTICES]);
-		
-		// Position:
-		glEnableVertexAttribArray(VERTEX_POSITION); // Indicate that the vertex attribute at index 0 is being used
-		glVertexAttribPointer(VERTEX_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position)); // Define array of vertex attribute data: index, number of components (3 = 3 elements in vec3), type, should data be normalized?, stride, offset from start to 1st component
-		
-		// Normals:
-		glEnableVertexAttribArray(VERTEX_NORMAL);
-		glVertexAttribPointer(VERTEX_NORMAL, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
-
-		// Color buffer:
-		glEnableVertexAttribArray(VERTEX_COLOR);
-		glVertexAttribPointer(VERTEX_COLOR, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
-		
-		// UV's:
-		glEnableVertexAttribArray(VERTEX_UV);
-		glVertexAttribPointer(VERTEX_UV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-
-		// Bind our index buffer:
-		glGenBuffers(1, &vertexBufferObjects[BUFFER_INDEXES]);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexBufferObjects[BUFFER_INDEXES]);
-
-
-		// Cleanup:
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-		glBindSampler(0, 0);
-
-
 		ClearWindow(vec4(0.79f, 0.32f, 0.0f, 1.0f));
 	}
 
@@ -182,8 +146,6 @@ namespace BlazeEngine
 	{
 		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Render manager shutting down...") });
 
-		glDeleteVertexArrays(BUFFER_COUNT, &standardVertexVAO);
-		glDeleteBuffers(BUFFER_COUNT, vertexBufferObjects);
 	}
 
 	void RenderManager::Update()
@@ -196,26 +158,21 @@ namespace BlazeEngine
 		// Clear the color and depth buffers
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// TO DO: Loop by material, shader, mesh:
-		// Pre-store all vertices for the scene in (material, shader) buffers!
 
 		// TO DO: Merge ALL meshes using the same material into a single draw call
 
 
-		// Get the current list of shaders:
+		// Get the current list of all shaders:
 		Shader const* const* shaders = CoreEngine::GetSceneManager()->GetShaders();
 
 		// Assemble common (model independent) matrices:
 		mat4 view = CoreEngine::GetSceneManager()->MainCamera()->View();
 		mat4 projection = CoreEngine::GetSceneManager()->MainCamera()->Projection();
 		
-
+		// Loop by material, shader, mesh:
 		unsigned int numMaterials = CoreEngine::GetSceneManager()->NumMaterials();
 		for (unsigned int currentMaterialIndex = 0; currentMaterialIndex < numMaterials; currentMaterialIndex++)
 		{
-			// Bind the required VAO:
-			glBindVertexArray(standardVertexVAO);
-
 			// Get the current material:
 			Material* currentMaterial = CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
 			
@@ -227,8 +184,7 @@ namespace BlazeEngine
 			for (int i = 0; i < TEXTURE_COUNT; i++)
 			{
 				glBindSampler(i, currentMaterial->Samplers(i));
-			}
-			
+			}			
 
 			// Bind textures:
 			Texture* albedo = currentMaterial->GetTexture(TEXTURE_ALBEDO);
@@ -332,20 +288,16 @@ namespace BlazeEngine
 			{
 				Mesh* currentMesh = materialMeshes->at(j);
 
+				// Bind the mesh VAO:
+				glBindVertexArray(currentMesh->VAO());
+
+
 				// Assemble model-specific matrices:
 				mat4 model = currentMesh->GetTransform()->Model();
 				mat4 mv = view * model;
 				mat4 mvp = CoreEngine::GetSceneManager()->MainCamera()->ViewProjection() * model;
 				
 				mat3 mv_it = glm::transpose(glm::inverse(mat3(mv)));
-				
-				// Bind our position VBO as active and copy vertex data into the buffer
-				glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[BUFFER_VERTICES]);		// TO DO: Define when/which obects should use GL_STATIC_DRAW, GL_DYNAMIC_DRAW, GL_STREAM_DRAW ??
-				glBufferData(GL_ARRAY_BUFFER, currentMesh->NumVerts() * sizeof(Vertex), &currentMesh->Vertices()[0].position.x, GL_STATIC_DRAW); // <- should we be null checking?
-
-				// Bind our index VBO as active:
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexBufferObjects[BUFFER_INDEXES]);
-				glBufferData(GL_ELEMENT_ARRAY_BUFFER, currentMesh->NumIndices() * sizeof(GLubyte), &currentMesh->Indices()[0], GL_STATIC_DRAW);
 
 				// Upload mesh-specific matrices:
 				matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_model");
@@ -364,6 +316,11 @@ namespace BlazeEngine
 					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
 				}				
 
+				// Bind our position and index buffers:
+				glBindBuffer(GL_ARRAY_BUFFER, currentMesh->VBO(BUFFER_VERTICES));
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, currentMesh->VBO(BUFFER_INDEXES));
+
+				// Draw!
 				glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_BYTE, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type,const GLvoid * indices);
 
 				// Cleanup: 

@@ -16,19 +16,80 @@ namespace BlazeEngine
 
 		this->materialIndex = materialIndex;
 
-		this->transform = nullptr; // Must be initialized by calling SetTransform();
+		this->transform = nullptr; // Must be set via SetTransform();
+
+
+		// Create and bind our Vertex Array Object:
+		glGenVertexArrays(1, &meshVAO);
+		glBindVertexArray(meshVAO);
+
+		// Create and bind a vertex buffer:
+		glGenBuffers(1, &meshVBOs[BUFFER_VERTICES]);
+		glBindBuffer(GL_ARRAY_BUFFER, meshVBOs[BUFFER_VERTICES]);
+
+		// Position:
+		glEnableVertexAttribArray(VERTEX_POSITION); // Indicate that the vertex attribute at index 0 is being used
+		glVertexAttribPointer(VERTEX_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position)); // Define array of vertex attribute data: index, number of components (3 = 3 elements in vec3), type, should data be normalized?, stride, offset from start to 1st component
+
+		// Normals:
+		glEnableVertexAttribArray(VERTEX_NORMAL);
+		glVertexAttribPointer(VERTEX_NORMAL, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+
+		// Color buffer:
+		glEnableVertexAttribArray(VERTEX_COLOR);
+		glVertexAttribPointer(VERTEX_COLOR, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
+
+		// UV's:
+		glEnableVertexAttribArray(VERTEX_UV);
+		glVertexAttribPointer(VERTEX_UV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+
+		// Bind our index buffer:
+		glGenBuffers(1, &meshVBOs[BUFFER_INDEXES]);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshVBOs[BUFFER_INDEXES]);
+
+
+		// Buffer data:
+		glBufferData(GL_ARRAY_BUFFER, numVerts * sizeof(Vertex), &vertices[0].position.x, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(GLubyte), &indices[0], GL_STATIC_DRAW);
+
+		// Cleanup:
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
-	Mesh::~Mesh()
+	//Mesh::~Mesh()
+	//{
+	//	// Cleanup should be handled by whatever owns the mesh, by calling DestroyMesh()
+	//}
+
+	void Mesh::DestroyMesh()
 	{
+		if (vertices)
+		{
+			delete[] vertices;
+			vertices = nullptr;
+			numVerts = -1;
+		}
+		if (indices)
+		{
+			delete[] indices;
+			indices = nullptr;
+			numIndices = -1;
+		}
 
+		glDeleteVertexArrays(1, &meshVAO);
+		glDeleteBuffers(BUFFER_COUNT, meshVBOs);
+
+		materialIndex = -1;		// Note: Material MUST be cleaned up elsewhere!
+
+		transform = nullptr;
 	}
-
 
 	// Static functions:
 	//-------------------
+		
 
-	
+
 	Mesh Mesh::CreateCube()
 	{
 		// Note: BlazeEngine uses a RHCS in all cases

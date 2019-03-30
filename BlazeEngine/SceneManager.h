@@ -86,7 +86,6 @@ namespace BlazeEngine
 
 		inline vector<Renderable const*> const* GetRenderables() { return &currentScene->renderables;	}
 
-		//inline vector<Shader>* GetShaders() { return &shaders; } // SHOULD THIS RETURN CONST ?????
 		inline Shader const* const* GetShaders() const { return shaders; }
 		
 		inline unsigned int GetMaterialShaderIndex(unsigned int materialIndex) { return materials[materialIndex]->ShaderIndex(); } // TO DO: Bounds checking?
@@ -107,9 +106,9 @@ namespace BlazeEngine
 
 		// Material management:
 		//*********************
-		const unsigned int MAX_MATERIALS = 100; // TO DO: Replace this with something configurable/dynamic?
-		unsigned int currentMaterialCount = 0;
-		Material** materials = nullptr;
+		const unsigned int MAX_MATERIALS	= 100; // TO DO: Replace this with something configurable/dynamic?
+		unsigned int currentMaterialCount	= 0;
+		Material** materials				= nullptr;
 
 		// Finds an existing material, or creates one using the default shader if none exists
 		int GetMaterial(string materialName);
@@ -128,16 +127,16 @@ namespace BlazeEngine
 
 		// Texture management:
 		//********************
-		const unsigned int MAX_TEXTURES = 100; // TO DO: Replace this with something configurable/dynamic?
-		unsigned int currentTextureCount = 0;
-		Texture** textures = nullptr;
+		const unsigned int MAX_TEXTURES		= 100; // TO DO: Replace this with something configurable/dynamic?
+		Texture** textures					= nullptr;
+		unsigned int currentTextureCount	= 0;
 
 
 		// Shader management:		
 		//*******************
-		const unsigned int MAX_SHADERS = 100; // TO DO: Replace this with something configurable/dynamic?
-		Shader** shaders;
-		unsigned int currentShaderCount = 0;
+		const unsigned int MAX_SHADERS		= 100; // TO DO: Replace this with something configurable/dynamic?
+		Shader** shaders					= nullptr;
+		unsigned int currentShaderCount		= 0;
 
 		// Finds an existing shader index, or create one if none exists/if findExisting == false
 		unsigned int GetShaderIndexFromShaderName(string shaderName, bool findExisting = true);

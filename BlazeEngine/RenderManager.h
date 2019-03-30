@@ -25,16 +25,6 @@ namespace BlazeEngine
 		SHADER_DEFAULT = 1,
 	};
 
-	enum VERTEX_ATTRIBUTE
-	{
-		VERTEX_POSITION,
-		VERTEX_NORMAL,
-		VERTEX_COLOR,
-		VERTEX_UV, // MULTIPLE?
-
-		VERTEX_NUM_ATTRIBUTES	// RESERVED: The total number of vertex attributes
-	};
-
 	
 	class RenderManager : public EngineComponent
 	{
@@ -71,22 +61,8 @@ namespace BlazeEngine
 		SDL_Window* glWindow;
 		SDL_GLContext glContext;
 		
-		enum
-		{
-			BUFFER_VERTICES,
-			BUFFER_INDEXES,
-
-			BUFFER_COUNT, // Reserved: Number of buffers to allocate
-		};
-
-		GLuint standardVertexVAO;
-
-		GLuint vertexBufferObjects[BUFFER_COUNT];		// Buffer objects that hold vertices in GPU memory
-		
-	
 		// Private member functions:
 		void ClearWindow(vec4 clearColor);
-
 	};
 }
 

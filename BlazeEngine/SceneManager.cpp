@@ -70,7 +70,8 @@ namespace BlazeEngine
 		// Cleanup the scene:
 		for (int i = 0; i < (int)currentScene->meshes.size(); i++)
 		{
-			if (currentScene->meshes[i].Vertices())
+			currentScene->meshes.at(i).DestroyMesh();
+			/*if (currentScene->meshes[i].Vertices())
 			{
 				delete currentScene->meshes[i].Vertices();
 			}
@@ -78,7 +79,7 @@ namespace BlazeEngine
 			if (currentScene->meshes[i].Indices())
 			{
 				delete currentScene->meshes[i].Indices();
-			}
+			}*/
 		}
 
 		for (int i = 0; i < currentScene->gameObjects.size(); i++)

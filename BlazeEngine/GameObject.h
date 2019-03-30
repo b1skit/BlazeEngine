@@ -18,16 +18,19 @@ namespace BlazeEngine
 	class GameObject : public SceneObject
 	{
 	public:
+		// No-arg constructor (Don't use this!):
 		GameObject() : SceneObject::SceneObject("Unnamed GameObject")
 		{
 			this->renderable.SetTransform(&this->transform);
 		}
 
+		// String constructor:
 		GameObject(string name) : SceneObject::SceneObject(name) 
 		{
 			this->renderable.SetTransform(&this->transform);
 		}
 
+		// String and renderable constructor:
 		GameObject(string name, Renderable renderable);
 
 		// Copy constructor:

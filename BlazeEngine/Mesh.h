@@ -57,11 +57,31 @@ namespace BlazeEngine
 	};
 
 
+	enum VERTEX_BUFFER_OBJECT
+	{
+		BUFFER_VERTICES,
+		BUFFER_INDEXES,
+
+		BUFFER_COUNT, // Reserved: Number of buffers to allocate
+	};
+
+
+	enum VERTEX_ATTRIBUTE
+	{
+		VERTEX_POSITION,
+		VERTEX_NORMAL,
+		VERTEX_COLOR,
+		VERTEX_UV, // MULTIPLE?
+
+		VERTEX_NUM_ATTRIBUTES	// RESERVED: The total number of vertex attributes
+	};
+
+
 	class Mesh
 	{
 	public:
 		Mesh(Vertex* vertices, unsigned int numVerts, GLubyte* indices, unsigned int numIndices, int materialIndex = -1);
-		~Mesh();
+		/*~Mesh();*/
 
 		// Copy constructor:
 		Mesh(const Mesh& mesh) = default;
@@ -78,10 +98,19 @@ namespace BlazeEngine
 		inline Transform* GetTransform() { return transform; }
 		inline void SetTransform(Transform* transform) { this->transform = transform; }
 
+		inline GLuint const& VAO() { return meshVAO; }
+		inline GLuint const& VBO(VERTEX_BUFFER_OBJECT index) { return meshVBOs[index]; }
+		
+		// Deallocate and unbind this mesh object
+		void DestroyMesh();
+
+
 		// Static functions:
+		//------------------
 
 		// Create a simple cube mesh aligned to +/-1 on all axis'
 		static Mesh CreateCube();
+
 
 	protected:
 
@@ -92,6 +121,9 @@ namespace BlazeEngine
 
 		GLubyte* indices = nullptr;		// Deallocated in SceneManager.Shutdown()
 		unsigned int numIndices = -1;
+
+		GLuint meshVAO;
+		GLuint meshVBOs[BUFFER_COUNT];		// Buffer objects that hold vertices in GPU memory
 
 		int materialIndex = -1;
 
