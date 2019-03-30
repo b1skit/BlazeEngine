@@ -5,12 +5,14 @@
 #include "Transform.h"
 
 
-#define GLM_FORCE_SWIZZLE
-#include "glm.hpp"
+#include "SDL.h"
+//#include <SDL_egl.h>
 #include "GL/glew.h"
 #include <GL/GL.h> // MUST follow glew.h...
-#include <SDL_egl.h>
-#include "SDL.h"
+
+#define GLM_FORCE_SWIZZLE
+#include "glm.hpp"
+
 #undef main // Required to prevent SDL from redefining main...
 
 using glm::vec3;
@@ -45,13 +47,32 @@ namespace BlazeEngine
 	{
 		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Render manager started!") });
 
+		// TO DO: IMPLEMENT PER-COMPONENT INITIALIZATION
 		// Initialize SDL:
-		/*SDL_Init(SDL_INIT_VIDEO);*/ // TO DO: IMPLEMENT PER-COMPONENT INITIALIZATION
+		if (SDL_Init(SDL_INIT_VIDEO) < 0)
+		{
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Could not initialize SDL video") });
+			return;
+		}
 
 		// Cache the relevant config data:
 		this->xRes = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes;
 		this->yRes = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes;
 		this->windowTitle = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowTitle;
+
+
+		// Configure attributes needed before creating an SDL window:
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+
+		if (SDL_GL_SetAttribute(
+			SDL_GL_CONTEXT_PROFILE_MASK,
+			SDL_GL_CONTEXT_PROFILE_CORE) < 0)
+		{
+			cout << "set attrib failed\n";
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Could not set context attribute") });
+			return;
+		}
 
 		SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
 		SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
@@ -59,36 +80,6 @@ namespace BlazeEngine
 		SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 		SDL_GL_SetAttribute(SDL_GL_BUFFER_SIZE, 32);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-		// Create a window:
-		glWindow = SDL_CreateWindow(
-			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowTitle.c_str(),
-			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
-			xRes, 
-			yRes, 
-			SDL_WINDOW_OPENGL
-		);
-		if (glWindow == NULL)
-		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Could not create window") });
-			return;
-		}
-
-		// Create an OpenGL context and make it current:
-		glContext = SDL_GL_CreateContext(glWindow);
-		if (glContext == NULL)
-		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Could not create OpenGL context") });
-			return;
-		}
-		if (SDL_GL_MakeCurrent(glWindow, glContext) < 0)
-		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Failed to make OpenGL context current") });
-			return;
-		}
-		
-		// Configure SDL:
-		SDL_SetRelativeMouseMode(SDL_TRUE);	// Lock the mouse to the window
 
 		/*SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);*/
 
@@ -100,9 +91,58 @@ namespace BlazeEngine
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);*/
 
+		// Create a window:
+		glWindow = SDL_CreateWindow(
+			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowTitle.c_str(),
+			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
+			xRes, 
+			yRes, 
+			SDL_WINDOW_OPENGL
+		);
+		if (glWindow == NULL)
+		{
+			cout << "gl window null\n";
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Could not create window") });
+			return;
+		}
+
+		// Create an OpenGL context and make it current:
+		glContext = SDL_GL_CreateContext(glWindow);
+		if (glContext == NULL)
+		{
+			cout << "gl context null\n";
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Could not create OpenGL context") });
+			return;
+		}
+		if (SDL_GL_MakeCurrent(glWindow, glContext) < 0)
+		{
+			cout << "Couldl not make window current\n";
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Failed to make OpenGL context current") });
+			return;
+		}
+		
+		// Configure SDL:
+		SDL_SetRelativeMouseMode(SDL_TRUE);	// Lock the mouse to the window
+
+		// ^^^ MOVE TO ABOVE?
+
 
 		//// Make our buffer swap syncronized with the monitor's vertical refresh:
 		//SDL_GL_SetSwapInterval(1);
+
+
+		// Initialize glew:
+		glewExperimental = GL_TRUE; // Expose OpenGL 3.x+ interfaces
+		GLenum glStatus = glewInit();
+		if (glStatus != GLEW_OK)
+		{
+			cout << "glew not ok\n";
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Render manager start failed: glStatus not ok!") });
+			return;
+		}
+
+		string debugError(SDL_GetError());
+		cout << "SDL_GetError: " << debugError << "\n";
 
 		// Configure OpenGL:
 		glEnable(GL_DEPTH_TEST);			// Enable Z depth testing
@@ -110,16 +150,7 @@ namespace BlazeEngine
 		glEnable(GL_CULL_FACE);				// Enable face culling
 		glCullFace(GL_BACK);				// Cull back faces
 		//glDepthFunc(GL_LESS);				// How to sort Z
-		
-		
 
-		// Initialize glew:
-		GLenum glStatus = glewInit();
-		if (glStatus != GLEW_OK)
-		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Render manager start failed: glStatus not ok!") });
-			return;
-		}
 
 		// Generate and bind our Vertex Array Object as active:
 		glGenVertexArrays(1, &vertexArrayObject); // Allocate the required number of vertex array objects (VAO's)
@@ -146,7 +177,17 @@ namespace BlazeEngine
 		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
 
 		// Samplers:
-		glCreateSamplers(1, &vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]);
+		glGenSamplers(1, &vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]);
+		glBindSampler(0, vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]); // Assign to index 0
+		if (!glIsSampler(vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]))
+		{
+			cout << "sampler error\n";
+			// TO DO: Log an error
+		}
+		// TO DO: Set sampler parameters? glSamplerParameter???
+
+		/*glCreateSamplers(1, &vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]);*/
+		//Crashes on OpenGL4.3! ^
 
 		// Bind our index buffer:
 		glGenBuffers(1, &vertexBufferObjects[BUFFER_INDEXES]);
