@@ -29,10 +29,14 @@ namespace BlazeEngine
 		// Returns texels[0] if u = [0, width - 1], v = [0, height - 1] are out of bounds.
 		vec4& Texel(unsigned int u, unsigned int v);
 
+		// Fill a texture with a solid color
+		void Fill(vec4 color, bool sendToGPU = true);
+
 		// Static functions:
 		//------------------
 		
-		// Load a texture object from a (relative) path:
+		// Load a texture object from a (relative) path
+		// Returns nullptr if OpenGL binding fails
 		static Texture* LoadTextureFromPath(string texturePath);
 
 	protected:
@@ -53,6 +57,7 @@ namespace BlazeEngine
 		GLenum internalFormat	= GL_RGBA32F;
 		GLenum format			= GL_RGBA;
 		GLenum type				= GL_FLOAT;
+		// Wrap modes?
 
 		vec4* texels = nullptr;
 		unsigned int numTexels;

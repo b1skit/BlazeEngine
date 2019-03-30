@@ -21,7 +21,7 @@ uniform mat4 in_projection;
 uniform mat4 in_mv;
 uniform mat4 in_mvp;
 
-uniform sampler2D albedo;
+layout (location = 0) uniform sampler2D albedo;
 uniform sampler2D normal;
 uniform sampler2D roughness;
 uniform sampler2D metallic;

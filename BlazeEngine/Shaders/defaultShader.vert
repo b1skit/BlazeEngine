@@ -40,7 +40,7 @@ void main()
 	// Assign our position data to the predefined gl_Position output
     gl_Position = in_mvp * vec4(in_position.x, in_position.y, in_position.z, 1.0);
 
-	// TO DO: Replace gl_Position with an out ^^^ (deprecated!)
+	// TO DO: Replace gl_Position with an out ^^^ (deprecated???????)
 
 	vertexColor = in_color * ambient;
 

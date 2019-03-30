@@ -97,8 +97,26 @@ namespace BlazeEngine
 			// Try and return the safest option:
 			return texels[0];
 		}
-
 		return texels[(u * width) + v];
+	}
+
+	void BlazeEngine::Texture::Fill(vec4 color, bool sendToGPU)
+	{
+		for (unsigned int row = 0; row < this->height; row++)
+		{
+			for (unsigned int col = 0; col < this->width; col++)
+			{
+				Texel(row, col) = color;
+			}
+		}
+
+		// Upload the texture to the GPU, if required
+		if (sendToGPU)
+		{
+			glBindTexture(target, textureID);
+			glTexSubImage2D(this->target, 0, 0, 0, this->width, this->height, this->format, this->type, &this->Texel(0, 0).r);
+			glBindTexture(target, 0);
+		}
 	}
 
 	Texture* Texture::LoadTextureFromPath(string texturePath)
@@ -110,34 +128,23 @@ namespace BlazeEngine
 
 		Texture* texture = new Texture(width, height);
 
+		// Create and bind the texture:
 		glGenTextures(1, &texture->textureID);
-		
-		//glCreateTextures(texture->target, 1, &texture->textureID);
-		//if (!glIsTexture(texture->textureID))
-		//{
-		//	CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("OpenGL failed to create texture. Returning null") });
-		//	return nullptr;
-		//}
-		//// OPENGL 4.5+++++!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-		if (!glIsTexture(texture->textureID))
-		{
-			cout << "Not atexture\n";
-			// TO DO: Log an error
-		}
-
-		// Bind the texture, and specify its storage details:
 		glBindTexture(texture->target, texture->textureID);
+		if (glIsTexture(texture->textureID) != GL_TRUE)
+		{
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("OpenGL failed to create texture. Returning null") });
+			return nullptr;
+		}	
 
-		glActiveTexture(texture->textureID);
+		glTexStorage2D(texture->target, 1, texture->internalFormat, (GLsizei)texture->width, (GLsizei)texture->height);
 
-		/*glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, (GLsizei)width, (GLsizei)height);*/
-		/*glTextureStorage2D(texture->textureID, 1, texture->internalFormat, (GLsizei)texture->width, (GLsizei)texture->height);*/
-
-		glTexStorage2D(texture->textureID, 1, texture->internalFormat, (GLsizei)texture->width, (GLsizei)texture->height);
+		//glActiveTexture(0); // Set the active texture unit [0, 80+]
+		// Don't think we need this if we're using glBindTexture?
 
 		// Upload to the GPU:
 		glTexSubImage2D(texture->target, 0, 0, 0, texture->width, texture->height, texture->format, texture->type, &texture->Texel(0, 0).r);
+		
 
 		// Cleanup:
 		glBindTexture(texture->target, 0);

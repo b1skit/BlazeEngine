@@ -48,20 +48,20 @@ namespace BlazeEngine
 		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Render manager started!") });
 
 		// TO DO: IMPLEMENT PER-COMPONENT INITIALIZATION
-		// Initialize SDL:
-		if (SDL_Init(SDL_INIT_VIDEO) < 0)
-		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Could not initialize SDL video") });
-			return;
-		}
+
+		//// Initialize SDL:
+		//if (SDL_Init(SDL_INIT_VIDEO) < 0)
+		//{
+		//	CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Could not initialize SDL video") });
+		//	return;
+		//}
 
 		// Cache the relevant config data:
 		this->xRes = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes;
 		this->yRes = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes;
 		this->windowTitle = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowTitle;
 
-
-		// Configure attributes needed before creating an SDL window:
+		// Configure SDL before creating a window:
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
@@ -91,6 +91,11 @@ namespace BlazeEngine
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);*/
 
+		SDL_SetRelativeMouseMode(SDL_TRUE);	// Lock the mouse to the window
+
+		//// Make our buffer swap syncronized with the monitor's vertical refresh:
+		//SDL_GL_SetSwapInterval(1);
+
 		// Create a window:
 		glWindow = SDL_CreateWindow(
 			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowTitle.c_str(),
@@ -101,7 +106,6 @@ namespace BlazeEngine
 		);
 		if (glWindow == NULL)
 		{
-			cout << "gl window null\n";
 			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Could not create window") });
 			return;
 		}
@@ -110,39 +114,23 @@ namespace BlazeEngine
 		glContext = SDL_GL_CreateContext(glWindow);
 		if (glContext == NULL)
 		{
-			cout << "gl context null\n";
 			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Could not create OpenGL context") });
 			return;
 		}
 		if (SDL_GL_MakeCurrent(glWindow, glContext) < 0)
 		{
-			cout << "Couldl not make window current\n";
 			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Failed to make OpenGL context current") });
 			return;
 		}
-		
-		// Configure SDL:
-		SDL_SetRelativeMouseMode(SDL_TRUE);	// Lock the mouse to the window
-
-		// ^^^ MOVE TO ABOVE?
-
-
-		//// Make our buffer swap syncronized with the monitor's vertical refresh:
-		//SDL_GL_SetSwapInterval(1);
-
 
 		// Initialize glew:
 		glewExperimental = GL_TRUE; // Expose OpenGL 3.x+ interfaces
 		GLenum glStatus = glewInit();
 		if (glStatus != GLEW_OK)
 		{
-			cout << "glew not ok\n";
 			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Render manager start failed: glStatus not ok!") });
 			return;
 		}
-
-		string debugError(SDL_GetError());
-		cout << "SDL_GetError: " << debugError << "\n";
 
 		// Configure OpenGL:
 		glEnable(GL_DEPTH_TEST);			// Enable Z depth testing
@@ -152,50 +140,50 @@ namespace BlazeEngine
 		//glDepthFunc(GL_LESS);				// How to sort Z
 
 
-		// Generate and bind our Vertex Array Object as active:
-		glGenVertexArrays(1, &vertexArrayObject); // Allocate the required number of vertex array objects (VAO's)
-		glBindVertexArray(vertexArrayObject); // Bind our VAO
+		// Create and bind our Vertex Array Object:
+		glGenVertexArrays(1, &vertexArrayObject);
+		glBindVertexArray(vertexArrayObject);		
 
-		// Create and bind a vertex buffer to a buffer binding point allocated on the GPU suitable for vertices:
-		glGenBuffers(1, &vertexBufferObjects[BUFFER_VERTICES]); // Create a vertex position buffer object and store its handle
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[BUFFER_VERTICES]); // Bind our VBO to GL_ARRAY_BUFFER
+		// Create and bind a vertex buffer:
+		glGenBuffers(1, &vertexBufferObjects[BUFFER_VERTICES]);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjects[BUFFER_VERTICES]);
 		
 		// Position:
-		glEnableVertexAttribArray(0); // Indicate that the vertex attribute at index 0 is being used
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position)); // Define array of vertex attribute data: index, number of components (3 = 3 elements in vec3), type, should data be normalized?, stride, offset from start to 1st component
+		glEnableVertexAttribArray(VERTEX_POSITION); // Indicate that the vertex attribute at index 0 is being used
+		glVertexAttribPointer(VERTEX_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position)); // Define array of vertex attribute data: index, number of components (3 = 3 elements in vec3), type, should data be normalized?, stride, offset from start to 1st component
 		
 		// Normals:
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+		glEnableVertexAttribArray(VERTEX_NORMAL);
+		glVertexAttribPointer(VERTEX_NORMAL, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
 		// Color buffer:
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
+		glEnableVertexAttribArray(VERTEX_COLOR);
+		glVertexAttribPointer(VERTEX_COLOR, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
 		
 		// UV's:
-		glEnableVertexAttribArray(3);
-		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+		glEnableVertexAttribArray(VERTEX_UV);
+		glVertexAttribPointer(VERTEX_UV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
 
-		// Samplers:
-		glGenSamplers(1, &vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]);
-		glBindSampler(0, vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]); // Assign to index 0
+		
+		// Create and bind texture samplers:
+		glGenSamplers(1, &vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]); // TO DO: Use a differnt array to contain sampler objects...
+		glBindSampler(0, vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]); // Assign to index/unit 0
 		if (!glIsSampler(vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]))
 		{
-			cout << "sampler error\n";
-			// TO DO: Log an error
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Could not create sampler") });
 		}
 		// TO DO: Set sampler parameters? glSamplerParameter???
 
-		/*glCreateSamplers(1, &vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]);*/
-		//Crashes on OpenGL4.3! ^
 
 		// Bind our index buffer:
 		glGenBuffers(1, &vertexBufferObjects[BUFFER_INDEXES]);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexBufferObjects[BUFFER_INDEXES]);
 
+
 		// Cleanup:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindSampler(0, 0);
 
 
 		ClearWindow(vec4(0.79f, 0.32f, 0.0f, 1.0f));
@@ -208,12 +196,11 @@ namespace BlazeEngine
 		glDeleteVertexArrays(BUFFER_COUNT, &vertexArrayObject);
 		glDeleteBuffers(BUFFER_COUNT, vertexBufferObjects);
 
-		glDisableClientState(GL_VERTEX_ARRAY);
+		glDeleteSamplers(1, &vertexBufferObjects[BUFFER_ALBEDO_SAMPLER]);
 	}
 
 	void RenderManager::Update()
 	{
-		
 	}
 
 
@@ -242,18 +229,18 @@ namespace BlazeEngine
 			// Bind the required VAO:
 			glBindVertexArray(vertexArrayObject);
 
+			// Get the current material:
+			Material* currentMaterial = CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
+			
 			// Setup the current shader:
-			unsigned int shaderIndex = CoreEngine::GetSceneManager()->GetMaterialShaderIndex(currentMaterialIndex); // TO DO: Check if the shader at the given index is valid, display an error if it's not?
-
+			unsigned int shaderIndex = currentMaterial->ShaderIndex();
 			glUseProgram(shaders[shaderIndex]->ShaderReference()); // ...TO DO: Decide whether to use this directly, or via BindShader() ?
 
-
-
-			Material* currentMaterial = CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
 
 			// Bind textures:
 			Texture* albedo = currentMaterial->GetTexture(TEXTURE_ALBEDO);
 			glBindTexture(albedo->Target(), albedo->TextureID());
+
 
 			// TO DO: Bind multiple textures (normal, etc)
 

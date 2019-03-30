@@ -34,7 +34,7 @@ namespace BlazeEngine
 	{
 		if (textures[textureIndex])
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Replacing material \"" + this->name + "\" texture contents at index #" + std::to_string(textureIndex)) });
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Replacing material \"" + this->name + "\" texture #" + std::to_string(textureIndex)) });
 
 			delete textures[textureIndex];
 		}

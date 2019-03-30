@@ -24,6 +24,24 @@ namespace BlazeEngine
 		SHADER_ERROR = 0,
 		SHADER_DEFAULT = 1,
 	};
+
+	enum VERTEX_ATTRIBUTE
+	{
+		VERTEX_POSITION,
+		VERTEX_NORMAL,
+		VERTEX_COLOR,
+		VERTEX_UV, // MULTIPLE?
+
+		VERTEX_NUM_ATTRIBUTES	// RESERVED: The total number of vertex attributes
+	};
+
+	//enum SAMPLER
+	//{
+	//	SAMPLER_ALBEDO, // ?????
+	//	
+
+	//	SAMPLER_COUNT	// RESERVED: The total number of samplers 
+	//};
 	
 	class RenderManager : public EngineComponent
 	{

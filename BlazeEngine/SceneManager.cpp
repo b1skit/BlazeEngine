@@ -177,6 +177,7 @@ namespace BlazeEngine
 
 		// Create textures and assign them to the material:
 		Texture* testAlbedo = Texture::LoadTextureFromPath("./debug/invalid/path");
+		testAlbedo->Fill(vec4(1, 0, 0, 1));
 		newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
 
 		// Add the material to our material list:
@@ -218,6 +219,7 @@ namespace BlazeEngine
 
 		// Create textures and assign them to the material:
 		testAlbedo = Texture::LoadTextureFromPath("./another/invalid/path");
+		testAlbedo->Fill(vec4(0, 1, 0, 1));
 		newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
 
 		// Add the material to our material list:
@@ -256,10 +258,11 @@ namespace BlazeEngine
 		// Create a material and shader:
 		shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
 
-		newMaterial = new Material("testMaterial2", shaderIndex);
+		newMaterial = new Material("testMaterial3", shaderIndex);
 
 		// Create textures and assign them to the material:
 		testAlbedo = Texture::LoadTextureFromPath("./another/invalid/path");
+		testAlbedo->Fill(vec4(0,0,1,1));
 		newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
 
 		// Add the material to our material list:
@@ -346,6 +349,7 @@ namespace BlazeEngine
 			int materialIndex = FindMaterialIndex(newMaterial->Name());
 			if (materialIndex != -1)
 			{
+				CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Found existing material \"" + materials[materialIndex]->Name() + "\" at index " + to_string(materialIndex)) });
 				return materialIndex;
 			}
 		}			
