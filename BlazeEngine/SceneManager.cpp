@@ -1,7 +1,11 @@
 #include "SceneManager.h"
 #include "EventManager.h"
 #include "CoreEngine.h"
-//#include "Texture.h"
+
+#include "assimp/Importer.hpp"	// Importer interface
+#include "assimp/scene.h"		// Output data structure
+#include "assimp/postprocess.h"	// Post processing flags
+
 
 //// DEBUG:
 //#include <iostream>
@@ -138,8 +142,6 @@ namespace BlazeEngine
 
 	void SceneManager::LoadScene(string scenePath)
 	{
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_DEBUG, this, new string("Could not load " + scenePath + ", as LoadScene() is not implemented. Using a debug hard coded path for now!") });
-
 		if (currentScene)
 		{
 			// TO DO: Write a destructor/cleanup correctly when deleting a scene
@@ -166,6 +168,49 @@ namespace BlazeEngine
 		// TO DO: Guard file loading flow with exception handling
 
 
+
+		Assimp::Importer importer;
+		const aiScene* scene = importer.ReadFile(scenePath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
+		
+		if (!scene)
+		{
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("Failed to load texture at " + scenePath + ": " + importer.GetErrorString() ) });
+			return;
+		}
+		else
+		{
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Successfully Loaded " + scenePath) });
+		}
+
+
+		if (scene->HasTextures())
+		{
+			int numTextures = scene->mNumTextures;
+
+			cout << "Scene has " << numTextures << " textures!\n";
+
+			if (scene->mTextures[0]->CheckFormat("png"))
+			{
+				cout << "Found a png: " << scene->mTextures[0]->mWidth << " x " << scene->mTextures[0]->mHeight << "\n";
+			}
+			else
+			{
+				cout << "Did not find a png\n";
+			}
+		}
+		string texPath = CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + "testGrid.png";
+		const aiScene* testImage = importer.ReadFile(texPath, 0);
+
+		if (testImage)
+		{
+			cout << "LOADED TEST IMAGE\n";
+		}
+		else
+			cout << "NOT\n";
+
+
+		
+		
 
 
 		// DEBUG: HARD CODE SOME OBJECTS TO WORK WITH:

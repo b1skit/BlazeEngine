@@ -52,9 +52,11 @@ namespace BlazeEngine
 		struct
 		{
 			const string sceneRoot			= "./Scenes/";	// Root path: All assets stored here
-			const string texturesDirectory	= "Textures/";	// Default texture location, within a given scene directory
+			//const string texturesDirectory	= "Textures/";	// Default texture location, within a given scene directory
 
-			string scenePath		= sceneRoot + "testScene"; // DEBUG: hard coded scene path
+			const string scene01			= "simpleCube/simpleCube.fbx";
+
+			//string scenePath				= sceneRoot + "testScene"; // DEBUG: hard coded scene path
 		} scene;
 		
 		// TO DO: Add button config for inputmanager

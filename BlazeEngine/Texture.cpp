@@ -4,6 +4,7 @@
 #include "Texture.h"
 #include "CoreEngine.h"
 
+
 // Debug:
 #include <iostream>
 using std::cout;
@@ -118,6 +119,11 @@ namespace BlazeEngine
 			glBindTexture(target, 0);
 		}
 	}
+
+
+
+	// Static functions:
+	//------------------
 
 	Texture* Texture::LoadTextureFromPath(string texturePath)
 	{

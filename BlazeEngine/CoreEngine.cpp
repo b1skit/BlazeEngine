@@ -53,7 +53,7 @@ namespace BlazeEngine
 
 		// Must wait to start scene manager and load a scene until the renderer is called, since we need to initialize OpenGL in the RenderManager before creating shaders
 		BlazeSceneManager->Startup();
-		BlazeSceneManager->LoadScene(config.scene.scenePath);
+		BlazeSceneManager->LoadScene(config.scene.sceneRoot + config.scene.scene01);
 
 		isRunning = true;
 
