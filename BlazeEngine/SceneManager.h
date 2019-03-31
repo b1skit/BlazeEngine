@@ -120,7 +120,7 @@ namespace BlazeEngine
 		// Returns index of material with matching name, or -1 otherwise
 		int FindMaterialIndex(string materialName); 
 
-		// Helper function: Compiles vectors filled with meshes that use each material
+		// Helper function: Compiles vectors filled with meshes that use each material. Must be called once after all meshes have finished loading
 		void AssembleMaterialMeshLists(); 
 		vector<vector<Mesh*>> materialMeshLists;
 
@@ -139,7 +139,7 @@ namespace BlazeEngine
 		unsigned int currentShaderCount		= 0;
 
 		// Finds an existing shader index, or create one if none exists/if findExisting == false
-		unsigned int GetShaderIndexFromShaderName(string shaderName, bool findExisting = true);
+		unsigned int GetShaderIndexFromShaderName(string shaderName, bool findExisting = false);
 	};
 }
 

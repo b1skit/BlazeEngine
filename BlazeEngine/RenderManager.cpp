@@ -245,40 +245,40 @@ namespace BlazeEngine
 						
 
 			// Upload common shader matrices:
-			GLuint matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_view");
-			if (matrixID >= 0)
+			GLuint viewID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_view");
+			if (viewID >= 0)
 			{
-				glUniformMatrix4fv(matrixID, 1, GL_FALSE, &view[0][0]);
+				glUniformMatrix4fv(viewID, 1, GL_FALSE, &view[0][0]);
 			}
-			matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_projection");
-			if (matrixID >= 0)
+			GLuint projectionID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_projection");
+			if (projectionID >= 0)
 			{
-				glUniformMatrix4fv(matrixID, 1, GL_FALSE, &projection[0][0]);
+				glUniformMatrix4fv(projectionID, 1, GL_FALSE, &projection[0][0]);
 			}
 
 			// Upload ambient light data:
-			matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "ambient");
-			if (matrixID >= 0)
+			GLuint ambientID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "ambient");
+			if (ambientID >= 0)
 			{
-				glUniform4fv(matrixID, 1, &CoreEngine::GetSceneManager()->GetAmbient()[0]);
+				glUniform4fv(ambientID, 1, &CoreEngine::GetSceneManager()->GetAmbient()[0]);
 			}
 
 			// Upload key key light direction (world space):
-			matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "keyDirection");
-			if (matrixID >= 0)
+			GLuint keyDirID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "keyDirection");
+			if (keyDirID >= 0)
 			{
 				vec3 keyDirection = CoreEngine::GetSceneManager()->GetKeyLight().GetTransform().Forward() * -1.0f; // Reverse the direction: Points surface->light
-				glUniform3fv(matrixID, 1, &keyDirection[0]);
+				glUniform3fv(keyDirID, 1, &keyDirection[0]);
 			}
-			matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "keyColor");
-			if (matrixID >= 0)
+			GLuint keyColorID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "keyColor");
+			if (keyColorID >= 0)
 			{
-				glUniform4fv(matrixID, 1, &CoreEngine::GetSceneManager()->GetKeyLight().Color().r);
+				glUniform4fv(keyColorID, 1, &CoreEngine::GetSceneManager()->GetKeyLight().Color().r);
 			}
-			matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "keyIntensity");
-			if (matrixID >= 0)
+			GLuint keyIntensityID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "keyIntensity");
+			if (keyIntensityID >= 0)
 			{
-				glUniform1f(matrixID, CoreEngine::GetSceneManager()->GetKeyLight().Intensity());
+				glUniform1f(keyIntensityID, CoreEngine::GetSceneManager()->GetKeyLight().Intensity());
 			}
 
 			// Loop through each mesh:
@@ -300,20 +300,20 @@ namespace BlazeEngine
 				mat3 mv_it = glm::transpose(glm::inverse(mat3(mv)));
 
 				// Upload mesh-specific matrices:
-				matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_model");
-				if (matrixID >= 0)
+				GLuint modelID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_model");
+				if (modelID >= 0)
 				{
-					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &model[0][0]);
+					glUniformMatrix4fv(modelID, 1, GL_FALSE, &model[0][0]);
 				}
-				matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_mv");
-				if (matrixID >= 0)
+				GLuint mvID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_mv");
+				if (mvID >= 0)
 				{
-					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mv[0][0]);
+					glUniformMatrix4fv(mvID, 1, GL_FALSE, &mv[0][0]);
 				}
-				matrixID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_mvp");
-				if (matrixID >= 0)
+				GLuint mvpID = glGetUniformLocation(shaders[shaderIndex]->ShaderReference(), "in_mvp");
+				if (mvpID >= 0)
 				{
-					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
+					glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
 				}				
 
 				// Bind our position and index buffers:

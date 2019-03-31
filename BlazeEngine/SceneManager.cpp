@@ -151,14 +151,6 @@ namespace BlazeEngine
 		currentScene = new Scene();
 
 
-		// Flush any existing scene objects: (NOTE: Any objects that access these must be shut down first!)
-		// TO DO: Make sure we're deallocating everything before clearing the lists
-		//gameObjects.clear();
-		/*renderables.clear();*/
-		/*meshes.clear();*/  // TO DO: delete meshes.Vertices()
-		/*materials.clear();*/
-		/*forwardLights.clear();
-		mainCamera = Camera();*/
 		
 		// Load our .FBX:
 		// ...
@@ -275,7 +267,7 @@ namespace BlazeEngine
 		// Assemble a second cube:
 
 		// Create a material and shader:
-		shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName, false); // Force creation of a new shader
+		shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
 
 		newMaterial = new Material("testMaterial2", shaderIndex);
 
@@ -445,7 +437,9 @@ namespace BlazeEngine
 	void SceneManager::AssembleMaterialMeshLists()
 	{
 		materialMeshLists.clear();
-		materialMeshLists.resize(MAX_MATERIALS);
+		materialMeshLists.reserve(MAX_MATERIALS);
+
+		unsigned int numMeshes = 0;
 		for (int i = 0; i < (int)currentScene->renderables.size(); i++)
 		{
 			for (int j = 0; j < (int)currentScene->renderables.at(i)->ViewMeshes()->size(); j++)
@@ -455,16 +449,22 @@ namespace BlazeEngine
 				if (materialIndex < 0)
 				{
 					CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("AssembleMaterialMeshLists() is skipping a mesh with no material!") });
-
+					// TO DO: Assign a default/error material and still add the mesh?
 				}
 				else
 				{
+					if (materialIndex >= materialMeshLists.size())
+					{
+						materialMeshLists.emplace_back(vector<Mesh*>());
+						materialMeshLists.at(materialMeshLists.size() - 1).reserve(50); // TO DO: Tune this value based on the actual number of meshes loaded?
+					}
 					materialMeshLists.at(materialIndex).emplace_back(viewMesh);
+					numMeshes++;
 				}
 			}
 		}
 
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Finished adding " + to_string(materialMeshLists.size()) + " meshes to material mesh lists") });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Finished adding " + to_string(numMeshes) + " meshes for " + to_string(materialMeshLists.size()) + " materials to the material mesh lists") });
 	}
 
 
@@ -474,7 +474,7 @@ namespace BlazeEngine
 
 	unsigned int SceneManager::GetShaderIndexFromShaderName(string shaderName, bool findExisting)
 	{
-		if (findExisting)
+		if (findExisting || shaderName == CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName)
 		{
 			// Return the index if it's found, or load the shader and return a new index, or return the error shader otherwise
 			for (unsigned int i = 0; i < MAX_SHADERS; i++)
