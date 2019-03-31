@@ -379,8 +379,12 @@ healthchecksdb
 
 # Forced inclusions:
 #-------------------
-!./BlazeEngine/Dependencies/
+!./BlazeEngine/Dependencies/*
 !./BlazeEngine/BlazeEngine/SDL2.dll
 !./BlazeEngine/BlazeEngine/glew32.dll
 !./BlazeEngine/Dependencies/glew/lib/Release/x64/glew32.lib
 !./BlazeEngine/Dependencies/glew/lib/Release/x64/glew32s.lib
+!./BlazeEngine/Dependencies/assimp/lib/assimp-vc140-mt.dll
+!./BlazeEngine/Dependencies/assimp/lib/assimp-vc140-mt.ilk
+!./BlazeEngine/Dependencies/assimp/lib/assimp-vc140-mt.lib
+!./BlazeEngine/Dependencies/assimp/lib/assimp-vc140-mt.pdb
