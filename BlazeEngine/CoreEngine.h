@@ -1,11 +1,11 @@
 #pragma once
-//#include <iostream>
 #include "EventManager.h"
 #include "LogManager.h"
 #include "TimeManager.h"
 #include "InputManager.h"
 #include "RenderManager.h"
 #include "SceneManager.h"
+
 
 namespace BlazeEngine
 {
@@ -37,7 +37,7 @@ namespace BlazeEngine
 
 		struct
 		{
-			const string shaderDirectory	= "./Shaders/";
+			const string shaderDirectory	= ".\\Shaders\\";
 			const string errorShaderName	= "errorShader";
 			const string defaultShaderName	= "defaultShader";
 		} shader;
@@ -51,12 +51,9 @@ namespace BlazeEngine
 		// Scene config:
 		struct
 		{
-			const string sceneRoot			= "./Scenes/";	// Root path: All assets stored here
-			//const string texturesDirectory	= "Textures/";	// Default texture location, within a given scene directory
+			const string sceneRoot			= ".\\Scenes\\";	// Root path: All assets stored here
 
-			const string scene01			= "simpleCube/simpleCube.fbx";
-
-			//string scenePath				= sceneRoot + "testScene"; // DEBUG: hard coded scene path
+			const string scene01			= "simpleCube";		// Generic scene name
 		} scene;
 		
 		// TO DO: Add button config for inputmanager

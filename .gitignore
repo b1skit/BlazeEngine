@@ -377,6 +377,12 @@ ASALocalRun/
 healthchecksdb
 
 
+# Scene asset exclusions:
+#------------------------
+**/.mayaSwatches
+**/workspace.mel
+
+
 # Forced inclusions:
 #-------------------
 !./BlazeEngine/Dependencies/*

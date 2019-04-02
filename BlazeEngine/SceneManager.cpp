@@ -6,6 +6,8 @@
 #include "assimp/scene.h"		// Output data structure
 #include "assimp/postprocess.h"	// Post processing flags
 
+#define STB_IMAGE_IMPLEMENTATION	// Only include this define ONCE in the project
+#include "stb_image.h"				// STB image loader
 
 //// DEBUG:
 //#include <iostream>
@@ -13,11 +15,12 @@
 //using std::to_string;
 
 
+
 namespace BlazeEngine
 {
 	SceneManager::SceneManager() : EngineComponent("SceneManager")
 	{
-		
+		stbi_set_flip_vertically_on_load(true);	// Tell stb_image to flip the y-axis on loading (So pixel (0,0) is in the bottom-left of the image)
 	}
 
 	SceneManager::~SceneManager()
@@ -140,83 +143,109 @@ namespace BlazeEngine
 	}
 
 
-	void SceneManager::LoadScene(string scenePath)
+	void SceneManager::LoadScene(string sceneName)
 	{
 		if (currentScene)
 		{
 			// TO DO: Write a destructor/cleanup correctly when deleting a scene
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_DEBUG, this, new string("WARNING: Current scene already exists. Debug deallocation is to just delete it, but this is likely leaking memory!") });
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_DEBUG, this, new string("WARNING: A scene already currently exists. Debug handling is to just delete it, but this is likely leaking memory!") });
 			delete currentScene;
 		}
+		
 		currentScene = new Scene();
 
+		// Assemble paths:
+		string sceneRoot = CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + sceneName + "\\";
+		string fbxPath = sceneRoot + sceneName + ".fbx";
 
-		
-		// Load our .FBX:
-		// ...
-
-		// Create a new game object for every item in the .FBX:
-		// ...
-		// TO DO: Guard file loading flow with exception handling
-
-
-
+		// Load our .fbx using Assimp:
 		Assimp::Importer importer;
-		const aiScene* scene = importer.ReadFile(scenePath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
-		
+		const aiScene* scene = importer.ReadFile(fbxPath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
 		if (!scene)
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("Failed to load texture at " + scenePath + ": " + importer.GetErrorString() ) });
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, nullptr, new string("Failed to load scene: " + fbxPath + ": " + importer.GetErrorString() ) });
 			return;
 		}
 		else
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Successfully Loaded " + scenePath) });
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Successfully loaded scene: " + fbxPath) });
 		}
-
-
-		if (scene->HasTextures())
+		
+		// Extract materials and textures:
+		if (scene->HasMaterials())
 		{
-			int numTextures = scene->mNumTextures;
+			int numMaterials = scene->mNumMaterials;
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Found " + to_string(numMaterials) + " scene materials" ) });
 
-			cout << "Scene has " << numTextures << " textures!\n";
-
-			if (scene->mTextures[0]->CheckFormat("png"))
+			// Create Blaze Engine materials:
+			for (int i = 0; i < numMaterials; i++)
 			{
-				cout << "Found a png: " << scene->mTextures[0]->mWidth << " x " << scene->mTextures[0]->mHeight << "\n";
-			}
-			else
-			{
-				cout << "Did not find a png\n";
-			}
-		}
-		string texPath = CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + "testGrid.png";
-		const aiScene* testImage = importer.ReadFile(texPath, 0);
+				// Get the material name:
+				aiString name;
+				scene->mMaterials[i]->Get(AI_MATKEY_NAME, name);
 
-		if (testImage)
-		{
-			cout << "LOADED TEST IMAGE\n";
+				CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Creating material: " + string(name.C_Str())) });
+
+				// Create a shader:
+				unsigned int shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
+				// TO DO: Figure out how to load different shaders based on AI_MATKEY_SHADING_MODEL
+
+				// Create a Blaze Engine material:
+				Material* newMaterial = new Material(string(name.C_Str()), shaderIndex);
+
+				// Extract material's textures:
+				if (scene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) // If there is more than 1 texture in the slot, we only get the FIRST...
+				{
+					CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Material " + to_string(i) + ": Loading diffuse texture...") });
+
+					aiString path;
+					scene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &path); // We only get the texture at index 0 (any others are ignored...)
+
+					if (path.length > 0)
+					{
+						string texturePath = sceneRoot + string(path.C_Str());
+						CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Found texture path: " + texturePath) });
+
+						// Find the texture if it has already been loaded, or load it otherwise:
+						Texture* diffuseTexture = FindLoadTextureByPath(texturePath);
+
+
+						// Add texture to a material:
+						newMaterial->SetTexture(diffuseTexture, TEXTURE_ALBEDO);
+
+
+						// Add the material to our material list:
+						unsigned int materialIndex = AddMaterial(newMaterial, false);
+					}
+					else
+					{
+						CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Material does not contain a diffuse texture path") });
+					}					
+				}
+			}
+
+			// TO DO: Load lights, cameras, geometry + materials
+
+			
+
+
 		}
 		else
-			cout << "NOT\n";
+		{
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Scene has no materials") });
+		}
 
-
-		
-		
 
 
 		// DEBUG: HARD CODE SOME OBJECTS TO WORK WITH:
 
 
-		// Create a material and shader:
-		unsigned int shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
+		
+		// Create 1st cube using test texture:
 
-		Material* newMaterial = new Material("testMaterial1", shaderIndex);
+		Material* newMaterial = GetMaterial("cubePhong");
 
-		// Create textures and assign them to the material:
-		Texture* testAlbedo = Texture::LoadTextureFromPath("./debug/invalid/albedo/path");
-		newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
-		testAlbedo->Fill(vec4(1, 1, 1, 1));
+		// -> Already has an albedo...
 
 		Texture* testNormal = Texture::LoadTextureFromPath(".debug/invalid/normal/path");
 		newMaterial->SetTexture(testNormal, TEXTURE_NORMAL);
@@ -234,12 +263,12 @@ namespace BlazeEngine
 		newMaterial->SetTexture(testAmbientOcclusion, TEXTURE_AMBIENT_OCCLUSION);
 		testAmbientOcclusion->Fill(vec4(0.5, 0.5, 0.5, 1));
 
-		// Add the material to our material list:
-		unsigned int materialIndex = AddMaterial(newMaterial);
+		// -> Material already in material list...
 
 		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
 		Mesh mesh = Mesh::CreateCube();
-		mesh.MaterialIndex() = materialIndex;
+		mesh.MaterialIndex() = GetMaterialIndex("cubePhong");
+		// -> Get using string instead of index...
 
 		currentScene->meshes.push_back(mesh);
 		int meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address
@@ -267,17 +296,20 @@ namespace BlazeEngine
 		// Assemble a second cube:
 
 		// Create a material and shader:
-		shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
+		int shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
 
 		newMaterial = new Material("testMaterial2", shaderIndex);
 
 		// Create textures and assign them to the material:
-		testAlbedo = Texture::LoadTextureFromPath("./another/invalid/path");
-		//testAlbedo->Fill(vec4(0, 1, 0, 1));
+		Texture* testAlbedo = new Texture(256, 256, false); // Create a new, unfilled texture
+		testAlbedo->Fill(vec4(1, 1, 1, 1), vec4(0, 0, 1, 1), vec4(0, 1, 0, 1), vec4(1, 0, 0, 1));
+		
+		//Texture* testAlbedo = Texture::LoadTextureFromPath("INVALID PATH");  // Bright red error texture
+		
 		newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
 
 		// Add the material to our material list:
-		materialIndex = AddMaterial(newMaterial);
+		int materialIndex = AddMaterial(newMaterial);
 
 		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
 		mesh = Mesh::CreateCube();
@@ -304,6 +336,10 @@ namespace BlazeEngine
 
 		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
 		currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
+
+
+		
+
 
 
 
@@ -349,6 +385,7 @@ namespace BlazeEngine
 
 
 
+			   
 
 
 		// Assemble material mesh lists:
@@ -379,8 +416,23 @@ namespace BlazeEngine
 		
 	}
 
+
+	Material * BlazeEngine::SceneManager::GetMaterial(string materialName)
+	{
+		for (unsigned int i = 0; i < currentMaterialCount; i++)
+		{
+			if (materials[i]->Name() == materialName)
+			{
+				return materials[i];
+			}
+		}
+
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Could not find material \"" + materialName + "\"") });
+		return nullptr;
+	}
+
 	
-	int SceneManager::GetMaterial(string materialName)
+	int SceneManager::GetMaterialIndex(string materialName)
 	{
 		// Check if a material with the same name exists, and return it if it does:
 		int materialIndex = FindMaterialIndex(materialName);
@@ -389,6 +441,8 @@ namespace BlazeEngine
 			return materialIndex;
 		}
 		
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Material \"" + materialName + "\" does not exist... Creating a new material with default shader") });
+
 		// If we've made it this far, no material with the given name exists. Create it:
 		Material* newMaterial = new Material(materialName, GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName)); // Assign the default shader
 
@@ -467,12 +521,26 @@ namespace BlazeEngine
 		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Finished adding " + to_string(numMeshes) + " meshes for " + to_string(materialMeshLists.size()) + " materials to the material mesh lists") });
 	}
 
+	Texture* BlazeEngine::SceneManager::FindLoadTextureByPath(string texturePath)
+	{
+		for (unsigned int i = 0; i < currentTextureCount; i++)
+		{
+			if (textures[i] && textures[i]->TexturePath() == texturePath)
+			{
+				CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Texture at path " + texturePath + " has already been loaded") });
+				return textures[i];
+			}
+		}
+
+		// If we've made it this far, try and load the texture
+		return Texture::LoadTextureFromPath(texturePath);
+	}
 
 
 	// Shader management:		
 	//*******************
 
-	unsigned int SceneManager::GetShaderIndexFromShaderName(string shaderName, bool findExisting)
+	unsigned int SceneManager::GetShaderIndexFromShaderName(string shaderName, bool findExisting) // findExisting == false by default
 	{
 		if (findExisting || shaderName == CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName)
 		{

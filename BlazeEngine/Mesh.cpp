@@ -132,6 +132,11 @@ namespace BlazeEngine
 			vec2(0.0f, 1.0f),
 			vec2(1.0f, 0.0f),
 			vec2(1.0f, 1.0f),
+
+			//vec2(0.0f, 1.0f),	// tl
+			//vec2(0.0f, 0.0f),	// bl			
+			//vec2(1.0f, 0.0f),	// br
+			//vec2(1.0f, 1.0f),	// tr
 		};
 
 		int numVerts = 24;

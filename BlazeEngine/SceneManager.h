@@ -21,6 +21,7 @@ namespace BlazeEngine
 {
 	// Pre-declarations:
 	class Camera;
+	class aiTexture;
 
 
 	// Container for all scene data:
@@ -78,10 +79,14 @@ namespace BlazeEngine
 		void HandleEvent(EventInfo const* eventInfo);
 
 		// Member functions:
-		void LoadScene(string scenePath);
+		//------------------
+		// Load a scene.
+		// sceneName == the root folder name within the ./Scenes/ directory. Must contain an .fbx file with the same name.
+		void LoadScene(string sceneName);
 
 		inline unsigned int NumMaterials() { return currentMaterialCount; }
 		inline Material* GetMaterial(unsigned int materialIndex) { return materials[materialIndex]; }
+		Material* GetMaterial(string materialName);
 		inline vector<Mesh*> const* GetRenderMeshes(unsigned int materialIndex) { return &materialMeshLists.at(materialIndex); } // TO DO: BOunds checking?
 
 		inline vector<Renderable const*> const* GetRenderables() { return &currentScene->renderables;	}
@@ -111,7 +116,7 @@ namespace BlazeEngine
 		Material** materials				= nullptr;
 
 		// Finds an existing material, or creates one using the default shader if none exists
-		int GetMaterial(string materialName);
+		int GetMaterialIndex(string materialName);
 
 		// Add a material to the material array
 		// Warning: Material name MUST be unique if checkForExisting == false
@@ -130,6 +135,9 @@ namespace BlazeEngine
 		const unsigned int MAX_TEXTURES		= 100; // TO DO: Replace this with something configurable/dynamic?
 		Texture** textures					= nullptr;
 		unsigned int currentTextureCount	= 0;
+		
+		// Find if a texture if it exists, or try and load it if it doesn't. Returns nullptr if file can't be loaded
+		Texture* FindLoadTextureByPath(string texturePath);
 
 
 		// Shader management:		
@@ -139,7 +147,7 @@ namespace BlazeEngine
 		unsigned int currentShaderCount		= 0;
 
 		// Finds an existing shader index, or create one if none exists/if findExisting == false
-		unsigned int GetShaderIndexFromShaderName(string shaderName, bool findExisting = false);
+		unsigned int GetShaderIndexFromShaderName(string shaderName, bool findExisting = false); 
 	};
 }
 

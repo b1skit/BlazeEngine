@@ -69,11 +69,11 @@ namespace BlazeEngine
 		
 		if (eventInfo->generator)
 		{
-			cout << std::to_string(eventInfo->generator->GetObjectID()) << " (" << eventInfo->generator->GetName() << ")";
+			cout << std::to_string(eventInfo->generator->GetObjectID()) << " (" << eventInfo->generator->GetName() << ")\t";
 		}
 		else
 		{
-			cout << "_unknown_ (null event generator)";
+			cout << "anonymous (     ??    )\t";
 		}
 
 		if (eventInfo->eventMessage && eventInfo->eventMessage->length() > 0)

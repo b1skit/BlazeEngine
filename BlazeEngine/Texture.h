@@ -14,7 +14,7 @@ namespace BlazeEngine
 	class Texture
 	{
 	public:
-		Texture(int width, int height);
+		Texture(int width, int height, bool doFill = true, vec4 fillColor = vec4(1.0,0,0,1));
 		~Texture();
 
 		Texture& operator=(Texture const& rhs);
@@ -24,13 +24,17 @@ namespace BlazeEngine
 		inline unsigned int const& Height() const { return height; }
 		inline GLuint const& TextureID() const { return textureID; }
 		inline GLenum const& Target() const { return target; }
+		string const& TexturePath() { return texturePath; }
 
 		// Get/set a texel value:
 		// Returns texels[0] if u = [0, width - 1], v = [0, height - 1] are out of bounds.
 		vec4& Texel(unsigned int u, unsigned int v);
 
-		// Fill a texture with a solid color
-		void Fill(vec4 color, bool sendToGPU = true);
+		// Fill texture with a solid color
+		void Fill(vec4 color, bool doBuffer = true);
+
+		// Fill texture with a color gradient
+		void Fill(vec4 tl, vec4 bl, vec4 tr, vec4 br, bool doBuffer = true); 
 
 		// Static functions:
 		//------------------
@@ -47,7 +51,7 @@ namespace BlazeEngine
 		unsigned int width	= 1;		// # Cols
 		unsigned int height = 1;		// # Rows
 
-		GLuint textureID;
+		GLuint textureID = 0;
 
 		// TO DO: Make these configurable/dynamically set based on loaded file??
 		/*GLint level;
@@ -61,6 +65,11 @@ namespace BlazeEngine
 
 		vec4* texels = nullptr;
 		unsigned int numTexels;
+
+		string texturePath;
+
+		// Upload a texture to the GPU. Returns true if successful, false otherwise
+		bool Buffer();
 	};
 }
 

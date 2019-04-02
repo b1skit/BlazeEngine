@@ -5,6 +5,14 @@
 
 #include <string>
 
+
+//#if defined(WIN32) || defined(_WIN32) 
+//	#define PATH_SEPARATOR '\\'
+//#else 
+//	#define PATH_SEPARATOR '/' 
+//#endif 
+
+
 // DEBUG:
 #include <iostream>
 using std::cout;
@@ -53,7 +61,7 @@ namespace BlazeEngine
 
 		// Must wait to start scene manager and load a scene until the renderer is called, since we need to initialize OpenGL in the RenderManager before creating shaders
 		BlazeSceneManager->Startup();
-		BlazeSceneManager->LoadScene(config.scene.sceneRoot + config.scene.scene01);
+		BlazeSceneManager->LoadScene(config.scene.scene01);
 
 		isRunning = true;
 

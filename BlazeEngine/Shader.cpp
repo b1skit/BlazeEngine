@@ -32,7 +32,7 @@ namespace BlazeEngine
 
 	Shader* Shader::CreateShader(string shaderName)
 	{
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Loading shader: " + shaderName) });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Creating shader: " + shaderName) });
 
 		GLuint shaderReference;
 		unsigned int numShaders = 2; // TO DO : Allow loading of geometry shaders?
@@ -96,7 +96,7 @@ namespace BlazeEngine
 
 		Shader* newShader = new Shader(shaderName, shaderReference);
 
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Successfully loaded " + shaderName + "!") });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Successfully created shader " + shaderName + "!") });
 
 		return newShader;
 	}
