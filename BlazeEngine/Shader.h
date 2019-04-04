@@ -10,12 +10,13 @@ namespace BlazeEngine
 	class Shader
 	{
 	public:
+		Shader() {} // Do nothing
 		Shader(const string shaderName, const GLuint shaderReference);
 		Shader(const Shader& existingShader);
 		~Shader();
 
 		// Getters/Setters:
-		inline string Name() { return shaderName; }
+		inline string const& Name() { return shaderName; }
 		inline GLuint ShaderReference() const { return shaderReference; }
 
 		// Static functions:
@@ -26,8 +27,8 @@ namespace BlazeEngine
 
 
 	private:
-		string shaderName; // Extensionless filename of the shader. Will have ".vert" / ".frag" appended
-		GLuint shaderReference;
+		string shaderName		= "uninitializedShader"; // Extensionless filename of the shader. Will have ".vert" / ".frag" appended
+		GLuint shaderReference	= 0;
 
 
 		// Private static functions:

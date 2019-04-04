@@ -37,6 +37,7 @@ namespace BlazeEngine
 
 	private:
 		unsigned int shaderIndex;
+		Shader shader;
 
 		string name; // Must be unique: Identifies this material
 
