@@ -204,6 +204,14 @@ namespace BlazeEngine
 
 			// Set the texture properties:
 			glTexStorage2D(this->target, 1, this->internalFormat, (GLsizei)this->width, (GLsizei)this->height);
+
+			// UV wrap mode:
+			glTexParameteri(this->target, GL_TEXTURE_WRAP_S, GL_REPEAT);	// u
+			glTexParameteri(this->target, GL_TEXTURE_WRAP_T, GL_REPEAT);	// v
+
+			// Mip map min/maximizing:
+			glTexParameteri(this->target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);	// Linear interpolation, nearest neighbour sampling
+			glTexParameteri(this->target, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_LINEAR);
 		}
 		else
 		{
@@ -215,6 +223,7 @@ namespace BlazeEngine
 
 		// Upload to the GPU:
 		glTexSubImage2D(this->target, 0, 0, 0, this->width, this->height, this->format, this->type, &this->Texel(0, 0).r);
+		glGenerateMipmap(this->target);
 
 		// Cleanup:
 		glBindTexture(this->target, 0);
