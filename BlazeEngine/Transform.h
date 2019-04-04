@@ -43,6 +43,7 @@ namespace BlazeEngine
 		// Functionality:
 		void Translate(vec3 amount);
 		void SetPosition(vec3 position);
+		vec3 const& Position() { return position; }
 
 		// Rotate about the world X, Y, Z axis, in that order
 		// eulerXYZ = Rotation angles about each axis, in RADIANS

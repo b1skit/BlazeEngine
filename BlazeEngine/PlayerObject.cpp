@@ -82,12 +82,19 @@ namespace BlazeEngine
 		}
 
 
-		// Reset the cam back to the origin if the player has clicked the lmb
+		// Reset the cam back to the saved position
 		if (InputManager::GetInputState(INPUT_MOUSE_LEFT))
 		{
-			this->transform.SetPosition(vec3(0, 0, 0));
-			this->transform.SetEulerRotation(vec3(0, 0, 0));
-			this->playerCam.GetTransform()->SetEulerRotation(vec3(0, 0, 0));
+			this->transform.SetPosition(savedPosition);
+			this->transform.SetEulerRotation(vec3(0, savedEulerRotation.y, 0));
+			this->playerCam.GetTransform()->SetEulerRotation(vec3(savedEulerRotation.x, 0, 0));
+		}
+
+		// Save the current position/rotation:
+		if (InputManager::GetInputState(INPUT_MOUSE_RIGHT))
+		{
+			this->savedPosition = transform.Position();
+			this->savedEulerRotation = vec3(this->playerCam.GetTransform()->GetEulerRotation().x, this->transform.GetEulerRotation().y, 0 );
 		}
 	}
 

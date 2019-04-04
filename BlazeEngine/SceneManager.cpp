@@ -151,12 +151,7 @@ namespace BlazeEngine
 
 				// TO DO: Figure out how to load different shaders based on AI_MATKEY_SHADING_MODEL
 
-
-				// Create a shader:
-				/*unsigned int shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);*/
-
 				// Create a Blaze Engine material:
-				/*Material* newMaterial = new Material(string(name.C_Str()), shaderIndex);*/
 				string matName = string(name.C_Str());
 				Material* newMaterial = new Material(matName, CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
 

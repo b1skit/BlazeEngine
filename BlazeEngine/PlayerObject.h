@@ -3,6 +3,10 @@
 #include "GameObject.h"
 #include "Camera.h"
 
+#include "glm.hpp"
+
+using glm::vec3;
+
 
 namespace BlazeEngine
 {
@@ -30,6 +34,10 @@ namespace BlazeEngine
 
 		// Control configuration:
 		float movementSpeed = 0.01f;
+
+		// Saved positions
+		vec3 savedPosition = vec3(0.0f, 0.0f, 0.0f);
+		vec3 savedEulerRotation = vec3(0.0f, 0.0f, 0.0f);
 	};
 
 }
