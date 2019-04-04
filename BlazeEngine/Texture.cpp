@@ -172,6 +172,8 @@ namespace BlazeEngine
 			// Cleanup:
 			stbi_image_free(imageData);
 
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Completed loading texture: " + texturePath) });
+
 			return texture;
 		}
 

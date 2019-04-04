@@ -126,12 +126,23 @@ namespace BlazeEngine
 		const aiScene* scene = importer.ReadFile(fbxPath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
 		if (!scene)
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, nullptr, new string("Failed to load scene: " + fbxPath + ": " + importer.GetErrorString() ) });
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, nullptr, new string("Failed to load scene file: " + fbxPath + ": " + importer.GetErrorString() ) });
 			return;
 		}
 		else
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Successfully loaded scene: " + fbxPath) });
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Successfully loaded scene file " + fbxPath) });
+		}
+
+		// Load textures:
+		if (scene->HasTextures())
+		{
+			int numTextures = scene->mNumTextures;
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Found " + to_string(numTextures) + " embedded scene textures. These will NOT be loaded!") });	
+		}
+		else
+		{
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Scene has no embedded textures") });
 		}
 		
 		// Extract materials and textures:
@@ -185,17 +196,49 @@ namespace BlazeEngine
 					}					
 				}
 			}
-
-			// TO DO: Load lights, cameras, geometry + materials
-
-			
-
-
 		}
 		else
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Scene has no materials") });
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Scene has no materials") });
 		}
+
+		if (scene->HasMeshes())
+		{
+			int numMeshes = scene->mNumMeshes;
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Found " + to_string(numMeshes) + " scene meshes") });
+
+			// TO DO: Load meshes
+		}
+		else
+		{
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Scene has no meshes") });
+		}
+
+		if (scene->HasLights())
+		{
+			int numLights = scene->mNumLights;
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Found " + to_string(numLights) + " scene lights") });
+
+			// TO DO: Load lights
+		}
+		else
+		{
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Scene has no materials") });
+		}
+
+		if (scene->HasCameras())
+		{
+			int numCameras = scene->mNumCameras;
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Found " + to_string(numCameras) + " scene cameras") });
+
+			// TO DO: Load cameras
+			// Player object should get the main camera, and set its position/orientation as its start point?
+		}
+		else
+		{
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Scene has no cameras") });
+		}
+
 
 
 
@@ -209,19 +252,19 @@ namespace BlazeEngine
 
 		// -> Already has an albedo...
 
-		Texture* testNormal = Texture::LoadTextureFromPath(".debug/invalid/normal/path");
+		Texture* testNormal = FindLoadTextureByPath(".debug/invalid/normal/path");
 		newMaterial->SetTexture(testNormal, TEXTURE_NORMAL);
 		testNormal->Fill(vec4(0, 0, 1, 1));
 		
-		Texture* testRoughness = Texture::LoadTextureFromPath(".debug/invalid/rough/path");
+		Texture* testRoughness = FindLoadTextureByPath(".debug/invalid/rough/path");
 		newMaterial->SetTexture(testRoughness, TEXTURE_ROUGHNESS);
 		testRoughness->Fill(vec4(1, 1, 0, 1));
 
-		Texture* testMetallic = Texture::LoadTextureFromPath(".debug/invalid/metal/path");
+		Texture* testMetallic = FindLoadTextureByPath(".debug/invalid/metal/path");
 		newMaterial->SetTexture(testMetallic, TEXTURE_METALLIC);
 		testMetallic->Fill(vec4(0, 1, 1, 1));
 
-		Texture* testAmbientOcclusion = Texture::LoadTextureFromPath(".debug/invalid/AO/path");
+		Texture* testAmbientOcclusion = FindLoadTextureByPath(".debug/invalid/AO/path");
 		newMaterial->SetTexture(testAmbientOcclusion, TEXTURE_AMBIENT_OCCLUSION);
 		testAmbientOcclusion->Fill(vec4(0.5, 0.5, 0.5, 1));
 
@@ -316,7 +359,7 @@ namespace BlazeEngine
 		//newMaterial = new Material("testMaterial3", shaderIndex);
 
 		// Create textures and assign them to the material:
-		testAlbedo = Texture::LoadTextureFromPath("./another/invalid/path");
+		testAlbedo = FindLoadTextureByPath("./another/invalid/path");
 		newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
 
 		// Add the material to our material list:
@@ -483,7 +526,7 @@ namespace BlazeEngine
 			}
 		}
 
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Finished adding " + to_string(numMeshes) + " meshes for " + to_string(materialMeshLists.size()) + " materials to the material mesh lists") });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Assembled material mesh list of " + to_string(numMeshes) + " meshes and " + to_string(materialMeshLists.size()) + " materials") });
 	}
 
 	Texture* BlazeEngine::SceneManager::FindLoadTextureByPath(string texturePath)
