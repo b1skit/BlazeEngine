@@ -7,10 +7,11 @@ using std::to_string;
 
 namespace BlazeEngine
 {
-	Material::Material(string name, unsigned int shaderIndex)
+	Material::Material(string materialName, string shaderName)
 	{
-		this->name = name;
-		this->shaderIndex = shaderIndex;
+		this->name = materialName;
+
+		this->shader = Shader::CreateShader(shaderName);
 
 		textures = new Texture*[TEXTURE_COUNT];
 		for (int i = 0; i < TEXTURE_COUNT; i++)
@@ -19,7 +20,7 @@ namespace BlazeEngine
 		}
 
 		// Create samplers:
-		glGenSamplers(TEXTURE_COUNT, &samplers[0]); // TO DO: Use a differnt array to contain sampler objects...
+		glGenSamplers(TEXTURE_COUNT, &samplers[0]);
 		for (int i = 0; i < TEXTURE_COUNT; i++)
 		{
 			glBindSampler(i, samplers[i]);

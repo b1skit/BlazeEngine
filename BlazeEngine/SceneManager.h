@@ -91,10 +91,6 @@ namespace BlazeEngine
 
 		inline vector<Renderable const*> const* GetRenderables() { return &currentScene->renderables;	}
 
-		inline Shader const* const* GetShaders() const { return shaders; }
-		
-		inline unsigned int GetMaterialShaderIndex(unsigned int materialIndex) { return materials[materialIndex]->ShaderIndex(); } // TO DO: Bounds checking?
-
 		inline vec4 const& GetAmbient() { return currentScene->ambientLight; }
 		inline Light& GetKeyLight() { return currentScene->keyLight; }
 		/*inline vector<Light> const& GetForwardLights() { return forwardLights; }*/
@@ -138,16 +134,6 @@ namespace BlazeEngine
 		
 		// Find if a texture if it exists, or try and load it if it doesn't. Returns nullptr if file can't be loaded
 		Texture* FindLoadTextureByPath(string texturePath);
-
-
-		// Shader management:		
-		//*******************
-		const unsigned int MAX_SHADERS		= 100; // TO DO: Replace this with something configurable/dynamic?
-		Shader** shaders					= nullptr;
-		unsigned int currentShaderCount		= 0;
-
-		// Finds an existing shader index, or create one if none exists/if findExisting == false
-		unsigned int GetShaderIndexFromShaderName(string shaderName, bool findExisting = false); 
 	};
 }
 

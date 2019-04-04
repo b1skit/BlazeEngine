@@ -32,9 +32,15 @@ namespace BlazeEngine
 
 
 		// Private static functions:
+		//--------------------------
+		
+		// Helper function: Attempts to load and return the error shader. Returns nullptr if the error shader can't be loaded
+		static Shader* ReturnErrorShader(string shaderName);
+
 		static string LoadShaderFile(const string& filepath);
 		static GLuint CreateGLShaderObject(const string& text, GLenum shaderType);
 		static bool CheckShaderError(GLuint shader, GLuint flag, bool isProgram);
+
 	};
 }
 

@@ -44,28 +44,6 @@ namespace BlazeEngine
 		}
 		currentMaterialCount = 0;
 
-		// Initialize shaders:
-		shaders = new Shader*[MAX_SHADERS];
-		for (unsigned int i = 0; i < MAX_SHADERS; i++)
-		{
-			shaders[i] = nullptr;
-		}
-		currentShaderCount = 0;
-
-		// Initialize our Shaders to match the order of the SHADER enum:
-		// Load error shader (Shader index 0):
-		int loadedShaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName);
-		if (loadedShaderIndex != 0 || shaders[0] == nullptr || currentShaderCount != 1)
-		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Shader 0 (Error shader) could not be loaded!") });
-		}
-		// Load default shader (Shader index 1):
-		loadedShaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
-		if (loadedShaderIndex != 1 || shaders[1] == nullptr || currentShaderCount != 2)
-		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Warning: Shader 1 (Default shader) could not be loaded!") });
-		}
-
 		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Scene manager started!") });
 	}
 
@@ -78,15 +56,6 @@ namespace BlazeEngine
 		for (int i = 0; i < (int)currentScene->meshes.size(); i++)
 		{
 			currentScene->meshes.at(i).DestroyMesh();
-			/*if (currentScene->meshes[i].Vertices())
-			{
-				delete currentScene->meshes[i].Vertices();
-			}
-
-			if (currentScene->meshes[i].Indices())
-			{
-				delete currentScene->meshes[i].Indices();
-			}*/
 		}
 
 		for (int i = 0; i < currentScene->gameObjects.size(); i++)
@@ -108,23 +77,17 @@ namespace BlazeEngine
 			{
 				if (materials[i])
 				{
+					if (materials[i]->GetShader() != nullptr)
+					{
+						glDeleteProgram(materials[i]->GetShader()->ShaderReference());
+						delete materials[i]->GetShader();
+					}
 					delete materials[i];
 				}
 			}
 			delete[] materials;
 			currentMaterialCount = 0;
 		}		
-
-		for (unsigned int i = 0; i < currentShaderCount; i++)
-		{
-			if (shaders[i])
-			{
-				glDeleteProgram(shaders[i]->ShaderReference());
-				delete shaders[i];
-			}
-		}
-		delete[] shaders;
-		currentShaderCount = 0;
 	}
 
 
@@ -186,12 +149,16 @@ namespace BlazeEngine
 
 				CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Creating material: " + string(name.C_Str())) });
 
-				// Create a shader:
-				unsigned int shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
 				// TO DO: Figure out how to load different shaders based on AI_MATKEY_SHADING_MODEL
 
+
+				// Create a shader:
+				/*unsigned int shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);*/
+
 				// Create a Blaze Engine material:
-				Material* newMaterial = new Material(string(name.C_Str()), shaderIndex);
+				/*Material* newMaterial = new Material(string(name.C_Str()), shaderIndex);*/
+				string matName = string(name.C_Str());
+				Material* newMaterial = new Material(matName, CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
 
 				// Extract material's textures:
 				if (scene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) // If there is more than 1 texture in the slot, we only get the FIRST...
@@ -296,9 +263,10 @@ namespace BlazeEngine
 		// Assemble a second cube:
 
 		// Create a material and shader:
-		int shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
+		newMaterial = new Material("testMaterial2", CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
 
-		newMaterial = new Material("testMaterial2", shaderIndex);
+		/*int shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
+		newMaterial = new Material("testMaterial2", shaderIndex);*/
 
 		// Create textures and assign them to the material:
 		Texture* testAlbedo = new Texture(256, 256, false); // Create a new, unfilled texture
@@ -346,9 +314,11 @@ namespace BlazeEngine
 		// Assemble a third cube:
 
 		// Create a material and shader:
-		shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName); // Use the error shader
+		newMaterial = new Material("testMaterial3", "thisShouldLoadTheErrorShader");
 
-		newMaterial = new Material("testMaterial3", shaderIndex);
+
+		//shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName); // Use the error shader
+		//newMaterial = new Material("testMaterial3", shaderIndex);
 
 		// Create textures and assign them to the material:
 		testAlbedo = Texture::LoadTextureFromPath("./another/invalid/path");
@@ -444,7 +414,7 @@ namespace BlazeEngine
 		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Material \"" + materialName + "\" does not exist... Creating a new material with default shader") });
 
 		// If we've made it this far, no material with the given name exists. Create it:
-		Material* newMaterial = new Material(materialName, GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName)); // Assign the default shader
+		Material* newMaterial = new Material(materialName, CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName); // Assign the default shader
 
 		return AddMaterial(newMaterial, false);
 	}
@@ -490,8 +460,14 @@ namespace BlazeEngine
 
 	void SceneManager::AssembleMaterialMeshLists()
 	{
+		// Pre-allocate our vector of vectors:
 		materialMeshLists.clear();
-		materialMeshLists.reserve(MAX_MATERIALS);
+		materialMeshLists.reserve(currentMaterialCount);
+		for (unsigned int i = 0; i < currentMaterialCount; i++)
+		{
+			materialMeshLists.emplace_back(vector<Mesh*>());
+			materialMeshLists.at(i).reserve(25);			// TO DO: Tune this value based on the actual number of meshes loaded?
+		}
 
 		unsigned int numMeshes = 0;
 		for (int i = 0; i < (int)currentScene->renderables.size(); i++)
@@ -500,18 +476,12 @@ namespace BlazeEngine
 			{
 				Mesh* viewMesh = currentScene->renderables.at(i)->ViewMeshes()->at(j);
 				int materialIndex = viewMesh->MaterialIndex();
-				if (materialIndex < 0)
+				if (materialIndex < 0 || (unsigned int)materialIndex >= currentMaterialCount)
 				{
-					CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("AssembleMaterialMeshLists() is skipping a mesh with no material!") });
-					// TO DO: Assign a default/error material and still add the mesh?
+					CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("AssembleMaterialMeshLists() is skipping a mesh with out of bounds material index!") });
 				}
 				else
 				{
-					if (materialIndex >= materialMeshLists.size())
-					{
-						materialMeshLists.emplace_back(vector<Mesh*>());
-						materialMeshLists.at(materialMeshLists.size() - 1).reserve(50); // TO DO: Tune this value based on the actual number of meshes loaded?
-					}
 					materialMeshLists.at(materialIndex).emplace_back(viewMesh);
 					numMeshes++;
 				}
@@ -534,42 +504,6 @@ namespace BlazeEngine
 
 		// If we've made it this far, try and load the texture
 		return Texture::LoadTextureFromPath(texturePath);
-	}
-
-
-	// Shader management:		
-	//*******************
-
-	unsigned int SceneManager::GetShaderIndexFromShaderName(string shaderName, bool findExisting) // findExisting == false by default
-	{
-		if (findExisting || shaderName == CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName)
-		{
-			// Return the index if it's found, or load the shader and return a new index, or return the error shader otherwise
-			for (unsigned int i = 0; i < MAX_SHADERS; i++)
-			{
-				if (shaders[i] && shaders[i]->Name() == shaderName)
-				{
-					return i; // We're done!
-				}
-			}
-		}		
-
-		// If we've made it this far, the shader was not found. Attempt to load it:
-		Shader* shader = Shader::CreateShader(shaderName);
-		int shaderIndex = -1;
-		if (shader != nullptr)
-		{
-			shaderIndex = currentShaderCount; // Cache the insertion index
-
-			shaders[currentShaderCount] = shader;
-			currentShaderCount++;
-
-			return shaderIndex;
-		}
-		else // If all else fails, return the error shader:
-		{
-			return 0;
-		}
 	}
 }
 

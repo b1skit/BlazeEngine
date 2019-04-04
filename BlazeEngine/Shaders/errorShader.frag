@@ -1,3 +1,6 @@
+// Blaze Engine Error Shader.
+// If this file cannot be found or cannot be compiled, the engine will likely crash.
+
 #version 430 core
 out vec4 FragColor;
 

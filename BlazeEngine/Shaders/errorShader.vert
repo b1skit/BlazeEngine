@@ -1,3 +1,6 @@
+// Blaze Engine Error Shader.
+// If this file cannot be found or cannot be compiled, the engine will likely crash.
+
 #version 430 core
 
 layout (location = 0) // Set the location of the position input variable

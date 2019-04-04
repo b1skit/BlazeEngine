@@ -116,18 +116,18 @@ namespace BlazeEngine
 
 
 	private:
-		Vertex* vertices = nullptr;		// Deallocated in SceneManager.Shutdown()
-		unsigned int numVerts = -1;
+		Vertex* vertices		= nullptr;		// Deallocated in SceneManager.Shutdown()
+		unsigned int numVerts	= -1;
 
-		GLubyte* indices = nullptr;		// Deallocated in SceneManager.Shutdown()
+		GLubyte* indices		= nullptr;		// Deallocated in SceneManager.Shutdown()
 		unsigned int numIndices = -1;
 
-		GLuint meshVAO;
-		GLuint meshVBOs[BUFFER_COUNT];		// Buffer objects that hold vertices in GPU memory
+		GLuint meshVAO			= 0;
+		GLuint meshVBOs[BUFFER_COUNT];			// Buffer objects that hold vertices in GPU memory
 
-		int materialIndex = -1;
+		int materialIndex		= -1;
 
-		Transform* transform = nullptr;	// Pointer to statically allocated Transform held by SceneObject superclass
+		Transform* transform	= nullptr;		// Pointer to statically allocated Transform held by SceneObject superclass
 	};
 }
 

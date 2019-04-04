@@ -23,7 +23,7 @@ namespace BlazeEngine
 
 	Shader::~Shader()
 	{
-	
+		
 	}
 
 
@@ -32,7 +32,7 @@ namespace BlazeEngine
 
 	Shader* Shader::CreateShader(string shaderName)
 	{
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Creating shader: " + shaderName) });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Creating shader \"" + shaderName + "\"") });
 
 		GLuint shaderReference;
 		unsigned int numShaders = 2; // TO DO : Allow loading of geometry shaders?
@@ -46,8 +46,8 @@ namespace BlazeEngine
 		string fragmentShader = LoadShaderFile(shaderName + ".frag");
 		if (vertexShader == "" || fragmentShader == "")
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("Creating shader failed while loading shader files") });
-			return nullptr;
+			glDeleteProgram(shaderReference);
+			ReturnErrorShader(shaderName);
 		}
 
 		// Create shader objects and attach them to the program objects:
@@ -79,14 +79,16 @@ namespace BlazeEngine
 		glLinkProgram(shaderReference);
 		if (!CheckShaderError(shaderReference, GL_LINK_STATUS, true))
 		{
-			return nullptr;
+			glDeleteProgram(shaderReference);
+			ReturnErrorShader(shaderName);
 		}
 
 		// Validate our program objects can execute with our current OpenGL state:
 		glValidateProgram(shaderReference);
 		if (!CheckShaderError(shaderReference, GL_VALIDATE_STATUS, true))
 		{
-			return nullptr;
+			glDeleteProgram(shaderReference);
+			ReturnErrorShader(shaderName);
 		}
 
 		// Delete the shader objects now that they've been linked into the program object:
@@ -96,9 +98,23 @@ namespace BlazeEngine
 
 		Shader* newShader = new Shader(shaderName, shaderReference);
 
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Successfully created shader " + shaderName + "!") });
+		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Successfully created shader \"" + shaderName + "\"") });
 
 		return newShader;
+	}
+
+	Shader * BlazeEngine::Shader::ReturnErrorShader(string shaderName)
+	{
+		if (shaderName != CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName)
+		{
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("Creating shader \"" + shaderName +  "\" failed while loading shader files. Returning error shader") });
+			return CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName);
+		}
+		else
+		{
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("Creating shader failed while loading shader files. Returning nullptr") });
+			return nullptr; // Worst case: We can't find the error shader. This will likely cause a crash if it ever occurs.
+		}
 	}
 
 	string Shader::LoadShaderFile(const string& filename)

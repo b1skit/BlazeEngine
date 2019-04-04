@@ -20,24 +20,24 @@ namespace BlazeEngine
 	class Material
 	{
 	public:
-		Material() { shaderIndex = 0; }
-		Material(string name, unsigned int shaderIndex);
+		Material(string materialName, string shaderName);
 		~Material();
 
 		// Getters/Setters:
-		inline unsigned int ShaderIndex() { return shaderIndex; }
-		inline string const& Name() { return name; }
-		inline Texture* GetTexture(TEXTURE_TYPE textureIndex) { return textures[textureIndex]; }
-		inline GLuint const& Samplers(unsigned int textureType) { return samplers[textureType]; }
+		inline string const&	Name()									{ return name; }
+		inline Texture*			GetTexture(TEXTURE_TYPE textureIndex)	{ return textures[textureIndex]; }
+		inline GLuint const&	Samplers(unsigned int textureType)		{ return samplers[textureType]; }
+		inline Shader const*	GetShader()								{ return shader; }
 
 		void SetTexture(Texture* texture, TEXTURE_TYPE textureIndex);
+
+		
 
 	protected:
 
 
 	private:
-		unsigned int shaderIndex;
-		Shader shader;
+		Shader* shader = nullptr;		// Deallocated  up in SceneManager.Shutdown()
 
 		string name; // Must be unique: Identifies this material
 
