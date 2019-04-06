@@ -1,5 +1,6 @@
 #include "InputManager.h"
 #include "CoreEngine.h"
+#include "BuildConfiguration.h"
 
 #include "SDL_keyboard.h"
 #include "SDL_keycode.h"
@@ -79,12 +80,12 @@ namespace BlazeEngine
 		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_RELEASE_LEFT, this);
 		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_RELEASE_RIGHT, this);
 
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Input manager started!") });
+		LOG("Input manager started!");
 	}
 
 	void InputManager::Shutdown()
 	{
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Input manager shutting down...") });
+		LOG("Input manager shutting down...");
 	}
 
 	void InputManager::Update()
@@ -168,7 +169,7 @@ namespace BlazeEngine
 		break;
 
 		default:
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("ERROR: Default event generated in InputManager!") });
+			LOG_ERROR("ERROR: Default event generated in InputManager!");
 			break;
 		}
 	}

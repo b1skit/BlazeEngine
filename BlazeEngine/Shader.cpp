@@ -2,6 +2,7 @@
 
 #include "Shader.h"
 #include "CoreEngine.h"
+#include "BuildConfiguration.h"
 
 #include <fstream>
 using std::ifstream;
@@ -32,7 +33,7 @@ namespace BlazeEngine
 
 	Shader* Shader::CreateShader(string shaderName)
 	{
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Creating shader \"" + shaderName + "\"") });
+		LOG("Creating shader \"" + shaderName + "\"");
 
 		GLuint shaderReference;
 		unsigned int numShaders = 2; // TO DO : Allow loading of geometry shaders?
@@ -98,7 +99,7 @@ namespace BlazeEngine
 
 		Shader* newShader = new Shader(shaderName, shaderReference);
 
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Successfully created shader \"" + shaderName + "\"") });
+		LOG("Successfully created shader \"" + shaderName + "\"");
 
 		return newShader;
 	}
@@ -107,12 +108,12 @@ namespace BlazeEngine
 	{
 		if (shaderName != CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName)
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("Creating shader \"" + shaderName +  "\" failed while loading shader files. Returning error shader") });
+			LOG_ERROR("Creating shader \"" + shaderName + "\" failed while loading shader files. Returning error shader");
 			return CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName);
 		}
 		else
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("Creating shader failed while loading shader files. Returning nullptr") });
+			LOG_ERROR("Creating shader failed while loading shader files. Returning nullptr");
 			return nullptr; // Worst case: We can't find the error shader. This will likely cause a crash if it ever occurs.
 		}
 	}
@@ -137,7 +138,7 @@ namespace BlazeEngine
 		}
 		else
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("LoadShaderFile failed: Could not open shader " + filepath) });
+			LOG_ERROR("LoadShaderFile failed: Could not open shader " + filepath);
 
 			return "";
 		}
@@ -150,7 +151,7 @@ namespace BlazeEngine
 		GLuint shader = glCreateShader(shaderType);
 		if (shader == 0)
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("glCreateShader failed!") });
+			LOG_ERROR("glCreateShader failed!");
 		}
 
 		const GLchar* shaderSourceStrings[1];
@@ -194,7 +195,7 @@ namespace BlazeEngine
 
 			string errorAsString(error);
 
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("CheckShaderError failed: " + errorAsString) });
+			LOG_ERROR("CheckShaderError failed: " + errorAsString);
 
 			return false;
 		}

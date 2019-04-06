@@ -1,5 +1,5 @@
-//#include <iostream>
 #include "CoreEngine.h"
+#include "BuildConfiguration.h"
 
 #include "SDL.h"
 
@@ -51,7 +51,7 @@ namespace BlazeEngine
 		BlazeEventManager->Startup();	
 		BlazeLogManager->Startup();
 
-		BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("CoreEngine started!") }, true);
+		LOG("CoreEngine started!");
 		BlazeEventManager->Subscribe(EVENT_ENGINE_QUIT, this);
 
 		BlazeTimeManager->Startup();
@@ -72,7 +72,7 @@ namespace BlazeEngine
 	// Main game loop
 	void CoreEngine::Run()
 	{
-		BlazeEventManager->Notify(new EventInfo{ EVENT_LOG, this, new string("CoreEngine beginning main game loop!") });
+		LOG("CoreEngine beginning main game loop!");
 
 		// Initialize game loop timing:
 		double elapsed = 0.0;
@@ -108,7 +108,7 @@ namespace BlazeEngine
 
 	void CoreEngine::Shutdown()
 	{
-		BlazeEventManager->Notify(new EventInfo{EVENT_LOG, this, new string("CoreEngine shutting down...") });
+		LOG("CoreEngine shutting down...");
 
 		if (configDirty)
 		{
@@ -147,7 +147,7 @@ namespace BlazeEngine
 			break;
 
 		default:
-			BlazeEventManager->Notify(new EventInfo{ EVENT_ERROR, this, new string("ERROR: Default event generated in CoreEngine!") });
+			LOG_ERROR("ERROR: Default event generated in CoreEngine!");
 			break;
 		}
 
@@ -157,13 +157,13 @@ namespace BlazeEngine
 
 	void EngineConfig::LoadConfig(string path)
 	{
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_DEBUG, nullptr, new string("EngineConfig.LoadConfig() is not implemented. Using hard coded default values!") });
+		LOG("DEBUG: EngineConfig.LoadConfig() is not implemented. Using hard coded default values!");
 	
 		// TO DO: Implement config loading!
 	}
 
 	void EngineConfig::SaveConfig(string path)
 	{
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_DEBUG, nullptr, new string("EngineConfig.SaveConfig() is not implemented. No data is being saved!\n") });
+		LOG("DEBUG: EngineConfig.SaveConfig() is not implemented. No data is being saved!\n");
 	}
 }

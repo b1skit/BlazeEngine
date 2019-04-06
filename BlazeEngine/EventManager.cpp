@@ -3,17 +3,19 @@
 #include "EventManager.h"
 #include "BlazeObject.h"
 #include "CoreEngine.h"
+#include "BuildConfiguration.h"
+
 #include "SDL.h"
 
 // DEBUG: Spew notification messages as they're recieved.
 // Useful for debugging when an issue occurs before we can print it normally
-//#define RAW_OUTPUT
-#if defined(RAW_OUTPUT)
-	#include <string>
-	#include <iostream>
-	using std::string;
-	using std::cout;
-#endif
+//#define DEBUG_PRINT_NOTIFICATIONS
+//#if defined(DEBUG_PRINT_NOTIFICATIONS)
+//	#include <string>
+//	#include <iostream>
+//	using std::string;
+//	using std::cout;
+//#endif
 
 
 namespace BlazeEngine
@@ -46,15 +48,14 @@ namespace BlazeEngine
 
 	void EventManager::Startup()
 	{
-
-		Notify(new EventInfo{ EVENT_LOG, this, new string("Event manager started!") });
+		LOG("Event manager started!");
 	}
 
 	void EventManager::Shutdown()
 	{
 		Update(); // Run one last update
 
-		Notify(new EventInfo{ EVENT_LOG, this, new string("Event manager shutting down...") });
+		LOG("Event manager shutting down...");
 	}
 
 	void EventManager::Update()
@@ -227,35 +228,35 @@ namespace BlazeEngine
 			switch (glError)
 			{
 			case GL_INVALID_ENUM:
-				Notify(new EventInfo{ EVENT_ERROR, this, new string(prefix + "GL_INVALID_ENUM") });
+				LOG_ERROR(prefix + "GL_INVALID_ENUM");
 				break;
 
 			case GL_INVALID_VALUE:
-				Notify(new EventInfo{ EVENT_ERROR, this, new string(prefix + "GL_INVALID_VALUE") });
+				LOG_ERROR(prefix + "GL_INVALID_VALUE");
 				break;
 
 			case GL_INVALID_OPERATION:
-				Notify(new EventInfo{ EVENT_ERROR, this, new string(prefix + "GL_INVALID_OPERATION") });
+				LOG_ERROR(prefix + "GL_INVALID_OPERATION");
 				break;
 
 			case GL_INVALID_FRAMEBUFFER_OPERATION:
-				Notify(new EventInfo{ EVENT_ERROR, this, new string(prefix + "GL_INVALID_FRAMEBUFFER_OPERATION") });
+				LOG_ERROR(prefix + "GL_INVALID_FRAMEBUFFER_OPERATION");
 				break;
 
 			case GL_OUT_OF_MEMORY:
-				Notify(new EventInfo{ EVENT_ERROR, this, new string(prefix + "GL_OUT_OF_MEMORY") });
+				LOG_ERROR(prefix + "GL_OUT_OF_MEMORY");
 				break;
 
 			case GL_STACK_UNDERFLOW:
-				Notify(new EventInfo{ EVENT_ERROR, this, new string(prefix + "GL_OUT_OF_MEMORY") });
+				LOG_ERROR(prefix + "GL_OUT_OF_MEMORY");
 				break;
 
 			case GL_STACK_OVERFLOW:
-				Notify(new EventInfo{ EVENT_ERROR, this, new string(prefix + "GL_STACK_OVERFLOW") });
+				LOG_ERROR(prefix + "GL_STACK_OVERFLOW");
 				break;
 
 			default:
-				Notify(new EventInfo{ EVENT_ERROR, this, new string(prefix + to_string(glError)) });
+				LOG_ERROR(prefix + to_string(glError));
 				break;
 			}
 		}
@@ -303,37 +304,39 @@ namespace BlazeEngine
 
 	void EventManager::Notify(EventInfo const* eventInfo, bool pushToFront)
 	{
-		#if defined(RAW_OUTPUT)
+		#if defined(DEBUG_PRINT_NOTIFICATIONS)
 			if (eventInfo)
 			{
 				if (eventInfo->generator)
 				{
 					if (eventInfo->eventMessage)
 					{
-						cout << "RAW OUTPUT: " << eventInfo->generator << " " << *eventInfo->eventMessage << "\n";
+						LOG("NOTIFICATION: " + to_string((long long)eventInfo->generator) + " : " + *eventInfo->eventMessage);
 					}
 					else
 					{
-						cout << "RAW OUTPUT: " << eventInfo->generator << " " << "nullptr" << "\n";
+						LOG("NOTIFICATION: " + to_string((long long)eventInfo->generator) + " : nullptr");
 					}
 				}
 				else
 				{
 					if (eventInfo->eventMessage)
 					{
-						cout << "RAW OUTPUT: " << "nullptr" << " " << *eventInfo->eventMessage << "\n";
+						LOG("NOTIFICATION: nullptr : " + *eventInfo->eventMessage);
 					}
 					else
 					{
-						cout << "RAW OUTPUT: " << "nullptr" << " " << "nullptr" << "\n";
+						LOG("NOTIFICATION: nullptr : nullptr");
 					}
 				}
 			}
 			else
 			{
-				cout << "RAW OUTPUT: Received NULL eventInfo...\n";
+				LOG("NOTIFICATION: Received NULL eventInfo...");
 			}			
 		#endif
+
+		// Selec what to notify based on type?
 
 		if (pushToFront)
 		{

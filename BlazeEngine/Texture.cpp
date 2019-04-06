@@ -3,6 +3,7 @@
 
 #include "Texture.h"
 #include "CoreEngine.h"
+#include "BuildConfiguration.h"
 
 #define STBI_FAILURE_USERMSG
 #include "stb_image.h"				// STB image loader. No need to #define STB_IMAGE_IMPLEMENTATION, as it was already defined in SceneManager
@@ -73,7 +74,7 @@ namespace BlazeEngine
 	{
 		if (u >= width || v >= height)
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("Invalid texture access! Cannot access texel (" + to_string(u) + ", " + to_string(v) + " in a texture of size " + to_string(width) + "x" + to_string(height) ) });
+			LOG_ERROR("Invalid texture access! Cannot access texel (" + to_string(u) + ", " + to_string(v) + " in a texture of size " + to_string(width) + "x" + to_string(height));
 
 			// Try and return the safest option:
 			return texels[0];
@@ -129,14 +130,14 @@ namespace BlazeEngine
 
 	Texture* Texture::LoadTextureFromPath(string texturePath)
 	{
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Loading texture at " + texturePath) });
+		LOG("Loading texture at " + texturePath);
 
 		int width, height, numChannels;
 		unsigned char* imageData = stbi_load(texturePath.c_str(), &width, &height, &numChannels, 0);
 
 		if (imageData)
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Attempting to load texture with " + to_string(numChannels) + " channels") });
+			LOG("Attempting to load texture with " + to_string(numChannels) + " channels");
 
 			Texture* texture = new Texture(width, height);
 			texture->texturePath = texturePath;
@@ -172,14 +173,14 @@ namespace BlazeEngine
 			// Cleanup:
 			stbi_image_free(imageData);
 
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Completed loading texture: " + texturePath) });
+			LOG("Completed loading texture: " + texturePath);
 
 			return texture;
 		}
 
 		// If we've made it this far, we couldn't load an image from a file:
 		char const* failResult = stbi_failure_reason();
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("Could not load texture at \"" + texturePath + "\", error: \"" + string(failResult) + ".\" Returning solid red color!") });
+		LOG_ERROR("Could not load texture at \"" + texturePath + "\", error: \"" + string(failResult) + ".\" Returning solid red color!");
 
 		width = height = 1;
 		Texture* texture = new Texture(width, height);
@@ -200,7 +201,7 @@ namespace BlazeEngine
 			glBindTexture(this->target, this->textureID);
 			if (glIsTexture(this->textureID) != GL_TRUE)
 			{
-				CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("OpenGL failed to create texture") });
+				LOG_ERROR("OpenGL failed to create texture");
 				return false;
 			}
 

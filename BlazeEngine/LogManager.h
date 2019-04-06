@@ -3,11 +3,6 @@
 #include "EngineComponent.h"
 
 
-// Compiler directives: Control logging verbosity
-//#define LOG_VERBOSITY_ALL
-#define LOG_VERBOSITY_DEBUG
-//#define LOG_VERBOSITY_RELEASE
-
 namespace BlazeEngine
 {
 	class LogManager : public EngineComponent, public EventListener
@@ -28,6 +23,12 @@ namespace BlazeEngine
 
 		// EventListener interface:
 		void HandleEvent(EventInfo const* eventInfo);
+
+		// Static functions:
+		//------------------
+
+		static void Log(string const& message);
+		static void LogError(string const& message);
 
 	private:
 		

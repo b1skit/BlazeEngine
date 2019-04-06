@@ -1,5 +1,7 @@
 #include "TimeManager.h"
 #include "CoreEngine.h"
+#include "BuildConfiguration.h"
+
 #include "SDL.h"
 
 namespace BlazeEngine
@@ -29,13 +31,12 @@ namespace BlazeEngine
 
 	void TimeManager::Startup()
 	{
-
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("TimeManager started!") });
+		LOG("TimeManager started!");
 	}
 
 	void TimeManager::Shutdown()
 	{
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Time manager shutting down...") });
+		LOG("Time manager shutting down...");
 	}
 
 	void TimeManager::Update()

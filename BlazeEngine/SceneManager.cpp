@@ -1,6 +1,7 @@
 #include "SceneManager.h"
 #include "EventManager.h"
 #include "CoreEngine.h"
+#include "BuildConfiguration.h"
 
 #include "assimp/Importer.hpp"	// Importer interface
 #include "assimp/scene.h"		// Output data structure
@@ -8,6 +9,8 @@
 
 #define STB_IMAGE_IMPLEMENTATION	// Only include this define ONCE in the project
 #include "stb_image.h"				// STB image loader
+
+
 
 //// DEBUG:
 //#include <iostream>
@@ -25,7 +28,6 @@ namespace BlazeEngine
 
 	SceneManager::~SceneManager()
 	{
-		
 	}
 
 	SceneManager& SceneManager::Instance()
@@ -44,13 +46,13 @@ namespace BlazeEngine
 		}
 		currentMaterialCount = 0;
 
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Scene manager started!") });
+		LOG("Scene manager started!");
 	}
 
 
 	void SceneManager::Shutdown()
 	{
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Scene manager shutting down...") });
+		LOG("Scene manager shutting down...");
 
 		// Cleanup the scene:
 		for (int i = 0; i < (int)currentScene->meshes.size(); i++)
@@ -111,7 +113,7 @@ namespace BlazeEngine
 		if (currentScene)
 		{
 			// TO DO: Write a destructor/cleanup correctly when deleting a scene
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_DEBUG, this, new string("WARNING: A scene already currently exists. Debug handling is to just delete it, but this is likely leaking memory!") });
+			LOG("DEBUG: WARNING: A scene already currently exists. Debug handling is to just delete it, but this is likely leaking memory!");
 			delete currentScene;
 		}
 		
@@ -131,112 +133,117 @@ namespace BlazeEngine
 		}
 		else
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Successfully loaded scene file " + fbxPath) });
+			LOG("Successfully loaded scene file " + fbxPath);
 		}
 
 		// Load textures:
 		if (scene->HasTextures())
 		{
 			int numTextures = scene->mNumTextures;
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Found " + to_string(numTextures) + " embedded scene textures. These will NOT be loaded!") });	
+			LOG_ERROR("Found " + to_string(numTextures) + " embedded scene textures. These will NOT be loaded!");
 		}
 		else
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Scene has no embedded textures") });
+			LOG("Scene has no embedded textures");
 		}
 		
 		// Extract materials and textures:
 		if (scene->HasMaterials())
 		{
 			int numMaterials = scene->mNumMaterials;
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Found " + to_string(numMaterials) + " scene materials" ) });
+			LOG("Found " + to_string(numMaterials) + " scene materials");
 
 			// Create Blaze Engine materials:
 			for (int i = 0; i < numMaterials; i++)
 			{
 				// Get the material name:
 				aiString name;
-				scene->mMaterials[i]->Get(AI_MATKEY_NAME, name);
-
-				CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Creating material: " + string(name.C_Str())) });
-
-				// TO DO: Figure out how to load different shaders based on AI_MATKEY_SHADING_MODEL
-
-				// Create a Blaze Engine material:
-				string matName = string(name.C_Str());
-				Material* newMaterial = new Material(matName, CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
-
-				// Extract material's textures:
-				if (scene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) // If there is more than 1 texture in the slot, we only get the FIRST...
+				if (AI_SUCCESS == scene->mMaterials[i]->Get(AI_MATKEY_NAME, name))
 				{
-					CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Material " + to_string(i) + ": Loading diffuse texture...") });
-
-					aiString path;
-					scene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &path); // We only get the texture at index 0 (any others are ignored...)
-
-					if (path.length > 0)
+					aiShadingMode shaderType;
+					if (AI_SUCCESS != scene->mMaterials[i]->Get(AI_MATKEY_SHADING_MODEL, shaderType))
 					{
-						string texturePath = sceneRoot + string(path.C_Str());
-						CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Found texture path: " + texturePath) });
-
-						// Find the texture if it has already been loaded, or load it otherwise:
-						Texture* diffuseTexture = FindLoadTextureByPath(texturePath);
-
-
-						// Add texture to a material:
-						newMaterial->SetTexture(diffuseTexture, TEXTURE_ALBEDO);
-
-
-						// Add the material to our material list:
-						unsigned int materialIndex = AddMaterial(newMaterial, false);
+						LOG_ERROR("Couldn't load shader type!!!");
 					}
-					else
+
+					LOG("Creating material: " + string(name.C_Str()) + " of shader type " + to_string(shaderType));
+
+					// Create a Blaze Engine material:
+					string matName = string(name.C_Str());
+					Material* newMaterial = new Material(matName, CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
+
+					// Extract material's textures:
+					if (scene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) // If there is more than 1 texture in the slot, we only get the FIRST...
 					{
-						CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Material does not contain a diffuse texture path") });
-					}					
-				}
+						LOG("Material " + to_string(i) + ": Loading diffuse texture...");
+
+						aiString path;
+						scene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &path); // We only get the texture at index 0 (any others are ignored...)
+
+						if (path.length > 0)
+						{
+							string texturePath = sceneRoot + string(path.C_Str());
+							LOG("Found texture path: " + texturePath);
+
+							// Find the texture if it has already been loaded, or load it otherwise:
+							Texture* diffuseTexture = FindLoadTextureByPath(texturePath);
+
+
+							// Add texture to a material:
+							newMaterial->SetTexture(diffuseTexture, TEXTURE_ALBEDO);
+
+
+							// Add the material to our material list:
+							unsigned int materialIndex = AddMaterial(newMaterial, false);
+						}
+						else
+						{
+							LOG("Material does not contain a diffuse texture path");
+						}
+					}
+				}				
 			}
 		}
 		else
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Scene has no materials") });
+			LOG_ERROR("Scene has no materials");
 		}
 
 		if (scene->HasMeshes())
 		{
 			int numMeshes = scene->mNumMeshes;
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Found " + to_string(numMeshes) + " scene meshes") });
+			LOG("Found " + to_string(numMeshes) + " scene meshes");
 
 			// TO DO: Load meshes
 		}
 		else
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Scene has no meshes") });
+			LOG_ERROR("Scene has no meshes");
 		}
 
 		if (scene->HasLights())
 		{
 			int numLights = scene->mNumLights;
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Found " + to_string(numLights) + " scene lights") });
+			LOG("Found " + to_string(numLights) + " scene lights");
 
 			// TO DO: Load lights
 		}
 		else
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Scene has no materials") });
+			LOG_ERROR("Scene has no materials");
 		}
 
 		if (scene->HasCameras())
 		{
 			int numCameras = scene->mNumCameras;
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Found " + to_string(numCameras) + " scene cameras") });
+			LOG("Found " + to_string(numCameras) + " scene cameras");
 
 			// TO DO: Load cameras
 			// Player object should get the main camera, and set its position/orientation as its start point?
 		}
 		else
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Scene has no cameras") });
+			LOG_ERROR("Scene has no cameras");
 		}
 
 
@@ -435,7 +442,7 @@ namespace BlazeEngine
 			}
 		}
 
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Could not find material \"" + materialName + "\"") });
+		LOG_ERROR("Could not find material \"" + materialName + "\"");
 		return nullptr;
 	}
 
@@ -449,7 +456,7 @@ namespace BlazeEngine
 			return materialIndex;
 		}
 		
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Material \"" + materialName + "\" does not exist... Creating a new material with default shader") });
+		LOG_ERROR("Material \"" + materialName + "\" does not exist... Creating a new material with default shader");
 
 		// If we've made it this far, no material with the given name exists. Create it:
 		Material* newMaterial = new Material(materialName, CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName); // Assign the default shader
@@ -464,7 +471,7 @@ namespace BlazeEngine
 			int materialIndex = FindMaterialIndex(newMaterial->Name());
 			if (materialIndex != -1)
 			{
-				CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Found existing material \"" + materials[materialIndex]->Name() + "\" at index " + to_string(materialIndex)) });
+				LOG("Found existing material \"" + materials[materialIndex]->Name() + "\" at index " + to_string(materialIndex));
 				return materialIndex;
 			}
 		}			
@@ -472,7 +479,7 @@ namespace BlazeEngine
 		// Otherwise, add a new material:
 		if (currentMaterialCount == MAX_MATERIALS)
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, this, new string("Cannot add any new materials: Max materials have been added! Returning material at index 0") });
+			LOG_ERROR("Cannot add any new materials: Max materials have been added! Returning material at index 0");
 			return 0; // Error: Return first material
 		}
 
@@ -516,7 +523,7 @@ namespace BlazeEngine
 				int materialIndex = viewMesh->MaterialIndex();
 				if (materialIndex < 0 || (unsigned int)materialIndex >= currentMaterialCount)
 				{
-					CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("AssembleMaterialMeshLists() is skipping a mesh with out of bounds material index!") });
+					LOG("AssembleMaterialMeshLists() is skipping a mesh with out of bounds material index!");
 				}
 				else
 				{
@@ -526,7 +533,7 @@ namespace BlazeEngine
 			}
 		}
 
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Assembled material mesh list of " + to_string(numMeshes) + " meshes and " + to_string(materialMeshLists.size()) + " materials") });
+		LOG("Assembled material mesh list of " + to_string(numMeshes) + " meshes and " + to_string(materialMeshLists.size()) + " materials");
 	}
 
 	Texture* BlazeEngine::SceneManager::FindLoadTextureByPath(string texturePath)
@@ -535,7 +542,7 @@ namespace BlazeEngine
 		{
 			if (textures[i] && textures[i]->TexturePath() == texturePath)
 			{
-				CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Texture at path " + texturePath + " has already been loaded") });
+				LOG("Texture at path " + texturePath + " has already been loaded");
 				return textures[i];
 			}
 		}

@@ -17,9 +17,6 @@ namespace BlazeEngine
 	enum EVENT_TYPE
 	{
 		// System:
-		EVENT_LOG,
-		EVENT_DEBUG,
-		EVENT_ERROR,
 		EVENT_ENGINE_QUIT,
 		
 		// Button inputs:
@@ -54,9 +51,6 @@ namespace BlazeEngine
 	const static string EVENT_NAME[EVENT_NUM_EVENTS] = 
 	{
 		// System:
-		"EVENT_LOG", 
-		"EVENT_DEBUG",
-		"EVENT_ERROR", 
 		"EVENT_ENGINE_QUIT", 
 
 		// Button inputs:

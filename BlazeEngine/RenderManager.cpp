@@ -3,6 +3,7 @@
 #include "Shader.h"
 #include "Mesh.h"
 #include "Transform.h"
+#include "BuildConfiguration.h"
 
 
 #include "SDL.h"
@@ -44,7 +45,7 @@ namespace BlazeEngine
 
 	void RenderManager::Startup()
 	{
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Render manager started!") });
+		LOG("Render manager started!");
 
 		// TO DO: IMPLEMENT PER-COMPONENT INITIALIZATION
 
@@ -144,8 +145,7 @@ namespace BlazeEngine
 
 	void RenderManager::Shutdown()
 	{
-		CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, this, new string("Render manager shutting down...") });
-
+		LOG("Render manager shutting down...");
 	}
 
 	void RenderManager::Update()

@@ -1,5 +1,7 @@
 #include "Material.h"
 #include "CoreEngine.h"
+#include "BuildConfiguration.h"
+
 
 #include <string>
 using std::to_string;
@@ -26,7 +28,7 @@ namespace BlazeEngine
 			glBindSampler(i, samplers[i]);
 			if (!glIsSampler(samplers[i]))
 			{
-				CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ERROR, nullptr, new string("Material could not create sampler #" + to_string(i)) });
+				LOG_ERROR("Material could not create sampler #" + to_string(i));
 			}
 			glBindSampler(i, 0);
 		}
@@ -53,7 +55,7 @@ namespace BlazeEngine
 	{
 		if (textures[textureIndex])
 		{
-			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_LOG, nullptr, new string("Replacing material \"" + this->name + "\" texture #" + std::to_string(textureIndex)) });
+			LOG("Replacing material \"" + this->name + "\" texture #" + std::to_string(textureIndex));
 
 			delete textures[textureIndex];
 		}
