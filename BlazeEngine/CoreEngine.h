@@ -12,6 +12,7 @@ namespace BlazeEngine
 	// ENGINE CONFIG:
 	// TO DO: Implement loading/saving of this object...
 	// TO DO: Make various fields const ?
+	// TO DO: Make this object (and members) static?
 	struct EngineConfig
 	{
 		EngineConfig(CoreEngine* coreEngine)

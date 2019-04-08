@@ -8,10 +8,8 @@
 #define STBI_FAILURE_USERMSG
 #include "stb_image.h"				// STB image loader. No need to #define STB_IMAGE_IMPLEMENTATION, as it was already defined in SceneManager
 
+#include <string>
 
-// Debug:
-#include <iostream>
-using std::cout;
 using std::to_string;
 
 
@@ -123,8 +121,6 @@ namespace BlazeEngine
 
 
 
-
-
 	// Static functions:
 	//------------------
 
@@ -168,7 +164,10 @@ namespace BlazeEngine
 				}
 			}
 
-			texture->Buffer();
+			if (!texture->Buffer())
+			{
+				LOG_ERROR("Texture buffering failed");
+			}
 
 			// Cleanup:
 			stbi_image_free(imageData);
@@ -186,7 +185,10 @@ namespace BlazeEngine
 		Texture* texture = new Texture(width, height);
 		texture->texturePath = "errorTexture";
 		texture->Fill(vec4(1.0, 0, 0, 1));
-		texture->Buffer();
+		if (!texture->Buffer())
+		{
+			LOG_ERROR("Texture buffering failed");
+		}
 
 		return texture;
 	}
@@ -194,16 +196,25 @@ namespace BlazeEngine
 
 	bool Texture::Buffer()
 	{
+		LOG("Buffering texture...");
+
+		glBindTexture(this->target, this->textureID);
+
 		// If the texture hasn't been created, create a new name:
 		if (!glIsTexture(this->textureID))
 		{
+			LOG("Texture has never been bound before!");
+
 			glGenTextures(1, &this->textureID);
 			glBindTexture(this->target, this->textureID);
 			if (glIsTexture(this->textureID) != GL_TRUE)
 			{
-				LOG_ERROR("OpenGL failed to create texture");
+				LOG_ERROR("OpenGL failed to generate new texture name");
 				return false;
 			}
+
+			// Specify a 2D image:
+			glTexImage2D(this->target, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, &this->Texel(0,0).r);
 
 			// Set the texture properties:
 			glTexStorage2D(this->target, 1, this->internalFormat, (GLsizei)this->width, (GLsizei)this->height);
@@ -214,23 +225,24 @@ namespace BlazeEngine
 
 			// Mip map min/maximizing:
 			glTexParameteri(this->target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);	// Linear interpolation, nearest neighbour sampling
-			glTexParameteri(this->target, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+			glTexParameteri(this->target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		}
 		else
 		{
-			glBindTexture(this->target, this->textureID);
+			LOG("Updating existing texture");
 		}
 
 		//glActiveTexture(0); // Set the active texture unit [0, 80+]
 		// Don't think we need this if we're using glBindTexture?
 
 		// Upload to the GPU:
-		glTexSubImage2D(this->target, 0, 0, 0, this->width, this->height, this->format, this->type, &this->Texel(0, 0).r);
+		glTexSubImage2D(this->target, 0, 0, 0, this->width, this->height, this->format, this->type, &this->Texel(0, 0).r); // <-- GL_INVALID_ENUM ???
 		glGenerateMipmap(this->target);
 
 		// Cleanup:
 		glBindTexture(this->target, 0);
 
+		LOG("Texture buffering complete!");
 		return true;
 	}
 }

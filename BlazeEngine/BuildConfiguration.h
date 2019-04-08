@@ -19,6 +19,9 @@
 	//#define LOG_VERBOSITY_DEBUG
 	// ^^ Currently unused...
 
+	// OpenGL-specific logging (in RenderManager.cpp)
+	#define DEBUG_LOG_OPENGL	// Comment this out to disable OpenGL logging
+
 #endif
 
 
@@ -33,3 +36,4 @@
 	#define LOG(message)		do {} while(false);
 	#define LOG_ERROR(message)	do {} while(false);
 #endif
+

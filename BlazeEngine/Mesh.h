@@ -39,9 +39,7 @@ namespace BlazeEngine
 
 		// Copy constructor:
 		Vertex(const Vertex& vertex) = default;
-		/*{
-			this->position = vertex.position;
-		}*/
+
 
 		vec3 position;
 		vec3 normal;
@@ -71,7 +69,7 @@ namespace BlazeEngine
 		VERTEX_POSITION,
 		VERTEX_NORMAL,
 		VERTEX_COLOR,
-		VERTEX_UV, // MULTIPLE?
+		VERTEX_UV, // TO DO: Implement multipl UV channels?
 
 		VERTEX_NUM_ATTRIBUTES	// RESERVED: The total number of vertex attributes
 	};
@@ -80,7 +78,7 @@ namespace BlazeEngine
 	class Mesh
 	{
 	public:
-		Mesh(Vertex* vertices, unsigned int numVerts, GLubyte* indices, unsigned int numIndices, int materialIndex = -1);
+		Mesh(Vertex* vertices, unsigned int numVerts, GLuint* indices, unsigned int numIndices, int materialIndex = -1);
 		/*~Mesh();*/
 
 		// Copy constructor:
@@ -92,7 +90,7 @@ namespace BlazeEngine
 		
 		inline int& MaterialIndex() { return materialIndex; }
 		
-		inline GLubyte* Indices() { return indices; }
+		inline GLuint* Indices() { return indices; }
 		inline unsigned int NumIndices() { return numIndices; }
 		
 		inline Transform* GetTransform() { return transform; }
@@ -119,7 +117,7 @@ namespace BlazeEngine
 		Vertex* vertices		= nullptr;		// Deallocated in SceneManager.Shutdown()
 		unsigned int numVerts	= -1;
 
-		GLubyte* indices		= nullptr;		// Deallocated in SceneManager.Shutdown()
+		GLuint* indices			= nullptr;		// Deallocated in SceneManager.Shutdown()
 		unsigned int numIndices = -1;
 
 		GLuint meshVAO			= 0;

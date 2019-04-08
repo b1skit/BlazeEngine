@@ -10,6 +10,7 @@
 #include "Light.h"
 #include "PlayerObject.h"
 
+#include "assimp/scene.h"		// Output data structure
 
 #include <vector>
 
@@ -134,6 +135,13 @@ namespace BlazeEngine
 		
 		// Find if a texture if it exists, or try and load it if it doesn't. Returns nullptr if file can't be loaded
 		Texture* FindLoadTextureByPath(string texturePath);
+
+
+		// Scene setup/construction:
+		//--------------------------
+
+		// Helper function: Traverses an aiNode tree, building and parenting meshes
+		void BuildSceneObjects(aiNode* root, aiScene const* scene);
 	};
 }
 

@@ -6,7 +6,7 @@ namespace BlazeEngine
 
 
 	// Mesh functions:
-	Mesh::Mesh(Vertex* vertices, unsigned int numVerts, GLubyte* indices, unsigned int numIndices, int materialIndex)
+	Mesh::Mesh(Vertex* vertices, unsigned int numVerts, GLuint* indices, unsigned int numIndices, int materialIndex)
 	{
 		this->vertices = vertices;
 		this->numVerts = numVerts;
@@ -27,6 +27,10 @@ namespace BlazeEngine
 		glGenBuffers(1, &meshVBOs[BUFFER_VERTICES]);
 		glBindBuffer(GL_ARRAY_BUFFER, meshVBOs[BUFFER_VERTICES]);
 
+		// Create and bind an index buffer:
+		glGenBuffers(1, &meshVBOs[BUFFER_INDEXES]);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshVBOs[BUFFER_INDEXES]);
+
 		// Position:
 		glEnableVertexAttribArray(VERTEX_POSITION); // Indicate that the vertex attribute at index 0 is being used
 		glVertexAttribPointer(VERTEX_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position)); // Define array of vertex attribute data: index, number of components (3 = 3 elements in vec3), type, should data be normalized?, stride, offset from start to 1st component
@@ -43,14 +47,10 @@ namespace BlazeEngine
 		glEnableVertexAttribArray(VERTEX_UV);
 		glVertexAttribPointer(VERTEX_UV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
 
-		// Bind our index buffer:
-		glGenBuffers(1, &meshVBOs[BUFFER_INDEXES]);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshVBOs[BUFFER_INDEXES]);
-
 
 		// Buffer data:
-		glBufferData(GL_ARRAY_BUFFER, numVerts * sizeof(Vertex), &vertices[0].position.x, GL_STATIC_DRAW);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(GLubyte), &indices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, numVerts * sizeof(Vertex), &vertices[0].position.x, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(GLuint), &indices[0], GL_DYNAMIC_DRAW);
 
 		// Cleanup:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -85,10 +85,9 @@ namespace BlazeEngine
 		transform = nullptr;
 	}
 
+
 	// Static functions:
 	//-------------------
-		
-
 
 	Mesh Mesh::CreateCube()
 	{
@@ -132,11 +131,6 @@ namespace BlazeEngine
 			vec2(0.0f, 1.0f),
 			vec2(1.0f, 0.0f),
 			vec2(1.0f, 1.0f),
-
-			//vec2(0.0f, 1.0f),	// tl
-			//vec2(0.0f, 0.0f),	// bl			
-			//vec2(1.0f, 0.0f),	// br
-			//vec2(1.0f, 1.0f),	// tr
 		};
 
 		int numVerts = 24;
@@ -180,7 +174,7 @@ namespace BlazeEngine
 		};
 
 		int numIndices = 36;
-		GLubyte* cubeIndices = new GLubyte[numIndices] // 6 faces * 2 tris * 3 indices 
+		GLuint* cubeIndices = new GLuint[numIndices] // 6 faces * 2 tris * 3 indices 
 		{
 			// Front face:
 			0, 1, 3,

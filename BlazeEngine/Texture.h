@@ -36,6 +36,7 @@ namespace BlazeEngine
 		// Fill texture with a color gradient
 		void Fill(vec4 tl, vec4 bl, vec4 tr, vec4 br, bool doBuffer = true); 
 
+
 		// Static functions:
 		//------------------
 		
@@ -51,14 +52,14 @@ namespace BlazeEngine
 		unsigned int width	= 1;		// # Cols
 		unsigned int height = 1;		// # Rows
 
-		GLuint textureID = 0;
+		GLuint textureID	= 0;
 
 		// TO DO: Make these configurable/dynamically set based on loaded file??
 		/*GLint level;
 		GLint xoffset;
 		GLint yoffset;*/
 		GLenum target			= GL_TEXTURE_2D;
-		GLenum internalFormat	= GL_RGBA32F;
+		GLenum internalFormat	= GL_RGBA32F;		// TO DO: Is this worth specifying per-texture?
 		GLenum format			= GL_RGBA;
 		GLenum type				= GL_FLOAT;
 		// Wrap modes?

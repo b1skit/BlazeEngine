@@ -5,6 +5,7 @@
 #include "Transform.h"
 #include "BuildConfiguration.h"
 
+#include <string>
 
 #include "SDL.h"
 #include "GL/glew.h"
@@ -29,6 +30,95 @@ using std::to_string;
 
 namespace BlazeEngine
 {
+	// OpenGL error message helper function: (Enable/disable via BuildConfiguration.h)
+	#if defined(DEBUG_LOG_OPENGL)
+		void GLAPIENTRY GLMessageCallback
+		(
+				GLenum source,
+				GLenum type,
+				GLuint id,
+				GLenum severity,
+				GLsizei length,
+				const GLchar* message,
+				const void* userParam
+		)
+		{
+			string output = "\nOpenGL Error Callback:\nSource: ";
+
+			switch (source)
+			{
+			case GL_DEBUG_SOURCE_APPLICATION: 
+				output += "GL_DEBUG_SOURCE_APPLICATION\n";
+					break;
+
+			case GL_DEBUG_SOURCE_THIRD_PARTY:
+				output += "GL_DEBUG_SOURCE_THIRD_PARTY\n";
+					break;
+			default:
+				output += "\n";
+			}
+
+			output += "Type: ";
+
+			switch (type)
+			{
+			case GL_DEBUG_TYPE_ERROR:
+				output += "ERROR\n";
+				break;
+			case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+				output += "DEPRECATED_BEHAVIOR\n";
+				break;
+			case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+				output += "UNDEFINED_BEHAVIOR\n";
+				break;
+			case GL_DEBUG_TYPE_PORTABILITY:
+				output += "PORTABILITY\n";
+				break;
+			case GL_DEBUG_TYPE_PERFORMANCE:
+				output += "PERFORMANCE\n";
+				break;
+			case GL_DEBUG_TYPE_OTHER:
+				output += "OTHER\n";
+				break;
+			default:
+				output += "\n";
+			}
+
+			output += "id: " + to_string(id) + "\n";
+
+			output += "Severity: ";
+			switch (severity)
+			{
+			case GL_DEBUG_SEVERITY_NOTIFICATION:
+				output += "NOTIFICATION\n";
+				break;
+			case GL_DEBUG_SEVERITY_LOW :
+					output += "LOW\n";
+				break;
+			case GL_DEBUG_SEVERITY_MEDIUM:
+				output += "MEDIUM\n";
+				break;
+			case GL_DEBUG_SEVERITY_HIGH:
+				output += "HIGH\n";
+				break;
+			default:
+				output += "\n";
+			}
+		
+			output += "Message: " + string(message);
+
+			switch(severity)
+			{
+			case GL_DEBUG_SEVERITY_NOTIFICATION:
+				LOG(output);
+				break;
+			default:
+				LOG_ERROR(output);
+			}
+		}
+	#endif
+
+
 	RenderManager::~RenderManager()
 	{
 		// Close our window in the destructor so we can still read any final OpenGL error messages before it is destroyed
@@ -132,7 +222,13 @@ namespace BlazeEngine
 			return;
 		}
 
-		// Configure OpenGL:
+		// Configure OpenGL logging:
+		#if defined(DEBUG_LOG_OPENGL)
+			glEnable(GL_DEBUG_OUTPUT);
+			glDebugMessageCallback(GLMessageCallback, 0);
+		#endif
+
+		// Configure other OpenGL settings:
 		glEnable(GL_DEPTH_TEST);			// Enable Z depth testing
 		glFrontFace(GL_CCW);				// Counter-clockwise vertex winding (OpenGL default)
 		glEnable(GL_CULL_FACE);				// Enable face culling
@@ -319,7 +415,7 @@ namespace BlazeEngine
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, currentMesh->VBO(BUFFER_INDEXES));
 
 				// Draw!
-				glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_BYTE, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type,const GLvoid * indices);
+				glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type,const GLvoid * indices);
 
 				// Cleanup: 
 				glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -353,6 +449,8 @@ namespace BlazeEngine
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
+
+
 }
 
 

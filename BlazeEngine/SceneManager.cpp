@@ -4,7 +4,7 @@
 #include "BuildConfiguration.h"
 
 #include "assimp/Importer.hpp"	// Importer interface
-#include "assimp/scene.h"		// Output data structure
+//#include "assimp/scene.h"		// Output data structure
 #include "assimp/postprocess.h"	// Post processing flags
 
 #define STB_IMAGE_IMPLEMENTATION	// Only include this define ONCE in the project
@@ -125,7 +125,16 @@ namespace BlazeEngine
 
 		// Load our .fbx using Assimp:
 		Assimp::Importer importer;
-		const aiScene* scene = importer.ReadFile(fbxPath, aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
+		aiScene const* scene = importer.ReadFile(fbxPath, 
+			aiProcess_ValidateDataStructure 
+			| aiProcess_CalcTangentSpace 
+			| aiProcess_Triangulate 
+			| aiProcess_JoinIdenticalVertices 
+			| aiProcess_SortByPType 
+			| aiProcess_GenUVCoords 
+			| aiProcess_TransformUVCoords
+		); // aiProcess_FlipUVs | aiProcess_GenNormals | aiProcess_OptimizeMeshes | aiProcess_RemoveRedundantMaterials
+
 		if (!scene)
 		{
 			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, nullptr, new string("Failed to load scene file: " + fbxPath + ": " + importer.GetErrorString() ) });
@@ -136,7 +145,35 @@ namespace BlazeEngine
 			LOG("Successfully loaded scene file " + fbxPath);
 		}
 
-		// Load textures:
+
+		//// DEBUG:
+		//BuildSceneObjects(scene->mRootNode, scene);
+
+
+		//for (unsigned int i = 0; i < scene->mNumMeshes; i++)
+		//{
+		//	LOG("Found a mesh named " + string(scene->mMeshes[i]->mName.C_Str()) + " length = " + to_string(scene->mMeshes[i]->mName.length) );
+
+		//	aiNode* test = nullptr;
+		//	test = scene->mRootNode->FindNode(scene->mMeshes[i]->mName.C_Str());
+		//	if (test)
+		//	{
+		//		LOG("FOUND MATCHING NODE!");
+		//		LOG("has " + to_string(test->mNumMeshes));
+		//	}
+		//	else
+		//	{
+		//		LOG("faiiiiiiiiiiiiiiled");
+		//	}
+		//}
+		
+
+		
+
+
+
+
+		// Check for embedded textures:
 		if (scene->HasTextures())
 		{
 			int numTextures = scene->mNumTextures;
@@ -146,8 +183,10 @@ namespace BlazeEngine
 		{
 			LOG("Scene has no embedded textures");
 		}
+
 		
 		// Extract materials and textures:
+		//--------------------------------
 		if (scene->HasMaterials())
 		{
 			int numMaterials = scene->mNumMaterials;
@@ -160,21 +199,29 @@ namespace BlazeEngine
 				aiString name;
 				if (AI_SUCCESS == scene->mMaterials[i]->Get(AI_MATKEY_NAME, name))
 				{
-					aiShadingMode shaderType;
+					aiShadingMode shaderType = aiShadingMode_NoShading;
 					if (AI_SUCCESS != scene->mMaterials[i]->Get(AI_MATKEY_SHADING_MODEL, shaderType))
 					{
 						LOG_ERROR("Couldn't load shader type!!!");
 					}
 
-					LOG("Creating material: " + string(name.C_Str()) + " of shader type " + to_string(shaderType));
+					LOG("Creating material: \"" + string(name.C_Str()) + "\" of shader type \"" + to_string(shaderType) + "\"");
 
 					// Create a Blaze Engine material:
 					string matName = string(name.C_Str());
 					Material* newMaterial = new Material(matName, CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
 
 					// Extract material's textures:
+					Texture* diffuseTexture = nullptr;
 					if (scene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) // If there is more than 1 texture in the slot, we only get the FIRST...
 					{
+						int numTextures = scene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE);
+						LOG("Material has " + to_string(numTextures) + " aiTextureType_DIFFUSE textures...");
+
+
+						// TO DO: Loop through EVERY texture, and use a switch statement to handle each type
+
+
 						LOG("Material " + to_string(i) + ": Loading diffuse texture...");
 
 						aiString path;
@@ -186,22 +233,30 @@ namespace BlazeEngine
 							LOG("Found texture path: " + texturePath);
 
 							// Find the texture if it has already been loaded, or load it otherwise:
-							Texture* diffuseTexture = FindLoadTextureByPath(texturePath);
-
-
-							// Add texture to a material:
-							newMaterial->SetTexture(diffuseTexture, TEXTURE_ALBEDO);
-
-
-							// Add the material to our material list:
-							unsigned int materialIndex = AddMaterial(newMaterial, false);
+							diffuseTexture = FindLoadTextureByPath(texturePath);
 						}
 						else
 						{
-							LOG("Material does not contain a diffuse texture path");
+							LOG("Material does not contain a diffuse texture path. Assigning an error texture");
 						}
 					}
-				}				
+					else
+					{
+						LOG("Material " + to_string(i) + ": No diffuse texture found. Assigning an error texture");
+					}
+
+					if (diffuseTexture == nullptr)
+					{
+						diffuseTexture = FindLoadTextureByPath("errorPath"); // TO DO: Make "errorPath" a global/static string, so it can be reused anywhere?
+					}
+					// Add texture to a material:
+					newMaterial->SetTexture(diffuseTexture, TEXTURE_ALBEDO);
+
+
+
+					// Add the material to our material list:
+					AddMaterial(newMaterial, false);
+				}
 			}
 		}
 		else
@@ -209,18 +264,114 @@ namespace BlazeEngine
 			LOG_ERROR("Scene has no materials");
 		}
 
+
+		// Extract meshes:
+		//----------------
 		if (scene->HasMeshes())
 		{
 			int numMeshes = scene->mNumMeshes;
 			LOG("Found " + to_string(numMeshes) + " scene meshes");
 
-			// TO DO: Load meshes
+			// Loop through each mesh in the scene
+			for (int currentMesh = 0; currentMesh < numMeshes; currentMesh++)
+			{
+				if (
+					scene->mMeshes[currentMesh]->HasPositions()
+					&& scene->mMeshes[currentMesh]->HasFaces()
+					&& scene->mMeshes[currentMesh]->HasNormals()
+					//&& scene->mMeshes[currentMesh]->HasVertexColors(0)
+					&& scene->mMeshes[currentMesh]->HasTextureCoords(0)
+					//&& scene->mMeshes[currentMesh]->HasTangentsAndBitangents()
+					)
+				{
+					int numVerts		= scene->mMeshes[currentMesh]->mNumVertices;
+					int numFaces		= scene->mMeshes[currentMesh]->mNumFaces;
+					int numUVs			= scene->mMeshes[currentMesh]->mNumUVComponents[0]; // Just look at the first UV channel for now...
+					int numUVChannels	= scene->mMeshes[currentMesh]->GetNumUVChannels();
+					int materialIndex	= scene->mMeshes[currentMesh]->mMaterialIndex;
+
+					LOG("Mesh #" + to_string(currentMesh) + " is valid: " + to_string(numVerts) + " vertices, " + to_string(numFaces) + " faces, " + to_string(numUVChannels) + " UV channels, " + to_string(numUVs) + " UV components in channel 0, using material #" + to_string(materialIndex));
+
+					Vertex* vertices = new Vertex[numVerts];
+					LOG("Created an array of " + to_string(numVerts) + " vertices!");
+
+					// Fill the vertices array:
+					for (int currentVert = 0; currentVert < numVerts; currentVert++)
+					{
+						vertices[currentVert] = Vertex
+						{
+							vec3(scene->mMeshes[currentMesh]->mVertices[currentVert].x, scene->mMeshes[currentMesh]->mVertices[currentVert].y, scene->mMeshes[currentMesh]->mVertices[currentVert].z),
+							vec3(scene->mMeshes[currentMesh]->mNormals[currentVert].x, scene->mMeshes[currentMesh]->mNormals[currentVert].y, scene->mMeshes[currentMesh]->mNormals[currentVert].z),
+							vec4(0.5f, 0.5f ,0.5f , 1.0f), // TO DO: Color - Populate this?
+							vec2(scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].x, scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].y)
+						};
+					}
+
+					// Fill the indices array:
+					int numIndices = scene->mMeshes[currentMesh]->mNumFaces * 3;
+					GLuint* indices = new GLuint[numIndices];
+					LOG("Created an array of " + to_string(numIndices) + " indices!");
+					
+					for (int currentFace = 0; currentFace < numFaces; currentFace++)
+					{
+						for (int currentIndex = 0; currentIndex < 3; currentIndex++)
+						{
+							if (scene->mMeshes[currentMesh]->mFaces[currentFace].mNumIndices != 3)
+							{
+								LOG_ERROR("Found a face that doesn't have 3 indices!")
+							}
+							indices[(currentFace * 3) + currentIndex] = scene->mMeshes[currentMesh]->mFaces[currentFace].mIndices[currentIndex];
+
+							//LOG("Index # " + to_string((currentFace * 3) + currentIndex) + " = Face #" + to_string(currentFace) + " index #" + to_string(currentIndex) + " = " + to_string(scene->mMeshes[currentMesh]->mFaces[currentFace].mIndices[currentIndex]));
+						}
+					}
+
+					Mesh newMesh(vertices, numVerts, indices, numIndices, materialIndex);
+
+					currentScene->meshes.push_back(newMesh);
+					int meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address				
+
+					// Assemble a list of all meshes held by a Renderable:
+					vector<Mesh*> viewMeshes;
+					viewMeshes.push_back(&(currentScene->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
+					Renderable testRenderable(viewMeshes);
+
+					// Construct a GameObject for the cube:
+					GameObject* meshGameObject = new GameObject("cubeObject1", testRenderable);
+
+					/*cubeObject->GetTransform()->SetPosition(vec3(-3, 0, 0));*/
+
+
+					// Add cube object to scene:
+					currentScene->gameObjects.push_back(meshGameObject);
+					int gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
+
+					// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
+					currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
+
+
+				}
+				else
+				{
+					LOG("Mesh is missing the following properties:");
+					if (!scene->mMeshes[currentMesh]->HasPositions())				LOG("\t - positions");
+					if (!scene->mMeshes[currentMesh]->HasFaces())					LOG("\t - faces");
+					if (!scene->mMeshes[currentMesh]->HasNormals())					LOG("\t - normals");
+					if (!scene->mMeshes[currentMesh]->HasVertexColors(0))			LOG("\t - vertex colors");
+					if (!scene->mMeshes[currentMesh]->HasTextureCoords(0))			LOG("\t - texture coordinates");
+					if (!scene->mMeshes[currentMesh]->HasTangentsAndBitangents())	LOG("\t - tangents & bitangents");
+				}
+			}
+
 		}
 		else
 		{
 			LOG_ERROR("Scene has no meshes");
 		}
 
+
+		// Extract lights:
+		//----------------
 		if (scene->HasLights())
 		{
 			int numLights = scene->mNumLights;
@@ -230,9 +381,12 @@ namespace BlazeEngine
 		}
 		else
 		{
-			LOG_ERROR("Scene has no materials");
+			LOG_ERROR("Scene has no lights");
 		}
 
+
+		// Extract cameras:
+		//-----------------
 		if (scene->HasCameras())
 		{
 			int numCameras = scene->mNumCameras;
@@ -249,154 +403,154 @@ namespace BlazeEngine
 
 
 
-		// DEBUG: HARD CODE SOME OBJECTS TO WORK WITH:
+		//// DEBUG: HARD CODE SOME OBJECTS TO WORK WITH:
 
 
-		
-		// Create 1st cube using test texture:
+		//
+		//// Create 1st cube using test texture:
 
-		Material* newMaterial = GetMaterial("cubePhong");
+		//Material* newMaterial = GetMaterial("cubePhong");
 
-		// -> Already has an albedo...
+		//// -> Already has an albedo...
 
-		Texture* testNormal = FindLoadTextureByPath(".debug/invalid/normal/path");
-		newMaterial->SetTexture(testNormal, TEXTURE_NORMAL);
-		testNormal->Fill(vec4(0, 0, 1, 1));
-		
-		Texture* testRoughness = FindLoadTextureByPath(".debug/invalid/rough/path");
-		newMaterial->SetTexture(testRoughness, TEXTURE_ROUGHNESS);
-		testRoughness->Fill(vec4(1, 1, 0, 1));
+		//Texture* testNormal = FindLoadTextureByPath(".debug/invalid/normal/path");
+		//newMaterial->SetTexture(testNormal, TEXTURE_NORMAL);
+		//testNormal->Fill(vec4(0, 0, 1, 1));
+		//
+		//Texture* testRoughness = FindLoadTextureByPath(".debug/invalid/rough/path");
+		//newMaterial->SetTexture(testRoughness, TEXTURE_ROUGHNESS);
+		//testRoughness->Fill(vec4(1, 1, 0, 1));
 
-		Texture* testMetallic = FindLoadTextureByPath(".debug/invalid/metal/path");
-		newMaterial->SetTexture(testMetallic, TEXTURE_METALLIC);
-		testMetallic->Fill(vec4(0, 1, 1, 1));
+		//Texture* testMetallic = FindLoadTextureByPath(".debug/invalid/metal/path");
+		//newMaterial->SetTexture(testMetallic, TEXTURE_METALLIC);
+		//testMetallic->Fill(vec4(0, 1, 1, 1));
 
-		Texture* testAmbientOcclusion = FindLoadTextureByPath(".debug/invalid/AO/path");
-		newMaterial->SetTexture(testAmbientOcclusion, TEXTURE_AMBIENT_OCCLUSION);
-		testAmbientOcclusion->Fill(vec4(0.5, 0.5, 0.5, 1));
+		//Texture* testAmbientOcclusion = FindLoadTextureByPath(".debug/invalid/AO/path");
+		//newMaterial->SetTexture(testAmbientOcclusion, TEXTURE_AMBIENT_OCCLUSION);
+		//testAmbientOcclusion->Fill(vec4(0.5, 0.5, 0.5, 1));
 
-		// -> Material already in material list...
+		//// -> Material already in material list...
 
-		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		Mesh mesh = Mesh::CreateCube();
-		mesh.MaterialIndex() = GetMaterialIndex("cubePhong");
-		// -> Get using string instead of index...
+		//// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
+		//Mesh mesh = Mesh::CreateCube();
+		//mesh.MaterialIndex() = GetMaterialIndex("cubePhong");
+		//// -> Get using string instead of index...
 
-		currentScene->meshes.push_back(mesh);
-		int meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address
+		//currentScene->meshes.push_back(mesh);
+		//int meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address
 
-		// Assemble a list of all meshes held by a Renderable:
-		vector<Mesh*> viewMeshes;
-		viewMeshes.push_back(&(currentScene->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
-		Renderable testRenderable(viewMeshes);
+		//// Assemble a list of all meshes held by a Renderable:
+		//vector<Mesh*> viewMeshes;
+		//viewMeshes.push_back(&(currentScene->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
+		//Renderable testRenderable(viewMeshes);
 
-		// Construct a GameObject for the cube:
-		GameObject* cubeObject = new GameObject("cubeObject1", testRenderable);
+		//// Construct a GameObject for the cube:
+		//GameObject* cubeObject = new GameObject("cubeObject1", testRenderable);
 
-		cubeObject->GetTransform()->SetPosition(vec3(-3, 0,0));
-		
+		//cubeObject->GetTransform()->SetPosition(vec3(-3, 0,0));
+		//
 
-		// Add cube object to scene:
-		currentScene->gameObjects.push_back(cubeObject);
-		int gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
+		//// Add cube object to scene:
+		//currentScene->gameObjects.push_back(cubeObject);
+		//int gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
 
-		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-		currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
-
-
-
-		// Assemble a second cube:
-
-		// Create a material and shader:
-		newMaterial = new Material("testMaterial2", CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
-
-		/*int shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
-		newMaterial = new Material("testMaterial2", shaderIndex);*/
-
-		// Create textures and assign them to the material:
-		Texture* testAlbedo = new Texture(256, 256, false); // Create a new, unfilled texture
-		testAlbedo->Fill(vec4(1, 1, 1, 1), vec4(0, 0, 1, 1), vec4(0, 1, 0, 1), vec4(1, 0, 0, 1));
-		
-		//Texture* testAlbedo = Texture::LoadTextureFromPath("INVALID PATH");  // Bright red error texture
-		
-		newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
-
-		// Add the material to our material list:
-		int materialIndex = AddMaterial(newMaterial);
-
-		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		mesh = Mesh::CreateCube();
-		mesh.MaterialIndex() = materialIndex;
-
-		currentScene->meshes.push_back(mesh);
-		meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address
-
-		// Assemble a list of all meshes held by a Renderable:
-		viewMeshes.clear();
-		viewMeshes.push_back(&(currentScene->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
-		testRenderable = Renderable(viewMeshes);
-
-		// Construct a GameObject for the cube:
-		cubeObject = new GameObject("cubeObject2", testRenderable);
-
-		cubeObject->GetTransform()->SetPosition(vec3(3, 0, 0));
-		cubeObject->GetTransform()->SetEulerRotation(vec3(0.5f,0.5f,0.5f));
-
-
-		// Add cube object to scene:
-		currentScene->gameObjects.push_back(cubeObject);
-		gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
-
-		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-		currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
-
-
-		
+		//// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
+		//currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
 
 
 
+		//// Assemble a second cube:
 
-		// Assemble a third cube:
+		//// Create a material and shader:
+		//newMaterial = new Material("testMaterial2", CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
 
-		// Create a material and shader:
-		newMaterial = new Material("testMaterial3", "thisShouldLoadTheErrorShader");
+		///*int shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
+		//newMaterial = new Material("testMaterial2", shaderIndex);*/
+
+		//// Create textures and assign them to the material:
+		//Texture* testAlbedo = new Texture(256, 256, false); // Create a new, unfilled texture
+		//testAlbedo->Fill(vec4(1, 1, 1, 1), vec4(0, 0, 1, 1), vec4(0, 1, 0, 1), vec4(1, 0, 0, 1));
+		//
+		////Texture* testAlbedo = Texture::LoadTextureFromPath("INVALID PATH");  // Bright red error texture
+		//
+		//newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
+
+		//// Add the material to our material list:
+		//int materialIndex = AddMaterial(newMaterial);
+
+		//// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
+		//mesh = Mesh::CreateCube();
+		//mesh.MaterialIndex() = materialIndex;
+
+		//currentScene->meshes.push_back(mesh);
+		//meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address
+
+		//// Assemble a list of all meshes held by a Renderable:
+		//viewMeshes.clear();
+		//viewMeshes.push_back(&(currentScene->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
+		//testRenderable = Renderable(viewMeshes);
+
+		//// Construct a GameObject for the cube:
+		//cubeObject = new GameObject("cubeObject2", testRenderable);
+
+		//cubeObject->GetTransform()->SetPosition(vec3(3, 0, 0));
+		//cubeObject->GetTransform()->SetEulerRotation(vec3(0.5f,0.5f,0.5f));
 
 
-		//shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName); // Use the error shader
-		//newMaterial = new Material("testMaterial3", shaderIndex);
+		//// Add cube object to scene:
+		//currentScene->gameObjects.push_back(cubeObject);
+		//gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
 
-		// Create textures and assign them to the material:
-		testAlbedo = FindLoadTextureByPath("./another/invalid/path");
-		newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
-
-		// Add the material to our material list:
-		materialIndex = AddMaterial(newMaterial);
-
-		// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		mesh = Mesh::CreateCube();
-		mesh.MaterialIndex() = materialIndex;
-
-		currentScene->meshes.push_back(mesh);
-		meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address
-
-		// Assemble a list of all meshes held by a Renderable:
-		viewMeshes.clear();
-		viewMeshes.push_back(&(currentScene->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
-		testRenderable = Renderable(viewMeshes);
-
-		// Construct a GameObject for the cube:
-		cubeObject = new GameObject("cubeObject2", testRenderable);
-
-		cubeObject->GetTransform()->SetPosition(vec3(0, -5, -5));
-		cubeObject->GetTransform()->SetEulerRotation(vec3(-0.3f, 0.3f, -0.3f));
+		//// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
+		//currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
 
 
-		// Add cube object to scene:
-		currentScene->gameObjects.push_back(cubeObject);
-		gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
+		//
 
-		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-		currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
+
+
+
+		//// Assemble a third cube:
+
+		//// Create a material and shader:
+		//newMaterial = new Material("testMaterial3", "thisShouldLoadTheErrorShader");
+
+
+		////shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName); // Use the error shader
+		////newMaterial = new Material("testMaterial3", shaderIndex);
+
+		//// Create textures and assign them to the material:
+		//testAlbedo = FindLoadTextureByPath("./another/invalid/path");
+		//newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
+
+		//// Add the material to our material list:
+		//materialIndex = AddMaterial(newMaterial);
+
+		//// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
+		//mesh = Mesh::CreateCube();
+		//mesh.MaterialIndex() = materialIndex;
+
+		//currentScene->meshes.push_back(mesh);
+		//meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address
+
+		//// Assemble a list of all meshes held by a Renderable:
+		//viewMeshes.clear();
+		//viewMeshes.push_back(&(currentScene->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
+		//testRenderable = Renderable(viewMeshes);
+
+		//// Construct a GameObject for the cube:
+		//cubeObject = new GameObject("cubeObject2", testRenderable);
+
+		//cubeObject->GetTransform()->SetPosition(vec3(0, -5, -5));
+		//cubeObject->GetTransform()->SetEulerRotation(vec3(-0.3f, 0.3f, -0.3f));
+
+
+		//// Add cube object to scene:
+		//currentScene->gameObjects.push_back(cubeObject);
+		//gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
+
+		//// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
+		//currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
 
 
 
@@ -549,6 +703,46 @@ namespace BlazeEngine
 
 		// If we've made it this far, try and load the texture
 		return Texture::LoadTextureFromPath(texturePath);
+	}
+
+
+	// Traverse a scene, printing info:
+	void SceneManager::BuildSceneObjects(aiNode* root, aiScene const* scene)
+	{
+		if (root == nullptr || scene == nullptr || root->mNumChildren <= 0)
+		{
+			return;
+		}
+		
+		// Print this node's info:
+		LOG("Name = " + string(root->mName.C_Str()) + ", # meshes = " + to_string(root->mNumMeshes));
+
+		LOG(to_string(root->mTransformation.a1) + " " + to_string(root->mTransformation.a2) + " " + to_string(root->mTransformation.a3) + " " + to_string(root->mTransformation.a4));
+		LOG(to_string(root->mTransformation.b1) + " " + to_string(root->mTransformation.b2) + " " + to_string(root->mTransformation.b3) + " " + to_string(root->mTransformation.b4));
+		LOG(to_string(root->mTransformation.c1) + " " + to_string(root->mTransformation.c2) + " " + to_string(root->mTransformation.c3) + " " + to_string(root->mTransformation.c4));
+		LOG(to_string(root->mTransformation.d1) + " " + to_string(root->mTransformation.d2) + " " + to_string(root->mTransformation.d3) + " " + to_string(root->mTransformation.d4));
+
+		//root->
+
+
+		//if (root->mParent == NULL)
+			// Don't parent!
+
+
+		for (unsigned int i = 0; i < root->mNumMeshes; i++)
+		{
+			/*if (root->mMeshes[i] && scene->mMeshes &&  scene-> ->mMeshes)
+			{
+				
+			}*/
+			LOG("Mesh #" + to_string(i) + " has index = " + to_string(root->mMeshes[i]));
+		}
+
+		// Recursively call all children:
+		for (unsigned int i = 0; i < root->mNumChildren; i++)
+		{
+			BuildSceneObjects(root->mChildren[i], scene);
+		}
 	}
 }
 

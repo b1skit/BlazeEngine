@@ -7,16 +7,6 @@
 
 #include "SDL.h"
 
-// DEBUG: Spew notification messages as they're recieved.
-// Useful for debugging when an issue occurs before we can print it normally
-//#define DEBUG_PRINT_NOTIFICATIONS
-//#if defined(DEBUG_PRINT_NOTIFICATIONS)
-//	#include <string>
-//	#include <iostream>
-//	using std::string;
-//	using std::cout;
-//#endif
-
 
 namespace BlazeEngine
 {
@@ -218,47 +208,6 @@ namespace BlazeEngine
 			}
 
 			}// End switch
-		}
-
-		// Catch OpenGl error events:
-		GLenum glError;
-		string prefix = "OpenGL error: ";
-		while ((glError = glGetError()) != GL_NO_ERROR) // TO DO: REPLACE THIS WITH AN OPENGL ERROR HANDLING CALLBACK FUNCTION
-		{
-			switch (glError)
-			{
-			case GL_INVALID_ENUM:
-				LOG_ERROR(prefix + "GL_INVALID_ENUM");
-				break;
-
-			case GL_INVALID_VALUE:
-				LOG_ERROR(prefix + "GL_INVALID_VALUE");
-				break;
-
-			case GL_INVALID_OPERATION:
-				LOG_ERROR(prefix + "GL_INVALID_OPERATION");
-				break;
-
-			case GL_INVALID_FRAMEBUFFER_OPERATION:
-				LOG_ERROR(prefix + "GL_INVALID_FRAMEBUFFER_OPERATION");
-				break;
-
-			case GL_OUT_OF_MEMORY:
-				LOG_ERROR(prefix + "GL_OUT_OF_MEMORY");
-				break;
-
-			case GL_STACK_UNDERFLOW:
-				LOG_ERROR(prefix + "GL_OUT_OF_MEMORY");
-				break;
-
-			case GL_STACK_OVERFLOW:
-				LOG_ERROR(prefix + "GL_STACK_OVERFLOW");
-				break;
-
-			default:
-				LOG_ERROR(prefix + to_string(glError));
-				break;
-			}
 		}
 
 		// Loop through each type of event:
