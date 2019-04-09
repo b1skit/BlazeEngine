@@ -13,14 +13,14 @@
 	//#define DEBUG_LOG_MANAGER_PRINT_EVENTS		// Print events as the log manager receives them
 
 	
-	// Logging verbosity: Which events the log manager will subscribe to:
-	//-------------------------------------------------------------------
-	//#define LOG_VERBOSITY_ALL
-	//#define LOG_VERBOSITY_DEBUG
-	// ^^ Currently unused...
+	// Logging verbosity:
+	//-------------------
+	//#define LOG_VERBOSITY_ALL				// Uncomment to enable non-essential logging (e.g. OpenGL notifications)
+
+	//#define LOG_VERBOSITY_DEBUG // <-- Currently unused
 
 	// OpenGL-specific logging (in RenderManager.cpp)
-	#define DEBUG_LOG_OPENGL	// Comment this out to disable OpenGL logging
+	#define DEBUG_LOG_OPENGL	// Comment this out to completely disable OpenGL logging
 
 #endif
 

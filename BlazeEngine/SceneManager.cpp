@@ -4,18 +4,10 @@
 #include "BuildConfiguration.h"
 
 #include "assimp/Importer.hpp"	// Importer interface
-//#include "assimp/scene.h"		// Output data structure
 #include "assimp/postprocess.h"	// Post processing flags
 
 #define STB_IMAGE_IMPLEMENTATION	// Only include this define ONCE in the project
 #include "stb_image.h"				// STB image loader
-
-
-
-//// DEBUG:
-//#include <iostream>
-//using std::cout;
-//using std::to_string;
 
 
 
@@ -26,15 +18,18 @@ namespace BlazeEngine
 		stbi_set_flip_vertically_on_load(true);	// Tell stb_image to flip the y-axis on loading (So pixel (0,0) is in the bottom-left of the image)
 	}
 
+
 	SceneManager::~SceneManager()
 	{
 	}
+
 
 	SceneManager& SceneManager::Instance()
 	{
 		static SceneManager* instance = new SceneManager();
 		return *instance;
 	}
+
 
 	void SceneManager::Startup()
 	{
@@ -45,6 +40,13 @@ namespace BlazeEngine
 			materials[i] = nullptr;
 		}
 		currentMaterialCount = 0;
+
+		textures = new Texture*[MAX_TEXTURES];
+		for (unsigned int i = 0; i < MAX_TEXTURES; i++)
+		{
+			textures[i] = nullptr;
+		}
+		currentTextureCount = 0;
 
 		LOG("Scene manager started!");
 	}
@@ -146,35 +148,44 @@ namespace BlazeEngine
 		}
 
 
-		//// DEBUG:
-		//BuildSceneObjects(scene->mRootNode, scene);
 
 
-		//for (unsigned int i = 0; i < scene->mNumMeshes; i++)
-		//{
-		//	LOG("Found a mesh named " + string(scene->mMeshes[i]->mName.C_Str()) + " length = " + to_string(scene->mMeshes[i]->mName.length) );
+		// DEBUG:
+		BuildSceneObjects(scene->mRootNode, scene);
 
-		//	aiNode* test = nullptr;
-		//	test = scene->mRootNode->FindNode(scene->mMeshes[i]->mName.C_Str());
-		//	if (test)
-		//	{
-		//		LOG("FOUND MATCHING NODE!");
-		//		LOG("has " + to_string(test->mNumMeshes));
-		//	}
-		//	else
-		//	{
-		//		LOG("faiiiiiiiiiiiiiiled");
-		//	}
-		//}
+
+		for (unsigned int i = 0; i < scene->mNumMeshes; i++)
+		{
+			LOG("Found a mesh named " + string(scene->mMeshes[i]->mName.C_Str()) + " length = " + to_string(scene->mMeshes[i]->mName.length) );
+
+			aiNode* test = nullptr;
+			test = scene->mRootNode->FindNode(scene->mMeshes[i]->mName.C_Str()); // this works.
+			if (test)
+			{
+				LOG("FOUND MATCHING NODE with " + to_string(test->mNumMeshes) + " meshes");
+
+				aiNode* current = test->mParent;
+				while (current != NULL)
+				{
+					LOG("Has a parent: " + string(current->mName.C_Str() ));
+					current = current->mParent;
+				}
+				LOG("\n");
+			}
+			else
+			{
+				LOG("faiiiiiiiiiiiiiiled");
+			}
+		}
 		
 
 		
 
 
 
-
-		// Check for embedded textures:
-		if (scene->HasTextures())
+		// Extract materials and textures:
+		//--------------------------------
+		if (scene->HasTextures()) // Check for embedded textures
 		{
 			int numTextures = scene->mNumTextures;
 			LOG_ERROR("Found " + to_string(numTextures) + " embedded scene textures. These will NOT be loaded!");
@@ -184,85 +195,15 @@ namespace BlazeEngine
 			LOG("Scene has no embedded textures");
 		}
 
-		
-		// Extract materials and textures:
-		//--------------------------------
 		if (scene->HasMaterials())
 		{
-			int numMaterials = scene->mNumMaterials;
-			LOG("Found " + to_string(numMaterials) + " scene materials");
-
-			// Create Blaze Engine materials:
-			for (int i = 0; i < numMaterials; i++)
-			{
-				// Get the material name:
-				aiString name;
-				if (AI_SUCCESS == scene->mMaterials[i]->Get(AI_MATKEY_NAME, name))
-				{
-					aiShadingMode shaderType = aiShadingMode_NoShading;
-					if (AI_SUCCESS != scene->mMaterials[i]->Get(AI_MATKEY_SHADING_MODEL, shaderType))
-					{
-						LOG_ERROR("Couldn't load shader type!!!");
-					}
-
-					LOG("Creating material: \"" + string(name.C_Str()) + "\" of shader type \"" + to_string(shaderType) + "\"");
-
-					// Create a Blaze Engine material:
-					string matName = string(name.C_Str());
-					Material* newMaterial = new Material(matName, CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
-
-					// Extract material's textures:
-					Texture* diffuseTexture = nullptr;
-					if (scene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) // If there is more than 1 texture in the slot, we only get the FIRST...
-					{
-						int numTextures = scene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE);
-						LOG("Material has " + to_string(numTextures) + " aiTextureType_DIFFUSE textures...");
-
-
-						// TO DO: Loop through EVERY texture, and use a switch statement to handle each type
-
-
-						LOG("Material " + to_string(i) + ": Loading diffuse texture...");
-
-						aiString path;
-						scene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &path); // We only get the texture at index 0 (any others are ignored...)
-
-						if (path.length > 0)
-						{
-							string texturePath = sceneRoot + string(path.C_Str());
-							LOG("Found texture path: " + texturePath);
-
-							// Find the texture if it has already been loaded, or load it otherwise:
-							diffuseTexture = FindLoadTextureByPath(texturePath);
-						}
-						else
-						{
-							LOG("Material does not contain a diffuse texture path. Assigning an error texture");
-						}
-					}
-					else
-					{
-						LOG("Material " + to_string(i) + ": No diffuse texture found. Assigning an error texture");
-					}
-
-					if (diffuseTexture == nullptr)
-					{
-						diffuseTexture = FindLoadTextureByPath("errorPath"); // TO DO: Make "errorPath" a global/static string, so it can be reused anywhere?
-					}
-					// Add texture to a material:
-					newMaterial->SetTexture(diffuseTexture, TEXTURE_ALBEDO);
-
-
-
-					// Add the material to our material list:
-					AddMaterial(newMaterial, false);
-				}
-			}
+			ImportMaterialsAndTexturesFromScene(scene, sceneName);
 		}
 		else
 		{
 			LOG_ERROR("Scene has no materials");
 		}
+
 
 
 		// Extract meshes:
@@ -290,7 +231,7 @@ namespace BlazeEngine
 					int numUVChannels	= scene->mMeshes[currentMesh]->GetNumUVChannels();
 					int materialIndex	= scene->mMeshes[currentMesh]->mMaterialIndex;
 
-					LOG("Mesh #" + to_string(currentMesh) + " is valid: " + to_string(numVerts) + " vertices, " + to_string(numFaces) + " faces, " + to_string(numUVChannels) + " UV channels, " + to_string(numUVs) + " UV components in channel 0, using material #" + to_string(materialIndex));
+					LOG("Mesh #" + to_string(currentMesh) + " \"" + string(scene->mMeshes[currentMesh]->mName.C_Str()) +  "\" is valid: " + to_string(numVerts) + " vertices, " + to_string(numFaces) + " faces, " + to_string(numUVChannels) + " UV channels, " + to_string(numUVs) + " UV components in channel 0, using material #" + to_string(materialIndex));
 
 					Vertex* vertices = new Vertex[numVerts];
 					LOG("Created an array of " + to_string(numVerts) + " vertices!");
@@ -618,6 +559,7 @@ namespace BlazeEngine
 		return AddMaterial(newMaterial, false);
 	}
 
+
 	unsigned int SceneManager::AddMaterial(Material* newMaterial, bool checkForExisting) // checkForExisting = true by default
 	{
 		if (checkForExisting) // Check if a material with the same name exists, and return it if it does
@@ -643,6 +585,7 @@ namespace BlazeEngine
 
 		return newIndex; // Return the previous index
 	}
+
 
 	int SceneManager::FindMaterialIndex(string materialName)
 	{
@@ -690,6 +633,7 @@ namespace BlazeEngine
 		LOG("Assembled material mesh list of " + to_string(numMeshes) + " meshes and " + to_string(materialMeshLists.size()) + " materials");
 	}
 
+
 	Texture* BlazeEngine::SceneManager::FindLoadTextureByPath(string texturePath)
 	{
 		for (unsigned int i = 0; i < currentTextureCount; i++)
@@ -701,9 +645,119 @@ namespace BlazeEngine
 			}
 		}
 
-		// If we've made it this far, try and load the texture
+		// If we've made it this far, load the texture
+		currentTextureCount++;
 		return Texture::LoadTextureFromPath(texturePath);
 	}
+
+
+	void SceneManager::ImportMaterialsAndTexturesFromScene(aiScene const* scene, string sceneName)
+	{
+		int numMaterials = scene->mNumMaterials;
+		LOG("Found " + to_string(numMaterials) + " scene materials");
+
+		string sceneRoot = CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + sceneName + "\\";
+
+		// Create Blaze Engine materials:
+		for (int i = 0; i < numMaterials; i++)
+		{
+			// Get the material name:
+			aiString name;
+			if (AI_SUCCESS == scene->mMaterials[i]->Get(AI_MATKEY_NAME, name))
+			{
+				aiShadingMode shaderType = aiShadingMode_NoShading;
+				if (AI_SUCCESS != scene->mMaterials[i]->Get(AI_MATKEY_SHADING_MODEL, shaderType))
+				{
+					LOG_ERROR("Couldn't load shader type!!!");
+				}
+
+				LOG("Creating material: \"" + string(name.C_Str()) + "\" of shader type \"" + to_string(shaderType) + "\"");
+
+				// Create a Blaze Engine material:
+				string matName = string(name.C_Str());
+				Material* newMaterial = new Material(matName, CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
+
+				// Extract material's textures:
+				Texture* diffuseTexture = nullptr;
+				if (scene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) // If there is more than 1 texture in the slot, we only get the FIRST...
+				{
+					int numTextures = scene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE);
+					LOG("Material has " + to_string(numTextures) + " aiTextureType_DIFFUSE textures...");
+
+
+					// TO DO: Loop through EVERY texture, and use a switch statement to handle each type
+
+
+					LOG("Material " + to_string(i) + ": Loading diffuse texture...");
+
+					aiString path;
+					scene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &path); // We only get the texture at index 0 (any others are ignored...)
+
+					if (path.length > 0)
+					{
+						string texturePath = sceneRoot + string(path.C_Str());
+						LOG("Found texture path: " + texturePath);
+
+						// Find the texture if it has already been loaded, or load it otherwise:
+						diffuseTexture = FindLoadTextureByPath(texturePath);
+					}
+					else
+					{
+						LOG("Material does not contain a diffuse texture path. Assigning an error texture");
+					}
+				}
+				else
+				{
+					LOG("Material " + to_string(i) + ": No diffuse texture found. Assigning an error texture");
+				}
+
+				if (diffuseTexture == nullptr)
+				{
+					diffuseTexture = FindLoadTextureByPath("errorPath"); // TO DO: Make "errorPath" a global/static string, so it can be reused anywhere?
+				}
+				// Add texture to a material:
+				newMaterial->SetTexture(diffuseTexture, TEXTURE_ALBEDO);
+
+
+
+				// Add the material to our material list:
+				AddMaterial(newMaterial, false);
+			}
+		}
+
+		LOG("Loaded a total of " + to_string(currentTextureCount) + " textures (including error textures)");
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 	// Traverse a scene, printing info:

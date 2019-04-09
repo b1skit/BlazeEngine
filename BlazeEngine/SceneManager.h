@@ -140,6 +140,11 @@ namespace BlazeEngine
 		// Scene setup/construction:
 		//--------------------------
 
+		void ImportMaterialsAndTexturesFromScene(aiScene const* scene, string sceneName);
+		/*void ImportMeshesFromScene(aiScene const* scene);*/
+		/*void ImportLightsFromScene(aiScene const* scene);
+		void ImportCamerasFromScene(aiScene const* scene);*/
+
 		// Helper function: Traverses an aiNode tree, building and parenting meshes
 		void BuildSceneObjects(aiNode* root, aiScene const* scene);
 	};

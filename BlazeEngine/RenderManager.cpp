@@ -89,9 +89,14 @@ namespace BlazeEngine
 			output += "Severity: ";
 			switch (severity)
 			{
+			#if defined(LOG_VERBOSITY_ALL)
 			case GL_DEBUG_SEVERITY_NOTIFICATION:
 				output += "NOTIFICATION\n";
 				break;
+			#else
+			case GL_DEBUG_SEVERITY_NOTIFICATION:
+				return; // DO NOTHING
+			#endif
 			case GL_DEBUG_SEVERITY_LOW :
 					output += "LOW\n";
 				break;
@@ -223,7 +228,7 @@ namespace BlazeEngine
 		}
 
 		// Configure OpenGL logging:
-		#if defined(DEBUG_LOG_OPENGL)
+		#if defined(DEBUG_LOG_OPENGL)		// Defined in BuildConfiguration.h
 			glEnable(GL_DEBUG_OUTPUT);
 			glDebugMessageCallback(GLMessageCallback, 0);
 		#endif
