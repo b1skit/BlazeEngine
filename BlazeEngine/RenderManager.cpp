@@ -22,11 +22,6 @@ using glm::mat3;
 using glm::mat4;
 
 
-// DEBUG:
-#include <iostream>
-using std::cout;
-using std::to_string;
-
 
 namespace BlazeEngine
 {
@@ -263,7 +258,6 @@ namespace BlazeEngine
 		// TO DO: Merge ALL meshes using the same material into a single draw call
 
 
-
 		// Assemble common (model independent) matrices:
 		mat4 view = CoreEngine::GetSceneManager()->MainCamera()->View();
 		mat4 projection = CoreEngine::GetSceneManager()->MainCamera()->Projection();
@@ -392,9 +386,9 @@ namespace BlazeEngine
 
 
 				// Assemble model-specific matrices:
-				mat4 model = currentMesh->GetTransform()->Model();
-				mat4 mv = view * model;
-				mat4 mvp = CoreEngine::GetSceneManager()->MainCamera()->ViewProjection() * model;
+				mat4 model	= currentMesh->GetTransform().Model();
+				mat4 mv		= view * model;
+				mat4 mvp	= CoreEngine::GetSceneManager()->MainCamera()->ViewProjection() * model;
 				
 				mat3 mv_it = glm::transpose(glm::inverse(mat3(mv)));
 

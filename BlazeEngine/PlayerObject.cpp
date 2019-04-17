@@ -1,6 +1,8 @@
 #include "PlayerObject.h"
 #include "TimeManager.h"
 #include "InputManager.h"
+#include "CoreEngine.h"
+//#include "Camera.h"
 
 #include "gtc/constants.hpp"
 
@@ -12,9 +14,22 @@ using std::to_string;
 
 namespace BlazeEngine
 {
-	PlayerObject::PlayerObject() : GameObject::GameObject("Player Object")
+	PlayerObject::PlayerObject(Camera* playerCam) : GameObject::GameObject("Player Object")
 	{
-		this->playerCam.GetTransform()->SetParent(&this->transform);
+		this->playerCam = playerCam;
+		this->playerCam->GetTransform()->SetParent(&this->transform);
+
+		// Move the yaw (ie. about Y) rotation from the camera to the PlayerObject's transform:
+
+		Transform* playerCamTransform = this->playerCam->GetTransform();
+		vec3 camRotation = playerCamTransform->GetEulerRotation();
+		vec3 camPosition = playerCamTransform->Position();
+
+		playerCamTransform->SetEulerRotation(vec3(camRotation.x, 0.0f, 0.0f));	// Set pitch
+		playerCamTransform->SetPosition(vec3(0.0f, 0.0f, 0.0f));
+		
+		this->transform.SetEulerRotation(vec3(0.0f, camRotation.y, 0.0f));		// Set yaw
+		this->transform.SetPosition(camPosition);
 	}
 
 	//PlayerObject::~PlayerObject()
@@ -32,11 +47,11 @@ namespace BlazeEngine
 			vec3 pitch(0.0f, 0.0f, 0.0f);
 
 			// Compute rotation amounts, in radians:
-			yaw.y = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_X) * (float)TimeManager::DeltaTime();
+			yaw.y	= (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_X) * (float)TimeManager::DeltaTime();
 			pitch.x = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_Y) * (float)TimeManager::DeltaTime();
 
 			this->transform.Rotate(yaw);
-			this->playerCam.GetTransform()->Rotate(pitch);
+			this->playerCam->GetTransform()->Rotate(pitch);
 		}
 
 		// Handle direction:
@@ -45,14 +60,14 @@ namespace BlazeEngine
 		if (InputManager::GetInputState(INPUT_BUTTON_FORWARD))
 		{
 			vec3 forward = this->transform.Forward();
-			Transform::RotateVector(forward, this->playerCam.GetTransform()->GetEulerRotation().x, this->transform.Right());
+			Transform::RotateVector(forward, this->playerCam->GetTransform()->GetEulerRotation().x, this->transform.Right());
 
 			direction += forward  * -1.0f;			
 		}
 		if (InputManager::GetInputState(INPUT_BUTTON_BACKWARD))
 		{
 			vec3 forward = this->transform.Forward();
-			Transform::RotateVector(forward, this->playerCam.GetTransform()->GetEulerRotation().x, this->transform.Right());
+			Transform::RotateVector(forward, this->playerCam->GetTransform()->GetEulerRotation().x, this->transform.Right());
 
 			direction += forward;
 		}
@@ -87,14 +102,14 @@ namespace BlazeEngine
 		{
 			this->transform.SetPosition(savedPosition);
 			this->transform.SetEulerRotation(vec3(0, savedEulerRotation.y, 0));
-			this->playerCam.GetTransform()->SetEulerRotation(vec3(savedEulerRotation.x, 0, 0));
+			this->playerCam->GetTransform()->SetEulerRotation(vec3(savedEulerRotation.x, 0, 0));
 		}
 
 		// Save the current position/rotation:
 		if (InputManager::GetInputState(INPUT_MOUSE_RIGHT))
 		{
 			this->savedPosition = transform.Position();
-			this->savedEulerRotation = vec3(this->playerCam.GetTransform()->GetEulerRotation().x, this->transform.GetEulerRotation().y, 0 );
+			this->savedEulerRotation = vec3(this->playerCam->GetTransform()->GetEulerRotation().x, this->transform.GetEulerRotation().y, 0 );
 		}
 	}
 

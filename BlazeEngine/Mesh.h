@@ -1,18 +1,24 @@
 #pragma once
 
+#include "Transform.h"
+
 #include <glm.hpp>
 #include <GL/glew.h>
+
+#include <string>
 
 //using glm::vec2;
 using glm::vec3;
 using glm::vec4;
 using glm::vec2;
 
+using std::string;
+
 
 namespace BlazeEngine
 {
-	// Pre-declarations:
-	class Transform;
+	//// Pre-declarations:
+	//class Transform;
 
 
 	// Vertex structure:
@@ -78,13 +84,15 @@ namespace BlazeEngine
 	class Mesh
 	{
 	public:
-		Mesh(Vertex* vertices, unsigned int numVerts, GLuint* indices, unsigned int numIndices, int materialIndex = -1);
+		Mesh(string name, Vertex* vertices, unsigned int numVerts, GLuint* indices, unsigned int numIndices, int materialIndex = -1);
 		/*~Mesh();*/
 
 		// Copy constructor:
 		Mesh(const Mesh& mesh) = default;
 
 		// Getters/Setters:
+		inline string const& Name() { return meshName; }
+
 		inline Vertex* Vertices() { return vertices; }
 		inline unsigned int NumVerts() { return this->numVerts; }
 		
@@ -92,9 +100,9 @@ namespace BlazeEngine
 		
 		inline GLuint* Indices() { return indices; }
 		inline unsigned int NumIndices() { return numIndices; }
-		
-		inline Transform* GetTransform() { return transform; }
-		inline void SetTransform(Transform* transform) { this->transform = transform; }
+
+
+		inline Transform& GetTransform() { return transform; }
 
 		inline GLuint const& VAO() { return meshVAO; }
 		inline GLuint const& VBO(VERTEX_BUFFER_OBJECT index) { return meshVBOs[index]; }
@@ -125,7 +133,8 @@ namespace BlazeEngine
 
 		int materialIndex		= -1;
 
-		Transform* transform	= nullptr;		// Pointer to statically allocated Transform held by SceneObject superclass
+		Transform transform;
+		string meshName			= "UNNAMED";
 	};
 }
 

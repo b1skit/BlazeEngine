@@ -56,6 +56,8 @@ namespace BlazeEngine
 	{
 		LOG("Scene manager shutting down...");
 
+		// TO DO: A lot of this stuff should be moved the the Scene struct destructor!!!!!
+
 		// Cleanup the scene:
 		for (int i = 0; i < (int)currentScene->meshes.size(); i++)
 		{
@@ -73,6 +75,7 @@ namespace BlazeEngine
 		if (currentScene)
 		{
 			delete currentScene;
+			// TO DO: Cleanup scene before deleting?!?!
 		}
 		
 		if (materials)
@@ -91,7 +94,19 @@ namespace BlazeEngine
 			}
 			delete[] materials;
 			currentMaterialCount = 0;
-		}		
+		}
+
+		if (textures)
+		{
+			for (unsigned int i = 0; i < currentTextureCount; i++)
+			{
+				if (textures[i])
+				{
+					delete textures[i];
+				}
+			}
+			delete[] textures;
+		}
 	}
 
 
@@ -118,7 +133,6 @@ namespace BlazeEngine
 			LOG("DEBUG: WARNING: A scene already currently exists. Debug handling is to just delete it, but this is likely leaking memory!");
 			delete currentScene;
 		}
-		
 		currentScene = new Scene();
 
 		// Assemble paths:
@@ -148,41 +162,6 @@ namespace BlazeEngine
 		}
 
 
-
-
-		// DEBUG:
-		BuildSceneObjects(scene->mRootNode, scene);
-
-
-		for (unsigned int i = 0; i < scene->mNumMeshes; i++)
-		{
-			LOG("Found a mesh named " + string(scene->mMeshes[i]->mName.C_Str()) + " length = " + to_string(scene->mMeshes[i]->mName.length) );
-
-			aiNode* test = nullptr;
-			test = scene->mRootNode->FindNode(scene->mMeshes[i]->mName.C_Str()); // this works.
-			if (test)
-			{
-				LOG("FOUND MATCHING NODE with " + to_string(test->mNumMeshes) + " meshes");
-
-				aiNode* current = test->mParent;
-				while (current != NULL)
-				{
-					LOG("Has a parent: " + string(current->mName.C_Str() ));
-					current = current->mParent;
-				}
-				LOG("\n");
-			}
-			else
-			{
-				LOG("faiiiiiiiiiiiiiiled");
-			}
-		}
-		
-
-		
-
-
-
 		// Extract materials and textures:
 		//--------------------------------
 		if (scene->HasTextures()) // Check for embedded textures
@@ -205,105 +184,11 @@ namespace BlazeEngine
 		}
 
 
-
 		// Extract meshes:
 		//----------------
 		if (scene->HasMeshes())
 		{
-			int numMeshes = scene->mNumMeshes;
-			LOG("Found " + to_string(numMeshes) + " scene meshes");
-
-			// Loop through each mesh in the scene
-			for (int currentMesh = 0; currentMesh < numMeshes; currentMesh++)
-			{
-				if (
-					scene->mMeshes[currentMesh]->HasPositions()
-					&& scene->mMeshes[currentMesh]->HasFaces()
-					&& scene->mMeshes[currentMesh]->HasNormals()
-					//&& scene->mMeshes[currentMesh]->HasVertexColors(0)
-					&& scene->mMeshes[currentMesh]->HasTextureCoords(0)
-					//&& scene->mMeshes[currentMesh]->HasTangentsAndBitangents()
-					)
-				{
-					int numVerts		= scene->mMeshes[currentMesh]->mNumVertices;
-					int numFaces		= scene->mMeshes[currentMesh]->mNumFaces;
-					int numUVs			= scene->mMeshes[currentMesh]->mNumUVComponents[0]; // Just look at the first UV channel for now...
-					int numUVChannels	= scene->mMeshes[currentMesh]->GetNumUVChannels();
-					int materialIndex	= scene->mMeshes[currentMesh]->mMaterialIndex;
-
-					LOG("Mesh #" + to_string(currentMesh) + " \"" + string(scene->mMeshes[currentMesh]->mName.C_Str()) +  "\" is valid: " + to_string(numVerts) + " vertices, " + to_string(numFaces) + " faces, " + to_string(numUVChannels) + " UV channels, " + to_string(numUVs) + " UV components in channel 0, using material #" + to_string(materialIndex));
-
-					Vertex* vertices = new Vertex[numVerts];
-					LOG("Created an array of " + to_string(numVerts) + " vertices!");
-
-					// Fill the vertices array:
-					for (int currentVert = 0; currentVert < numVerts; currentVert++)
-					{
-						vertices[currentVert] = Vertex
-						{
-							vec3(scene->mMeshes[currentMesh]->mVertices[currentVert].x, scene->mMeshes[currentMesh]->mVertices[currentVert].y, scene->mMeshes[currentMesh]->mVertices[currentVert].z),
-							vec3(scene->mMeshes[currentMesh]->mNormals[currentVert].x, scene->mMeshes[currentMesh]->mNormals[currentVert].y, scene->mMeshes[currentMesh]->mNormals[currentVert].z),
-							vec4(0.5f, 0.5f ,0.5f , 1.0f), // TO DO: Color - Populate this?
-							vec2(scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].x, scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].y)
-						};
-					}
-
-					// Fill the indices array:
-					int numIndices = scene->mMeshes[currentMesh]->mNumFaces * 3;
-					GLuint* indices = new GLuint[numIndices];
-					LOG("Created an array of " + to_string(numIndices) + " indices!");
-					
-					for (int currentFace = 0; currentFace < numFaces; currentFace++)
-					{
-						for (int currentIndex = 0; currentIndex < 3; currentIndex++)
-						{
-							if (scene->mMeshes[currentMesh]->mFaces[currentFace].mNumIndices != 3)
-							{
-								LOG_ERROR("Found a face that doesn't have 3 indices!")
-							}
-							indices[(currentFace * 3) + currentIndex] = scene->mMeshes[currentMesh]->mFaces[currentFace].mIndices[currentIndex];
-
-							//LOG("Index # " + to_string((currentFace * 3) + currentIndex) + " = Face #" + to_string(currentFace) + " index #" + to_string(currentIndex) + " = " + to_string(scene->mMeshes[currentMesh]->mFaces[currentFace].mIndices[currentIndex]));
-						}
-					}
-
-					Mesh newMesh(vertices, numVerts, indices, numIndices, materialIndex);
-
-					currentScene->meshes.push_back(newMesh);
-					int meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address				
-
-					// Assemble a list of all meshes held by a Renderable:
-					vector<Mesh*> viewMeshes;
-					viewMeshes.push_back(&(currentScene->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
-					Renderable testRenderable(viewMeshes);
-
-					// Construct a GameObject for the cube:
-					GameObject* meshGameObject = new GameObject("cubeObject1", testRenderable);
-
-					/*cubeObject->GetTransform()->SetPosition(vec3(-3, 0, 0));*/
-
-
-					// Add cube object to scene:
-					currentScene->gameObjects.push_back(meshGameObject);
-					int gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
-
-					// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-					currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
-
-
-				}
-				else
-				{
-					LOG("Mesh is missing the following properties:");
-					if (!scene->mMeshes[currentMesh]->HasPositions())				LOG("\t - positions");
-					if (!scene->mMeshes[currentMesh]->HasFaces())					LOG("\t - faces");
-					if (!scene->mMeshes[currentMesh]->HasNormals())					LOG("\t - normals");
-					if (!scene->mMeshes[currentMesh]->HasVertexColors(0))			LOG("\t - vertex colors");
-					if (!scene->mMeshes[currentMesh]->HasTextureCoords(0))			LOG("\t - texture coordinates");
-					if (!scene->mMeshes[currentMesh]->HasTangentsAndBitangents())	LOG("\t - tangents & bitangents");
-				}
-			}
-
+			ImportGameObjectGeometryFromScene(scene);
 		}
 		else
 		{
@@ -311,14 +196,16 @@ namespace BlazeEngine
 		}
 
 
+		// Assemble material mesh lists:
+		// -----------------------------
+		AssembleMaterialMeshLists();
+
+
 		// Extract lights:
 		//----------------
 		if (scene->HasLights())
 		{
-			int numLights = scene->mNumLights;
-			LOG("Found " + to_string(numLights) + " scene lights");
-
-			// TO DO: Load lights
+			ImportLightsFromScene(scene);
 		}
 		else
 		{
@@ -330,200 +217,20 @@ namespace BlazeEngine
 		//-----------------
 		if (scene->HasCameras())
 		{
-			int numCameras = scene->mNumCameras;
-			LOG("Found " + to_string(numCameras) + " scene cameras");
-
-			// TO DO: Load cameras
-			// Player object should get the main camera, and set its position/orientation as its start point?
+			ImportCamerasFromScene(scene);
 		}
 		else
 		{
-			LOG_ERROR("Scene has no cameras");
+			LOG_ERROR("Scene has no cameras. Creating a default camera at the origin");
+			ImportCamerasFromScene();
 		}
-
-
-
-
-		//// DEBUG: HARD CODE SOME OBJECTS TO WORK WITH:
-
-
-		//
-		//// Create 1st cube using test texture:
-
-		//Material* newMaterial = GetMaterial("cubePhong");
-
-		//// -> Already has an albedo...
-
-		//Texture* testNormal = FindLoadTextureByPath(".debug/invalid/normal/path");
-		//newMaterial->SetTexture(testNormal, TEXTURE_NORMAL);
-		//testNormal->Fill(vec4(0, 0, 1, 1));
-		//
-		//Texture* testRoughness = FindLoadTextureByPath(".debug/invalid/rough/path");
-		//newMaterial->SetTexture(testRoughness, TEXTURE_ROUGHNESS);
-		//testRoughness->Fill(vec4(1, 1, 0, 1));
-
-		//Texture* testMetallic = FindLoadTextureByPath(".debug/invalid/metal/path");
-		//newMaterial->SetTexture(testMetallic, TEXTURE_METALLIC);
-		//testMetallic->Fill(vec4(0, 1, 1, 1));
-
-		//Texture* testAmbientOcclusion = FindLoadTextureByPath(".debug/invalid/AO/path");
-		//newMaterial->SetTexture(testAmbientOcclusion, TEXTURE_AMBIENT_OCCLUSION);
-		//testAmbientOcclusion->Fill(vec4(0.5, 0.5, 0.5, 1));
-
-		//// -> Material already in material list...
-
-		//// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		//Mesh mesh = Mesh::CreateCube();
-		//mesh.MaterialIndex() = GetMaterialIndex("cubePhong");
-		//// -> Get using string instead of index...
-
-		//currentScene->meshes.push_back(mesh);
-		//int meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address
-
-		//// Assemble a list of all meshes held by a Renderable:
-		//vector<Mesh*> viewMeshes;
-		//viewMeshes.push_back(&(currentScene->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
-		//Renderable testRenderable(viewMeshes);
-
-		//// Construct a GameObject for the cube:
-		//GameObject* cubeObject = new GameObject("cubeObject1", testRenderable);
-
-		//cubeObject->GetTransform()->SetPosition(vec3(-3, 0,0));
-		//
-
-		//// Add cube object to scene:
-		//currentScene->gameObjects.push_back(cubeObject);
-		//int gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
-
-		//// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-		//currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
-
-
-
-		//// Assemble a second cube:
-
-		//// Create a material and shader:
-		//newMaterial = new Material("testMaterial2", CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
-
-		///*int shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
-		//newMaterial = new Material("testMaterial2", shaderIndex);*/
-
-		//// Create textures and assign them to the material:
-		//Texture* testAlbedo = new Texture(256, 256, false); // Create a new, unfilled texture
-		//testAlbedo->Fill(vec4(1, 1, 1, 1), vec4(0, 0, 1, 1), vec4(0, 1, 0, 1), vec4(1, 0, 0, 1));
-		//
-		////Texture* testAlbedo = Texture::LoadTextureFromPath("INVALID PATH");  // Bright red error texture
-		//
-		//newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
-
-		//// Add the material to our material list:
-		//int materialIndex = AddMaterial(newMaterial);
-
-		//// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		//mesh = Mesh::CreateCube();
-		//mesh.MaterialIndex() = materialIndex;
-
-		//currentScene->meshes.push_back(mesh);
-		//meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address
-
-		//// Assemble a list of all meshes held by a Renderable:
-		//viewMeshes.clear();
-		//viewMeshes.push_back(&(currentScene->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
-		//testRenderable = Renderable(viewMeshes);
-
-		//// Construct a GameObject for the cube:
-		//cubeObject = new GameObject("cubeObject2", testRenderable);
-
-		//cubeObject->GetTransform()->SetPosition(vec3(3, 0, 0));
-		//cubeObject->GetTransform()->SetEulerRotation(vec3(0.5f,0.5f,0.5f));
-
-
-		//// Add cube object to scene:
-		//currentScene->gameObjects.push_back(cubeObject);
-		//gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
-
-		//// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-		//currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
-
-
-		//
-
-
-
-
-		//// Assemble a third cube:
-
-		//// Create a material and shader:
-		//newMaterial = new Material("testMaterial3", "thisShouldLoadTheErrorShader");
-
-
-		////shaderIndex = GetShaderIndexFromShaderName(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName); // Use the error shader
-		////newMaterial = new Material("testMaterial3", shaderIndex);
-
-		//// Create textures and assign them to the material:
-		//testAlbedo = FindLoadTextureByPath("./another/invalid/path");
-		//newMaterial->SetTexture(testAlbedo, TEXTURE_ALBEDO);
-
-		//// Add the material to our material list:
-		//materialIndex = AddMaterial(newMaterial);
-
-		//// Construct a mesh and store it locally: (Normally, we'll do this when loading a .FBX)
-		//mesh = Mesh::CreateCube();
-		//mesh.MaterialIndex() = materialIndex;
-
-		//currentScene->meshes.push_back(mesh);
-		//meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address
-
-		//// Assemble a list of all meshes held by a Renderable:
-		//viewMeshes.clear();
-		//viewMeshes.push_back(&(currentScene->meshes.at(meshIndex))); // Store the address of our mesh to pass to our Renderable
-		//testRenderable = Renderable(viewMeshes);
-
-		//// Construct a GameObject for the cube:
-		//cubeObject = new GameObject("cubeObject2", testRenderable);
-
-		//cubeObject->GetTransform()->SetPosition(vec3(0, -5, -5));
-		//cubeObject->GetTransform()->SetEulerRotation(vec3(-0.3f, 0.3f, -0.3f));
-
-
-		//// Add cube object to scene:
-		//currentScene->gameObjects.push_back(cubeObject);
-		//gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
-
-		//// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-		//currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
-
-
-
 			   
 
-
-		// Assemble material mesh lists:
-		AssembleMaterialMeshLists();
-
-
-
-		// Set up lights:
-		currentScene->ambientLight = vec4(0.5, 0.5, 0.5, 1.0f);
-		currentScene->keyLight = Light(LIGHT_DIRECTIONAL, vec4(1.0f, 1.0f, 1.0f, 1.0f), 1.0f);
-		currentScene->keyLight.GetTransform().Rotate(vec3(3.14f/4.0f, 3.14f/8.0f, 0)); // Rotation in radians
-		currentScene->keyLight.SetColor(vec4(0,1,0,1));
-		currentScene->keyLight.SetIntensity(2.0f);
-
-		// Set up a player object:
-		PlayerObject* player = new PlayerObject();
-		currentScene->gameObjects.push_back(player);
-		currentScene->mainCamera = player->GetCamera();
-		currentScene->mainCamera->Initialize(
-			vec3(0, 0, 0),
-			(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
-			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.fieldOfView,
-			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.near,
-			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.far
-			);
-
-		player->GetTransform()->SetPosition(vec3(0.0f, 0.0f, 4.0f));
-		
+		// Create a PlayerObject:
+		//-----------------------
+		PlayerObject* player = new PlayerObject(currentScene->mainCamera);
+		currentScene->gameObjects.push_back(player);	
+		LOG("Created PlayerObject using mainCamera");
 	}
 
 
@@ -542,6 +249,35 @@ namespace BlazeEngine
 	}
 
 	
+	void BlazeEngine::SceneManager::AddGameObject(GameObject * newGameObject)
+	{
+		currentScene->gameObjects.push_back(newGameObject);
+		int gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
+
+		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
+		currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
+
+		LOG("Added new GameObject to the scene: " + newGameObject->GetName());
+	}
+
+
+	void BlazeEngine::SceneManager::InitializeTransformValues(aiMatrix4x4 const& source, Transform* dest)
+	{
+		aiVector3D sourceScale, sourcePosition; // sourceRotation, 
+		aiQuaternion sourceRotation;
+		source.Decompose(sourceScale, sourceRotation, sourcePosition); // Extract the decomposed matrices
+
+		// TO DO: Use Quaternions instead of euler angles...
+		glm::quat sourceRotationAsGLMQuat(sourceRotation.w, sourceRotation.x, sourceRotation.y, sourceRotation.z);
+		vec3 eulerRotation = glm::eulerAngles(sourceRotationAsGLMQuat);
+
+		dest->SetPosition(vec3(sourcePosition.x, sourcePosition.y, sourcePosition.z));
+		/*dest->SetEulerRotation(vec3(sourceRotation.x, sourceRotation.y, sourceRotation.z));*/
+		dest->SetEulerRotation(vec3(eulerRotation.x, eulerRotation.y, eulerRotation.z));
+		dest->SetScale(vec3(sourceScale.x, sourceScale.y, sourceScale.z));
+	}
+
+
 	int SceneManager::GetMaterialIndex(string materialName)
 	{
 		// Check if a material with the same name exists, and return it if it does:
@@ -729,74 +465,424 @@ namespace BlazeEngine
 	}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	// Traverse a scene, printing info:
-	void SceneManager::BuildSceneObjects(aiNode* root, aiScene const* scene)
+	void SceneManager::ImportGameObjectGeometryFromScene(aiScene const* scene)
 	{
-		if (root == nullptr || scene == nullptr || root->mNumChildren <= 0)
+		// NOTE: There seems to be a bug in Assimp where nested groups sometimes get incorrect rotations... I haven't been able to lock it down 100%, but as a workaround just avoid nesting
+		
+
+		//LOG("\nMESH DEBUG:\n");
+		//for (unsigned int i = 0; i < scene->mNumMeshes; i++)
+		//{
+		//	LOG("scene->mMeshes[" + to_string(i) + "] = " + string(scene->mMeshes[i]->mName.C_Str()));
+
+		//	
+
+		//	aiNode* test = nullptr;
+		//	test = scene->mRootNode->FindNode(scene->mMeshes[i]->mName.C_Str()); // this works.
+		//	if (test)
+		//	{
+		//		LOG("FindNode() found match for \"" + string(scene->mMeshes[i]->mName.C_Str()) + "\" called \"" +  string(test->mName.C_Str())+ "\" that is holding " + to_string(test->mNumMeshes) + " meshes");
+
+		//		LOG("[mTransform]")
+		//		LOG(to_string(test->mTransformation.a1) + " " + to_string(test->mTransformation.a2) + " " + to_string(test->mTransformation.a3) + " " + to_string(test->mTransformation.a4));
+		//		LOG(to_string(test->mTransformation.b1) + " " + to_string(test->mTransformation.b2) + " " + to_string(test->mTransformation.b3) + " " + to_string(test->mTransformation.b4));
+		//		LOG(to_string(test->mTransformation.c1) + " " + to_string(test->mTransformation.c2) + " " + to_string(test->mTransformation.c3) + " " + to_string(test->mTransformation.c4));
+		//		LOG(to_string(test->mTransformation.d1) + " " + to_string(test->mTransformation.d2) + " " + to_string(test->mTransformation.d3) + " " + to_string(test->mTransformation.d4));
+
+		//		aiNode* current = test->mParent;
+		//		while (current != NULL)
+		//		{
+		//			LOG("Parent: " + string(current->mName.C_Str()) + " with " + to_string(current->mNumMeshes) + " meshes");
+
+		//			LOG("[Parent->mTransform]")
+		//			LOG(to_string(current->mTransformation.a1) + " " + to_string(current->mTransformation.a2) + " " + to_string(current->mTransformation.a3) + " " + to_string(current->mTransformation.a4));
+		//			LOG(to_string(current->mTransformation.b1) + " " + to_string(current->mTransformation.b2) + " " + to_string(current->mTransformation.b3) + " " + to_string(current->mTransformation.b4));
+		//			LOG(to_string(current->mTransformation.c1) + " " + to_string(current->mTransformation.c2) + " " + to_string(current->mTransformation.c3) + " " + to_string(current->mTransformation.c4));
+		//			LOG(to_string(current->mTransformation.d1) + " " + to_string(current->mTransformation.d2) + " " + to_string(current->mTransformation.d3) + " " + to_string(current->mTransformation.d4));
+
+		//			current = current->mParent;
+		//		}
+		//		
+
+		//		LOG("");
+		//	}
+		//	else
+		//	{
+		//		LOG("FindNode() FOUND NO RESULTS!");
+		//	}
+		//}
+		//// END DEBUG
+
+
+		int numMeshes = scene->mNumMeshes;
+		LOG("Found " + to_string(numMeshes) + " scene meshes:");
+
+		currentScene->gameObjects.clear(); // TO DO: Reserve gameObjects based on numMeshes ???
+
+		// Loop through each mesh in the scene graph:
+		for (int currentMesh = 0; currentMesh < numMeshes; currentMesh++)
 		{
+			// Check mesh is valid:
+			if (
+				scene->mMeshes[currentMesh]->HasPositions()
+				&& scene->mMeshes[currentMesh]->HasFaces()
+				&& scene->mMeshes[currentMesh]->HasNormals()
+				//&& scene->mMeshes[currentMesh]->HasVertexColors(0)
+				&& scene->mMeshes[currentMesh]->HasTextureCoords(0)
+				//&& scene->mMeshes[currentMesh]->HasTangentsAndBitangents()
+				)
+			{
+				// Mesh is valid: See if we can find the corresponding node in the scene graph:
+				string meshName = string(scene->mMeshes[currentMesh]->mName.C_Str());
+				aiNode* currentNode = scene->mRootNode->FindNode(scene->mMeshes[currentMesh]->mName.C_Str());
+
+				if (currentNode)
+				{
+					// We've found a corresponding node in the scene graph. Create a mesh:
+					int numVerts = scene->mMeshes[currentMesh]->mNumVertices;
+					int numFaces = scene->mMeshes[currentMesh]->mNumFaces;
+					int numUVs = scene->mMeshes[currentMesh]->mNumUVComponents[0]; // Just look at the first UV channel for now...
+					int numUVChannels = scene->mMeshes[currentMesh]->GetNumUVChannels();
+					int materialIndex = scene->mMeshes[currentMesh]->mMaterialIndex;
+
+					LOG("\nMesh #" + to_string(currentMesh) + " \"" + meshName + "\": " + to_string(numVerts) + " verts, " + to_string(numFaces) + " faces, " + to_string(numUVChannels) + " UV channels, " + to_string(numUVs) + " UV components in channel 0, using material #" + to_string(materialIndex));
+
+					Vertex* vertices = new Vertex[numVerts];
+
+					// Fill the vertices array:
+					for (int currentVert = 0; currentVert < numVerts; currentVert++)
+					{
+						vertices[currentVert] = Vertex
+						{
+							vec3(scene->mMeshes[currentMesh]->mVertices[currentVert].x, scene->mMeshes[currentMesh]->mVertices[currentVert].y, scene->mMeshes[currentMesh]->mVertices[currentVert].z),
+							vec3(scene->mMeshes[currentMesh]->mNormals[currentVert].x, scene->mMeshes[currentMesh]->mNormals[currentVert].y, scene->mMeshes[currentMesh]->mNormals[currentVert].z),
+							vec4(0.0f, 0.0f ,0.0f , 1.0f), // TO DO: Color - Populate this?
+							vec2(scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].x, scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].y)
+						};
+					}
+
+					// Fill the indices array:
+					int numIndices = scene->mMeshes[currentMesh]->mNumFaces * 3;
+					GLuint* indices = new GLuint[numIndices];
+
+					LOG("Created arrays of " + to_string(numVerts) + " vertices, & " + to_string(numIndices) + " indices");
+
+					for (int currentFace = 0; currentFace < numFaces; currentFace++)
+					{
+						for (int currentIndex = 0; currentIndex < 3; currentIndex++)
+						{
+							if (scene->mMeshes[currentMesh]->mFaces[currentFace].mNumIndices != 3)
+							{
+								LOG_ERROR("Found a face that doesn't have 3 indices!")
+							}
+							indices[(currentFace * 3) + currentIndex] = scene->mMeshes[currentMesh]->mFaces[currentFace].mIndices[currentIndex];
+						}
+					}
+
+					Mesh newMesh(meshName, vertices, numVerts, indices, numIndices, materialIndex);
+
+					currentScene->meshes.push_back(newMesh);
+					int meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address				
+
+					GameObject* gameObject = FindCreateGameObjectParents(scene, currentNode->mParent);
+
+					// If the mesh doesn't belong to a group, create a GameObject to contain it:
+					if (gameObject == nullptr)
+					{
+						gameObject = new GameObject(meshName + "_GAMEOBJECT"); // Add a postfix to remind us that we expect GameObjects to be grouped in our .FBX from Maya
+						
+						aiMatrix4x4 combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode->mParent);
+						
+						InitializeTransformValues(combinedTransform, gameObject->GetTransform());
+						
+						// Set the GameObject as the parent of the mesh:
+						newMesh.GetTransform().SetParent(gameObject->GetTransform());
+
+						gameObject->GetRenderable()->AddViewMeshAsChild(&(currentScene->meshes.at(meshIndex)));
+
+						AddGameObject(gameObject);
+
+						LOG_ERROR("Created a _GAMEOBJECT for mesh \"" + meshName + "\" that did not belong to a group! GameObjects should belong to groups in the source .FBX!");
+
+
+
+						//LOG("SPEWING HIERARCHY:");
+						//aiNode* test = currentNode->mParent;
+						//while (test != nullptr)
+						//{
+						//	string testName = string(test->mName.C_Str());
+						//	LOG("name = " + testName);
+						//	LOG(to_string(test->mTransformation.a1) + " " + to_string(test->mTransformation.a2) + " " + to_string(test->mTransformation.a3) + " " + to_string(test->mTransformation.a4));
+						//	LOG(to_string(test->mTransformation.b1) + " " + to_string(test->mTransformation.b2) + " " + to_string(test->mTransformation.b3) + " " + to_string(test->mTransformation.b4));
+						//	LOG(to_string(test->mTransformation.c1) + " " + to_string(test->mTransformation.c2) + " " + to_string(test->mTransformation.c3) + " " + to_string(test->mTransformation.c4));
+						//	LOG(to_string(test->mTransformation.d1) + " " + to_string(test->mTransformation.d2) + " " + to_string(test->mTransformation.d3) + " " + to_string(test->mTransformation.d4));
+
+						//	test = test->mParent;
+						//}
+
+
+						continue; // We're done!
+					}
+
+					// We found a GameObject
+					aiMatrix4x4 combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode->mParent);
+					combinedTransform = combinedTransform * currentNode->mTransformation; // Combine the parent and child transforms
+					InitializeTransformValues(combinedTransform, &currentScene->meshes.at(meshIndex).GetTransform());  // Copy to our Mesh transform
+
+					// Add the mesh to the GameObject's Renderable's viewMeshes:
+					gameObject->GetRenderable()->AddViewMeshAsChild(&(currentScene->meshes.at(meshIndex)));
+
+					// Add GameObject to the scene:
+					AddGameObject(gameObject);
+				}
+				else
+				{
+					LOG_ERROR("Could not find \"" + meshName + "\" in the scene graph");
+				}
+			}
+			else
+			{
+				LOG("Mesh is missing the following properties:");
+				if (!scene->mMeshes[currentMesh]->HasPositions())				LOG("\t - positions");
+				if (!scene->mMeshes[currentMesh]->HasFaces())					LOG("\t - faces");
+				if (!scene->mMeshes[currentMesh]->HasNormals())					LOG("\t - normals");
+				if (!scene->mMeshes[currentMesh]->HasVertexColors(0))			LOG("\t - vertex colors");
+				if (!scene->mMeshes[currentMesh]->HasTextureCoords(0))			LOG("\t - texture coordinates");
+				if (!scene->mMeshes[currentMesh]->HasTangentsAndBitangents())	LOG("\t - tangents & bitangents");
+			}
+		}
+
+		int numGameObjects = (int)currentScene->gameObjects.size();
+		LOG("Created " + to_string(numGameObjects) + " game objects");
+
+
+		//// DEBUG:
+		//for (int i = 0; i < currentScene->gameObjects.size(); i++)
+		//{
+		//	LOG("\n**GameObject**");
+		//	LOG(to_string((long long)currentScene->gameObjects.at(i)->GetTransform()) + ": " + currentScene->gameObjects.at(i)->GetName());
+		//	currentScene->gameObjects.at(i)->GetTransform()->DebugPrint();
+
+		//	for (int j = 0; j < currentScene->gameObjects.at(i)->GetRenderable()->ViewMeshes()->size(); j++)
+		//	{
+		//		LOG("\n**Mesh**");
+		//		LOG("Mesh name = " + currentScene->gameObjects.at(i)->GetRenderable()->ViewMeshes()->at(j)->Name());
+		//		LOG("mesh parent = " + to_string((long long)currentScene->gameObjects.at(i)->GetRenderable()->ViewMeshes()->at(j)->GetTransform().GetParent() ) );
+		//		currentScene->gameObjects.at(i)->GetRenderable()->ViewMeshes()->at(j)->GetTransform().DebugPrint();
+		//	}
+		//}
+	}
+
+
+	GameObject* BlazeEngine::SceneManager::FindCreateGameObjectParents(aiScene const* scene, aiNode* parent)
+	{
+		if (parent == nullptr || parent == scene->mRootNode)
+		{
+			LOG("Reached end of parent heirarchy!");
+			return nullptr;
+		}
+
+		string parentName = string(parent->mName.C_Str());
+
+		// Exclude Maya .fbx "frozen" transformation nodes and keep searching:
+		if (parentName.find("$AssimpFbx$") != string::npos)
+		{	
+			LOG("Found Maya transformation node \"" + parentName + "\", continuing to search!");
+			return FindCreateGameObjectParents(scene, parent->mParent);
+		}
+
+		// Check if there is a GameObject that corresponds with the current parent node
+		for (int i = 0; i < (int)currentScene->gameObjects.size(); i++)
+		{
+			if (currentScene->gameObjects.at(i)->GetName() == parentName)
+			{
+				LOG("Found an existing GameObject parent: \"" + parentName + "\"");
+				return currentScene->gameObjects.at(i);
+			}
+		}
+
+		// Otherwise, create the heirarchy
+		GameObject* newGameObject = new GameObject(parentName);
+		InitializeTransformValues(parent->mTransformation, newGameObject->GetTransform());
+
+		GameObject* nextParent = FindCreateGameObjectParents(scene, parent->mParent);
+		if (nextParent)
+		{
+			LOG("Parented \"" + newGameObject->GetName() + "\" -> \"" + nextParent->GetName() + "\"");
+			newGameObject->GetTransform()->SetParent(nextParent->GetTransform());
+		}
+
+		LOG("Returning newly created GameObject \"" + newGameObject->GetName() + "\"");
+		return newGameObject;
+	}
+
+
+	aiMatrix4x4 BlazeEngine::SceneManager::GetCombinedTransformFromHierarchy(aiScene const* scene, aiNode* parent)
+	{
+		LOG("Combining imported transformations from scene graph:s");
+
+		if (scene == nullptr || parent == nullptr)
+		{
+			LOG_ERROR("SceneManager.GetCombinedTransformFromHierarchy() received a null pointer!");
+			return aiMatrix4x4();
+		}
+
+		string parentName = string(parent->mName.C_Str());
+		if (parentName.find("$AssimpFbx$") == string::npos)
+		{
+			LOG("Parent is not a transformation node, returning identity matrix");
+			return aiMatrix4x4();
+		}
+
+		aiMatrix4x4 translation;
+		aiMatrix4x4 scaling;
+		aiMatrix4x4 rotation;
+
+		aiNode* current = parent;
+		bool foundTranslation = false, foundScaling = false, foundRotation = false;
+		while (current != nullptr && current != scene->mRootNode)
+		{
+			string currentName = string(current->mName.C_Str());
+
+			// Assimp (seems to) build transformations in the order Scaling, Rotation, Translation as we walk up the tree...
+			if (currentName.find("$AssimpFbx$") != string::npos)
+			{
+				if (!foundTranslation && currentName.find("Translation") != string::npos && currentName.find("Pivot") == string::npos)
+				{
+					translation = current->mTransformation;
+					foundTranslation = true;
+					LOG("Found a translation node...");
+				}
+				else if (!foundScaling && currentName.find("Scaling") != string::npos && currentName.find("Pivot") == string::npos)
+				{
+					scaling = current->mTransformation;
+					foundScaling = true;
+					LOG("Found a scaling node...");
+				}
+				else if (!foundRotation && currentName.find("_Rotation") != string::npos && currentName.find("Pivot") == string::npos) // We check for "_Rotation" so we can skip "PostRotation"
+				{
+					rotation = current->mTransformation;
+					foundRotation = true;
+					LOG("Found a rotation node...");
+				}
+			}
+			else 
+			{ 
+				LOG("Found a non-transformation node, stopping search");
+				break; // If we've found a non-transformation node, we need to stop searching
+			}
+
+			if (foundTranslation && foundScaling && foundRotation)
+			{
+				break;
+			}
+
+			current = current->mParent;
+		}
+
+		LOG("Finished combining transformations");
+		return translation * scaling * rotation;
+	}
+
+
+	void BlazeEngine::SceneManager::ImportLightsFromScene(aiScene const* scene)
+	{
+		int numLights = scene->mNumLights;
+		LOG("Found " + to_string(numLights) + " scene lights");
+
+
+		// DEBUG: Set up hard coded lights:
+		currentScene->ambientLight = vec4(0.5, 0.5, 0.5, 1.0f);
+		currentScene->keyLight = Light(LIGHT_DIRECTIONAL, vec4(1.0f, 1.0f, 1.0f, 1.0f), 1.0f);
+		currentScene->keyLight.GetTransform().Rotate(vec3(3.14f / 4.0f, 3.14f / 8.0f, 0)); // Rotation in radians
+		currentScene->keyLight.SetColor(vec4(0, 1, 0, 1));
+		currentScene->keyLight.SetIntensity(2.0f);
+
+
+
+		LOG_ERROR("LIGHT IMPORT IS NOT YET IMPLEMENTED. SETTING TEMPORARY HARD CODED VALUES");
+	}
+
+
+	void BlazeEngine::SceneManager::ImportCamerasFromScene(aiScene const* scene) // scene == nullptr by default
+	{
+		if (currentScene->mainCamera != nullptr)
+		{
+			delete currentScene->mainCamera;
+		}
+
+		if (scene == nullptr)
+		{
+			// No camera found - Set up a default camera at the origin:
+			currentScene->mainCamera->Initialize(
+				vec3(0, 0, 0),
+				(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
+				CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultFieldOfView,
+				CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultNear,
+				CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultFar
+			);
+
 			return;
 		}
+
+		// If we made it this far, we found a camera in the scene:
+		string cameraName = string(scene->mCameras[0]->mName.C_Str());
+		currentScene->mainCamera = new Camera(cameraName); // TO DO: Should main camera ALWAYS be camera 0 ??
+
+		int numCameras = scene->mNumCameras;
+		if (numCameras > 1)
+		{
+			LOG_ERROR("Found " + to_string(numCameras) + " cameras in the scene. Currently, only 1 camera is supported. Setting the FIRST camera received camera as the main camera.")
+		}
+		else
+		{
+			LOG("Found " + to_string(numCameras) + " scene camera");
+		}
 		
-		// Print this node's info:
-		LOG("Name = " + string(root->mName.C_Str()) + ", # meshes = " + to_string(root->mNumMeshes));
 
-		LOG(to_string(root->mTransformation.a1) + " " + to_string(root->mTransformation.a2) + " " + to_string(root->mTransformation.a3) + " " + to_string(root->mTransformation.a4));
-		LOG(to_string(root->mTransformation.b1) + " " + to_string(root->mTransformation.b2) + " " + to_string(root->mTransformation.b3) + " " + to_string(root->mTransformation.b4));
-		LOG(to_string(root->mTransformation.c1) + " " + to_string(root->mTransformation.c2) + " " + to_string(root->mTransformation.c3) + " " + to_string(root->mTransformation.c4));
-		LOG(to_string(root->mTransformation.d1) + " " + to_string(root->mTransformation.d2) + " " + to_string(root->mTransformation.d3) + " " + to_string(root->mTransformation.d4));
-
-		//root->
+		// Note: In the current version of Assimp, the mLookAt, mUp vectors seem to just be the world forward, up vectors, and mTransformation is the identity...
 
 
-		//if (root->mParent == NULL)
-			// Don't parent!
+		// TO DO: Set camera orientation based on up, lookAt:
+		//scene->mCameras[0]->mLookAt; // Not used, for now...
+		//scene->mCameras[0]->mUp; // Not used, for now...
 
+		// TO DO: Add ALL cameras (look for a name that contains "main" to use as the main camera, or use the 1st camera otherwise)
 
-		for (unsigned int i = 0; i < root->mNumMeshes; i++)
+		aiNode* camNode = scene->mRootNode->FindNode(scene->mCameras[0]->mName);
+		if (camNode)
 		{
-			/*if (root->mMeshes[i] && scene->mMeshes &&  scene-> ->mMeshes)
+			//// DEBUG: SPEW TRANSFORM THE HIERARCHY:
+			//aiNode* current = camNode->mParent;
+			//while (current != nullptr)
+			//{
+			//	LOG("FOUND CAMERA PARENT: " + string(current->mName.C_Str()));
+			//	current = current->mParent;
+			//}
+
+			// TO DO: Handle GROUPED cameras (ie. Cameras that belong to game objects: Reflection probes, shadow cams etc). Currently, group transforms are ignored...
+			/*if (camNode->mParent != nullptr && camNode->mParent != scene->mRootNode)
 			{
-				
+				LOG_ERROR("Found a camera that belongs to a group. Currently, this is not supported, and group transformations are IGNORED! Only the Cameras local transform is considered...");
 			}*/
-			LOG("Mesh #" + to_string(i) + " has index = " + to_string(root->mMeshes[i]));
+
+			aiMatrix4x4 camTransform = GetCombinedTransformFromHierarchy(scene, camNode->mParent);
+			InitializeTransformValues(camTransform, currentScene->mainCamera->GetTransform()); 
 		}
 
-		// Recursively call all children:
-		for (unsigned int i = 0; i < root->mNumChildren; i++)
-		{
-			BuildSceneObjects(root->mChildren[i], scene);
-		}
+		vec3 camPosition = currentScene->mainCamera->GetTransform()->Position();
+		vec3 camRotation = currentScene->mainCamera->GetTransform()->GetEulerRotation();
+		LOG("Camera is located at " + to_string(camPosition.x) + " " + to_string(camPosition.y) + " " + to_string(camPosition.z) + ". Near = " + to_string(scene->mCameras[0]->mClipPlaneNear) + ", " + "far = " + to_string(scene->mCameras[0]->mClipPlaneFar) );
+		LOG("Camera rotation is " + to_string(camRotation.x) + " " + to_string(camRotation.y) + " " + to_string(camRotation.z));
+		
+		LOG_ERROR("Camera field of view is NOT currently loaded from the source file. A hard-coded default value is used for now...");
+
+		currentScene->mainCamera->Initialize(
+			(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
+			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultFieldOfView, //scene->mCameras[0]->mHorizontalFOV; // TO DO: Implement this (Needs to be converted to a vertical FOV???)
+			scene->mCameras[0]->mClipPlaneNear,
+			scene->mCameras[0]->mClipPlaneFar
+		);
 	}
 }
 

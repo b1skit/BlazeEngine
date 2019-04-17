@@ -10,15 +10,18 @@ using glm::vec3;
 
 namespace BlazeEngine
 {
+	// Pre-declarations:
+	class Camera;
+
 	class PlayerObject : public GameObject
 	{
 	public:
-		PlayerObject();
+		PlayerObject(Camera* playerCam);
 		/*~PlayerObject();*/
 
 
 		// Getters/Setters:
-		inline Camera* GetCamera() { return &playerCam; }
+		inline Camera* GetCamera() { return playerCam; }
 
 		// BlazeObject interface:
 		void Update() override;
@@ -30,7 +33,7 @@ namespace BlazeEngine
 
 
 	private:
-		Camera playerCam;
+		Camera* playerCam;
 
 		// Control configuration:
 		float movementSpeed = 0.01f;

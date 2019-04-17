@@ -16,7 +16,6 @@ namespace BlazeEngine
 	public:
 		EngineComponent(string name) : BlazeObject(name)
 		{
-			coreEngine = nullptr; // Init to null: Overridden when startup is called
 		}
 
 		// We can't control the order constructors are called, so this function should be called to start the object

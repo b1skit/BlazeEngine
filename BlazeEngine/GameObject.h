@@ -51,7 +51,7 @@ namespace BlazeEngine
 		void HandleEvent(EventInfo const* eventInfo) {}
 
 		// Getters/Setters:
-		inline Renderable const* GetRenderable() { return &renderable; }
+		inline Renderable* GetRenderable() { return &renderable; }
 		
 
 	protected:

@@ -91,7 +91,15 @@ namespace BlazeEngine
 
 	void BlazeEngine::LogManager::Log(string const& message)
 	{
-		cout << "Log:\t" << message << "\n";
+		if (message[0] == '\n')
+		{
+			cout << "\nLog:\t" << message.substr(1, string::npos) << "\n";
+		}
+		else
+		{
+			cout << "Log:\t" << message << "\n";
+		}
+		
 
 		// TO DO: Implement writing to file
 	}
@@ -99,7 +107,15 @@ namespace BlazeEngine
 
 	void BlazeEngine::LogManager::LogError(string const& message)
 	{
-		cout << "Error:\t" << message << "\n";
+		if (message[0] == '\n')
+		{
+			cout << "Error:\t" << message.substr(1, string::npos) << "\n";
+		}
+		else
+		{
+			cout << "Error:\t" << message << "\n";
+		}
+
 
 		// TO DO: Implement writing to file
 	}

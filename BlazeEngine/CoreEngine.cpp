@@ -36,7 +36,8 @@ namespace BlazeEngine
 			exit(-1);
 		}
 		// TO DO: Initialize per-component, instead of initializing everything???
-	};
+	}
+
 
 	void CoreEngine::Startup()
 	{
@@ -94,10 +95,12 @@ namespace BlazeEngine
 		}
 	}
 
+
 	void CoreEngine::Stop()
 	{
 		isRunning = false;
 	}
+
 
 	void CoreEngine::Shutdown()
 	{
@@ -124,10 +127,12 @@ namespace BlazeEngine
 		return;
 	}
 
+
 	EngineConfig const * CoreEngine::GetConfig()
 	{
 		return &config;
 	}
+
 
 	void CoreEngine::HandleEvent(EventInfo const* eventInfo)
 	{
@@ -154,6 +159,7 @@ namespace BlazeEngine
 	
 		// TO DO: Implement config loading!
 	}
+
 
 	void EngineConfig::SaveConfig(string path)
 	{

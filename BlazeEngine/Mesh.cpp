@@ -6,8 +6,10 @@ namespace BlazeEngine
 
 
 	// Mesh functions:
-	Mesh::Mesh(Vertex* vertices, unsigned int numVerts, GLuint* indices, unsigned int numIndices, int materialIndex)
+	Mesh::Mesh(string name, Vertex* vertices, unsigned int numVerts, GLuint* indices, unsigned int numIndices, int materialIndex) // materialIndex == -1 by default
 	{
+		this->meshName = name;
+
 		this->vertices = vertices;
 		this->numVerts = numVerts;
 
@@ -16,7 +18,7 @@ namespace BlazeEngine
 
 		this->materialIndex = materialIndex;
 
-		this->transform = nullptr; // Must be set via SetTransform();
+		//this->transform = nullptr; // Must be set via SetTransform();
 
 
 		// Create and bind our Vertex Array Object:
@@ -64,6 +66,10 @@ namespace BlazeEngine
 
 	void Mesh::DestroyMesh()
 	{
+		#if defined(DEBUG_LOG_OUTPUT)
+			name = name + "_DELETED"; // Safety...
+		#endif
+
 		if (vertices)
 		{
 			delete[] vertices;
@@ -81,8 +87,6 @@ namespace BlazeEngine
 		glDeleteBuffers(BUFFER_COUNT, meshVBOs);
 
 		materialIndex = -1;		// Note: Material MUST be cleaned up elsewhere!
-
-		transform = nullptr;
 	}
 
 
@@ -201,7 +205,7 @@ namespace BlazeEngine
 			21, 22, 23,
 		};
 
-		return Mesh(cubeVerts, numVerts, cubeIndices, numIndices);
+		return Mesh("cube", cubeVerts, numVerts, cubeIndices, numIndices);
 	}
 
 }

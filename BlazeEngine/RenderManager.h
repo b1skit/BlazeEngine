@@ -48,8 +48,6 @@ namespace BlazeEngine
 		// Member functions:
 		void Render(double alpha);
 
-		/*unsigned int GetShaderIndexFromShaderName(string shaderName);*/
-
 		
 	private:
 		// Configuration:

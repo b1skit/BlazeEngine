@@ -12,7 +12,7 @@ namespace BlazeEngine
 	class SceneObject : public BlazeObject, public EventListener
 	{
 	public:
-		SceneObject() : BlazeObject::BlazeObject("Unnamed SceneObject") { this->coreEngine; }
+		SceneObject() : BlazeObject::BlazeObject("Unnamed SceneObject") { }
 		SceneObject(string newName) : BlazeObject::BlazeObject(newName) {}
 
 		// Copy constructor:

@@ -39,15 +39,25 @@ namespace BlazeEngine
 			/*deferredLights.reserve(100);*/
 		}
 
-		// TO DO: Write a destructor
+		// TO DO: FINISH writing destructor!!!!!!
+		~Scene()
+		{
+			// This destructor should delete EVERYTHING held by the scene struct...
+
+			if (mainCamera != nullptr)
+			{
+				delete mainCamera;
+			}
+		}
+
 
 		// Cameras:
-		Camera* mainCamera; // Main camera: Currently points towards player object cam
+		Camera* mainCamera	= nullptr; // Main camera: Currently points towards player object cam
 		/*vector<Camera> sceneCameras;*/ // Various render cams
 
 		// Meshes and scene objects:
 		vector<GameObject*> gameObjects;
-		vector<Renderable const*> renderables; // Pointers to statically allocated renderables held by GameObjects
+		vector<Renderable*> renderables; // Pointers to statically allocated renderables held by GameObjects
 		vector<Mesh> meshes;
 
 		// Scene Lights: A scene can have ???
@@ -90,7 +100,7 @@ namespace BlazeEngine
 		Material* GetMaterial(string materialName);
 		inline vector<Mesh*> const* GetRenderMeshes(unsigned int materialIndex) { return &materialMeshLists.at(materialIndex); } // TO DO: BOunds checking?
 
-		inline vector<Renderable const*> const* GetRenderables() { return &currentScene->renderables;	}
+		inline vector<Renderable*>* GetRenderables() { return &currentScene->renderables;	}
 
 		inline vec4 const& GetAmbient() { return currentScene->ambientLight; }
 		inline Light& GetKeyLight() { return currentScene->keyLight; }
@@ -103,11 +113,17 @@ namespace BlazeEngine
 
 	private:
 		// Scene management:
-		//******************
+		//------------------
 		Scene* currentScene = nullptr;
 
+		// Add a game object and register it with the various tracking lists
+		void AddGameObject(GameObject* newGameObject);
+
+		// Helper function: Copy transformation values from Assimp scene to BlazeEngine transform
+		void InitializeTransformValues(aiMatrix4x4 const& source, Transform* dest);
+
 		// Material management:
-		//*********************
+		//---------------------
 		const unsigned int MAX_MATERIALS	= 100; // TO DO: Replace this with something configurable/dynamic?
 		unsigned int currentMaterialCount	= 0;
 		Material** materials				= nullptr;
@@ -128,7 +144,7 @@ namespace BlazeEngine
 
 
 		// Texture management:
-		//********************
+		//--------------------
 		const unsigned int MAX_TEXTURES		= 100; // TO DO: Replace this with something configurable/dynamic?
 		Texture** textures					= nullptr;
 		unsigned int currentTextureCount	= 0;
@@ -141,12 +157,20 @@ namespace BlazeEngine
 		//--------------------------
 
 		void ImportMaterialsAndTexturesFromScene(aiScene const* scene, string sceneName);
-		/*void ImportMeshesFromScene(aiScene const* scene);*/
-		/*void ImportLightsFromScene(aiScene const* scene);
-		void ImportCamerasFromScene(aiScene const* scene);*/
+		void ImportGameObjectGeometryFromScene(aiScene const* scene);
 
-		// Helper function: Traverses an aiNode tree, building and parenting meshes
-		void BuildSceneObjects(aiNode* root, aiScene const* scene);
+		// Scene geometry import helper: Create a GameObject transform hierarchy and return the GameObject parent
+		GameObject* FindCreateGameObjectParents(aiScene const* scene, aiNode* parent);
+
+		// Scene geometry import helper : Combines seperated transform nodes found throughout the scene graph.
+		// Finds and combines the FIRST instance of Translation, Scaling, Rotation matrices in the parenting hierarchy
+		aiMatrix4x4 GetCombinedTransformFromHierarchy(aiScene const* scene, aiNode* parent);
+
+		void ImportLightsFromScene(aiScene const* scene);
+
+		void ImportCamerasFromScene(aiScene const* scene = nullptr);
+
+
 	};
 }
 

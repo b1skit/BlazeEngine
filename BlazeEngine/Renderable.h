@@ -14,7 +14,7 @@ namespace BlazeEngine
 	class Renderable
 	{
 	public:
-		Renderable() { transform = nullptr; }
+		Renderable() {}
 		
 		Renderable(vector<Mesh*> viewMeshes)
 		{
@@ -29,16 +29,18 @@ namespace BlazeEngine
 		// Getters/Setters:
 		inline vector<Mesh*> const* ViewMeshes() const { return &viewMeshes; }
 
-		inline Transform* GetTransform() const { return transform; }
+		inline Transform* GetTransform() const { return gameObjectTransform; }
 		void SetTransform(Transform* transform);
+
+		void AddViewMeshAsChild(Mesh* mesh);
 
 
 	protected:
 
 
 	private:
-		vector<Mesh*> viewMeshes;			// Pointers to statically allocated Mesh objects held by the scene manager
-		Transform* transform = nullptr;		// The SceneObject that owns this Renderable must set the transform
+		vector<Mesh*> viewMeshes;					// Pointers to statically allocated Mesh objects held by the scene manager
+		Transform* gameObjectTransform = nullptr;	// The SceneObject that owns this Renderable must set the transform
 
 		/*Mesh* boundsMesh;*/
 

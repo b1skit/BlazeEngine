@@ -30,8 +30,6 @@ namespace BlazeEngine
 				this->name = name;
 			}
 
-			this->coreEngine = coreEngine;
-
 			objectID = AssignObjectID();
 		}
 
@@ -47,7 +45,6 @@ namespace BlazeEngine
 
 	protected:
 		unsigned long objectID; // Hashed value
-		CoreEngine* coreEngine;
 	private:
 		string name = "unnamed";
 		string hashString;
