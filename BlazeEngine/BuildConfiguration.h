@@ -2,6 +2,10 @@
 
 #pragma once
 
+// Visual Studio "Visual Leak Detector" plugin.
+#include <vld.h>
+
+
 // Flags:
 #define DEBUG_LOG_OUTPUT			// Comment this out to exclude logging for release builds
 

@@ -56,26 +56,10 @@ namespace BlazeEngine
 	{
 		LOG("Scene manager shutting down...");
 
-		// TO DO: A lot of this stuff should be moved the the Scene struct destructor!!!!!
-
-		// Cleanup the scene:
-		for (int i = 0; i < (int)currentScene->meshes.size(); i++)
-		{
-			currentScene->meshes.at(i).DestroyMesh();
-		}
-
-		for (int i = 0; i < currentScene->gameObjects.size(); i++)
-		{
-			if (currentScene->gameObjects.at(i))
-			{
-				delete currentScene->gameObjects.at(i);
-			}
-		}
-
 		if (currentScene)
 		{
 			delete currentScene;
-			// TO DO: Cleanup scene before deleting?!?!
+			currentScene = nullptr;
 		}
 		
 		if (materials)
@@ -234,7 +218,7 @@ namespace BlazeEngine
 	}
 
 
-	Material * BlazeEngine::SceneManager::GetMaterial(string materialName)
+	Material* BlazeEngine::SceneManager::GetMaterial(string materialName)
 	{
 		for (unsigned int i = 0; i < currentMaterialCount; i++)
 		{
@@ -249,7 +233,7 @@ namespace BlazeEngine
 	}
 
 	
-	void BlazeEngine::SceneManager::AddGameObject(GameObject * newGameObject)
+	void BlazeEngine::SceneManager::AddGameObject(GameObject* newGameObject)
 	{
 		currentScene->gameObjects.push_back(newGameObject);
 		int gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
@@ -600,8 +584,6 @@ namespace BlazeEngine
 
 						gameObject->GetRenderable()->AddViewMeshAsChild(&(currentScene->meshes.at(meshIndex)));
 
-						AddGameObject(gameObject);
-
 						LOG_ERROR("Created a _GAMEOBJECT for mesh \"" + meshName + "\" that did not belong to a group! GameObjects should belong to groups in the source .FBX!");
 
 
@@ -631,9 +613,6 @@ namespace BlazeEngine
 
 					// Add the mesh to the GameObject's Renderable's viewMeshes:
 					gameObject->GetRenderable()->AddViewMeshAsChild(&(currentScene->meshes.at(meshIndex)));
-
-					// Add GameObject to the scene:
-					AddGameObject(gameObject);
 				}
 				else
 				{
@@ -704,6 +683,8 @@ namespace BlazeEngine
 		// Otherwise, create the heirarchy
 		GameObject* newGameObject = new GameObject(parentName);
 		InitializeTransformValues(parent->mTransformation, newGameObject->GetTransform());
+
+		AddGameObject(newGameObject);
 
 		GameObject* nextParent = FindCreateGameObjectParents(scene, parent->mParent);
 		if (nextParent)

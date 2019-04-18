@@ -122,7 +122,13 @@ namespace BlazeEngine
 		BlazeEventManager->Shutdown();
 
 		BlazeLogManager->Shutdown();
-		
+
+		delete BlazeTimeManager;
+		delete BlazeInputManager;
+		delete BlazeRenderManager;
+		delete BlazeSceneManager;
+		delete BlazeEventManager;
+		delete BlazeLogManager;		
 
 		return;
 	}

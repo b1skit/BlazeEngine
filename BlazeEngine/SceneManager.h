@@ -39,10 +39,21 @@ namespace BlazeEngine
 			/*deferredLights.reserve(100);*/
 		}
 
-		// TO DO: FINISH writing destructor!!!!!!
 		~Scene()
 		{
-			// This destructor should delete EVERYTHING held by the scene struct...
+			for (int i = 0; i < (int)meshes.size(); i++)
+			{
+				meshes.at(i).DestroyMesh();
+			}
+
+			for (int i = 0; i < gameObjects.size(); i++)
+			{
+				if (gameObjects.at(i))
+				{
+					delete gameObjects.at(i);
+					gameObjects.at(i) = nullptr;
+				}
+			}
 
 			if (mainCamera != nullptr)
 			{
@@ -52,8 +63,8 @@ namespace BlazeEngine
 
 
 		// Cameras:
-		Camera* mainCamera	= nullptr; // Main camera: Currently points towards player object cam
-		/*vector<Camera> sceneCameras;*/ // Various render cams
+		Camera* mainCamera	= nullptr;		// Main camera: Currently points towards player object cam
+		/*vector<Camera> sceneCameras;*/	// Various render cams
 
 		// Meshes and scene objects:
 		vector<GameObject*> gameObjects;
@@ -159,7 +170,8 @@ namespace BlazeEngine
 		void ImportMaterialsAndTexturesFromScene(aiScene const* scene, string sceneName);
 		void ImportGameObjectGeometryFromScene(aiScene const* scene);
 
-		// Scene geometry import helper: Create a GameObject transform hierarchy and return the GameObject parent
+		// Scene geometry import helper: Create a GameObject transform hierarchy and return the GameObject parent. 
+		// Note: Adds the GameObject to the currentScene's gameObjects
 		GameObject* FindCreateGameObjectParents(aiScene const* scene, aiNode* parent);
 
 		// Scene geometry import helper : Combines seperated transform nodes found throughout the scene graph.

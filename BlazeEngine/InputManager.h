@@ -66,10 +66,12 @@ namespace BlazeEngine
 
 		// Singleton functionality:
 		static InputManager& Instance();
-		InputManager(InputManager const&) = delete; // Disallow copying of our Singleton
+		InputManager(InputManager const&)	= delete; // Disallow copying of our Singleton
 		void operator=(InputManager const&) = delete;
 
 		// Static member functions:
+		/*static bool const&	GetInputState(INPUT_STATE button);
+		static float const& GetMouseAxisInput(INPUT_AXIS axis);*/
 		static bool GetInputState(INPUT_STATE button);
 		static float GetMouseAxisInput(INPUT_AXIS axis);
 		

@@ -40,11 +40,13 @@ namespace BlazeEngine
 		return *instance;
 	}
 
+	/*bool const& InputManager::GetInputState(INPUT_STATE key)*/
 	bool InputManager::GetInputState(INPUT_STATE key)
 	{
 		return buttonStates[key];
 	}
 
+	/*float const& InputManager::GetMouseAxisInput(INPUT_AXIS axis)*/
 	float InputManager::GetMouseAxisInput(INPUT_AXIS axis)
 	{
 		if (axis == INPUT_MOUSE_X)
