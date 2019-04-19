@@ -21,33 +21,37 @@ namespace BlazeEngine
 
 	void LogManager::Startup() 
 	{
-		//// Subscribe to every event type:
-		//#if defined(LOG_VERBOSITY_DEBUG) || defined(LOG_VERBOSITY_ALL)
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_ENGINE_QUIT, this);
-		//#endif	
+		LOG("Log manager started!");
 
-		//#if defined(LOG_VERBOSITY_ALL)
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_FORWARD, this);
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_FORWARD, this);
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_BACKWARD, this);
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_BACKWARD, this);
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_LEFT, this);
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_LEFT, this);
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_RIGHT, this);
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_RIGHT, this);
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_UP, this);
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_UP, this);
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_DOWN, this);
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_DOWN, this);
-		//
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_CLICK_LEFT, this);
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_RELEASE_LEFT, this);
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_CLICK_RIGHT, this);
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_RELEASE_RIGHT, this);
-		//	CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_MOVED, this);
-		//#endif
+		#if defined(DEBUG_LOGMANAGER_KEY_INPUT_LOGGING)
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_FORWARD, this);
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_FORWARD, this);
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_BACKWARD, this);
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_BACKWARD, this);
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_LEFT, this);
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_LEFT, this);
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_RIGHT, this);
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_RIGHT, this);
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_UP, this);
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_UP, this);
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_DOWN, this);
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_DOWN, this);
+			LOG("\tKey input logging enabled");
+		#endif
 
-		LOG("Log manager started!");		
+		#if defined(DEBUG_LOGMANAGER_MOUSE_INPUT_LOGGING)
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_CLICK_LEFT, this);
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_RELEASE_LEFT, this);
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_CLICK_RIGHT, this);
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_RELEASE_RIGHT, this);
+			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_MOVED, this);
+			LOG("\tMouse input logging enabled");
+		#endif
+
+		#if defined(DEBUG_LOGMANAGER_QUIT_LOGGING)
+			CoreEngine::GetEventManager()->Subscribe(EVENT_ENGINE_QUIT, this);
+			LOG("\tQuit event logging enabled");
+		#endif
 	}
 
 	void LogManager::Shutdown()
@@ -63,23 +67,25 @@ namespace BlazeEngine
 
 	void LogManager::HandleEvent(EventInfo const* eventInfo)
 	{
-		/*#if defined(DEBUG_LOG_MANAGER_PRINT_EVENTS)
-			LOG(EVENT_NAME[eventInfo->type] + ": Object #");
+		#if defined(DEBUG_LOGMANAGER_LOG_EVENTS)
+			string logMessage = EVENT_NAME[eventInfo->type] + ": Object #";
 
 			if (eventInfo->generator)
 			{
-				LOG(std::to_string(eventInfo->generator->GetObjectID()) + " (" + eventInfo->generator->GetName() + ")\t");
+				logMessage += std::to_string(eventInfo->generator->GetObjectID()) + " (" + eventInfo->generator->GetName() + ")\t";
 			}
 			else
 			{
-				LOG("anonymous (     ??    )\t");
+				logMessage += "anonymous (     ??    )\t";
 			}
 
 			if (eventInfo->eventMessage && eventInfo->eventMessage->length() > 0)
 			{
-				LOG(": " + *eventInfo->eventMessage);
+				logMessage += ": " + *eventInfo->eventMessage;
 			}
-		#endif		*/
+
+			LOG(logMessage);
+		#endif		
 		
 		return;
 	}
@@ -95,11 +101,31 @@ namespace BlazeEngine
 		{
 			cout << "\nLog:\t" << message.substr(1, string::npos) << "\n";
 		}
+		else if (message[0] == '\t')
+		{
+			cout << "\t" << message.substr(1, string::npos) << "\n";
+		}
 		else
 		{
 			cout << "Log:\t" << message << "\n";
 		}
 		
+
+		// TO DO: Implement writing to file
+	}
+
+
+	void BlazeEngine::LogManager::LogWarning(string const& message)
+	{
+		if (message[0] == '\n')
+		{
+			cout << "Warning:\t" << message.substr(1, string::npos) << "\n";
+		}
+		else
+		{
+			cout << "Warning:\t" << message << "\n";
+		}
+
 
 		// TO DO: Implement writing to file
 	}

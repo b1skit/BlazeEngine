@@ -28,6 +28,7 @@ namespace BlazeEngine
 		//------------------
 
 		static void Log(string const& message);
+		static void LogWarning(string const& message);
 		static void LogError(string const& message);
 
 	private:

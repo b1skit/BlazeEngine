@@ -153,6 +153,11 @@ namespace BlazeEngine
 			buttonStates[INPUT_MOUSE_AXIS] = true;
 			mouseAxisStates[INPUT_MOUSE_X] = (float)xRel;
 			mouseAxisStates[INPUT_MOUSE_Y] = (float)yRel;
+
+			#if defined(DEBUG_LOGMANAGER_MOUSE_INPUT_LOGGING)
+				LOG("\tRecieved xRel = " + to_string(xRel) + ", yRel = " + to_string(yRel));
+			#endif
+			return;
 		}	
 		break;
 

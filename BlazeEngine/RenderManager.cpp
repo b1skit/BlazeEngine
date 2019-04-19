@@ -84,7 +84,7 @@ namespace BlazeEngine
 			output += "Severity: ";
 			switch (severity)
 			{
-			#if defined(LOG_VERBOSITY_ALL)
+			#if defined(DEBUG_LOG_OPENGL_NOTIFICATIONS)
 			case GL_DEBUG_SEVERITY_NOTIFICATION:
 				output += "NOTIFICATION\n";
 				break;
