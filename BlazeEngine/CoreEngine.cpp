@@ -74,13 +74,15 @@ namespace BlazeEngine
 
 		while (isRunning)
 		{
-			BlazeInputManager->Update(); // Note: Input processing occurs via events
+			BlazeInputManager->Update(); // Note: Input processing occurs via events. This just resets the mouse state
 
 			BlazeTimeManager->Update();
 			elapsed += BlazeTimeManager->DeltaTime();
 
 			while (elapsed >= FIXED_TIMESTEP)
 			{
+				//BlazeInputManager->Update(); // Note: Input processing occurs via events. This just resets the mouse state
+
 				// Update components:
 				BlazeEventManager->Update(); // Clears SDL event queue: Must occur after any other component that listens to SDL events
 				BlazeLogManager->Update();

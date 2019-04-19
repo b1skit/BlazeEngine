@@ -61,7 +61,6 @@ namespace BlazeEngine
 	
 	void InputManager::Startup()
 	{
-
 		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_BACKWARD, this);
 		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_DOWN, this);
 		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_FORWARD, this);

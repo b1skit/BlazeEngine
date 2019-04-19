@@ -45,8 +45,8 @@ namespace BlazeEngine
 
 		struct
 		{
-			float mousePitchSensitivity = -0.001f;
-			float mouseYawSensitivity	= -0.001f;
+			float mousePitchSensitivity = -0.0001f;
+			float mouseYawSensitivity	= -0.0001f;
 		} input;
 
 		// Scene config:

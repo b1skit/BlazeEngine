@@ -181,6 +181,7 @@ namespace BlazeEngine
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);*/
 
+		SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
 		SDL_SetRelativeMouseMode(SDL_TRUE);	// Lock the mouse to the window
 
 		//// Make our buffer swap syncronized with the monitor's vertical refresh:
