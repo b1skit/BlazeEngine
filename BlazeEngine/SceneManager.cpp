@@ -462,7 +462,7 @@ namespace BlazeEngine
 		//	
 
 		//	aiNode* test = nullptr;
-		//	test = scene->mRootNode->FindNode(scene->mMeshes[i]->mName.C_Str()); // this works.
+		//	test = scene->mRootNode->FindNode(scene->mMeshes[i]->mName); // this works.
 		//	if (test)
 		//	{
 		//		LOG("FindNode() found match for \"" + string(scene->mMeshes[i]->mName.C_Str()) + "\" called \"" +  string(test->mName.C_Str())+ "\" that is holding " + to_string(test->mNumMeshes) + " meshes");
@@ -518,7 +518,7 @@ namespace BlazeEngine
 			{
 				// Mesh is valid: See if we can find the corresponding node in the scene graph:
 				string meshName = string(scene->mMeshes[currentMesh]->mName.C_Str());
-				aiNode* currentNode = scene->mRootNode->FindNode(scene->mMeshes[currentMesh]->mName.C_Str());
+				aiNode* currentNode = scene->mRootNode->FindNode(scene->mMeshes[currentMesh]->mName);
 
 				if (currentNode)
 				{
@@ -666,7 +666,7 @@ namespace BlazeEngine
 		// Exclude Maya .fbx "frozen" transformation nodes and keep searching:
 		if (parentName.find("$AssimpFbx$") != string::npos)
 		{	
-			LOG("Found Maya transformation node \"" + parentName + "\", continuing to search!");
+			LOG("Found Maya transformation node \"" + parentName + "\", ignoring and continuing to search!");
 			return FindCreateGameObjectParents(scene, parent->mParent);
 		}
 
@@ -700,7 +700,7 @@ namespace BlazeEngine
 
 	aiMatrix4x4 BlazeEngine::SceneManager::GetCombinedTransformFromHierarchy(aiScene const* scene, aiNode* parent)
 	{
-		LOG("Combining imported transformations from scene graph:s");
+		LOG("Combining imported transformations from scene graph:");
 
 		if (scene == nullptr || parent == nullptr)
 		{
@@ -711,7 +711,7 @@ namespace BlazeEngine
 		string parentName = string(parent->mName.C_Str());
 		if (parentName.find("$AssimpFbx$") == string::npos)
 		{
-			LOG("Parent is not a transformation node, returning identity matrix");
+			LOG("Parent \"" + parentName + "\" is not a transformation node, returning identity matrix instead of continuing on to " + (parent->mParent ? string(parent->mParent->mName.C_Str()) : "null parent"));
 			return aiMatrix4x4();
 		}
 
@@ -732,19 +732,19 @@ namespace BlazeEngine
 				{
 					translation = current->mTransformation;
 					foundTranslation = true;
-					LOG("Found a translation node...");
+					LOG("\tFound a translation node...");
 				}
 				else if (!foundScaling && currentName.find("Scaling") != string::npos && currentName.find("Pivot") == string::npos)
 				{
 					scaling = current->mTransformation;
 					foundScaling = true;
-					LOG("Found a scaling node...");
+					LOG("\tFound a scaling node...");
 				}
 				else if (!foundRotation && currentName.find("_Rotation") != string::npos && currentName.find("Pivot") == string::npos) // We check for "_Rotation" so we can skip "PostRotation"
 				{
 					rotation = current->mTransformation;
 					foundRotation = true;
-					LOG("Found a rotation node...");
+					LOG("\tFound a rotation node...");
 				}
 			}
 			else 
@@ -769,19 +769,105 @@ namespace BlazeEngine
 	void BlazeEngine::SceneManager::ImportLightsFromScene(aiScene const* scene)
 	{
 		int numLights = scene->mNumLights;
-		LOG("Found " + to_string(numLights) + " scene lights");
+		if (numLights <= 0)
+		{
+			LOG_ERROR("Scene has no lights to import!");
+			return;
+		}
+		else
+		{
+			LOG("Found " + to_string(numLights) + " scene lights:");
+		}		
+		
+		bool foundDirectional = false;
+
+		for (unsigned int i = 0; i < scene->mNumLights; i++)
+		{
+			switch (scene->mLights[i]->mType)
+			{
+			case aiLightSource_DIRECTIONAL:
+			{
+				if (!foundDirectional)
+				{
+					foundDirectional = true;
+					string lightName = string(scene->mLights[i]->mName.C_Str());
+					LOG("\nFound a directional light \"" + lightName + "\"");
+
+					aiMatrix4x4 lightTransform;
+					aiNode* current = nullptr;
+					if (current = scene->mRootNode->FindNode(scene->mLights[i]->mName))
+					{
+						LOG("Found a corresponding light node in the scene graph...");
+						lightTransform = GetCombinedTransformFromHierarchy(scene, current->mParent);
+					}
+
+					currentScene->keyLight = Light
+					(
+						"lightName", 
+						LIGHT_DIRECTIONAL, 
+						vec3(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b),
+						2.0f		// TO DO: Load the actual intensity from the .fbx scene!!!!!!!!!!!!!!
+					);
+
+					LOG_ERROR("Light intensity not imported! Using a hard-coded value of 2.0f for now...");
+
+					InitializeTransformValues(lightTransform, &currentScene->keyLight.GetTransform());
+
+					LOG("Directional light position = " + to_string(currentScene->keyLight.GetTransform().Position().x) + ", " + to_string(currentScene->keyLight.GetTransform().Position().y) + ", " + to_string(currentScene->keyLight.GetTransform().Position().z));
+					LOG("Directional light forward = " + to_string(currentScene->keyLight.GetTransform().Forward().x) + ", " + to_string(currentScene->keyLight.GetTransform().Forward().y) + ", " + to_string(currentScene->keyLight.GetTransform().Forward().z));
+					
+
+					//currentScene->keyLight = Light(lightName, LIGHT_DIRECTIONAL, vec4(1.0f, 1.0f, 1.0f, 1.0f), 1.0f);
+					//currentScene->keyLight.GetTransform().Rotate(vec3(3.14f / 4.0f, 3.14f / 8.0f, 0)); // Rotation in radians
+					//currentScene->keyLight.SetColor(vec4(0, 1, 0, 1));
+					//currentScene->keyLight.SetIntensity(2.0f);
+				}
+				else
+				{
+					LOG_ERROR("Found additional directional light. More than 1 directional light is not yet supported!");
+				}
+			}
+				break;
+
+			case aiLightSource_POINT:
+				LOG_ERROR("\nFound a point light. Point lights are not yet supported!");
+				break;
+
+			case aiLightSource_SPOT:
+				LOG_ERROR("\nFound a spot light. Spot lights are not yet supported!");
+				break;
+
+			case aiLightSource_UNDEFINED:
+				LOG_ERROR("\nFound an undefined light type");
+				break;
+
+			default:
+				LOG_ERROR("\nFound an unhandled light type");
+				break;
+
+			}
+
+			#if defined(DEBUG_SCENEMANAGER_LOG_SCENE_SETUP)
+				LOG("mAngleInnerCone = " + to_string(scene->mLights[i]->mAngleInnerCone) + " radians");
+				LOG("mAngleOuterCone = " + to_string(scene->mLights[i]->mAngleOuterCone) + " radians");
+				LOG("mAttenuationConstant = " + to_string(scene->mLights[i]->mAttenuationConstant));
+				LOG("mAttenuationLinear = " + to_string(scene->mLights[i]->mAttenuationLinear));
+				LOG("mAttenuationQuadratic = " + to_string(scene->mLights[i]->mAttenuationQuadratic));
+				LOG("mColorAmbient = " + to_string(scene->mLights[i]->mColorAmbient.r) + ", " + to_string(scene->mLights[i]->mColorAmbient.g) + ", " + to_string(scene->mLights[i]->mColorAmbient.b));
+				LOG("mColorDiffuse = " + to_string(scene->mLights[i]->mColorDiffuse.r) + ", " + to_string(scene->mLights[i]->mColorDiffuse.g) + ", " + to_string(scene->mLights[i]->mColorDiffuse.b));
+				LOG("mColorSpecular = " + to_string(scene->mLights[i]->mColorSpecular.r) + ", " + to_string(scene->mLights[i]->mColorSpecular.g) + ", " + to_string(scene->mLights[i]->mColorSpecular.b));
+				LOG("mDirection = " + to_string(scene->mLights[i]->mDirection.x) + ", " + to_string(scene->mLights[i]->mDirection.y) + ", " + to_string(scene->mLights[i]->mDirection.z));
+				LOG("mPosition = " + to_string(scene->mLights[i]->mPosition.x) + ", " + to_string(scene->mLights[i]->mPosition.y) + ", " + to_string(scene->mLights[i]->mPosition.z));
+				LOG("mSize = " + to_string(scene->mLights[i]->mSize.x) + ", " + to_string(scene->mLights[i]->mSize.y));
+				LOG("mUp = " + to_string(scene->mLights[i]->mUp.x) + ", " + to_string(scene->mLights[i]->mUp.y) + ", " + to_string(scene->mLights[i]->mUp.z));
+			#endif
+		}
 
 
 		// DEBUG: Set up hard coded lights:
-		currentScene->ambientLight = vec4(0.5, 0.5, 0.5, 1.0f);
-		currentScene->keyLight = Light(LIGHT_DIRECTIONAL, vec4(1.0f, 1.0f, 1.0f, 1.0f), 1.0f);
-		currentScene->keyLight.GetTransform().Rotate(vec3(3.14f / 4.0f, 3.14f / 8.0f, 0)); // Rotation in radians
-		currentScene->keyLight.SetColor(vec4(0, 1, 0, 1));
-		currentScene->keyLight.SetIntensity(2.0f);
-
-
-
-		LOG_ERROR("LIGHT IMPORT IS NOT YET IMPLEMENTED. SETTING TEMPORARY HARD CODED VALUES");
+		currentScene->ambientLight = vec3(0.5, 0.5, 0.5);
+		
+		LOG_ERROR("Ambient light not imported! Using a hard-coded value of (0.5f, 0.5f, 0.5f) for now...");
 	}
 
 
@@ -822,11 +908,7 @@ namespace BlazeEngine
 		
 
 		// Note: In the current version of Assimp, the mLookAt, mUp vectors seem to just be the world forward, up vectors, and mTransformation is the identity...
-
-
-		// TO DO: Set camera orientation based on up, lookAt:
-		//scene->mCameras[0]->mLookAt; // Not used, for now...
-		//scene->mCameras[0]->mUp; // Not used, for now...
+		// + Importing cameras vacing towards Z+ results in a flipped camera?
 
 		// TO DO: Add ALL cameras (look for a name that contains "main" to use as the main camera, or use the 1st camera otherwise)
 

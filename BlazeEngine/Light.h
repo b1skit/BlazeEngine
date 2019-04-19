@@ -7,6 +7,8 @@
 
 #include "glm.hpp"
 
+#include <string>
+
 using glm::vec3;
 using glm::vec4;
 
@@ -27,11 +29,8 @@ namespace BlazeEngine
 	class Light : public SceneObject
 	{
 	public:
-		Light(){} // Default constructor
-		Light(LIGHT_TYPE type, vec4 color, float intensity);
-
-		inline vec4 const& Color() { return color; }
-		inline float const& Intensity() { return intensity; }
+		Light() {}; // Default constructor
+		Light(string lightName, LIGHT_TYPE type, vec3 color, float intensity);
 
 		// BlazeObject interface:
 		void Update();
@@ -40,24 +39,27 @@ namespace BlazeEngine
 		void HandleEvent(EventInfo const* eventInfo);
 
 		// Getters/Setters:
-		inline vec4 const& Color() const { return color; }
-		inline void SetColor(vec4 color) { this->color = color; }
+		inline vec3 const& Color() const			{ return color; }
+		inline void SetColor(vec4 color)			{ this->color = color; }
 
-		inline float const& Intensity() const { return intensity; }
-		inline void SetIntensity(float intensity) { this->intensity = intensity; }
+		inline float const& Intensity() const		{ return intensity; }
+		inline void SetIntensity(float intensity)	{ this->intensity = intensity; }
 
-		inline LIGHT_TYPE const& Type() const { return type; }
+		inline LIGHT_TYPE const& Type() const		{ return type; }
 
-		inline Transform& GetTransform() { return transform; } // Directional lights shine forward (Z+)
+		inline Transform& GetTransform()			{ return transform; } // Directional lights shine forward (Z+)
+
+		inline string const& Name() const			{ return lightName; }
 
 	protected:
 
 
 
 	private:
-		vec4 color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-		float intensity = 1.0f;
-		LIGHT_TYPE type = LIGHT_DIRECTIONAL;
+		vec3 color			= vec3(1.0f, 1.0f, 1.0f);
+		float intensity		= 1.0f;
+		LIGHT_TYPE type		= LIGHT_DIRECTIONAL;
 
+		string lightName	= "unnamed_light";
 	};
 }

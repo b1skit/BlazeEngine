@@ -2,8 +2,9 @@
 
 namespace BlazeEngine
 {
-	BlazeEngine::Light::Light(LIGHT_TYPE type, vec4 color, float intensity)
+	BlazeEngine::Light::Light(string lightName, LIGHT_TYPE type, vec3 color, float intensity)
 	{
+		this->lightName = lightName;
 		this->type = type;
 		this->color = color;
 		this->intensity = intensity;

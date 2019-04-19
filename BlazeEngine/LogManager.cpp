@@ -119,7 +119,7 @@ namespace BlazeEngine
 	{
 		if (message[0] == '\n')
 		{
-			cout << "Warning:\t" << message.substr(1, string::npos) << "\n";
+			cout << "\nWarning:\t" << message.substr(1, string::npos) << "\n";
 		}
 		else
 		{
@@ -135,7 +135,7 @@ namespace BlazeEngine
 	{
 		if (message[0] == '\n')
 		{
-			cout << "Error:\t" << message.substr(1, string::npos) << "\n";
+			cout << "\nError:\t" << message.substr(1, string::npos) << "\n";
 		}
 		else
 		{

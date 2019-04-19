@@ -75,7 +75,7 @@ namespace BlazeEngine
 		/*vector<Light> forwardLights;*/
 		/*vector<Light> deferredLights;*/
 
-		vec4 ambientLight = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		vec3 ambientLight = vec3(1.0f, 1.0f, 1.0f);
 		Light keyLight;
 	};
 
@@ -106,18 +106,20 @@ namespace BlazeEngine
 		// sceneName == the root folder name within the ./Scenes/ directory. Must contain an .fbx file with the same name.
 		void LoadScene(string sceneName);
 
-		inline unsigned int NumMaterials() { return currentMaterialCount; }
-		inline Material* GetMaterial(unsigned int materialIndex) { return materials[materialIndex]; }
+		inline unsigned int NumMaterials()										{ return currentMaterialCount; }
+		inline Material* GetMaterial(unsigned int materialIndex)				{ return materials[materialIndex]; }
+		
 		Material* GetMaterial(string materialName);
+		
 		inline vector<Mesh*> const* GetRenderMeshes(unsigned int materialIndex) { return &materialMeshLists.at(materialIndex); } // TO DO: BOunds checking?
 
-		inline vector<Renderable*>* GetRenderables() { return &currentScene->renderables;	}
+		inline vector<Renderable*>* GetRenderables()							{ return &currentScene->renderables;	}
 
-		inline vec4 const& GetAmbient() { return currentScene->ambientLight; }
-		inline Light& GetKeyLight() { return currentScene->keyLight; }
+		inline vec3 const& GetAmbient()											{ return currentScene->ambientLight; }
+		inline Light& GetKeyLight()												{ return currentScene->keyLight; }
 		/*inline vector<Light> const& GetForwardLights() { return forwardLights; }*/
 		
-		inline Camera* MainCamera() { return currentScene->mainCamera; }
+		inline Camera* MainCamera()												{ return currentScene->mainCamera; }
 
 	protected:
 

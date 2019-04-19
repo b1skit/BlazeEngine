@@ -5,14 +5,14 @@
 // in bool gl_FrontFacing;
 // in vec2 gl_PointCoord;
 
-in vec4 vertexColor;
+in vec3 vertexColor;
 in vec3 fragNormal;
 in vec2 uv0;
 
-uniform vec4 ambient;
+uniform vec3 ambient;
 
 uniform vec3 keyDirection;
-uniform vec4 keyColor;
+uniform vec3 keyColor;
 uniform float keyIntensity;
 
 uniform mat4 in_model;
@@ -38,6 +38,10 @@ out vec4 FragColor;
 void main()
 {	
 	FragColor = texture(albedo, uv0);
+
+	float nDotL = max(0, dot(fragNormal, keyDirection));
+
+	FragColor = (FragColor * vec4(ambient, 1)) + (FragColor * vec4(nDotL * keyColor * keyIntensity, 1));
 
 //	FragColor = texture(normal, uv0);
 //	FragColor = texture(roughness, uv0);
