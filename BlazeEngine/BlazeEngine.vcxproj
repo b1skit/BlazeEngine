@@ -174,8 +174,8 @@
     <ClInclude Include="Transform.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\defaultShader.frag" />
-    <None Include="Shaders\defaultShader.vert" />
+    <None Include="Shaders\lambertShader.frag" />
+    <None Include="Shaders\lambertShader.vert" />
     <None Include="Shaders\errorShader.frag" />
     <None Include="Shaders\errorShader.vert" />
   </ItemGroup>

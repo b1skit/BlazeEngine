@@ -40,7 +40,7 @@ namespace BlazeEngine
 		{
 			const string shaderDirectory	= ".\\Shaders\\";
 			const string errorShaderName	= "errorShader";
-			const string defaultShaderName	= "defaultShader";
+			const string defaultShaderName	= "lambertShader";
 		} shader;
 
 		struct

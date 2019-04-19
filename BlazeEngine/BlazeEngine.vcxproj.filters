@@ -142,16 +142,16 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\defaultShader.frag">
-      <Filter>Source Files\Shaders</Filter>
-    </None>
-    <None Include="Shaders\defaultShader.vert">
-      <Filter>Source Files\Shaders</Filter>
-    </None>
     <None Include="Shaders\errorShader.frag">
       <Filter>Source Files\Shaders</Filter>
     </None>
     <None Include="Shaders\errorShader.vert">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\lambertShader.frag">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\lambertShader.vert">
       <Filter>Source Files\Shaders</Filter>
     </None>
   </ItemGroup>
