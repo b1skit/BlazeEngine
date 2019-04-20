@@ -40,22 +40,21 @@ namespace BlazeEngine
 		return *instance;
 	}
 
-	/*bool const& InputManager::GetInputState(INPUT_STATE key)*/
-	bool InputManager::GetInputState(INPUT_STATE key)
+	bool const& InputManager::GetInputState(INPUT_STATE key)
 	{
-		return buttonStates[key];
+		return InputManager::buttonStates[key];
 	}
 
-	/*float const& InputManager::GetMouseAxisInput(INPUT_AXIS axis)*/
+
 	float InputManager::GetMouseAxisInput(INPUT_AXIS axis)
 	{
 		if (axis == INPUT_MOUSE_X)
 		{
-			return mouseAxisStates[INPUT_MOUSE_X] * CoreEngine::GetCoreEngine()->GetConfig()->input.mousePitchSensitivity;
+			return InputManager::mouseAxisStates[INPUT_MOUSE_X] * CoreEngine::GetCoreEngine()->GetConfig()->input.mousePitchSensitivity;
 		}
 		else
 		{
-			return mouseAxisStates[INPUT_MOUSE_Y] * CoreEngine::GetCoreEngine()->GetConfig()->input.mouseYawSensitivity;
+			return InputManager::mouseAxisStates[INPUT_MOUSE_Y] * CoreEngine::GetCoreEngine()->GetConfig()->input.mouseYawSensitivity;
 		}
 	}
 	

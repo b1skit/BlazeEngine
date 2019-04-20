@@ -70,9 +70,7 @@ namespace BlazeEngine
 		void operator=(InputManager const&) = delete;
 
 		// Static member functions:
-		/*static bool const&	GetInputState(INPUT_STATE button);
-		static float const& GetMouseAxisInput(INPUT_AXIS axis);*/
-		static bool GetInputState(INPUT_STATE button);
+		static bool const&	GetInputState(INPUT_STATE button);
 		static float GetMouseAxisInput(INPUT_AXIS axis);
 		
 		inline InputBindings const* GetInputBindings()
