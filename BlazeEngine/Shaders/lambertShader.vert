@@ -7,6 +7,7 @@ layout (location = 2) in vec3 in_color;
 layout (location = 3) in vec2 in_uv0;
 
 uniform vec3 ambient;
+uniform float ambientIntensity;
 
 uniform vec3 keyDirection;	// World space normalized vector pointing towards key light
 uniform vec3 keyColor;
@@ -40,7 +41,7 @@ void main()
 	// Assign our position data to the predefined gl_Position output
     gl_Position = in_mvp * vec4(in_position.x, in_position.y, in_position.z, 1.0);	// TO DO: Replace gl_Position with an out ^^^ (deprecated???????)
 
-	vertexColor = in_color * ambient;
+	vertexColor = in_color * ambient * ambientIntensity;
 
 	fragNormal = (in_model * vec4(in_normal, 0.0f)).xyz;	// Normal -> World normal
 

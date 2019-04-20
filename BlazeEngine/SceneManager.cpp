@@ -9,6 +9,9 @@
 #define STB_IMAGE_IMPLEMENTATION	// Only include this define ONCE in the project
 #include "stb_image.h"				// STB image loader
 
+#include <algorithm>
+#include <string>
+
 
 
 namespace BlazeEngine
@@ -766,6 +769,52 @@ namespace BlazeEngine
 	}
 
 
+	aiNode* BlazeEngine::SceneManager::FindNodeContainingName(aiScene const* scene, string name)
+	{
+		aiNode* result = nullptr;
+		if (result = scene->mRootNode->FindNode(name.c_str()))
+		{
+			return result;
+		}
+
+		std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+		if (result = FindNodeRecursiveHelper(scene->mRootNode, name))
+		{
+			return result;
+		}
+
+		LOG("Could not find any node containing the name \"" + name + "\" in the scene graph. Returning nullptr");
+		return nullptr;
+	}
+
+	aiNode* BlazeEngine::SceneManager::FindNodeRecursiveHelper(aiNode* rootNode, string name)
+	{
+		if (rootNode == nullptr)
+		{
+			return nullptr;
+		}
+
+		string currentName(rootNode->mName.C_Str());
+		std::transform(currentName.begin(), currentName.end(), currentName.begin(), ::tolower);
+		if (currentName.find(name) != string::npos)
+		{
+			LOG("Found node containing \"" + name + "\", returning node \"" + currentName +"\"");
+			return rootNode;
+		}
+
+		for (unsigned int i = 0; i < rootNode->mNumChildren; i++)
+		{
+			aiNode* result = FindNodeRecursiveHelper(rootNode->mChildren[i], name);
+
+			if (result != nullptr)
+			{
+				LOG("Found child node containing \"" + name + "\", returning node \"" + string(result->mName.C_Str()) + "\"");
+				return result;
+			}
+		}
+		return nullptr;
+	}
+
 	void BlazeEngine::SceneManager::ImportLightsFromScene(aiScene const* scene)
 	{
 		int numLights = scene->mNumLights;
@@ -779,7 +828,8 @@ namespace BlazeEngine
 			LOG("Found " + to_string(numLights) + " scene lights:");
 		}		
 		
-		bool foundDirectional = false;
+		bool foundDirectional	= false;	// TEMP: Only find the first directional light
+		bool foundAmbient		= false;	// Track: Have we found a point light with a name containing "ambient" yet?
 
 		for (unsigned int i = 0; i < scene->mNumLights; i++)
 		{
@@ -800,16 +850,22 @@ namespace BlazeEngine
 						LOG("Found a corresponding light node in the scene graph...");
 						lightTransform = GetCombinedTransformFromHierarchy(scene, current->mParent);
 					}
+					
+					vec3 lightColor(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b);
+					float intensity = (float)lightColor.length();
+					lightColor = glm::normalize(lightColor);
+					// This is niave, and doesn't work...
 
 					currentScene->keyLight = Light
 					(
 						"lightName", 
 						LIGHT_DIRECTIONAL, 
-						vec3(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b),
-						2.0f		// TO DO: Load the actual intensity from the .fbx scene!!!!!!!!!!!!!!
+						lightColor,
+						intensity
 					);
 
-					LOG_ERROR("Light intensity not imported! Using a hard-coded value of 2.0f for now...");
+					LOG("Directional light color: " + to_string(lightColor.r) + ", " + to_string(lightColor.g) + ", " + to_string(lightColor.b) );
+					LOG("Directional light intensity: " + to_string(intensity));
 
 					InitializeTransformValues(lightTransform, &currentScene->keyLight.GetTransform());
 
@@ -830,7 +886,23 @@ namespace BlazeEngine
 				break;
 
 			case aiLightSource_POINT:
-				LOG_ERROR("\nFound a point light. Point lights are not yet supported!");
+			{
+				string lightName = string(scene->mLights[i]->mName.C_Str());
+				if (!foundAmbient && lightName.find("ambient") != string::npos)
+				{
+					foundAmbient = true;
+					currentScene->ambientLight = vec3(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b);
+					float ambientIntensity = glm::length(currentScene->ambientLight);
+					currentScene->ambientLight = glm::normalize(currentScene->ambientLight);
+					// This is niave, and doesn't work...
+
+					LOG("Created ambient light")
+				}
+				else
+				{
+					LOG_ERROR("\nFound a point light. Point lights are not yet supported!");
+				}
+			}				
 				break;
 
 			case aiLightSource_SPOT:
@@ -863,11 +935,21 @@ namespace BlazeEngine
 			#endif
 		}
 
+		//// Import the ambient light. NOTE: The word "ambient" must appear in this light's name
+		//aiNode* ambientLightNode = FindNodeContainingName(scene, "ambient");
+		//if (ambientLightNode)
+		//{
+		//	LOG("FOUND " + to_string(ambientLightNode->mMetaData->mNumProperties) + " metadata properties...");
 
-		// DEBUG: Set up hard coded lights:
-		currentScene->ambientLight = vec3(0.5, 0.5, 0.5);
+		//	for (unsigned int i = 0; i < ambientLightNode->mMetaData->mNumProperties; i++)
+		//	{
+		//		//for (unsigned int key = 0; k < )
+		//		//ambientLightNode->mMetaData->Get();
+		//		//ambientLightNode->mMetaData->Get()
+		//	}			
+		//}
+
 		
-		LOG_ERROR("Ambient light not imported! Using a hard-coded value of (0.5f, 0.5f, 0.5f) for now...");
 	}
 
 

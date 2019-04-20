@@ -63,7 +63,7 @@ namespace BlazeEngine
 
 
 		// Cameras:
-		Camera* mainCamera	= nullptr;		// Main camera: Currently points towards player object cam
+		Camera* mainCamera		= nullptr;	// Main camera: Currently points towards player object cam
 		/*vector<Camera> sceneCameras;*/	// Various render cams
 
 		// Meshes and scene objects:
@@ -75,7 +75,9 @@ namespace BlazeEngine
 		/*vector<Light> forwardLights;*/
 		/*vector<Light> deferredLights;*/
 
-		vec3 ambientLight = vec3(1.0f, 1.0f, 1.0f);
+		vec3 ambientLight		= vec3(1.0f, 1.0f, 1.0f);
+		float ambientIntensity	= 1.0f;
+
 		Light keyLight;
 	};
 
@@ -116,6 +118,7 @@ namespace BlazeEngine
 		inline vector<Renderable*>* GetRenderables()							{ return &currentScene->renderables;	}
 
 		inline vec3 const& GetAmbient()											{ return currentScene->ambientLight; }
+		inline float const& GetAmbientIntensity()								{ return currentScene->ambientIntensity; }
 		inline Light& GetKeyLight()												{ return currentScene->keyLight; }
 		/*inline vector<Light> const& GetForwardLights() { return forwardLights; }*/
 		
@@ -179,6 +182,13 @@ namespace BlazeEngine
 		// Scene geometry import helper : Combines seperated transform nodes found throughout the scene graph.
 		// Finds and combines the FIRST instance of Translation, Scaling, Rotation matrices in the parenting hierarchy
 		aiMatrix4x4 GetCombinedTransformFromHierarchy(aiScene const* scene, aiNode* parent);
+		
+		// Find a node with a name matching or containing name
+		aiNode* FindNodeContainingName(aiScene const* scene, string name);
+
+		// Recursive helper function: Finds nodes containing name as a substring
+		aiNode* FindNodeRecursiveHelper(aiNode* rootNode, string name);
+
 
 		void ImportLightsFromScene(aiScene const* scene);
 
