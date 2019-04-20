@@ -208,7 +208,7 @@ namespace BlazeEngine
 		}
 		else
 		{
-			LOG_ERROR("Scene has no cameras. Creating a default camera at the origin");
+			LOG_ERROR("Scene has no camera");
 			ImportCamerasFromScene();
 		}
 			   
@@ -244,7 +244,9 @@ namespace BlazeEngine
 		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
 		currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
 
-		LOG("Added new GameObject to the scene: " + newGameObject->GetName());
+		#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
+			LOG("Added new GameObject to the scene: " + newGameObject->GetName());
+		#endif	
 	}
 
 
@@ -502,7 +504,7 @@ namespace BlazeEngine
 
 
 		int numMeshes = scene->mNumMeshes;
-		LOG("Found " + to_string(numMeshes) + " scene meshes:");
+		LOG("Found " + to_string(numMeshes) + " scene meshes");
 
 		currentScene->gameObjects.clear(); // TO DO: Reserve gameObjects based on numMeshes ???
 
@@ -532,7 +534,9 @@ namespace BlazeEngine
 					int numUVChannels = scene->mMeshes[currentMesh]->GetNumUVChannels();
 					int materialIndex = scene->mMeshes[currentMesh]->mMaterialIndex;
 
-					LOG("\nMesh #" + to_string(currentMesh) + " \"" + meshName + "\": " + to_string(numVerts) + " verts, " + to_string(numFaces) + " faces, " + to_string(numUVChannels) + " UV channels, " + to_string(numUVs) + " UV components in channel 0, using material #" + to_string(materialIndex));
+					#if defined(DEBUG_SCENEMANAGER_MESH_LOGGING)
+						LOG("\nMesh #" + to_string(currentMesh) + " \"" + meshName + "\": " + to_string(numVerts) + " verts, " + to_string(numFaces) + " faces, " + to_string(numUVChannels) + " UV channels, " + to_string(numUVs) + " UV components in channel 0, using material #" + to_string(materialIndex));
+					#endif
 
 					Vertex* vertices = new Vertex[numVerts];
 
@@ -552,7 +556,9 @@ namespace BlazeEngine
 					int numIndices = scene->mMeshes[currentMesh]->mNumFaces * 3;
 					GLuint* indices = new GLuint[numIndices];
 
-					LOG("Created arrays of " + to_string(numVerts) + " vertices, & " + to_string(numIndices) + " indices");
+					#if defined(DEBUG_SCENEMANAGER_MESH_LOGGING)
+						LOG("Created arrays of " + to_string(numVerts) + " vertices, & " + to_string(numIndices) + " indices");
+					#endif					
 
 					for (int currentFace = 0; currentFace < numFaces; currentFace++)
 					{
@@ -560,7 +566,7 @@ namespace BlazeEngine
 						{
 							if (scene->mMeshes[currentMesh]->mFaces[currentFace].mNumIndices != 3)
 							{
-								LOG_ERROR("Found a face that doesn't have 3 indices!")
+								LOG_ERROR("Found a face that doesn't have 3 indices during mesh import!")
 							}
 							indices[(currentFace * 3) + currentIndex] = scene->mMeshes[currentMesh]->mFaces[currentFace].mIndices[currentIndex];
 						}
@@ -588,23 +594,6 @@ namespace BlazeEngine
 						gameObject->GetRenderable()->AddViewMeshAsChild(&(currentScene->meshes.at(meshIndex)));
 
 						LOG_ERROR("Created a _GAMEOBJECT for mesh \"" + meshName + "\" that did not belong to a group! GameObjects should belong to groups in the source .FBX!");
-
-
-
-						//LOG("SPEWING HIERARCHY:");
-						//aiNode* test = currentNode->mParent;
-						//while (test != nullptr)
-						//{
-						//	string testName = string(test->mName.C_Str());
-						//	LOG("name = " + testName);
-						//	LOG(to_string(test->mTransformation.a1) + " " + to_string(test->mTransformation.a2) + " " + to_string(test->mTransformation.a3) + " " + to_string(test->mTransformation.a4));
-						//	LOG(to_string(test->mTransformation.b1) + " " + to_string(test->mTransformation.b2) + " " + to_string(test->mTransformation.b3) + " " + to_string(test->mTransformation.b4));
-						//	LOG(to_string(test->mTransformation.c1) + " " + to_string(test->mTransformation.c2) + " " + to_string(test->mTransformation.c3) + " " + to_string(test->mTransformation.c4));
-						//	LOG(to_string(test->mTransformation.d1) + " " + to_string(test->mTransformation.d2) + " " + to_string(test->mTransformation.d3) + " " + to_string(test->mTransformation.d4));
-
-						//	test = test->mParent;
-						//}
-
 
 						continue; // We're done!
 					}
@@ -636,23 +625,6 @@ namespace BlazeEngine
 
 		int numGameObjects = (int)currentScene->gameObjects.size();
 		LOG("Created " + to_string(numGameObjects) + " game objects");
-
-
-		//// DEBUG:
-		//for (int i = 0; i < currentScene->gameObjects.size(); i++)
-		//{
-		//	LOG("\n**GameObject**");
-		//	LOG(to_string((long long)currentScene->gameObjects.at(i)->GetTransform()) + ": " + currentScene->gameObjects.at(i)->GetName());
-		//	currentScene->gameObjects.at(i)->GetTransform()->DebugPrint();
-
-		//	for (int j = 0; j < currentScene->gameObjects.at(i)->GetRenderable()->ViewMeshes()->size(); j++)
-		//	{
-		//		LOG("\n**Mesh**");
-		//		LOG("Mesh name = " + currentScene->gameObjects.at(i)->GetRenderable()->ViewMeshes()->at(j)->Name());
-		//		LOG("mesh parent = " + to_string((long long)currentScene->gameObjects.at(i)->GetRenderable()->ViewMeshes()->at(j)->GetTransform().GetParent() ) );
-		//		currentScene->gameObjects.at(i)->GetRenderable()->ViewMeshes()->at(j)->GetTransform().DebugPrint();
-		//	}
-		//}
 	}
 
 
@@ -660,7 +632,10 @@ namespace BlazeEngine
 	{
 		if (parent == nullptr || parent == scene->mRootNode)
 		{
-			LOG("Reached end of parent heirarchy!");
+			#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
+				LOG("Reached end of parent heirarchy!");
+			#endif
+
 			return nullptr;
 		}
 
@@ -669,7 +644,9 @@ namespace BlazeEngine
 		// Exclude Maya .fbx "frozen" transformation nodes and keep searching:
 		if (parentName.find("$AssimpFbx$") != string::npos)
 		{	
-			LOG("Found Maya transformation node \"" + parentName + "\", ignoring and continuing to search!");
+			#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
+				LOG("Found Maya transformation node \"" + parentName + "\", ignoring and continuing to search!");
+			#endif
 			return FindCreateGameObjectParents(scene, parent->mParent);
 		}
 
@@ -678,7 +655,9 @@ namespace BlazeEngine
 		{
 			if (currentScene->gameObjects.at(i)->GetName() == parentName)
 			{
-				LOG("Found an existing GameObject parent: \"" + parentName + "\"");
+				#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
+					LOG("Found an existing GameObject parent: \"" + parentName + "\"");
+				#endif
 				return currentScene->gameObjects.at(i);
 			}
 		}
@@ -692,18 +671,25 @@ namespace BlazeEngine
 		GameObject* nextParent = FindCreateGameObjectParents(scene, parent->mParent);
 		if (nextParent)
 		{
-			LOG("Parented \"" + newGameObject->GetName() + "\" -> \"" + nextParent->GetName() + "\"");
+			#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
+				LOG("Parented \"" + newGameObject->GetName() + "\" -> \"" + nextParent->GetName() + "\"");
+			#endif
 			newGameObject->GetTransform()->SetParent(nextParent->GetTransform());
 		}
+		
+		#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
+			LOG("Returning newly created GameObject \"" + newGameObject->GetName() + "\"");
+		#endif
 
-		LOG("Returning newly created GameObject \"" + newGameObject->GetName() + "\"");
 		return newGameObject;
 	}
 
 
 	aiMatrix4x4 BlazeEngine::SceneManager::GetCombinedTransformFromHierarchy(aiScene const* scene, aiNode* parent)
 	{
-		LOG("Combining imported transformations from scene graph:");
+		#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+			LOG("Combining imported transformations from scene graph:");
+		#endif
 
 		if (scene == nullptr || parent == nullptr)
 		{
@@ -714,7 +700,9 @@ namespace BlazeEngine
 		string parentName = string(parent->mName.C_Str());
 		if (parentName.find("$AssimpFbx$") == string::npos)
 		{
-			LOG("Parent \"" + parentName + "\" is not a transformation node, returning identity matrix instead of continuing on to " + (parent->mParent ? string(parent->mParent->mName.C_Str()) : "null parent"));
+			#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+				LOG("Parent \"" + parentName + "\" is not a transformation node, returning identity matrix instead of continuing on to " + (parent->mParent ? string(parent->mParent->mName.C_Str()) : "null parent"));
+			#endif
 			return aiMatrix4x4();
 		}
 
@@ -735,24 +723,32 @@ namespace BlazeEngine
 				{
 					translation = current->mTransformation;
 					foundTranslation = true;
-					LOG("\tFound a translation node...");
+					#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+						LOG("\tFound a translation node...");
+					#endif
 				}
 				else if (!foundScaling && currentName.find("Scaling") != string::npos && currentName.find("Pivot") == string::npos)
 				{
 					scaling = current->mTransformation;
 					foundScaling = true;
-					LOG("\tFound a scaling node...");
+					#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+						LOG("\tFound a scaling node...");
+					#endif
 				}
 				else if (!foundRotation && currentName.find("_Rotation") != string::npos && currentName.find("Pivot") == string::npos) // We check for "_Rotation" so we can skip "PostRotation"
 				{
 					rotation = current->mTransformation;
 					foundRotation = true;
-					LOG("\tFound a rotation node...");
+					#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+						LOG("\tFound a rotation node...");
+					#endif
 				}
 			}
 			else 
-			{ 
-				LOG("Found a non-transformation node, stopping search");
+			{
+				#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+					LOG("Found a non-transformation node, stopping search");
+				#endif
 				break; // If we've found a non-transformation node, we need to stop searching
 			}
 
@@ -763,8 +759,9 @@ namespace BlazeEngine
 
 			current = current->mParent;
 		}
-
-		LOG("Finished combining transformations");
+		#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+			LOG("Finished combining transformations");
+		#endif
 		return translation * scaling * rotation;
 	}
 
@@ -789,6 +786,7 @@ namespace BlazeEngine
 
 	aiNode* BlazeEngine::SceneManager::FindNodeRecursiveHelper(aiNode* rootNode, string name)
 	{
+		// TO DO: Add logging: #if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
 		if (rootNode == nullptr)
 		{
 			return nullptr;
@@ -825,7 +823,7 @@ namespace BlazeEngine
 		}
 		else
 		{
-			LOG("Found " + to_string(numLights) + " scene lights:");
+			LOG("Found " + to_string(numLights) + " scene lights");
 		}		
 		
 		bool foundDirectional	= false;	// TEMP: Only find the first directional light
@@ -841,13 +839,18 @@ namespace BlazeEngine
 				{
 					foundDirectional = true;
 					string lightName = string(scene->mLights[i]->mName.C_Str());
-					LOG("\nFound a directional light \"" + lightName + "\"");
+
+					#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
+						LOG("\nFound a directional light \"" + lightName + "\"");
+					#endif
 
 					aiMatrix4x4 lightTransform;
 					aiNode* current = nullptr;
 					if (current = scene->mRootNode->FindNode(scene->mLights[i]->mName))
 					{
-						LOG("Found a corresponding light node in the scene graph...");
+						#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
+							LOG("Found a corresponding light node in the scene graph...");
+						#endif
 						lightTransform = GetCombinedTransformFromHierarchy(scene, current->mParent);
 					}
 					
@@ -855,23 +858,18 @@ namespace BlazeEngine
 
 					currentScene->keyLight = Light
 					(
-						"lightName", 
+						lightName, 
 						LIGHT_DIRECTIONAL, 
 						lightColor
 					);
 
-					LOG("Directional light color: " + to_string(lightColor.r) + ", " + to_string(lightColor.g) + ", " + to_string(lightColor.b) );
-
 					InitializeTransformValues(lightTransform, &currentScene->keyLight.GetTransform());
 
-					LOG("Directional light position = " + to_string(currentScene->keyLight.GetTransform().Position().x) + ", " + to_string(currentScene->keyLight.GetTransform().Position().y) + ", " + to_string(currentScene->keyLight.GetTransform().Position().z));
-					LOG("Directional light forward = " + to_string(currentScene->keyLight.GetTransform().Forward().x) + ", " + to_string(currentScene->keyLight.GetTransform().Forward().y) + ", " + to_string(currentScene->keyLight.GetTransform().Forward().z));
-					
-
-					//currentScene->keyLight = Light(lightName, LIGHT_DIRECTIONAL, vec4(1.0f, 1.0f, 1.0f, 1.0f), 1.0f);
-					//currentScene->keyLight.GetTransform().Rotate(vec3(3.14f / 4.0f, 3.14f / 8.0f, 0)); // Rotation in radians
-					//currentScene->keyLight.SetColor(vec4(0, 1, 0, 1));
-					//currentScene->keyLight.SetIntensity(2.0f);
+					#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
+						LOG("Directional light color: " + to_string(lightColor.r) + ", " + to_string(lightColor.g) + ", " + to_string(lightColor.b));
+						LOG("Directional light position = " + to_string(currentScene->keyLight.GetTransform().Position().x) + ", " + to_string(currentScene->keyLight.GetTransform().Position().y) + ", " + to_string(currentScene->keyLight.GetTransform().Position().z));
+						LOG("Directional light forward = " + to_string(currentScene->keyLight.GetTransform().Forward().x) + ", " + to_string(currentScene->keyLight.GetTransform().Forward().y) + ", " + to_string(currentScene->keyLight.GetTransform().Forward().z));
+					#endif
 				}
 				else
 				{
@@ -883,31 +881,32 @@ namespace BlazeEngine
 			case aiLightSource_POINT:
 			{
 				string lightName = string(scene->mLights[i]->mName.C_Str());
-				if (!foundAmbient && lightName.find("ambient") != string::npos)
+				if (!foundAmbient && lightName.find("ambient") != string::npos)	// NOTE: The word "ambient" must appear in the ambient light's name
 				{
 					foundAmbient = true;
 
 					currentScene->ambientLight = vec3(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b);
-
-					LOG("Created ambient light")
+					#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
+						LOG("Created ambient light from \"" + lightName +"\"");
+					#endif
 				}
 				else
 				{
-					LOG_ERROR("\nFound a point light. Point lights are not yet supported!");
+					LOG_ERROR("Found a point light. Point lights are not yet supported!");
 				}
 			}				
 				break;
 
 			case aiLightSource_SPOT:
-				LOG_ERROR("\nFound a spot light. Spot lights are not yet supported!");
+				LOG_ERROR("Found a spot light. Spot lights are not yet supported!");
 				break;
 
 			case aiLightSource_UNDEFINED:
-				LOG_ERROR("\nFound an undefined light type");
+				LOG_ERROR("Found an undefined light type");
 				break;
 
 			default:
-				LOG_ERROR("\nFound an unhandled light type");
+				LOG_ERROR("Found an unhandled light type");
 				break;
 
 			}
@@ -927,22 +926,6 @@ namespace BlazeEngine
 				LOG("mUp = " + to_string(scene->mLights[i]->mUp.x) + ", " + to_string(scene->mLights[i]->mUp.y) + ", " + to_string(scene->mLights[i]->mUp.z));
 			#endif
 		}
-
-		//// Import the ambient light. NOTE: The word "ambient" must appear in this light's name
-		//aiNode* ambientLightNode = FindNodeContainingName(scene, "ambient");
-		//if (ambientLightNode)
-		//{
-		//	LOG("FOUND " + to_string(ambientLightNode->mMetaData->mNumProperties) + " metadata properties...");
-
-		//	for (unsigned int i = 0; i < ambientLightNode->mMetaData->mNumProperties; i++)
-		//	{
-		//		//for (unsigned int key = 0; k < )
-		//		//ambientLightNode->mMetaData->Get();
-		//		//ambientLightNode->mMetaData->Get()
-		//	}			
-		//}
-
-		
 	}
 
 
@@ -953,9 +936,9 @@ namespace BlazeEngine
 			delete currentScene->mainCamera;
 		}
 
-		if (scene == nullptr)
+		if (scene == nullptr) // Signal to create a default camera at the origin
 		{
-			// No camera found - Set up a default camera at the origin:
+			LOG("Creating a default camera")
 			currentScene->mainCamera->Initialize(
 				vec3(0, 0, 0),
 				(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
@@ -963,7 +946,6 @@ namespace BlazeEngine
 				CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultNear,
 				CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultFar
 			);
-
 			return;
 		}
 
@@ -990,29 +972,18 @@ namespace BlazeEngine
 		aiNode* camNode = scene->mRootNode->FindNode(scene->mCameras[0]->mName);
 		if (camNode)
 		{
-			//// DEBUG: SPEW TRANSFORM THE HIERARCHY:
-			//aiNode* current = camNode->mParent;
-			//while (current != nullptr)
-			//{
-			//	LOG("FOUND CAMERA PARENT: " + string(current->mName.C_Str()));
-			//	current = current->mParent;
-			//}
-
-			// TO DO: Handle GROUPED cameras (ie. Cameras that belong to game objects: Reflection probes, shadow cams etc). Currently, group transforms are ignored...
-			/*if (camNode->mParent != nullptr && camNode->mParent != scene->mRootNode)
-			{
-				LOG_ERROR("Found a camera that belongs to a group. Currently, this is not supported, and group transformations are IGNORED! Only the Cameras local transform is considered...");
-			}*/
-
 			aiMatrix4x4 camTransform = GetCombinedTransformFromHierarchy(scene, camNode->mParent);
 			InitializeTransformValues(camTransform, currentScene->mainCamera->GetTransform()); 
 		}
 
 		vec3 camPosition = currentScene->mainCamera->GetTransform()->Position();
 		vec3 camRotation = currentScene->mainCamera->GetTransform()->GetEulerRotation();
-		LOG("Camera is located at " + to_string(camPosition.x) + " " + to_string(camPosition.y) + " " + to_string(camPosition.z) + ". Near = " + to_string(scene->mCameras[0]->mClipPlaneNear) + ", " + "far = " + to_string(scene->mCameras[0]->mClipPlaneFar) );
-		LOG("Camera rotation is " + to_string(camRotation.x) + " " + to_string(camRotation.y) + " " + to_string(camRotation.z));
-		
+
+		#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING)
+			LOG("Camera is located at " + to_string(camPosition.x) + " " + to_string(camPosition.y) + " " + to_string(camPosition.z) + ". Near = " + to_string(scene->mCameras[0]->mClipPlaneNear) + ", " + "far = " + to_string(scene->mCameras[0]->mClipPlaneFar) );
+			LOG("Camera rotation is " + to_string(camRotation.x) + " " + to_string(camRotation.y) + " " + to_string(camRotation.z));
+		#endif
+
 		LOG_ERROR("Camera field of view is NOT currently loaded from the source file. A hard-coded default value is used for now...");
 
 		currentScene->mainCamera->Initialize(
