@@ -38,7 +38,7 @@ namespace BlazeEngine
 	{
 		UNIFORM_Matrix4fv,		// glUniformMatrix4fv
 		UNIFORM_Vec3fv,			// glUniform3fv
-brea
+
 	};
 
 	
