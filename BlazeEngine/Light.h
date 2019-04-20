@@ -30,7 +30,7 @@ namespace BlazeEngine
 	{
 	public:
 		Light() {}; // Default constructor
-		Light(string lightName, LIGHT_TYPE type, vec3 color, float intensity);
+		Light(string lightName, LIGHT_TYPE type, vec3 color);
 
 		// BlazeObject interface:
 		void Update();
@@ -41,9 +41,6 @@ namespace BlazeEngine
 		// Getters/Setters:
 		inline vec3 const& Color() const			{ return color; }
 		inline void SetColor(vec4 color)			{ this->color = color; }
-
-		inline float const& Intensity() const		{ return intensity; }
-		inline void SetIntensity(float intensity)	{ this->intensity = intensity; }
 
 		inline LIGHT_TYPE const& Type() const		{ return type; }
 
@@ -56,8 +53,7 @@ namespace BlazeEngine
 
 
 	private:
-		vec3 color			= vec3(1.0f, 1.0f, 1.0f);
-		float intensity		= 1.0f;
+		vec3 color			= vec3(1.0f, 1.0f, 1.0f);	// Intensity is factored into these values
 		LIGHT_TYPE type		= LIGHT_DIRECTIONAL;
 
 		string lightName	= "unnamed_light";

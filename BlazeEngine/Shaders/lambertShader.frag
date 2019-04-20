@@ -10,11 +10,9 @@ in vec3 fragNormal;
 in vec2 uv0;
 
 uniform vec3 ambient;
-uniform float ambientIntensity;
 
 uniform vec3 keyDirection;
 uniform vec3 keyColor;
-uniform float keyIntensity;
 
 uniform mat4 in_model;
 uniform mat4 in_view;
@@ -42,7 +40,7 @@ void main()
 
 	float nDotL = max(0, dot(fragNormal, keyDirection));
 
-	FragColor = (FragColor * vec4(ambient * ambientIntensity, 1) ) + (FragColor * vec4(nDotL * keyColor * keyIntensity, 1));
+	FragColor = (FragColor * vec4(ambient, 1) ) + (FragColor * vec4(nDotL * keyColor, 1));
 
 //	FragColor = texture(normal, uv0);
 //	FragColor = texture(roughness, uv0);

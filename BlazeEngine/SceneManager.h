@@ -118,7 +118,6 @@ namespace BlazeEngine
 		inline vector<Renderable*>* GetRenderables()							{ return &currentScene->renderables;	}
 
 		inline vec3 const& GetAmbient()											{ return currentScene->ambientLight; }
-		inline float const& GetAmbientIntensity()								{ return currentScene->ambientIntensity; }
 		inline Light& GetKeyLight()												{ return currentScene->keyLight; }
 		/*inline vector<Light> const& GetForwardLights() { return forwardLights; }*/
 		

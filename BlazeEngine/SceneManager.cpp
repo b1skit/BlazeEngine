@@ -852,20 +852,15 @@ namespace BlazeEngine
 					}
 					
 					vec3 lightColor(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b);
-					float intensity = (float)lightColor.length();
-					lightColor = glm::normalize(lightColor);
-					// This is niave, and doesn't work...
 
 					currentScene->keyLight = Light
 					(
 						"lightName", 
 						LIGHT_DIRECTIONAL, 
-						lightColor,
-						intensity
+						lightColor
 					);
 
 					LOG("Directional light color: " + to_string(lightColor.r) + ", " + to_string(lightColor.g) + ", " + to_string(lightColor.b) );
-					LOG("Directional light intensity: " + to_string(intensity));
 
 					InitializeTransformValues(lightTransform, &currentScene->keyLight.GetTransform());
 
@@ -891,10 +886,8 @@ namespace BlazeEngine
 				if (!foundAmbient && lightName.find("ambient") != string::npos)
 				{
 					foundAmbient = true;
+
 					currentScene->ambientLight = vec3(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b);
-					float ambientIntensity = glm::length(currentScene->ambientLight);
-					currentScene->ambientLight = glm::normalize(currentScene->ambientLight);
-					// This is niave, and doesn't work...
 
 					LOG("Created ambient light")
 				}

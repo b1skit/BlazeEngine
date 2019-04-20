@@ -356,11 +356,6 @@ namespace BlazeEngine
 			{
 				glUniform3fv(ambientID, 1, &CoreEngine::GetSceneManager()->GetAmbient()[0]);
 			}
-			GLuint ambientIntensityID = glGetUniformLocation(shaderReference, "ambientIntensity");
-			if (ambientIntensityID >= 0)
-			{
-				glUniform1fv(ambientIntensityID, 1, &CoreEngine::GetSceneManager()->GetAmbientIntensity());
-			}
 
 			// Upload key key light direction (world space):
 			GLuint keyDirID = glGetUniformLocation(shaderReference, "keyDirection");
@@ -373,11 +368,6 @@ namespace BlazeEngine
 			if (keyColorID >= 0)
 			{
 				glUniform3fv(keyColorID, 1, &CoreEngine::GetSceneManager()->GetKeyLight().Color().r);
-			}
-			GLuint keyIntensityID = glGetUniformLocation(shaderReference, "keyIntensity");
-			if (keyIntensityID >= 0)
-			{
-				glUniform1f(keyIntensityID, CoreEngine::GetSceneManager()->GetKeyLight().Intensity());
 			}
 
 			// Loop through each mesh:
