@@ -181,9 +181,7 @@ namespace BlazeEngine
 	void Transform::SetScale(vec3 scale)
 	{
 		this->worldScale = scale;
-
-		// TO DO: Actually set the scale properly, updating scale matrix etc...
-		LOG_ERROR("Transform.SetScale() IS NOT FULLY IMPLEMENTED YET!! FOR NOW, JUST THE VALUE IS COPIED!!!");
+		this->scale = glm::scale(mat4(1.0f), scale);
 	}
 
 

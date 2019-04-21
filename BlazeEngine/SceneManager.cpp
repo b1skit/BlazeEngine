@@ -3,6 +3,10 @@
 #include "CoreEngine.h"
 #include "BuildConfiguration.h"
 
+#include "glm.hpp"
+#include "gtc/constants.hpp"
+using glm::pi;
+
 #include "assimp/Importer.hpp"	// Importer interface
 #include "assimp/postprocess.h"	// Post processing flags
 
@@ -584,8 +588,7 @@ namespace BlazeEngine
 					{
 						gameObject = new GameObject(meshName + "_GAMEOBJECT"); // Add a postfix to remind us that we expect GameObjects to be grouped in our .FBX from Maya
 						
-						aiMatrix4x4 combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode->mParent);
-						
+						aiMatrix4x4 combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode);	// Pass the currentNode (instead of its parent), since this mesh doesn't belong to a group
 						InitializeTransformValues(combinedTransform, gameObject->GetTransform());
 						
 						// Set the GameObject as the parent of the mesh:
@@ -595,12 +598,14 @@ namespace BlazeEngine
 
 						LOG_ERROR("Created a _GAMEOBJECT for mesh \"" + meshName + "\" that did not belong to a group! GameObjects should belong to groups in the source .FBX!");
 
+						AddGameObject(gameObject);	// We need to manually add the game object
 						continue; // We're done!
 					}
 
-					// We found a GameObject
+					// We have a GameObject:
 					aiMatrix4x4 combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode->mParent);
-					combinedTransform = combinedTransform * currentNode->mTransformation; // Combine the parent and child transforms
+					combinedTransform = combinedTransform * currentNode->mTransformation; // Combine the parent and child transforms								
+
 					InitializeTransformValues(combinedTransform, &currentScene->meshes.at(meshIndex).GetTransform());  // Copy to our Mesh transform
 
 					// Add the mesh to the GameObject's Renderable's viewMeshes:
@@ -687,82 +692,151 @@ namespace BlazeEngine
 
 	aiMatrix4x4 BlazeEngine::SceneManager::GetCombinedTransformFromHierarchy(aiScene const* scene, aiNode* parent)
 	{
-		#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-			LOG("Combining imported transformations from scene graph:");
-		#endif
-
 		if (scene == nullptr || parent == nullptr)
 		{
 			LOG_ERROR("SceneManager.GetCombinedTransformFromHierarchy() received a null pointer!");
 			return aiMatrix4x4();
 		}
 
+		#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+			LOG("Received parent \"" + (parent == nullptr ? "nullptr" : string(parent->mName.C_Str())) + "\". Combining imported transformations from scene graph:");
+		#endif
+
+		#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+			LOG("Spewing transform hierarchy:");
+			aiNode* debug = parent;
+			while (debug != nullptr)
+			{
+				LOG("-> " + string(debug->mName.C_Str()));
+
+				LOG("\t\t" + to_string(debug->mTransformation.a1) + " " + to_string(debug->mTransformation.b1) + " " + to_string(debug->mTransformation.c1) + " " + to_string(debug->mTransformation.d1));
+				LOG("\t\t" + to_string(debug->mTransformation.a2) + " " + to_string(debug->mTransformation.b2) + " " + to_string(debug->mTransformation.c2) + " " + to_string(debug->mTransformation.d2));
+				LOG("\t\t" + to_string(debug->mTransformation.a3) + " " + to_string(debug->mTransformation.b3) + " " + to_string(debug->mTransformation.c3) + " " + to_string(debug->mTransformation.d3));
+				LOG("\t\t" + to_string(debug->mTransformation.a4) + " " + to_string(debug->mTransformation.b4) + " " + to_string(debug->mTransformation.c4) + " " + to_string(debug->mTransformation.d4));
+
+				debug = debug->mParent;
+			}
+			LOG("End of transform hierarchy!");
+		#endif
+
 		string parentName = string(parent->mName.C_Str());
 		if (parentName.find("$AssimpFbx$") == string::npos)
 		{
 			#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-				LOG("Parent \"" + parentName + "\" is not a transformation node, returning identity matrix instead of continuing on to " + (parent->mParent ? string(parent->mParent->mName.C_Str()) : "null parent"));
+				LOG("\tParent \"" + parentName + "\" is not a transformation, returning identity instead of traversing up to \"" + (parent->mParent ? string(parent->mParent->mName.C_Str()) : "null parent") + "\"");
 			#endif
-			return aiMatrix4x4();
+			return aiMatrix4x4(); // Later, this is multiplied by the transform of the current node
 		}
 
-		aiMatrix4x4 translation;
-		aiMatrix4x4 scaling;
-		aiMatrix4x4 rotation;
+		#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+			LOG("Starting with transform of \"" + parentName + "\":");
+		#endif
 
+		aiMatrix4x4 combinedTransform;
 		aiNode* current = parent;
-		bool foundTranslation = false, foundScaling = false, foundRotation = false;
 		while (current != nullptr && current != scene->mRootNode)
 		{
 			string currentName = string(current->mName.C_Str());
 
-			// Assimp (seems to) build transformations in the order Scaling, Rotation, Translation as we walk up the tree...
-			if (currentName.find("$AssimpFbx$") != string::npos)
-			{
-				if (!foundTranslation && currentName.find("Translation") != string::npos && currentName.find("Pivot") == string::npos)
-				{
-					translation = current->mTransformation;
-					foundTranslation = true;
-					#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-						LOG("\tFound a translation node...");
-					#endif
-				}
-				else if (!foundScaling && currentName.find("Scaling") != string::npos && currentName.find("Pivot") == string::npos)
-				{
-					scaling = current->mTransformation;
-					foundScaling = true;
-					#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-						LOG("\tFound a scaling node...");
-					#endif
-				}
-				else if (!foundRotation && currentName.find("_Rotation") != string::npos && currentName.find("Pivot") == string::npos) // We check for "_Rotation" so we can skip "PostRotation"
-				{
-					rotation = current->mTransformation;
-					foundRotation = true;
-					#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-						LOG("\tFound a rotation node...");
-					#endif
-				}
-			}
-			else 
+			if (currentName.find("_Post") != string::npos) // HACK: Seems if we skip "_PostRotation" nodes, the directional light orientation will be correct
 			{
 				#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-					LOG("Found a non-transformation node, stopping search");
+					LOG("\t\tSkipped node \"" + currentName + "\"");
 				#endif
-				break; // If we've found a non-transformation node, we need to stop searching
+				current = current->mParent;
+				continue;
 			}
 
-			if (foundTranslation && foundScaling && foundRotation)
+			if (currentName.find("$AssimpFbx$") != string::npos)
 			{
+				#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+					LOG("\t\tCombined node with \"" + currentName + "\"");
+				#endif	
+				combinedTransform = current->mTransformation * combinedTransform;
+			}
+			else
+			{
+				#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+					LOG("\tNode \"" + currentName + "\" is not a transform. Stopping!");
+				#endif
 				break;
 			}
 
 			current = current->mParent;
 		}
-		#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-			LOG("Finished combining transformations");
-		#endif
-		return translation * scaling * rotation;
+
+		return combinedTransform;
+
+
+
+		//aiMatrix4x4 translation;
+		//aiMatrix4x4 scaling;
+		//aiMatrix4x4 rotation;
+
+		//aiNode* current = parent;
+		//bool foundTranslation = false, foundScaling = false, foundRotation = false;
+		//while (current != nullptr && current != scene->mRootNode)
+		//{
+		//	string currentName = string(current->mName.C_Str());
+
+		//	// Assimp (seems to) build transformations in the order Scaling, Rotation, Translation as we walk up the tree...
+		//	if (currentName.find("$AssimpFbx$") != string::npos)
+		//	{
+		//		#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+		//				LOG("\tCurrent node is \"" + currentName + "\":");
+		//		#endif
+
+
+		//		if (!foundTranslation && currentName.find("Translation") != string::npos && currentName.find("Pivot") == string::npos)
+		//		{
+		//			translation = current->mTransformation;
+		//			foundTranslation = true;
+		//			#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+		//				LOG("\t\t\"" + currentName + "\" is a translation node!");
+		//			#endif
+		//		}
+		//		else if (!foundScaling && currentName.find("Scaling") != string::npos && currentName.find("Pivot") == string::npos)
+		//		{
+		//			scaling = current->mTransformation;
+		//			foundScaling = true;
+		//			#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+		//				LOG("\t\t\"" + currentName + "\" is a scaling node!");
+		//			#endif
+		//		}
+		//		else if (!foundRotation && currentName.find("_Rotation") != string::npos && currentName.find("Pivot") == string::npos) // We check for "_Rotation" so we can skip "PostRotation"
+		//		{
+		//			rotation = current->mTransformation;
+		//			foundRotation = true;
+		//			#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+		//				LOG("\t\t\"" + currentName + "\" is a rotation node!");
+		//			#endif
+		//		}
+		//		#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+		//			else
+		//			{
+		//				LOG("\t\tSkipping \"" + currentName + "\"...");
+		//			}
+		//		#endif
+		//	}
+		//	else 
+		//	{
+		//		#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+		//			LOG("Found a non-transformation node, stopping search");
+		//		#endif
+		//		break; // If we've found a non-transformation node, we need to stop searching
+		//	}
+
+		//	if (foundTranslation && foundScaling && foundRotation)
+		//	{
+		//		break;
+		//	}
+
+		//	current = current->mParent;
+		//}
+		//#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+		//	LOG("Finished combining transformations");
+		//#endif
+		//return translation * scaling * rotation;
 	}
 
 
@@ -783,6 +857,7 @@ namespace BlazeEngine
 		LOG("Could not find any node containing the name \"" + name + "\" in the scene graph. Returning nullptr");
 		return nullptr;
 	}
+
 
 	aiNode* BlazeEngine::SceneManager::FindNodeRecursiveHelper(aiNode* rootNode, string name)
 	{
@@ -812,6 +887,7 @@ namespace BlazeEngine
 		}
 		return nullptr;
 	}
+
 
 	void BlazeEngine::SceneManager::ImportLightsFromScene(aiScene const* scene)
 	{
@@ -865,9 +941,13 @@ namespace BlazeEngine
 
 					InitializeTransformValues(lightTransform, &currentScene->keyLight.GetTransform());
 
+					// Note: Assimp seems to import directional lights with their "forward" vector pointing in the opposite direction.
+					// This is ok, since we use "forward" as "vector pointing towards the light" when uploading to our shaders...
 					#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
 						LOG("Directional light color: " + to_string(lightColor.r) + ", " + to_string(lightColor.g) + ", " + to_string(lightColor.b));
 						LOG("Directional light position = " + to_string(currentScene->keyLight.GetTransform().Position().x) + ", " + to_string(currentScene->keyLight.GetTransform().Position().y) + ", " + to_string(currentScene->keyLight.GetTransform().Position().z));
+						LOG("Directional light rotation = " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().x) + ", " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().y) + ", " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().z) + " (radians)");
+						LOG("Directional light rotation = " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().x * (180.0f / glm::pi<float>()) ) + ", " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().y * (180.0f / glm::pi<float>())) + ", " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().z * (180.0f / glm::pi<float>())) + " (degrees)");
 						LOG("Directional light forward = " + to_string(currentScene->keyLight.GetTransform().Forward().x) + ", " + to_string(currentScene->keyLight.GetTransform().Forward().y) + ", " + to_string(currentScene->keyLight.GetTransform().Forward().z));
 					#endif
 				}
@@ -911,7 +991,7 @@ namespace BlazeEngine
 
 			}
 
-			#if defined(DEBUG_SCENEMANAGER_LOG_SCENE_SETUP)
+			#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
 				LOG("mAngleInnerCone = " + to_string(scene->mLights[i]->mAngleInnerCone) + " radians");
 				LOG("mAngleOuterCone = " + to_string(scene->mLights[i]->mAngleOuterCone) + " radians");
 				LOG("mAttenuationConstant = " + to_string(scene->mLights[i]->mAttenuationConstant));
@@ -938,7 +1018,7 @@ namespace BlazeEngine
 
 		if (scene == nullptr) // Signal to create a default camera at the origin
 		{
-			LOG("Creating a default camera")
+			LOG("Creating a default camera");
 			currentScene->mainCamera->Initialize(
 				vec3(0, 0, 0),
 				(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
@@ -956,32 +1036,85 @@ namespace BlazeEngine
 		int numCameras = scene->mNumCameras;
 		if (numCameras > 1)
 		{
-			LOG_ERROR("Found " + to_string(numCameras) + " cameras in the scene. Currently, only 1 camera is supported. Setting the FIRST camera received camera as the main camera.")
+			LOG_ERROR("Found " + to_string(numCameras) + " cameras in the scene. Currently, only 1 camera is supported. Setting the FIRST camera received camera as the main camera.");
 		}
 		else
 		{
 			LOG("Found " + to_string(numCameras) + " scene camera");
 		}
-		
+
+
+		// Currently, camera transforms seem to be broken in Assimp...
+		// DEBUG: Set a default camera at the origin, for now
+		LOG_ERROR("Assimp camera import is broken... Creating a default camera at the origin");
+		currentScene->mainCamera->Initialize
+		(
+			vec3(0, 0, 0),
+			(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
+			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultFieldOfView,
+			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultNear,
+			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultFar
+		);
+	
 
 		// Note: In the current version of Assimp, the mLookAt, mUp vectors seem to just be the world forward, up vectors, and mTransformation is the identity...
+		// TO DO: TEST: Are these possibly related to specific maya camera creation options?
 		// + Importing cameras vacing towards Z+ results in a flipped camera?
 
 		// TO DO: Add ALL cameras (look for a name that contains "main" to use as the main camera, or use the 1st camera otherwise)
 
-		aiNode* camNode = scene->mRootNode->FindNode(scene->mCameras[0]->mName);
-		if (camNode)
-		{
-			aiMatrix4x4 camTransform = GetCombinedTransformFromHierarchy(scene, camNode->mParent);
-			InitializeTransformValues(camTransform, currentScene->mainCamera->GetTransform()); 
-		}
+		//aiNode* camNode = scene->mRootNode->FindNode(scene->mCameras[0]->mName);
+		//if (camNode)
+		//{			
+		//	aiMatrix4x4 camTransform;
+		//	aiNode* current = camNode->mParent;
+		//	while (current != nullptr && current != scene->mRootNode)
+		//	{
+		//		string currentName = string(current->mName.C_Str());
+
+		//		if (currentName.find("_Post") != string::npos)
+		//		{
+		//			#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING)
+		//				LOG("Skipping camera transform node \"" + currentName + "\"");
+		//			#endif
+		//			current = current->mParent;
+		//			continue;
+		//		}
+
+		//		if (currentName.find("$AssimpFbx$") != string::npos)
+		//		{
+		//			#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING)
+		//				LOG("Found camera transform node \"" + currentName + "\"");
+		//			#endif
+		//			//camTransform = camTransform * current->mTransformation;
+		//			camTransform = current->mTransformation * camTransform;
+		//		}
+		//		else
+		//		{
+		//			#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING)
+		//				LOG("Node \"" + currentName + "\" is not a camera transform. Stopping!");
+		//			#endif
+		//			break;
+		//		}
+		//		current = current->mParent;
+		//	}
+
+		//	#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING)
+		//		LOG("Combining transforms with camera's local transform node \"" + string(camNode->mName.C_Str()) + "\"");
+		//	#endif
+		//	//camTransform = camTransform * camNode->mTransformation;
+		//	camTransform = camNode->mTransformation * camTransform;
+		//	 
+		//	InitializeTransformValues(camTransform, currentScene->mainCamera->GetTransform());
+		//}
 
 		vec3 camPosition = currentScene->mainCamera->GetTransform()->Position();
 		vec3 camRotation = currentScene->mainCamera->GetTransform()->GetEulerRotation();
 
 		#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING)
 			LOG("Camera is located at " + to_string(camPosition.x) + " " + to_string(camPosition.y) + " " + to_string(camPosition.z) + ". Near = " + to_string(scene->mCameras[0]->mClipPlaneNear) + ", " + "far = " + to_string(scene->mCameras[0]->mClipPlaneFar) );
-			LOG("Camera rotation is " + to_string(camRotation.x) + " " + to_string(camRotation.y) + " " + to_string(camRotation.z));
+			LOG("Camera rotation is " + to_string(camRotation.x) + " " + to_string(camRotation.y) + " " + to_string(camRotation.z) + " (radians)");
+			LOG("Camera rotation is " + to_string(camRotation.x * (180.0f / glm::pi<float>())) + " " + to_string(camRotation.y * (180.0f / glm::pi<float>())) + " " + to_string(camRotation.z * (180.0f / glm::pi<float>())) + " (degrees)");
 		#endif
 
 		LOG_ERROR("Camera field of view is NOT currently loaded from the source file. A hard-coded default value is used for now...");
