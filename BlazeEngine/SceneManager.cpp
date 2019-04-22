@@ -400,6 +400,21 @@ namespace BlazeEngine
 					LOG_ERROR("Couldn't load shader type!!!");
 				}
 
+				aiMaterial* test = scene->mMaterials[0];
+				for (int i = 0; i < test->mNumProperties; i++)
+				{
+					LOG("KEY: " + string(test->mProperties[i]->mKey.C_Str()));
+					//scene->mMaterials[i]->Get(test->mProperties[i]->mKey);
+				}
+				//scene->mMaterials[0]->mProperties[0]->
+
+				
+				//aiShadingMode test;
+
+				////char const
+				//scene->mMaterials[i]->Get(AI_MATKEY_SHADING_MODEL, shaderType);
+
+
 				LOG("Creating material: \"" + string(name.C_Str()) + "\" of shader type \"" + to_string(shaderType) + "\"");
 
 				// Create a Blaze Engine material:
@@ -461,51 +476,6 @@ namespace BlazeEngine
 	void SceneManager::ImportGameObjectGeometryFromScene(aiScene const* scene)
 	{
 		// NOTE: There seems to be a bug in Assimp where nested groups sometimes get incorrect rotations... I haven't been able to lock it down 100%, but as a workaround just avoid nesting
-		
-
-		//LOG("\nMESH DEBUG:\n");
-		//for (unsigned int i = 0; i < scene->mNumMeshes; i++)
-		//{
-		//	LOG("scene->mMeshes[" + to_string(i) + "] = " + string(scene->mMeshes[i]->mName.C_Str()));
-
-		//	
-
-		//	aiNode* test = nullptr;
-		//	test = scene->mRootNode->FindNode(scene->mMeshes[i]->mName); // this works.
-		//	if (test)
-		//	{
-		//		LOG("FindNode() found match for \"" + string(scene->mMeshes[i]->mName.C_Str()) + "\" called \"" +  string(test->mName.C_Str())+ "\" that is holding " + to_string(test->mNumMeshes) + " meshes");
-
-		//		LOG("[mTransform]")
-		//		LOG(to_string(test->mTransformation.a1) + " " + to_string(test->mTransformation.a2) + " " + to_string(test->mTransformation.a3) + " " + to_string(test->mTransformation.a4));
-		//		LOG(to_string(test->mTransformation.b1) + " " + to_string(test->mTransformation.b2) + " " + to_string(test->mTransformation.b3) + " " + to_string(test->mTransformation.b4));
-		//		LOG(to_string(test->mTransformation.c1) + " " + to_string(test->mTransformation.c2) + " " + to_string(test->mTransformation.c3) + " " + to_string(test->mTransformation.c4));
-		//		LOG(to_string(test->mTransformation.d1) + " " + to_string(test->mTransformation.d2) + " " + to_string(test->mTransformation.d3) + " " + to_string(test->mTransformation.d4));
-
-		//		aiNode* current = test->mParent;
-		//		while (current != NULL)
-		//		{
-		//			LOG("Parent: " + string(current->mName.C_Str()) + " with " + to_string(current->mNumMeshes) + " meshes");
-
-		//			LOG("[Parent->mTransform]")
-		//			LOG(to_string(current->mTransformation.a1) + " " + to_string(current->mTransformation.a2) + " " + to_string(current->mTransformation.a3) + " " + to_string(current->mTransformation.a4));
-		//			LOG(to_string(current->mTransformation.b1) + " " + to_string(current->mTransformation.b2) + " " + to_string(current->mTransformation.b3) + " " + to_string(current->mTransformation.b4));
-		//			LOG(to_string(current->mTransformation.c1) + " " + to_string(current->mTransformation.c2) + " " + to_string(current->mTransformation.c3) + " " + to_string(current->mTransformation.c4));
-		//			LOG(to_string(current->mTransformation.d1) + " " + to_string(current->mTransformation.d2) + " " + to_string(current->mTransformation.d3) + " " + to_string(current->mTransformation.d4));
-
-		//			current = current->mParent;
-		//		}
-		//		
-
-		//		LOG("");
-		//	}
-		//	else
-		//	{
-		//		LOG("FindNode() FOUND NO RESULTS!");
-		//	}
-		//}
-		//// END DEBUG
-
 
 		int numMeshes = scene->mNumMeshes;
 		LOG("Found " + to_string(numMeshes) + " scene meshes");
@@ -522,7 +492,7 @@ namespace BlazeEngine
 				&& scene->mMeshes[currentMesh]->HasNormals()
 				//&& scene->mMeshes[currentMesh]->HasVertexColors(0)
 				&& scene->mMeshes[currentMesh]->HasTextureCoords(0)
-				//&& scene->mMeshes[currentMesh]->HasTangentsAndBitangents()
+				&& scene->mMeshes[currentMesh]->HasTangentsAndBitangents()
 				)
 			{
 				// Mesh is valid: See if we can find the corresponding node in the scene graph:
