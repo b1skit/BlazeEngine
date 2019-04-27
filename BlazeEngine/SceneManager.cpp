@@ -400,12 +400,73 @@ namespace BlazeEngine
 					LOG_ERROR("Couldn't load shader type!!!");
 				}
 
-				aiMaterial* test = scene->mMaterials[0];
-				for (int i = 0; i < test->mNumProperties; i++)
+
+				aiMaterial* test = scene->mMaterials[i];
+				for (unsigned int i = 0; i < test->mNumProperties; i++)
 				{
 					LOG("KEY: " + string(test->mProperties[i]->mKey.C_Str()));
 					//scene->mMaterials[i]->Get(test->mProperties[i]->mKey);
 				}
+
+				aiColor3D testColorThing;
+				if (AI_SUCCESS == scene->mMaterials[i]->Get(AI_MATKEY_COLOR_DIFFUSE, testColorThing) )
+				{
+					LOG("GREAT SUCCESS!!!!!!!!!!!!!!!!");
+				}
+				else
+				{
+					LOG("GREAT FAILURE!!!!!!!!!!!!!!!!");
+				}
+				
+				// http://assimp.sourceforge.net/lib_html/materials.html
+
+
+				//KEY: ? mat.name
+				//KEY: $clr.diffuse: AI_MATKEY_COLOR_DIFFUSE
+				//KEY: $clr.emissive: AI_MATKEY_COLOR_EMISSIVE
+				//KEY: $clr.specular
+				//KEY: $clr.ambient: AI_MATKEY_COLOR_AMBIENT
+				//KEY: $clr.transparent: AI_MATKEY_COLOR_TRANSPARENT
+				//KEY: $mat.transparencyfactor: AI_MATKEY_TRANSPARENCYFACTOR
+				//KEY: $mat.opacity: AI_MATKEY_OPACITY
+				//KEY: $mat.reflectivity
+				//Log : KEY: $clr.ambient
+				//Log : KEY: $clr.specular
+				//Log : KEY: $mat.transparencyfactor
+				//Log : KEY: $raw.Emissive
+				//Log : KEY: $raw.Reflectivity
+				//Log : KEY: $raw.Shininess
+				//KEY: $mat.bumpscaling: AI_MATKEY_BUMPSCALING
+				//KEY: $mat.displacementscaling: ???UNDEFINED???
+				//KEY: $raw.Emissive: ???UNDEFINED???
+				//KEY: $raw.Ambient
+				//KEY: $raw.Diffuse
+				//KEY: $raw.Specular
+				//KEY : $raw.DiffuseColor | file
+				//KEY : $raw.DiffuseColor | uvtrafo
+				//KEY : $raw.DiffuseColor | uvwsrc
+				//KEY : $tex.file
+				//KEY : $tex.uvwsrc
+
+				/*
+				AI_MATKEY_COLOR_DIFFUSE
+				AI_MATKEY_COLOR_EMISSIVE
+				AI_MATKEY_COLOR_AMBIENT
+				AI_MATKEY_COLOR_SPECULAR
+				AI_MATKEY_SHININESS_STRENGTH
+				AI_MATKEY_SHININESS
+				AI_MATKEY_COLOR_TRANSPARENT
+				AI_MATKEY_TRANSPARENCYFACTOR
+				AI_MATKEY_OPACITY
+				AI_MATKEY_COLOR_REFLECTIVE
+				AI_MATKEY_REFLECTIVITY
+				AI_MATKEY_BUMPSCALING
+
+				*/
+				
+
+
+
 				//scene->mMaterials[0]->mProperties[0]->
 
 				
