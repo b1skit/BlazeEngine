@@ -7,6 +7,15 @@ using std::string;
 
 namespace BlazeEngine
 {
+	// Used for uploading shader uniforms
+	enum UNIFORM_TYPE
+	{
+		UNIFORM_Matrix4fv,		// glUniformMatrix4fv
+		UNIFORM_Vec3fv,			// glUniform3fv
+
+	};
+
+
 	class Shader
 	{
 	public:
@@ -18,6 +27,8 @@ namespace BlazeEngine
 		// Getters/Setters:
 		inline string const& Name() { return shaderName; }
 		inline GLuint ShaderReference() const { return shaderReference; }
+
+		void UploadUniform(GLchar const* uniformName, GLfloat const* value, UNIFORM_TYPE const& type);
 
 		// Static functions:
 		static Shader* CreateShader(string shaderName);

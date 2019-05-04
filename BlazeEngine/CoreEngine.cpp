@@ -163,7 +163,7 @@ namespace BlazeEngine
 
 	void EngineConfig::LoadConfig(string path)
 	{
-		LOG("DEBUG: EngineConfig.LoadConfig() is not implemented. Using hard coded default values!");
+		LOG_WARNING("DEBUG: EngineConfig.LoadConfig() is not implemented. Using hard coded default values!");
 	
 		// TO DO: Implement config loading!
 	}
@@ -171,6 +171,6 @@ namespace BlazeEngine
 
 	void EngineConfig::SaveConfig(string path)
 	{
-		LOG("DEBUG: EngineConfig.SaveConfig() is not implemented. No data is being saved!\n");
+		LOG_WARNING("DEBUG: EngineConfig.SaveConfig() is not implemented. No data is being saved!\n");
 	}
 }

@@ -15,6 +15,8 @@ using glm::pi;
 
 #include <algorithm>
 #include <string>
+//#include <ctype.h>
+#include <stdio.h>
 
 
 
@@ -160,10 +162,12 @@ namespace BlazeEngine
 			int numTextures = scene->mNumTextures;
 			LOG_ERROR("Found " + to_string(numTextures) + " embedded scene textures. These will NOT be loaded!");
 		}
-		else
-		{
-			LOG("Scene has no embedded textures");
-		}
+		#if defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
+			else
+			{
+				LOG("Scene has no embedded textures");
+			}
+		#endif
 
 		if (scene->HasMaterials())
 		{
@@ -385,145 +389,122 @@ namespace BlazeEngine
 		int numMaterials = scene->mNumMaterials;
 		LOG("Found " + to_string(numMaterials) + " scene materials");
 
-		string sceneRoot = CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + sceneName + "\\";
-
 		// Create Blaze Engine materials:
-		for (int i = 0; i < numMaterials; i++)
+		for (int currentMaterial = 0; currentMaterial < numMaterials; currentMaterial++)
 		{
 			// Get the material name:
 			aiString name;
-			if (AI_SUCCESS == scene->mMaterials[i]->Get(AI_MATKEY_NAME, name))
+			if (AI_SUCCESS == scene->mMaterials[currentMaterial]->Get(AI_MATKEY_NAME, name))
 			{
-				aiShadingMode shaderType = aiShadingMode_NoShading;
-				if (AI_SUCCESS != scene->mMaterials[i]->Get(AI_MATKEY_SHADING_MODEL, shaderType))
+				string matName = string(name.C_Str());
+				LOG("Loading scene material \"" + matName + "\"...");
+
+				#if defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
+					LOG("Printing received material property keys:");
+					aiMaterial* currentAiMaterial = scene->mMaterials[currentMaterial];
+					for (unsigned int i = 0; i < currentAiMaterial->mNumProperties; i++)
+					{
+						LOG("KEY: " + string(currentAiMaterial->mProperties[i]->mKey.C_Str()));
+					}
+				#endif
+
+				string rawName = matName; // Convert to lowercase for comparisons
+				for (int currentChar = 0; currentChar < rawName.length(); currentChar++)
 				{
-					LOG_ERROR("Couldn't load shader type!!!");
+					if (isalpha(rawName.at(currentChar)) &&  isupper(rawName.at(currentChar)))
+					{
+						rawName.at(currentChar) = tolower(rawName.at(currentChar));
+					}
 				}
 
+				Material* newMaterial = nullptr;
 
-				aiMaterial* test = scene->mMaterials[i];
-				for (unsigned int i = 0; i < test->mNumProperties; i++)
+				// Assign shader based on the material name
+				std::size_t shaderNameIndex = matName.find_last_of("_");
+				if (shaderNameIndex == string::npos)
 				{
-					LOG("KEY: " + string(test->mProperties[i]->mKey.C_Str()));
-					//scene->mMaterials[i]->Get(test->mProperties[i]->mKey);
-				}
+					LOG_ERROR("Could not find a shader name prefixed with an underscore in the material name. Assigning the error shader");
 
-				aiColor3D testColorThing;
-				if (AI_SUCCESS == scene->mMaterials[i]->Get(AI_MATKEY_COLOR_DIFFUSE, testColorThing) )
-				{
-					LOG("GREAT SUCCESS!!!!!!!!!!!!!!!!");
+					newMaterial = new Material(matName, CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName);
 				}
 				else
 				{
-					LOG("GREAT FAILURE!!!!!!!!!!!!!!!!");
+					string shaderName = matName.substr(shaderNameIndex + 1, matName.length() - (shaderNameIndex + 1));
+
+					#if defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
+						LOG("Attempting to assign shader \"" + shaderName + "\" to material");
+					#endif
+
+					newMaterial = new Material(matName, shaderName);
 				}
-				
-				// http://assimp.sourceforge.net/lib_html/materials.html
 
-
-				//KEY: ? mat.name
-				//KEY: $clr.diffuse: AI_MATKEY_COLOR_DIFFUSE
-				//KEY: $clr.emissive: AI_MATKEY_COLOR_EMISSIVE
-				//KEY: $clr.specular
-				//KEY: $clr.ambient: AI_MATKEY_COLOR_AMBIENT
-				//KEY: $clr.transparent: AI_MATKEY_COLOR_TRANSPARENT
-				//KEY: $mat.transparencyfactor: AI_MATKEY_TRANSPARENCYFACTOR
-				//KEY: $mat.opacity: AI_MATKEY_OPACITY
-				//KEY: $mat.reflectivity
-				//Log : KEY: $clr.ambient
-				//Log : KEY: $clr.specular
-				//Log : KEY: $mat.transparencyfactor
-				//Log : KEY: $raw.Emissive
-				//Log : KEY: $raw.Reflectivity
-				//Log : KEY: $raw.Shininess
-				//KEY: $mat.bumpscaling: AI_MATKEY_BUMPSCALING
-				//KEY: $mat.displacementscaling: ???UNDEFINED???
-				//KEY: $raw.Emissive: ???UNDEFINED???
-				//KEY: $raw.Ambient
-				//KEY: $raw.Diffuse
-				//KEY: $raw.Specular
-				//KEY : $raw.DiffuseColor | file
-				//KEY : $raw.DiffuseColor | uvtrafo
-				//KEY : $raw.DiffuseColor | uvwsrc
-				//KEY : $tex.file
-				//KEY : $tex.uvwsrc
-
-				/*
-				AI_MATKEY_COLOR_DIFFUSE
-				AI_MATKEY_COLOR_EMISSIVE
-				AI_MATKEY_COLOR_AMBIENT
-				AI_MATKEY_COLOR_SPECULAR
-				AI_MATKEY_SHININESS_STRENGTH
-				AI_MATKEY_SHININESS
-				AI_MATKEY_COLOR_TRANSPARENT
-				AI_MATKEY_TRANSPARENCYFACTOR
-				AI_MATKEY_OPACITY
-				AI_MATKEY_COLOR_REFLECTIVE
-				AI_MATKEY_REFLECTIVITY
-				AI_MATKEY_BUMPSCALING
-
-				*/
-				
-
-
-
-				//scene->mMaterials[0]->mProperties[0]->
-
-				
-				//aiShadingMode test;
-
-				////char const
-				//scene->mMaterials[i]->Get(AI_MATKEY_SHADING_MODEL, shaderType);
-
-
-				LOG("Creating material: \"" + string(name.C_Str()) + "\" of shader type \"" + to_string(shaderType) + "\"");
-
-				// Create a Blaze Engine material:
-				string matName = string(name.C_Str());
-				Material* newMaterial = new Material(matName, CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName);
-
-				// Extract material's textures:
-				Texture* diffuseTexture = nullptr;
-				if (scene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE) > 0) // If there is more than 1 texture in the slot, we only get the FIRST...
+				// Extract material properties, and set the in the shader:
+				Shader* currentShader = newMaterial->GetShader();
+				if (currentShader->Name() != CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName)
 				{
-					int numTextures = scene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE);
-					LOG("Material has " + to_string(numTextures) + " aiTextureType_DIFFUSE textures...");
+					/* NOTE: For simplicity, BlazeEngine interprets phong shaders loaded from FBX files:
+					Shader name:	Attempt to use whatever follows the last _underscore as a shader name (Eg. myMaterial_phong)
+					Albedo:			Phong's color (rgb)
+					Transparency:	Phong's color (a)
+					Normal:			Phong's bump (rgb)
+					Emissive:		Phong's incandescence (rgb)
 
+					Packed Roughness + Metalic + AO channels:
+						Roughness:		Phong's specular color (r)
+						Metalic:		Phong's specular color (g)
+						AO:				Phong's specular color (b)
+					*/
 
-					// TO DO: Loop through EVERY texture, and use a switch statement to handle each type
-
-
-					LOG("Material " + to_string(i) + ": Loading diffuse texture...");
-
-					aiString path;
-					scene->mMaterials[i]->GetTexture(aiTextureType_DIFFUSE, 0, &path); // We only get the texture at index 0 (any others are ignored...)
-
-					if (path.length > 0)
+					// Extract material's textures:
+					LOG("Importing albedo + transparency texture (RGB+A) from material's diffuse/color slot");
+					Texture* diffuseTexture = ExtractLoadTextureFromAiMaterial(aiTextureType_DIFFUSE, scene->mMaterials[currentMaterial], sceneName);
+					if (diffuseTexture)
 					{
-						string texturePath = sceneRoot + string(path.C_Str());
-						LOG("Found texture path: " + texturePath);
-
-						// Find the texture if it has already been loaded, or load it otherwise:
-						diffuseTexture = FindLoadTextureByPath(texturePath);
+						newMaterial->SetTexture(diffuseTexture, TEXTURE_ALBEDO);
 					}
+
+					LOG("Importing normal map texture (RGB) from material's bump slot");
+					Texture* normalTexture = ExtractLoadTextureFromAiMaterial(aiTextureType_NORMALS, scene->mMaterials[currentMaterial], sceneName);
+					if (normalTexture)
+					{
+						newMaterial->SetTexture(normalTexture, TEXTURE_NORMAL);
+					}
+
+					LOG("Importing emissive map texture (RGB) from material's incandescence slot");
+					Texture* emissiveTexture = ExtractLoadTextureFromAiMaterial(aiTextureType_EMISSIVE, scene->mMaterials[currentMaterial], sceneName);
+					if (emissiveTexture)
+					{
+						newMaterial->SetTexture(emissiveTexture, TEXTURE_EMISSIVE);
+					}
+
+					LOG("Importing roughness, metalic, & AO textures (R+G+B) from material's specular slot");
+					Texture* RMAO = ExtractLoadTextureFromAiMaterial(aiTextureType_SPECULAR, scene->mMaterials[currentMaterial], sceneName);
+					if (emissiveTexture)
+					{
+						newMaterial->SetTexture(emissiveTexture, TEXTURE_RMAO);
+					}
+
+					// TO DO: If no texture is detected, attempt to load the hard-coded value instead and store it in one of the material's generic properties?
+
+
+					LOG("Importing value from material's cosine power slot");
+					if (ExtractPropertyFromAiMaterial(scene->mMaterials[currentMaterial], newMaterial->Property(MATERIAL_PROPERTY_0), AI_MATKEY_SHININESS))
+					{
+						#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING)
+							LOG("Setting shader matProperty0 uniform");
+						#endif
+
+						currentShader->UploadUniform("matProperty0", &newMaterial->Property(MATERIAL_PROPERTY_0).x, UNIFORM_Vec3fv);
+					}
+
+					// TO DO: Extract more generic properties?
+				} 
+				#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING) || defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
 					else
 					{
-						LOG("Material does not contain a diffuse texture path. Assigning an error texture");
+						LOG("Shader is the error shader: Skipping attempt to upload any uniform values");
 					}
-				}
-				else
-				{
-					LOG("Material " + to_string(i) + ": No diffuse texture found. Assigning an error texture");
-				}
-
-				if (diffuseTexture == nullptr)
-				{
-					diffuseTexture = FindLoadTextureByPath("errorPath"); // TO DO: Make "errorPath" a global/static string, so it can be reused anywhere?
-				}
-				// Add texture to a material:
-				newMaterial->SetTexture(diffuseTexture, TEXTURE_ALBEDO);
-
-
+				#endif
 
 				// Add the material to our material list:
 				AddMaterial(newMaterial, false);
@@ -531,6 +512,71 @@ namespace BlazeEngine
 		}
 
 		LOG("Loaded a total of " + to_string(currentTextureCount) + " textures (including error textures)");
+	}
+
+	Texture* BlazeEngine::SceneManager::ExtractLoadTextureFromAiMaterial(aiTextureType textureType, aiMaterial* material, string sceneName)
+	{
+		int textureCount = material->GetTextureCount(textureType);
+		if (textureCount <= 0)
+		{
+			LOG_WARNING("Received material does not have the requested texture");
+			return nullptr;
+		}
+		if (textureCount > 1)
+		{
+			LOG_WARNING("Received material has " + to_string(textureCount) + " of the requested texture type... Only the first will be extracted");
+		}
+
+		Texture* newTexture = nullptr;
+		string sceneRoot = CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + sceneName + "\\";
+
+		aiString path;
+		material->GetTexture(textureType, 0, &path); // We only get the texture at index 0 (any others are ignored...)
+		if (path.length > 0)
+		{
+			string texturePath = sceneRoot + string(path.C_Str());
+
+			#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
+				LOG("Found texture path: " + texturePath);
+			#endif
+
+			// Find the texture if it has already been loaded, or load it otherwise:
+			newTexture = FindLoadTextureByPath(texturePath);
+		}
+		else
+		{
+			LOG_ERROR("Material does not contain a diffuse texture path. Assigning an error texture");
+		}
+
+		if (newTexture == nullptr)
+		{
+			newTexture = FindLoadTextureByPath("errorPath"); // TO DO: Make "errorPath" a global/static string, so it can be reused anywhere?
+		}
+		
+		return newTexture;
+	}
+
+	bool BlazeEngine::SceneManager::ExtractPropertyFromAiMaterial(aiMaterial* material, vec3& targetProperty, char const* AI_MATKEY_TYPE, int unused0 /*= 0*/, int unused1 /*= 0*/)
+	{
+		aiColor3D color(0.f, 0.f, 0.f);
+		if (AI_SUCCESS == material->Get(AI_MATKEY_SHININESS, color))
+		{
+			#if defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
+				LOG("Successfully extracted material property");
+			#endif
+
+			targetProperty = vec3(color.r, color.g, color.b);
+
+			return true;
+		}
+		else
+		{
+			#if defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
+				LOG_ERROR("Material property extraction failed");
+			#endif
+
+			return false;
+		}
 	}
 
 

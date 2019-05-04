@@ -154,5 +154,11 @@
     <None Include="Shaders\lambertShader.vert">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="Shaders\phongShader.frag">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\phongShader.vert">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

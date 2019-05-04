@@ -32,24 +32,19 @@ namespace BlazeEngine
 			}
 			glBindSampler(i, 0);
 		}
+
+		for (int i = 0; i < MATERIAL_PROPERTY_COUNT; i++)
+		{
+			properties[i] = vec3(0.0f, 0.0f, 0.0f);
+		}
 	}
+
 
 	Material::~Material()
 	{
-		if (textures)
-		{
-			for (int i = 0; i < TEXTURE_COUNT; i++)
-			{
-				if (textures[i])
-				{
-					delete textures[i];
-				}
-			}
-			delete[] textures;
-		}
-
 		glDeleteSamplers(TEXTURE_COUNT, samplers);		
 	}
+
 
 	void Material::SetTexture(Texture* texture, TEXTURE_TYPE textureIndex)
 	{

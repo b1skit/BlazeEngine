@@ -16,7 +16,7 @@ using std::to_string;
 namespace BlazeEngine
 {
 	// Constructor:
-	Texture::Texture(int width, int height, bool doFill, vec4 fillColor) // doFill == true, fillColor = (1.0, 0, 0, 1) by default
+	Texture::Texture(int width, int height, bool doFill /* = true */, vec4 fillColor /* = (1.0, 0, 0, 1) */)
 	{
 		this->width = width;
 		this->height = height;
@@ -77,10 +77,11 @@ namespace BlazeEngine
 			// Try and return the safest option:
 			return texels[0];
 		}
+
 		return texels[(u * width) + v];
 	}
 
-	void BlazeEngine::Texture::Fill(vec4 color, bool doBuffer)	// doBuffer == true by default
+	void BlazeEngine::Texture::Fill(vec4 color, bool doBuffer /*= true*/)
 	{
 		for (unsigned int row = 0; row < this->height; row++)
 		{
@@ -97,7 +98,7 @@ namespace BlazeEngine
 		}
 	}
 
-	void BlazeEngine::Texture::Fill(vec4 tl, vec4 tr, vec4 bl, vec4 br, bool doBuffer)	// doBuffer == true by default
+	void BlazeEngine::Texture::Fill(vec4 tl, vec4 tr, vec4 bl, vec4 br, bool doBuffer /*= true*/)
 	{
 		for (unsigned int row = 0; row < height; row++)
 		{
@@ -133,16 +134,16 @@ namespace BlazeEngine
 
 		if (imageData)
 		{
-			LOG("Attempting to load texture with " + to_string(numChannels) + " channels");
+			LOG("Attempting to load " + to_string(width) + "x" + to_string(height) + " texture with " + to_string(numChannels) + " channels");
 
-			Texture* texture = new Texture(width, height);
+			Texture* texture = new Texture(width, height, false);
 			texture->texturePath = texturePath;
 
 			// Read texture values:
 			unsigned char* currentElement = imageData;
-			for (int row = 0; row < width; row++)
+			for (int row = 0; row < height; row++)
 			{
-				for (int col = 0; col < height; col++)
+				for (int col = 0; col < width; col++)
 				{
 					vec4 currentPixel(0, 0, 0, 1);
 					currentPixel.r = (float)((float)((unsigned int)*currentElement) / 255.0f);
@@ -160,7 +161,8 @@ namespace BlazeEngine
 					{
 						currentPixel.a = 1.0f;
 					}
-					texture->Texel(row, col) = currentPixel;						
+
+					texture->Texel(col, row) = currentPixel;						
 				}
 			}
 
@@ -172,7 +174,9 @@ namespace BlazeEngine
 			// Cleanup:
 			stbi_image_free(imageData);
 
-			LOG("Completed loading texture: " + texturePath);
+			#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
+				LOG("Completed loading texture: " + texturePath);
+			#endif
 
 			return texture;
 		}
@@ -182,13 +186,8 @@ namespace BlazeEngine
 		LOG_ERROR("Could not load texture at \"" + texturePath + "\", error: \"" + string(failResult) + ".\" Returning solid red color!");
 
 		width = height = 1;
-		Texture* texture = new Texture(width, height);
+		Texture* texture = new Texture(width, height, true, vec4(1.0f, 0.0f, 0.0f, 1.0f));
 		texture->texturePath = "errorTexture";
-		texture->Fill(vec4(1.0, 0, 0, 1));
-		if (!texture->Buffer())
-		{
-			LOG_ERROR("Texture buffering failed");
-		}
 
 		return texture;
 	}
@@ -203,13 +202,15 @@ namespace BlazeEngine
 		// If the texture hasn't been created, create a new name:
 		if (!glIsTexture(this->textureID))
 		{
-			LOG("Texture has never been bound before!");
+			#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
+				LOG("Texture has never been bound before!");
+			#endif
 
 			glGenTextures(1, &this->textureID);
 			glBindTexture(this->target, this->textureID);
 			if (glIsTexture(this->textureID) != GL_TRUE)
 			{
-				LOG_ERROR("OpenGL failed to generate new texture name");
+				LOG_ERROR("OpenGL failed to generate new texture name. Texture buffering failed");
 				return false;
 			}
 
@@ -227,10 +228,12 @@ namespace BlazeEngine
 			glTexParameteri(this->target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);	// Linear interpolation, nearest neighbour sampling
 			glTexParameteri(this->target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		}
-		else
-		{
-			LOG("Updating existing texture");
-		}
+		#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
+			else
+			{
+				LOG("Updating existing texture");
+			}
+		#endif
 
 		//glActiveTexture(0); // Set the active texture unit [0, 80+]
 		// Don't think we need this if we're using glBindTexture?
@@ -242,7 +245,10 @@ namespace BlazeEngine
 		// Cleanup:
 		glBindTexture(this->target, 0);
 
-		LOG("Texture buffering complete!");
+		#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
+			LOG("Texture buffering complete!");
+		#endif
+
 		return true;
 	}
 }

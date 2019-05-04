@@ -28,6 +28,28 @@ namespace BlazeEngine
 	}
 
 
+	void Shader::UploadUniform(GLchar const* uniformName, GLfloat const* value, UNIFORM_TYPE const& type)
+	{
+		GLuint uniformID = glGetUniformLocation(this->shaderReference, uniformName);
+
+		if (uniformID >= 0)
+		{
+			switch (type)
+			{
+			case UNIFORM_Matrix4fv:
+				glUniformMatrix4fv(uniformID, 1, GL_FALSE, value);	// Location, count, transpose?, value
+				break;
+
+			case UNIFORM_Vec3fv:
+				glUniform3fv(uniformID, 1, value);					// Location, count, value
+				break;
+
+			default:
+				LOG_ERROR("Shader uniform upload failed: Recieved invalid uniform type");
+			}
+		}
+	}
+
 	// Static functions:
 	//*******************
 
@@ -99,7 +121,9 @@ namespace BlazeEngine
 
 		Shader* newShader = new Shader(shaderName, shaderReference);
 
-		LOG("Successfully created shader \"" + shaderName + "\"");
+		#if defined (DEBUG_SCENEMANAGER_SHADER_LOGGING)
+			LOG("Finished creating shader \"" + shaderName + "\"");
+		#endif
 
 		return newShader;
 	}

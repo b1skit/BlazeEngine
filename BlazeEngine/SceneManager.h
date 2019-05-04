@@ -171,8 +171,18 @@ namespace BlazeEngine
 		// Scene setup/construction:
 		//--------------------------
 
+		// Assimp scene material and texture import helper:
 		void ImportMaterialsAndTexturesFromScene(aiScene const* scene, string sceneName);
+		
+		// Assimp scene texture import helper:
+		Texture* ExtractLoadTextureFromAiMaterial(aiTextureType textureType, aiMaterial* material, string sceneName);
+
+		// Assimp scene material property helper:
+		bool ExtractPropertyFromAiMaterial(aiMaterial* material, vec3& targetProperty, char const* AI_MATKEY_TYPE, int unused0 = 0, int unused1 = 0);
+
+		// Assimp scene geo import helper:
 		void ImportGameObjectGeometryFromScene(aiScene const* scene);
+
 
 		// Scene geometry import helper: Create a GameObject transform hierarchy and return the GameObject parent. 
 		// Note: Adds the GameObject to the currentScene's gameObjects
@@ -188,11 +198,11 @@ namespace BlazeEngine
 		// Recursive helper function: Finds nodes containing name as a substring
 		aiNode* FindNodeRecursiveHelper(aiNode* rootNode, string name);
 
-
+		//
 		void ImportLightsFromScene(aiScene const* scene);
 
+		//
 		void ImportCamerasFromScene(aiScene const* scene = nullptr);
-
 
 	};
 }

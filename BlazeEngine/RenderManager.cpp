@@ -270,7 +270,8 @@ namespace BlazeEngine
 		{
 			// Setup the current material and shader:
 			Material* currentMaterial = CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
-			GLuint shaderReference = currentMaterial->GetShader()->ShaderReference();
+			Shader* currentShader = currentMaterial->GetShader();
+			GLuint shaderReference = currentShader->ShaderReference();
 
 			BindShader(shaderReference);
 
@@ -279,15 +280,15 @@ namespace BlazeEngine
 			BindTextures(shaderReference, currentMaterial);
 
 			// Upload common shader matrices:
-			UploadUniform(shaderReference, "in_view", &view[0][0], UNIFORM_Matrix4fv);
-			UploadUniform(shaderReference, "in_projection", &projection[0][0], UNIFORM_Matrix4fv);
+			currentShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
+			currentShader->UploadUniform("in_projection", &projection[0][0], UNIFORM_Matrix4fv);
 
 			// Upload ambient light data:
-			UploadUniform(shaderReference, "ambient", &CoreEngine::GetSceneManager()->GetAmbient()[0], UNIFORM_Vec3fv);
+			currentShader->UploadUniform("ambient", &CoreEngine::GetSceneManager()->GetAmbient()[0], UNIFORM_Vec3fv);
 
 			// Upload key key light direction (world space) and color:
-			UploadUniform(shaderReference, "keyDirection", &CoreEngine::GetSceneManager()->GetKeyLight().GetTransform().Forward()[0], UNIFORM_Vec3fv);
-			UploadUniform(shaderReference, "keyColor", &CoreEngine::GetSceneManager()->GetKeyLight().Color().r, UNIFORM_Vec3fv);
+			currentShader->UploadUniform("keyDirection", &CoreEngine::GetSceneManager()->GetKeyLight().GetTransform().Forward()[0], UNIFORM_Vec3fv);
+			currentShader->UploadUniform("keyColor", &CoreEngine::GetSceneManager()->GetKeyLight().Color().r, UNIFORM_Vec3fv);
 
 			// Loop through each mesh:
 			vector<Mesh*> const* materialMeshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
@@ -304,9 +305,9 @@ namespace BlazeEngine
 				mat4 mvp	= CoreEngine::GetSceneManager()->MainCamera()->ViewProjection() * model;
 
 				// Upload mesh-specific matrices:
-				UploadUniform(shaderReference, "in_model", &model[0][0], UNIFORM_Matrix4fv);
-				UploadUniform(shaderReference, "in_mv", &mv[0][0], UNIFORM_Matrix4fv);
-				UploadUniform(shaderReference, "in_mvp", &mvp[0][0], UNIFORM_Matrix4fv);
+				currentShader->UploadUniform("in_model", &model[0][0], UNIFORM_Matrix4fv);
+				currentShader->UploadUniform("in_mv", &mv[0][0], UNIFORM_Matrix4fv);
+				currentShader->UploadUniform("in_mvp", &mvp[0][0], UNIFORM_Matrix4fv);
 
 				// Draw!
 				glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type,const GLvoid * indices);
@@ -384,62 +385,16 @@ namespace BlazeEngine
 			glActiveTexture(GL_TEXTURE0 + TEXTURE_NORMAL);
 			glBindTexture(normal->Target(), normal->TextureID());
 		}
-		Texture* roughness = currentMaterial->GetTexture(TEXTURE_ROUGHNESS);
-		if (roughness)
+		Texture* RMAO = currentMaterial->GetTexture(TEXTURE_RMAO);
+		if (RMAO)
 		{
-			GLuint samplerLocation = glGetUniformLocation(shaderReference, "roughness");
+			GLuint samplerLocation = glGetUniformLocation(shaderReference, "RMAO");
 			if (samplerLocation >= 0)
 			{
-				glUniform1i(samplerLocation, TEXTURE_ROUGHNESS);
+				glUniform1i(samplerLocation, TEXTURE_RMAO);
 			}
-			glActiveTexture(GL_TEXTURE0 + TEXTURE_ROUGHNESS);
-			glBindTexture(roughness->Target(), roughness->TextureID());
-		}
-		Texture* metallic = currentMaterial->GetTexture(TEXTURE_METALLIC);
-		if (metallic)
-		{
-			GLuint samplerLocation = glGetUniformLocation(shaderReference, "metallic");
-			if (samplerLocation >= 0)
-			{
-				glUniform1i(samplerLocation, TEXTURE_METALLIC);
-			}
-			glActiveTexture(GL_TEXTURE0 + TEXTURE_METALLIC);
-			glBindTexture(metallic->Target(), metallic->TextureID());
-		}
-		Texture* ambient = currentMaterial->GetTexture(TEXTURE_AMBIENT_OCCLUSION);
-		if (ambient)
-		{
-			GLuint samplerLocation = glGetUniformLocation(shaderReference, "ambientOcclusion");
-			if (samplerLocation >= 0)
-			{
-				glUniform1i(samplerLocation, TEXTURE_AMBIENT_OCCLUSION);
-			}
-			glActiveTexture(GL_TEXTURE0 + TEXTURE_AMBIENT_OCCLUSION);
-			glBindTexture(ambient->Target(), ambient->TextureID());
-		}
-	}
-
-
-	void BlazeEngine::RenderManager::UploadUniform(GLuint const& shaderReference, GLchar const* uniformName, GLfloat const* value, UNIFORM_TYPE const& type)
-	{
-		GLuint uniformID = glGetUniformLocation(shaderReference, uniformName);
-
-		if (uniformID >= 0)
-		{
-			switch (type)
-			{
-			case UNIFORM_Matrix4fv:
-				glUniformMatrix4fv(uniformID, 1, GL_FALSE, value);	// Location, count, transpose?, value
-				break;
-
-			case UNIFORM_Vec3fv:
-				glUniform3fv(uniformID, 1, value);					// Location, count, value
-				break;
-
-
-			default:
-				LOG_ERROR("UploadUniform() recieved invalid uniform type");
-			}
+			glActiveTexture(GL_TEXTURE0 + TEXTURE_RMAO);
+			glBindTexture(RMAO->Target(), RMAO->TextureID());
 		}
 	}
 

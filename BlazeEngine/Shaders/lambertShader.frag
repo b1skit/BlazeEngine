@@ -28,9 +28,17 @@ uniform mat4 in_mvp;
 
 uniform sampler2D albedo;
 uniform sampler2D normal;
-uniform sampler2D roughness;
-uniform sampler2D metallic;
-uniform sampler2D ambientOcclusion;
+uniform sampler2D RMAO;
+
+// Generic material properties:
+uniform vec3 matProperty0;
+//uniform vec3 matProperty1;
+//uniform vec3 matProperty2;
+//uniform vec3 matProperty3;
+//uniform vec3 matProperty4;
+//uniform vec3 matProperty5;
+//uniform vec3 matProperty6;
+//uniform vec3 matProperty7;
 
 out vec4 FragColor;
 

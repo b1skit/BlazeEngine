@@ -32,15 +32,6 @@ namespace BlazeEngine
 		SHADER_DEFAULT = 1,		// Lambert shader
 	};
 
-
-	// Used for uploading uniforms
-	enum UNIFORM_TYPE
-	{
-		UNIFORM_Matrix4fv,		// glUniformMatrix4fv
-		UNIFORM_Vec3fv,			// glUniform3fv
-
-	};
-
 	
 	class RenderManager : public EngineComponent
 	{
@@ -89,9 +80,6 @@ namespace BlazeEngine
 
 		// Bind a material's textures to the currently bound shader
 		void BindTextures(GLuint const& shaderReference, Material* currentMaterial);
-
-		// Upload value(s) to a shader's uniform
-		void UploadUniform(GLuint const& shaderReference, GLchar const* uniformName, GLfloat const* value, UNIFORM_TYPE const& type);
 
 		// Bind the mesh VAO, position, and index buffers. If mesh == nullptr, binds all elements to index 0 (ie. for cleanup)
 		void BindMeshBuffers(Mesh* const mesh = nullptr);
