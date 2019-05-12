@@ -491,11 +491,17 @@ namespace BlazeEngine
 					if (ExtractPropertyFromAiMaterial(scene->mMaterials[currentMaterial], newMaterial->Property(MATERIAL_PROPERTY_0), AI_MATKEY_SHININESS))
 					{
 						#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING)
-							LOG("Setting shader matProperty0 uniform");
+							LOG("Setting shader matProperty0 uniform: " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).x) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).y) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).z));
 						#endif
 
 						currentShader->UploadUniform("matProperty0", &newMaterial->Property(MATERIAL_PROPERTY_0).x, UNIFORM_Vec3fv);
 					}
+					#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING)
+					else
+					{
+						LOG_WARNING("Could not find material cosine power slot");
+					}
+					#endif
 
 					// TO DO: Extract more generic properties?
 				} 
@@ -562,11 +568,20 @@ namespace BlazeEngine
 		if (AI_SUCCESS == material->Get(AI_MATKEY_SHININESS, color))
 		{
 			#if defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
-				LOG("Successfully extracted material property");
+				LOG("Successfully extracted material property from AI_MATKEY_SHININESS");
 			#endif
 
 			targetProperty = vec3(color.r, color.g, color.b);
 
+			return true;
+		}
+		else if (AI_SUCCESS == material->Get("$raw.Shininess", 0, 0, color))
+		{
+			#if defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
+				LOG("Successfully extracted material property from $raw.Shininess");
+			#endif
+
+			targetProperty = vec3(color.r, color.g, color.b);
 			return true;
 		}
 		else
@@ -1035,7 +1050,7 @@ namespace BlazeEngine
 			}
 				break;
 
-			case aiLightSource_POINT:
+			case aiLightSource_POINT: // Can be either a point or ambient light
 			{
 				string lightName = string(scene->mLights[i]->mName.C_Str());
 				if (!foundAmbient && lightName.find("ambient") != string::npos)	// NOTE: The word "ambient" must appear in the ambient light's name
@@ -1043,6 +1058,7 @@ namespace BlazeEngine
 					foundAmbient = true;
 
 					currentScene->ambientLight = vec3(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b);
+					
 					#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
 						LOG("Created ambient light from \"" + lightName +"\"");
 					#endif

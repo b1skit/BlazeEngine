@@ -55,7 +55,9 @@ namespace BlazeEngine
 		// Member functions:
 		void Render(double alpha);
 
-		
+		// Upload static properties to shaders
+		void InitializeShaders();
+
 	private:
 		// Configuration:
 		int xRes;
@@ -83,8 +85,6 @@ namespace BlazeEngine
 
 		// Bind the mesh VAO, position, and index buffers. If mesh == nullptr, binds all elements to index 0 (ie. for cleanup)
 		void BindMeshBuffers(Mesh* const mesh = nullptr);
-
-
 	};
 }
 

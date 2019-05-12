@@ -198,12 +198,11 @@ namespace BlazeEngine
 		// Recursive helper function: Finds nodes containing name as a substring
 		aiNode* FindNodeRecursiveHelper(aiNode* rootNode, string name);
 
-		//
+		// Import light data from loaded scene
 		void ImportLightsFromScene(aiScene const* scene);
 
-		//
+		// Import camera data from loaded scene
 		void ImportCamerasFromScene(aiScene const* scene = nullptr);
-
 	};
 }
 

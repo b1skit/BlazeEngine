@@ -57,6 +57,9 @@ namespace BlazeEngine
 		BlazeSceneManager->Startup();
 		BlazeSceneManager->LoadScene(config.scene.scene01);
 
+		// Now that the scene (and its materials/shaders) has been loaded, we can initialize the shaders
+		BlazeRenderManager->InitializeShaders();
+
 		isRunning = true;
 
 		return;

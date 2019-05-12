@@ -63,13 +63,20 @@ namespace BlazeEngine
 		inline vec3 const& GetEulerRotation() { return eulerRotation; }
 		void SetEulerRotation(vec3 eulerXYZ);
 		
-
+		// Set the 
 		void SetScale(vec3 scale);
-		//void Scale(vec3 amount, SPACE space);
+
 
 		// Getters/Setters:
+		//-----------------
+
+		// Transform's world-space forward (Z+) vector
 		inline vec3 const& Forward() const { return forward; }
+
+		// Transform's world-space right (X+) vector
 		inline vec3 const& Right() const { return right; }
+
+		// Transform's world-space up (Y+) vector
 		inline vec3 const& Up() const { return up; }
 
 

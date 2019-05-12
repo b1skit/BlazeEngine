@@ -5,9 +5,6 @@
 // in bool gl_FrontFacing;
 // in vec2 gl_PointCoord;
 
-in vec3 vertexColor;
-in vec3 fragNormal;
-in vec2 uv0;
 
 uniform vec3 ambient;
 
@@ -40,13 +37,23 @@ uniform vec3 matProperty0;
 //uniform vec3 matProperty6;
 //uniform vec3 matProperty7;
 
+
+// NOTE: For now, this struct must be exactly the same as the one in the frag shader. 
+// TO DO: Implement shader #includes...
+in struct VtoF
+{
+	vec3 vertexColor;
+	vec3 fragNormal;
+	vec2 uv0;
+} data;
+
 out vec4 FragColor;
 
 void main()
 {	
-	FragColor = texture(albedo, uv0);
+	FragColor = texture(albedo, data.uv0);
 
-	float nDotL = max(0, dot(fragNormal, keyDirection));
+	float nDotL = max(0, dot(data.fragNormal, keyDirection));
 
 	FragColor = (FragColor * vec4(ambient, 1) ) + (FragColor * vec4(nDotL * keyColor, 1));
 

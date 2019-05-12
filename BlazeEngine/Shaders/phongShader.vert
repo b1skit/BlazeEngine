@@ -1,14 +1,8 @@
 #version 430 core
 
-// Define input locations:
-layout (location = 0) in vec3 in_position;
-layout (location = 1) in vec3 in_normal;
-layout (location = 2) in vec3 in_color;
-layout (location = 3) in vec2 in_uv0;
-
 uniform vec3 ambient;
 
-uniform vec3 keyDirection;	// World space normalized vector pointing towards key light
+uniform vec3 keyDirection;	// Normalized, world space, points towards light source
 uniform vec3 keyColor;
 
 uniform mat4 in_model;		// Local -> World
@@ -31,24 +25,37 @@ uniform vec3 matProperty0;
 //uniform vec3 matProperty6;
 //uniform vec3 matProperty7;
 
-out vec3 vertexColor;
-out vec3 fragNormal;
-out vec2 uv0;
+in struct Input
+{
+	vec3 in_position;
+	vec3 in_normal;
+	vec3 in_color;
+	vec2 in_uv0;
+} IN;
 
-// TO DO: Implement structures to pass through each stage...
-//out VS_OUT
-//{
-//	vec2 uv0;
-//} vs_out;
+// NOTE: For now, this struct must be exactly the same as the one in the frag shader. 
+// TO DO: Implement shader #includes...
+out struct VtoF
+{
+	vec3 vertexColor;
+	vec3 fragWorldNormal;
+	vec2 uv0;
+
+//	vec3 worldPos;
+	vec3 viewPos;		// Camera/eye-space position
+} data;
+
 
 void main()
 {
-	// Assign our position data to the predefined gl_Position output
-    gl_Position = in_mvp * vec4(in_position.x, in_position.y, in_position.z, 1.0);	// TO DO: Replace gl_Position with an out ^^^ (deprecated???????)
+	// Assign position to the predefined gl_Position clip-space output:
+    gl_Position = in_mvp * vec4(IN.in_position.x, IN.in_position.y, IN.in_position.z, 1.0);
 
-	vertexColor = in_color * ambient;
+	data.vertexColor = IN.in_color * ambient;
 
-	fragNormal = (in_model * vec4(in_normal, 0.0f)).xyz;	// Normal -> World normal
+	data.fragWorldNormal = (in_model * vec4(IN.in_normal, 0.0f)).xyz;	// Object -> World normal
 
-	uv0 = in_uv0;
+	data.uv0 = IN.in_uv0;
+
+	data.viewPos = (in_mv * vec4(IN.in_position.xyz, 1.0f)).xyz;
 }

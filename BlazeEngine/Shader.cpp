@@ -30,8 +30,16 @@ namespace BlazeEngine
 
 	void Shader::UploadUniform(GLchar const* uniformName, GLfloat const* value, UNIFORM_TYPE const& type)
 	{
-		GLuint uniformID = glGetUniformLocation(this->shaderReference, uniformName);
+		GLint currentProgram;
+		bool isBound = true;
+		glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+		if (currentProgram != this->shaderReference)
+		{
+			glUseProgram(this->shaderReference);
+			isBound = false;
+		}
 
+		GLuint uniformID = glGetUniformLocation(this->shaderReference, uniformName);
 		if (uniformID >= 0)
 		{
 			switch (type)
@@ -47,6 +55,11 @@ namespace BlazeEngine
 			default:
 				LOG_ERROR("Shader uniform upload failed: Recieved invalid uniform type");
 			}
+		}
+
+		if (!isBound)
+		{
+			glUseProgram(currentProgram);
 		}
 	}
 

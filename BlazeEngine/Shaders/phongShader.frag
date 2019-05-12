@@ -5,14 +5,11 @@
 // in bool gl_FrontFacing;
 // in vec2 gl_PointCoord;
 
-in vec3 vertexColor;
-in vec3 fragNormal;
-in vec2 uv0;
 
 uniform vec3 ambient;
 
-uniform vec3 keyDirection;
-uniform vec3 keyColor;
+uniform vec3 keyDirection;	// Normalized, world space, points towards light source
+uniform vec3 keyColor;		// Intensity
 
 uniform mat4 in_model;
 uniform mat4 in_view;
@@ -31,7 +28,7 @@ uniform sampler2D normal;
 uniform sampler2D RMAO;
 
 // Generic material properties:
-uniform vec3 matProperty0;		// matProperty.x == cosine power
+uniform vec3 matProperty0; // .x == Phong cosine exponent
 //uniform vec3 matProperty1;
 //uniform vec3 matProperty2;
 //uniform vec3 matProperty3;
@@ -40,22 +37,42 @@ uniform vec3 matProperty0;		// matProperty.x == cosine power
 //uniform vec3 matProperty6;
 //uniform vec3 matProperty7;
 
-out vec4 FragColor;
 
+// NOTE: For now, this struct must be exactly the same as the one in the frag shader. 
+// TO DO: Implement shader #includes...
+in struct VtoF
+{
+	vec3 vertexColor;
+	vec3 fragWorldNormal;
+	vec2 uv0;
+
+//	vec3 worldPos;
+	vec3 viewPos;
+} data;
+
+out vec4 FragColor;
 
 void main()
 {	
-	// TO DO: IMPLEMENT PHONG SHADING!!!!!!!!!
+	FragColor = texture(albedo, data.uv0);
+	float specColor = texture(RMAO, data.uv0).r;
 
-	FragColor = texture(albedo, uv0);
+	// Ambient:
+	vec4 ambientContribution = FragColor * vec4(ambient, 1);
 
-	float nDotL = max(0, dot(fragNormal, keyDirection));
+	// Diffuse:
+	float nDotL = max(0, dot(data.fragWorldNormal, keyDirection));	
+	vec4 diffuseContribution = FragColor * vec4(nDotL * keyColor, 1);
 
-	FragColor = (FragColor * vec4(ambient, 1) ) + (FragColor * vec4(nDotL * keyColor, 1));
+	// Specular:
+	vec3 viewDir = normalize(-data.viewPos.xyz); // Negate, because camera is looking down Z-
+	vec3 reflectDir = reflect(-keyDirection, data.fragWorldNormal);
+	reflectDir = (in_view * vec4(reflectDir, 0)).xyz; // World -> view space
+	float vDotR = max(0, dot(viewDir, reflectDir));
 
-//	FragColor = texture(normal, uv0);
-//	FragColor = texture(roughness, uv0);
-//	FragColor = texture(metallic, uv0);
-//	FragColor = texture(ambientOcclusion, uv0);
+	float specChannelVal = specColor * pow(vDotR, matProperty0.x);
+	vec4 specContribution = vec4(specChannelVal, specChannelVal, specChannelVal, 1);
 
+	// Final result:
+	FragColor = ambientContribution + diffuseContribution + specContribution;
 } 

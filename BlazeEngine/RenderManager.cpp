@@ -237,7 +237,6 @@ namespace BlazeEngine
 		glCullFace(GL_BACK);				// Cull back faces
 		//glDepthFunc(GL_LESS);				// How to sort Z
 
-
 		ClearWindow(vec4(0.79f, 0.32f, 0.0f, 1.0f));
 	}
 
@@ -262,7 +261,6 @@ namespace BlazeEngine
 
 		// Assemble common (model independent) matrices:
 		mat4 view		= CoreEngine::GetSceneManager()->MainCamera()->View();
-		mat4 projection = CoreEngine::GetSceneManager()->MainCamera()->Projection();
 		
 		// Loop by material (+shader), mesh:
 		unsigned int numMaterials = CoreEngine::GetSceneManager()->NumMaterials();
@@ -281,14 +279,6 @@ namespace BlazeEngine
 
 			// Upload common shader matrices:
 			currentShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
-			currentShader->UploadUniform("in_projection", &projection[0][0], UNIFORM_Matrix4fv);
-
-			// Upload ambient light data:
-			currentShader->UploadUniform("ambient", &CoreEngine::GetSceneManager()->GetAmbient()[0], UNIFORM_Vec3fv);
-
-			// Upload key key light direction (world space) and color:
-			currentShader->UploadUniform("keyDirection", &CoreEngine::GetSceneManager()->GetKeyLight().GetTransform().Forward()[0], UNIFORM_Vec3fv);
-			currentShader->UploadUniform("keyColor", &CoreEngine::GetSceneManager()->GetKeyLight().Color().r, UNIFORM_Vec3fv);
 
 			// Loop through each mesh:
 			vector<Mesh*> const* materialMeshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
@@ -308,6 +298,8 @@ namespace BlazeEngine
 				currentShader->UploadUniform("in_model", &model[0][0], UNIFORM_Matrix4fv);
 				currentShader->UploadUniform("in_mv", &mv[0][0], UNIFORM_Matrix4fv);
 				currentShader->UploadUniform("in_mvp", &mvp[0][0], UNIFORM_Matrix4fv);
+
+				// TO DO: Only (compute and) upload these matrices if they've changed ^^^^
 
 				// Draw!
 				glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type,const GLvoid * indices);
@@ -343,7 +335,7 @@ namespace BlazeEngine
 		glUseProgram(shaderReference);
 	}
 
-	void BlazeEngine::RenderManager::BindSamplers(Material* currentMaterial, bool doCleanup) // doCleanup = false by default. If true, binds to unit 0 (ie. for cleanup)
+	void BlazeEngine::RenderManager::BindSamplers(Material* currentMaterial, bool doCleanup /*= false*/)
 	{
 		if (!doCleanup)
 		{
@@ -412,6 +404,44 @@ namespace BlazeEngine
 			glBindVertexArray(0);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		}
+	}
+
+	void BlazeEngine::RenderManager::InitializeShaders()
+	{
+		SceneManager* sceneManager = CoreEngine::GetSceneManager();
+		unsigned int numMaterials = sceneManager->NumMaterials();
+
+		vec3 const* ambient = &CoreEngine::GetSceneManager()->GetAmbient();
+		vec3 const* keyDir = &CoreEngine::GetSceneManager()->GetKeyLight().GetTransform().Forward();
+		vec3 const* keyCol = &CoreEngine::GetSceneManager()->GetKeyLight().Color();
+
+		LOG("Uploading light and matrix data to shaders");
+		#if defined(DEBUG_RENDERMANAGER_SHADER_LOGGING)
+			LOG("Ambient: " + to_string(ambient->r) + ", " + to_string(ambient->g) + ", " + to_string(ambient->b));
+			LOG("Key Dir: " + to_string(keyDir->x) + ", " + to_string(keyDir->y) + ", " + to_string(keyDir->z));
+			LOG("Key Col: " + to_string(keyCol->r) + ", " + to_string(keyCol->g) + ", " + to_string(keyCol->b));
+		#endif
+
+		for (unsigned int i = 0; i < numMaterials; i++)
+		{
+			Shader* currentShader = sceneManager->GetMaterial(i)->GetShader();
+
+			RenderManager::BindShader(currentShader->ShaderReference());
+
+			// Upload key light direction (world space) and color, and ambient light color:
+			currentShader->UploadUniform("ambient", &(ambient->r), UNIFORM_Vec3fv);
+			currentShader->UploadUniform("keyDirection", &(keyDir->x), UNIFORM_Vec3fv);
+			currentShader->UploadUniform("keyColor", &(keyCol->r), UNIFORM_Vec3fv);
+			
+			/*currentShader->UploadUniform("ambient", &CoreEngine::GetSceneManager()->GetAmbient()[0], UNIFORM_Vec3fv);
+			currentShader->UploadUniform("keyDirection", &CoreEngine::GetSceneManager()->GetKeyLight().GetTransform().Forward()[0], UNIFORM_Vec3fv);
+			currentShader->UploadUniform("keyColor", &CoreEngine::GetSceneManager()->GetKeyLight().Color().r, UNIFORM_Vec3fv);*/
+
+			mat4 projection = sceneManager->MainCamera()->Projection();
+			currentShader->UploadUniform("in_projection", &projection[0][0], UNIFORM_Matrix4fv);
+
+			RenderManager::BindShader(0);
 		}
 	}
 
