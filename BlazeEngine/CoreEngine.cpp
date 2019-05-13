@@ -23,12 +23,16 @@ namespace BlazeEngine
 	RenderManager* CoreEngine::BlazeRenderManager = &RenderManager::Instance();
 
 
-	CoreEngine::CoreEngine(string configPath) : BlazeObject("CoreEngine")
+	CoreEngine::CoreEngine(int argc, char** argv) : BlazeObject("CoreEngine")
 	{
 		coreEngine = this;
 
-		this->configPath = configPath;
-		config.LoadConfig(this->configPath);
+		EngineConfig config = EngineConfig();
+
+		ProcessCommandLineArgs(argc, argv);
+
+		//this->configPath = configPath;
+		//config.LoadConfig(this->configPath);
 
 		// Initialize SDL:
 		if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
@@ -55,7 +59,7 @@ namespace BlazeEngine
 
 		// Must wait to start scene manager and load a scene until the renderer is called, since we need to initialize OpenGL in the RenderManager before creating shaders
 		BlazeSceneManager->Startup();
-		BlazeSceneManager->LoadScene(config.scene.scene01);
+		BlazeSceneManager->LoadScene(config.scene.currentScene);
 
 		// Now that the scene (and its materials/shaders) has been loaded, we can initialize the shaders
 		BlazeRenderManager->InitializeShaders();
@@ -175,5 +179,31 @@ namespace BlazeEngine
 	void EngineConfig::SaveConfig(string path)
 	{
 		LOG_WARNING("DEBUG: EngineConfig.SaveConfig() is not implemented. No data is being saved!\n");
+	}
+
+	void CoreEngine::ProcessCommandLineArgs(int argc, char** argv)
+	{
+		LOG("Processing " + to_string(argc - 1) + " command line arguments:");
+		for (int i = 1; i < argc; i++) // Start at index 1 to skip the executable path
+		{			
+			string currentArg = string(argv[i]);			
+			if (currentArg.find("-scene") != string::npos)
+			{
+				string parameter = string(argv[i + 1]);
+				if (i < argc - 1)
+				{
+					LOG("\tReceived scene command: \"" + currentArg + " " + parameter + "\"");
+
+					this->config.scene.currentScene = parameter;
+				}
+				
+				i++; // Eat the extra command parameter
+			}
+			else
+			{
+				LOG_ERROR("\"" + currentArg + "\" is not a recognized command!");
+			}
+
+		}
 	}
 }

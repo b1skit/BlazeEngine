@@ -15,9 +15,9 @@ namespace BlazeEngine
 	// TO DO: Make this object (and members) static?
 	struct EngineConfig
 	{
-		EngineConfig(CoreEngine* coreEngine)
+		EngineConfig()
 		{
-			this->coreEngine = coreEngine;
+			
 		}
 
 		// Renderer config:
@@ -53,18 +53,22 @@ namespace BlazeEngine
 		struct
 		{
 			const string sceneRoot			= ".\\Scenes\\";	// Root path: All assets stored here
-
-			const string scene01			= "simpleCube";		// Generic scene name
+			
+			string currentScene;			// The currently loaded scene
 		} scene;
 		
 		// TO DO: Add button config for inputmanager
+		//struct inputConfig
+		//{
+
+		//};
 
 		// TO DO: Implement load/save functions
 		void LoadConfig(string path);
 		void SaveConfig(string path);
 
 	private:
-		CoreEngine* coreEngine;
+		
 
 	};
 
@@ -73,7 +77,7 @@ namespace BlazeEngine
 	class CoreEngine : public BlazeObject, public EventListener
 	{
 	public:
-		CoreEngine(string configPath);
+		CoreEngine(int argc, char** argv);
 
 		// Static Engine component singletons getters:		
 		static inline CoreEngine*		GetCoreEngine()		{ return coreEngine; }
@@ -119,8 +123,10 @@ namespace BlazeEngine
 		bool isRunning = false;
 
 		// Engine configuration:
-		EngineConfig config = EngineConfig(this);
-		string configPath;
+		EngineConfig config;
+		string configPath = ".\\config.cfg";
 		bool configDirty = false; // Marks whether we need to save the config file or not
+
+		void ProcessCommandLineArgs(int argc, char** argv);
 	};
 }

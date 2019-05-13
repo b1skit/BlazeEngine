@@ -617,100 +617,11 @@ namespace BlazeEngine
 				&& scene->mMeshes[currentMesh]->HasTangentsAndBitangents()
 				)
 			{
-				// Mesh is valid: See if we can find the corresponding node in the scene graph:
-				string meshName = string(scene->mMeshes[currentMesh]->mName.C_Str());
-				aiNode* currentNode = scene->mRootNode->FindNode(scene->mMeshes[currentMesh]->mName);
-
-				if (currentNode)
-				{
-					// We've found a corresponding node in the scene graph. Create a mesh:
-					int numVerts = scene->mMeshes[currentMesh]->mNumVertices;
-					int numFaces = scene->mMeshes[currentMesh]->mNumFaces;
-					int numUVs = scene->mMeshes[currentMesh]->mNumUVComponents[0]; // Just look at the first UV channel for now...
-					int numUVChannels = scene->mMeshes[currentMesh]->GetNumUVChannels();
-					int materialIndex = scene->mMeshes[currentMesh]->mMaterialIndex;
-
-					#if defined(DEBUG_SCENEMANAGER_MESH_LOGGING)
-						LOG("\nMesh #" + to_string(currentMesh) + " \"" + meshName + "\": " + to_string(numVerts) + " verts, " + to_string(numFaces) + " faces, " + to_string(numUVChannels) + " UV channels, " + to_string(numUVs) + " UV components in channel 0, using material #" + to_string(materialIndex));
-					#endif
-
-					Vertex* vertices = new Vertex[numVerts];
-
-					// Fill the vertices array:
-					for (int currentVert = 0; currentVert < numVerts; currentVert++)
-					{
-						vertices[currentVert] = Vertex
-						{
-							vec3(scene->mMeshes[currentMesh]->mVertices[currentVert].x, scene->mMeshes[currentMesh]->mVertices[currentVert].y, scene->mMeshes[currentMesh]->mVertices[currentVert].z),
-							vec3(scene->mMeshes[currentMesh]->mNormals[currentVert].x, scene->mMeshes[currentMesh]->mNormals[currentVert].y, scene->mMeshes[currentMesh]->mNormals[currentVert].z),
-							vec4(0.0f, 0.0f ,0.0f , 1.0f), // TO DO: Color - Populate this?
-							vec2(scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].x, scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].y)
-						};
-					}
-
-					// Fill the indices array:
-					int numIndices = scene->mMeshes[currentMesh]->mNumFaces * 3;
-					GLuint* indices = new GLuint[numIndices];
-
-					#if defined(DEBUG_SCENEMANAGER_MESH_LOGGING)
-						LOG("Created arrays of " + to_string(numVerts) + " vertices, & " + to_string(numIndices) + " indices");
-					#endif					
-
-					for (int currentFace = 0; currentFace < numFaces; currentFace++)
-					{
-						for (int currentIndex = 0; currentIndex < 3; currentIndex++)
-						{
-							if (scene->mMeshes[currentMesh]->mFaces[currentFace].mNumIndices != 3)
-							{
-								LOG_ERROR("Found a face that doesn't have 3 indices during mesh import!")
-							}
-							indices[(currentFace * 3) + currentIndex] = scene->mMeshes[currentMesh]->mFaces[currentFace].mIndices[currentIndex];
-						}
-					}
-
-					Mesh newMesh(meshName, vertices, numVerts, indices, numIndices, materialIndex);
-
-					currentScene->meshes.push_back(newMesh);
-					int meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address				
-
-					GameObject* gameObject = FindCreateGameObjectParents(scene, currentNode->mParent);
-
-					// If the mesh doesn't belong to a group, create a GameObject to contain it:
-					if (gameObject == nullptr)
-					{
-						gameObject = new GameObject(meshName + "_GAMEOBJECT"); // Add a postfix to remind us that we expect GameObjects to be grouped in our .FBX from Maya
-						
-						aiMatrix4x4 combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode);	// Pass the currentNode (instead of its parent), since this mesh doesn't belong to a group
-						InitializeTransformValues(combinedTransform, gameObject->GetTransform());
-						
-						// Set the GameObject as the parent of the mesh:
-						newMesh.GetTransform().SetParent(gameObject->GetTransform());
-
-						gameObject->GetRenderable()->AddViewMeshAsChild(&(currentScene->meshes.at(meshIndex)));
-
-						LOG_ERROR("Created a _GAMEOBJECT for mesh \"" + meshName + "\" that did not belong to a group! GameObjects should belong to groups in the source .FBX!");
-
-						AddGameObject(gameObject);	// We need to manually add the game object
-						continue; // We're done!
-					}
-
-					// We have a GameObject:
-					aiMatrix4x4 combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode->mParent);
-					combinedTransform = combinedTransform * currentNode->mTransformation; // Combine the parent and child transforms								
-
-					InitializeTransformValues(combinedTransform, &currentScene->meshes.at(meshIndex).GetTransform());  // Copy to our Mesh transform
-
-					// Add the mesh to the GameObject's Renderable's viewMeshes:
-					gameObject->GetRenderable()->AddViewMeshAsChild(&(currentScene->meshes.at(meshIndex)));
-				}
-				else
-				{
-					LOG_ERROR("Could not find \"" + meshName + "\" in the scene graph");
-				}
+				LOG("All expected mesh properties found");
 			}
 			else
 			{
-				LOG("Mesh is missing the following properties:");
+				LOG_WARNING("Mesh is missing the following properties:");
 				if (!scene->mMeshes[currentMesh]->HasPositions())				LOG("\t - positions");
 				if (!scene->mMeshes[currentMesh]->HasFaces())					LOG("\t - faces");
 				if (!scene->mMeshes[currentMesh]->HasNormals())					LOG("\t - normals");
@@ -718,6 +629,118 @@ namespace BlazeEngine
 				if (!scene->mMeshes[currentMesh]->HasTextureCoords(0))			LOG("\t - texture coordinates");
 				if (!scene->mMeshes[currentMesh]->HasTangentsAndBitangents())	LOG("\t - tangents & bitangents");
 			}
+
+			// See if we can find the corresponding node in the scene graph:
+			string meshName = string(scene->mMeshes[currentMesh]->mName.C_Str());
+			aiNode* currentNode = scene->mRootNode->FindNode(scene->mMeshes[currentMesh]->mName);
+
+			if (currentNode)
+			{
+				// We've found a corresponding node in the scene graph. Create a mesh:
+				int numVerts = scene->mMeshes[currentMesh]->mNumVertices;
+				int numFaces = scene->mMeshes[currentMesh]->mNumFaces;
+				int numUVs = scene->mMeshes[currentMesh]->mNumUVComponents[0]; // Just look at the first UV channel for now...
+				int numUVChannels = scene->mMeshes[currentMesh]->GetNumUVChannels();
+				int materialIndex = scene->mMeshes[currentMesh]->mMaterialIndex;
+
+				#if defined(DEBUG_SCENEMANAGER_MESH_LOGGING)
+					LOG("\nMesh #" + to_string(currentMesh) + " \"" + meshName + "\": " + to_string(numVerts) + " verts, " + to_string(numFaces) + " faces, " + to_string(numUVChannels) + " UV channels, " + to_string(numUVs) + " UV components in channel 0, using material #" + to_string(materialIndex));
+				#endif
+
+				Vertex* vertices = new Vertex[numVerts];
+
+				// Fill the vertices array:
+				for (int currentVert = 0; currentVert < numVerts; currentVert++)
+				{
+					// Default vertex values:
+					vec3 position, normal = vec3(0, 0, 0);
+					vec4 color(0, 0, 0, 1);
+					vec2 uv(0, 0);
+
+					if (scene->mMeshes[currentMesh]->HasPositions())
+					{
+						position = vec3(scene->mMeshes[currentMesh]->mVertices[currentVert].x, scene->mMeshes[currentMesh]->mVertices[currentVert].y, scene->mMeshes[currentMesh]->mVertices[currentVert].z);
+					}
+
+					if (scene->mMeshes[currentMesh]->HasFaces())
+					{
+						normal = vec3(scene->mMeshes[currentMesh]->mNormals[currentVert].x, scene->mMeshes[currentMesh]->mNormals[currentVert].y, scene->mMeshes[currentMesh]->mNormals[currentVert].z);
+					}
+
+					if (scene->mMeshes[currentMesh]->HasVertexColors(0))
+					{
+						color = vec4(0.0f, 0.0f, 0.0f, 1.0f); // TO DO: Color - Populate this!!!!!!!!!!!!!
+					}
+
+					if (scene->mMeshes[currentMesh]->HasTextureCoords(0))
+					{
+						uv = vec2(scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].x, scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].y);
+					}
+
+					// Assemble the vertex:
+					vertices[currentVert] = Vertex(position, normal, color, uv);
+				}
+
+				// Fill the indices array:
+				int numIndices = scene->mMeshes[currentMesh]->mNumFaces * 3;
+				GLuint* indices = new GLuint[numIndices];
+
+				#if defined(DEBUG_SCENEMANAGER_MESH_LOGGING)
+					LOG("Created arrays of " + to_string(numVerts) + " vertices, & " + to_string(numIndices) + " indices");
+				#endif					
+
+				for (int currentFace = 0; currentFace < numFaces; currentFace++)
+				{
+					for (int currentIndex = 0; currentIndex < 3; currentIndex++)
+					{
+						if (scene->mMeshes[currentMesh]->mFaces[currentFace].mNumIndices != 3)
+						{
+							LOG_ERROR("Found a face that doesn't have 3 indices during mesh import!")
+						}
+						indices[(currentFace * 3) + currentIndex] = scene->mMeshes[currentMesh]->mFaces[currentFace].mIndices[currentIndex];
+					}
+				}
+
+				Mesh newMesh(meshName, vertices, numVerts, indices, numIndices, materialIndex);
+
+				currentScene->meshes.push_back(newMesh);
+				int meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address				
+
+				GameObject* gameObject = FindCreateGameObjectParents(scene, currentNode->mParent);
+
+				// If the mesh doesn't belong to a group, create a GameObject to contain it:
+				if (gameObject == nullptr)
+				{
+					gameObject = new GameObject(meshName + "_GAMEOBJECT"); // Add a postfix to remind us that we expect GameObjects to be grouped in our .FBX from Maya
+						
+					aiMatrix4x4 combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode);	// Pass the currentNode (instead of its parent), since this mesh doesn't belong to a group
+					InitializeTransformValues(combinedTransform, gameObject->GetTransform());
+						
+					// Set the GameObject as the parent of the mesh:
+					newMesh.GetTransform().SetParent(gameObject->GetTransform());
+
+					gameObject->GetRenderable()->AddViewMeshAsChild(&(currentScene->meshes.at(meshIndex)));
+
+					LOG_ERROR("Created a _GAMEOBJECT for mesh \"" + meshName + "\" that did not belong to a group! GameObjects should belong to groups in the source .FBX!");
+
+					AddGameObject(gameObject);	// We need to manually add the game object
+					continue; // We're done!
+				}
+
+				// We have a GameObject:
+				aiMatrix4x4 combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode->mParent);
+				combinedTransform = combinedTransform * currentNode->mTransformation; // Combine the parent and child transforms								
+
+				InitializeTransformValues(combinedTransform, &currentScene->meshes.at(meshIndex).GetTransform());  // Copy to our Mesh transform
+
+				// Add the mesh to the GameObject's Renderable's viewMeshes:
+				gameObject->GetRenderable()->AddViewMeshAsChild(&(currentScene->meshes.at(meshIndex)));
+			}
+			else
+			{
+				LOG_ERROR("Could not find \"" + meshName + "\" in the scene graph");
+			}
+			
 		}
 
 		int numGameObjects = (int)currentScene->gameObjects.size();
@@ -1102,16 +1125,18 @@ namespace BlazeEngine
 	}
 
 
-	void BlazeEngine::SceneManager::ImportCamerasFromScene(aiScene const* scene) // scene == nullptr by default
+	void BlazeEngine::SceneManager::ImportCamerasFromScene(aiScene const* scene /*= nullptr*/)
 	{
 		if (currentScene->mainCamera != nullptr)
 		{
 			delete currentScene->mainCamera;
+			currentScene->mainCamera = nullptr;
 		}
 
 		if (scene == nullptr) // Signal to create a default camera at the origin
 		{
 			LOG("Creating a default camera");
+			currentScene->mainCamera = new Camera("defaultCamera");
 			currentScene->mainCamera->Initialize(
 				vec3(0, 0, 0),
 				(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
