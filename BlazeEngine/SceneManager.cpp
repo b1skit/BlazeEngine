@@ -625,7 +625,7 @@ namespace BlazeEngine
 				scene->mMeshes[currentMesh]->HasPositions()
 				&& scene->mMeshes[currentMesh]->HasFaces()
 				&& scene->mMeshes[currentMesh]->HasNormals()
-				//&& scene->mMeshes[currentMesh]->HasVertexColors(0)
+				&& scene->mMeshes[currentMesh]->HasVertexColors(0)
 				&& scene->mMeshes[currentMesh]->HasTextureCoords(0)
 				&& scene->mMeshes[currentMesh]->HasTangentsAndBitangents()
 				)
@@ -666,7 +666,7 @@ namespace BlazeEngine
 				for (int currentVert = 0; currentVert < numVerts; currentVert++)
 				{
 					// Default vertex values:
-					vec3 position, normal = vec3(0, 0, 0);
+					vec3 position = vec3(0,0,0), normal = vec3(0, 0, 0), tangent = vec3(0, 0, 0), bitangent = vec3(0, 0, 0);
 					vec4 color(0, 0, 0, 1);
 					vec2 uv(0, 0);
 
@@ -694,8 +694,14 @@ namespace BlazeEngine
 						uv = vec2(scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].x, scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].y);
 					}
 
+					if (scene->mMeshes[currentMesh]->HasTangentsAndBitangents())
+					{
+						tangent = vec3(scene->mMeshes[currentMesh]->mTangents[currentVert].x, scene->mMeshes[currentMesh]->mTangents[currentVert].y, scene->mMeshes[currentMesh]->mTangents[currentVert].z);
+						bitangent = vec3(scene->mMeshes[currentMesh]->mBitangents[currentVert].x, scene->mMeshes[currentMesh]->mBitangents[currentVert].y, scene->mMeshes[currentMesh]->mBitangents[currentVert].z);
+					}
+
 					// Assemble the vertex:
-					vertices[currentVert] = Vertex(position, normal, color, uv);
+					vertices[currentVert] = Vertex(position, normal, tangent, bitangent, color, uv);
 				}
 
 				// Fill the indices array:

@@ -6,7 +6,7 @@ namespace BlazeEngine
 
 
 	// Mesh functions:
-	Mesh::Mesh(string name, Vertex* vertices, unsigned int numVerts, GLuint* indices, unsigned int numIndices, int materialIndex) // materialIndex == -1 by default
+	Mesh::Mesh(string name, Vertex* vertices, unsigned int numVerts, GLuint* indices, unsigned int numIndices, int materialIndex /*= -1*/)
 	{
 		this->meshName = name;
 
@@ -41,6 +41,14 @@ namespace BlazeEngine
 		glEnableVertexAttribArray(VERTEX_NORMAL);
 		glVertexAttribPointer(VERTEX_NORMAL, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 
+		// Tangents:
+		glEnableVertexAttribArray(VERTEX_TANGENT);
+		glVertexAttribPointer(VERTEX_TANGENT, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, tangent));
+
+		// Bitangents:
+		glEnableVertexAttribArray(VERTEX_BITANGENT);
+		glVertexAttribPointer(VERTEX_BITANGENT, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, bitangent));
+
 		// Color buffer:
 		glEnableVertexAttribArray(VERTEX_COLOR);
 		glVertexAttribPointer(VERTEX_COLOR, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
@@ -53,6 +61,7 @@ namespace BlazeEngine
 		// Buffer data:
 		glBufferData(GL_ARRAY_BUFFER, numVerts * sizeof(Vertex), &vertices[0].position.x, GL_DYNAMIC_DRAW);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(GLuint), &indices[0], GL_DYNAMIC_DRAW);
+
 
 		// Cleanup:
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -140,41 +149,43 @@ namespace BlazeEngine
 		int numVerts = 24;
 		Vertex* cubeVerts = new Vertex[numVerts]
 		{
+			// TO DO: Implement hard-coded tangent & bitangents instead of empty vec3's...
+
 			// Front face:
-			Vertex(positions[0], normals[0], colors[0], uvs[1]), // HINT: position index should = color index
-			Vertex(positions[1], normals[0], colors[1], uvs[0]), // All UV's should be used once per face
-			Vertex(positions[2], normals[0], colors[2], uvs[2]), //2
-			Vertex(positions[3], normals[0], colors[3], uvs[3]), //3
+			Vertex(positions[0], normals[0], vec3(), vec3(), colors[0], uvs[1]), // HINT: position index should = color index
+			Vertex(positions[1], normals[0], vec3(), vec3(), colors[1], uvs[0]), // All UV's should be used once per face
+			Vertex(positions[2], normals[0], vec3(), vec3(), colors[2], uvs[2]), //2
+			Vertex(positions[3], normals[0], vec3(), vec3(), colors[3], uvs[3]), //3
 
 			// Left face:
-			Vertex(positions[4], normals[2], colors[4], uvs[1]), //4
-			Vertex(positions[5], normals[2], colors[5], uvs[0]),
-			Vertex(positions[1], normals[2], colors[1], uvs[2]),
-			Vertex(positions[0], normals[2], colors[0], uvs[3]), //7
+			Vertex(positions[4], normals[2], vec3(), vec3(), colors[4], uvs[1]), //4
+			Vertex(positions[5], normals[2], vec3(), vec3(), colors[5], uvs[0]),
+			Vertex(positions[1], normals[2], vec3(), vec3(), colors[1], uvs[2]),
+			Vertex(positions[0], normals[2], vec3(), vec3(), colors[0], uvs[3]), //7
 
 			// Right face:
-			Vertex(positions[3], normals[3], colors[3], uvs[1]), //8
-			Vertex(positions[2], normals[3], colors[2], uvs[0]),
-			Vertex(positions[6], normals[3], colors[6], uvs[2]),
-			Vertex(positions[7], normals[3], colors[7], uvs[3]), //11
+			Vertex(positions[3], normals[3], vec3(), vec3(), colors[3], uvs[1]), //8
+			Vertex(positions[2], normals[3], vec3(), vec3(), colors[2], uvs[0]),
+			Vertex(positions[6], normals[3], vec3(), vec3(), colors[6], uvs[2]),
+			Vertex(positions[7], normals[3], vec3(), vec3(), colors[7], uvs[3]), //11
 
 			// Top face:
-			Vertex(positions[4], normals[4], colors[4], uvs[1]), //12
-			Vertex(positions[0], normals[4], colors[0], uvs[0]),
-			Vertex(positions[3], normals[4], colors[3], uvs[2]),
-			Vertex(positions[7], normals[4], colors[7], uvs[3]), //15
+			Vertex(positions[4], normals[4], vec3(), vec3(), colors[4], uvs[1]), //12
+			Vertex(positions[0], normals[4], vec3(), vec3(), colors[0], uvs[0]),
+			Vertex(positions[3], normals[4], vec3(), vec3(), colors[3], uvs[2]),
+			Vertex(positions[7], normals[4], vec3(), vec3(), colors[7], uvs[3]), //15
 
 			// Bottom face:
-			Vertex(positions[1], normals[5], colors[1], uvs[1]), //16
-			Vertex(positions[5], normals[5], colors[5], uvs[0]),
-			Vertex(positions[6], normals[5], colors[6], uvs[2]),
-			Vertex(positions[2], normals[5], colors[2], uvs[3]), //19
+			Vertex(positions[1], normals[5], vec3(), vec3(), colors[1], uvs[1]), //16
+			Vertex(positions[5], normals[5], vec3(), vec3(), colors[5], uvs[0]),
+			Vertex(positions[6], normals[5], vec3(), vec3(), colors[6], uvs[2]),
+			Vertex(positions[2], normals[5], vec3(), vec3(), colors[2], uvs[3]), //19
 
 			// Back face:
-			Vertex(positions[7], normals[1], colors[7], uvs[1]), //20
-			Vertex(positions[6], normals[1], colors[6], uvs[0]),
-			Vertex(positions[5], normals[1], colors[5], uvs[2]),
-			Vertex(positions[4], normals[1], colors[4], uvs[3]), //23
+			Vertex(positions[7], normals[1], vec3(), vec3(), colors[7], uvs[1]), //20
+			Vertex(positions[6], normals[1], vec3(), vec3(), colors[6], uvs[0]),
+			Vertex(positions[5], normals[1], vec3(), vec3(), colors[5], uvs[2]),
+			Vertex(positions[4], normals[1], vec3(), vec3(), colors[4], uvs[3]), //23
 		};
 
 		int numIndices = 36;

@@ -29,6 +29,8 @@ in struct Input
 {
 	vec3 in_position;
 	vec3 in_normal;
+	vec3 in_tangent;
+	vec3 in_bitangent;
 	vec3 in_color;
 	vec2 in_uv0;
 } IN;
@@ -39,6 +41,8 @@ out struct VtoF
 {
 	vec3 vertexColor;
 	vec3 fragWorldNormal;
+	vec3 tangent;
+	vec3 bitangent;
 	vec2 uv0;
 
 //	vec3 worldPos;
@@ -54,6 +58,9 @@ void main()
 	data.vertexColor = IN.in_color * ambient;
 
 	data.fragWorldNormal = (in_model * vec4(IN.in_normal, 0.0f)).xyz;	// Object -> World normal
+
+	data.tangent = IN.in_tangent;		// DEBUG: NEED TO TRANSFORM THESE!!!
+	data.bitangent = IN.in_bitangent;
 
 	data.uv0 = IN.in_uv0;
 

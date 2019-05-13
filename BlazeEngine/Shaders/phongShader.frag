@@ -44,6 +44,8 @@ in struct VtoF
 {
 	vec3 vertexColor;
 	vec3 fragWorldNormal;
+	vec3 tangent;
+	vec3 bitangent;
 	vec2 uv0;
 
 //	vec3 worldPos;
@@ -75,4 +77,8 @@ void main()
 
 	// Final result:
 	FragColor = ambientContribution + diffuseContribution + specContribution;
+
+//	FragColor = vec4(data.vertexColor.xyz, 1);
+//	FragColor = vec4(data.tangent.xyz, 1);
+//	FragColor = vec4(data.bitangent.xyz, 1);
 } 

@@ -25,20 +25,21 @@ namespace BlazeEngine
 	struct Vertex
 	{
 	public:
-		// TO DO: Figure out an elegant way to initialize vertices with all of their attributes...
 		Vertex()
 		{
-			position = vec3(0.0f, 0.0f, 0.0f); 
-			normal = vec3(0.0f, 0.0f, 0.0f);
+			position = normal = tangent = bitangent = vec3(0.0f, 0.0f, 0.0f);
+			
 			color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 			uv = vec2(0.0f, 0.0f);
 		}
 
 		 //Explicit constructor:
-		Vertex(const vec3& position, const vec3& normal, const vec4& color, const vec2& uv)
+		Vertex(const vec3& position, const vec3& normal, const vec3 tangent, const vec3 bitangent, const vec4& color, const vec2& uv)
 		{
 			this->position = position;
 			this->normal = normal;
+			this->tangent = tangent;
+			this->bitangent = bitangent;
 			this->color = color;
 			this->uv = uv;
 		}
@@ -49,6 +50,8 @@ namespace BlazeEngine
 
 		vec3 position;
 		vec3 normal;
+		vec3 tangent;
+		vec3 bitangent;
 		vec4 color;
 		vec2 uv;
 
@@ -74,6 +77,8 @@ namespace BlazeEngine
 	{
 		VERTEX_POSITION,
 		VERTEX_NORMAL,
+		VERTEX_TANGENT,
+		VERTEX_BITANGENT,
 		VERTEX_COLOR,
 		VERTEX_UV, // TO DO: Implement multipl UV channels?
 

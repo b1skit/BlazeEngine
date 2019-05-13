@@ -391,7 +391,7 @@ namespace BlazeEngine
 	}
 
 
-	void BlazeEngine::RenderManager::BindMeshBuffers(Mesh* const mesh)	// mesh == nullptr by default: Binds to element 0 (ie. for cleanup)
+	void BlazeEngine::RenderManager::BindMeshBuffers(Mesh* const mesh /*= nullptr*/) // If mesh == nullptr, binds to element 0
 	{
 		if (mesh)
 		{
@@ -433,10 +433,6 @@ namespace BlazeEngine
 			currentShader->UploadUniform("ambient", &(ambient->r), UNIFORM_Vec3fv);
 			currentShader->UploadUniform("keyDirection", &(keyDir->x), UNIFORM_Vec3fv);
 			currentShader->UploadUniform("keyColor", &(keyCol->r), UNIFORM_Vec3fv);
-			
-			/*currentShader->UploadUniform("ambient", &CoreEngine::GetSceneManager()->GetAmbient()[0], UNIFORM_Vec3fv);
-			currentShader->UploadUniform("keyDirection", &CoreEngine::GetSceneManager()->GetKeyLight().GetTransform().Forward()[0], UNIFORM_Vec3fv);
-			currentShader->UploadUniform("keyColor", &CoreEngine::GetSceneManager()->GetKeyLight().Color().r, UNIFORM_Vec3fv);*/
 
 			mat4 projection = sceneManager->MainCamera()->Projection();
 			currentShader->UploadUniform("in_projection", &projection[0][0], UNIFORM_Matrix4fv);

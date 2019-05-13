@@ -38,7 +38,7 @@
 
 	// Scene setup and creation logging:
 	//----------------------------------
-	#define DEBUG_LOG_SCENEMANAGER_SCENE_SETUP			// Enable/disable scene import logging
+	//#define DEBUG_LOG_SCENEMANAGER_SCENE_SETUP			// Enable/disable scene import logging
 	#if defined(DEBUG_LOG_SCENEMANAGER_SCENE_SETUP)
 		//#define DEBUG_SCENEMANAGER_LIGHT_LOGGING		// Enable logging of light import/creation
 		//#define DEBUG_SCENEMANAGER_CAMERA_LOGGING		// Enable logging of camera import/creation
