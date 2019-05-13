@@ -635,12 +635,12 @@ namespace BlazeEngine
 			else
 			{
 				LOG_WARNING("Mesh is missing the following properties:");
-				if (!scene->mMeshes[currentMesh]->HasPositions())				LOG("\t - positions");
-				if (!scene->mMeshes[currentMesh]->HasFaces())					LOG("\t - faces");
-				if (!scene->mMeshes[currentMesh]->HasNormals())					LOG("\t - normals");
-				if (!scene->mMeshes[currentMesh]->HasVertexColors(0))			LOG("\t - vertex colors");
-				if (!scene->mMeshes[currentMesh]->HasTextureCoords(0))			LOG("\t - texture coordinates");
-				if (!scene->mMeshes[currentMesh]->HasTangentsAndBitangents())	LOG("\t - tangents & bitangents");
+				if (!scene->mMeshes[currentMesh]->HasPositions())				LOG_WARNING("\t - positions");
+				if (!scene->mMeshes[currentMesh]->HasFaces())					LOG_WARNING("\t - faces");
+				if (!scene->mMeshes[currentMesh]->HasNormals())					LOG_WARNING("\t - normals");
+				if (!scene->mMeshes[currentMesh]->HasVertexColors(0))			LOG_WARNING("\t - vertex colors");
+				if (!scene->mMeshes[currentMesh]->HasTextureCoords(0))			LOG_WARNING("\t - texture coordinates");
+				if (!scene->mMeshes[currentMesh]->HasTangentsAndBitangents())	LOG_WARNING("\t - tangents & bitangents");
 			}
 
 			// See if we can find the corresponding node in the scene graph:
@@ -670,21 +670,25 @@ namespace BlazeEngine
 					vec4 color(0, 0, 0, 1);
 					vec2 uv(0, 0);
 
+					// Position:
 					if (scene->mMeshes[currentMesh]->HasPositions())
 					{
 						position = vec3(scene->mMeshes[currentMesh]->mVertices[currentVert].x, scene->mMeshes[currentMesh]->mVertices[currentVert].y, scene->mMeshes[currentMesh]->mVertices[currentVert].z);
 					}
 
+					// Normal:
 					if (scene->mMeshes[currentMesh]->HasFaces())
 					{
 						normal = vec3(scene->mMeshes[currentMesh]->mNormals[currentVert].x, scene->mMeshes[currentMesh]->mNormals[currentVert].y, scene->mMeshes[currentMesh]->mNormals[currentVert].z);
 					}
 
-					if (scene->mMeshes[currentMesh]->HasVertexColors(0))
+					// Vertex color:
+					if (scene->mMeshes[currentMesh]->HasVertexColors(0) && scene->mMeshes[currentMesh]->mColors[0])
 					{
-						color = vec4(0.0f, 0.0f, 0.0f, 1.0f); // TO DO: Color - Populate this!!!!!!!!!!!!!
+						color = vec4(scene->mMeshes[currentMesh]->mColors[0][currentVert].r, scene->mMeshes[currentMesh]->mColors[0][currentVert].g, scene->mMeshes[currentMesh]->mColors[0][currentVert].b, scene->mMeshes[currentMesh]->mColors[0][currentVert].a);
 					}
 
+					// TexCoords:
 					if (scene->mMeshes[currentMesh]->HasTextureCoords(0))
 					{
 						uv = vec2(scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].x, scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].y);
