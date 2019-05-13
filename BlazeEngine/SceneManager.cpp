@@ -525,8 +525,21 @@ namespace BlazeEngine
 		int textureCount = material->GetTextureCount(textureType);
 		if (textureCount <= 0)
 		{
-			LOG_WARNING("Received material does not have the requested texture");
-			return nullptr;
+			if (textureType == aiTextureType_DIFFUSE)
+			{
+				aiColor4D color;
+				if (AI_SUCCESS == material->Get("$clr.diffuse", 0, 0, color))
+				{
+					LOG_WARNING("Received material does not have the requested texture. Creating a 1x1 texture using the diffuse color");
+					Texture* newTexture = new Texture(1, 1, true, vec4(color.r, color.g, color.b, color.a));
+					return newTexture;
+				}
+			}
+			else
+			{
+				LOG_WARNING("Received material does not have the requested texture");
+				return nullptr;
+			}
 		}
 		if (textureCount > 1)
 		{

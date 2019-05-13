@@ -67,7 +67,7 @@ namespace BlazeEngine
 		vec4* texels = nullptr;
 		unsigned int numTexels;
 
-		string texturePath;
+		string texturePath = "UnloadedTexture";
 
 		// Upload a texture to the GPU. Returns true if successful, false otherwise
 		bool Buffer();
