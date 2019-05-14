@@ -120,6 +120,13 @@ namespace BlazeEngine
 
 	void SceneManager::LoadScene(string sceneName)
 	{
+		if (sceneName == "")
+		{
+			LOG_ERROR("Quitting! No scene name received. Did you forget to use the \"-scene theSceneName\" command line argument?");
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, nullptr });
+			return;
+		}
+
 		if (currentScene)
 		{
 			// TO DO: Write a destructor/cleanup correctly when deleting a scene
@@ -1150,6 +1157,7 @@ namespace BlazeEngine
 
 	void BlazeEngine::SceneManager::ImportCamerasFromScene(aiScene const* scene /*= nullptr*/)
 	{
+		// Delete the existing camera, if necessary:
 		if (currentScene->mainCamera != nullptr)
 		{
 			delete currentScene->mainCamera;
@@ -1170,7 +1178,7 @@ namespace BlazeEngine
 			return;
 		}
 
-		// If we made it this far, we found a camera in the scene:
+		// If we made it this far, we've imported a camera from the scene:
 		string cameraName = string(scene->mCameras[0]->mName.C_Str());
 		currentScene->mainCamera = new Camera(cameraName); // TO DO: Should main camera ALWAYS be camera 0 ??
 
@@ -1196,6 +1204,7 @@ namespace BlazeEngine
 			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultNear,
 			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultFar
 		);
+		// END DEBUG
 	
 
 		// Note: In the current version of Assimp, the mLookAt, mUp vectors seem to just be the world forward, up vectors, and mTransformation is the identity...

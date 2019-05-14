@@ -54,7 +54,7 @@ namespace BlazeEngine
 		{
 			const string sceneRoot			= ".\\Scenes\\";	// Root path: All assets stored here
 			
-			string currentScene;			// The currently loaded scene
+			string currentScene = "";			// The currently loaded scene
 		} scene;
 		
 		// TO DO: Add button config for inputmanager

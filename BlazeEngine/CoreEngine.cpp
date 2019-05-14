@@ -75,6 +75,10 @@ namespace BlazeEngine
 	{
 		LOG("CoreEngine beginning main game loop!");
 
+		// Process any events that might have occurred during startup:
+		BlazeEventManager->Update();
+		BlazeLogManager->Update();
+
 		// Initialize game loop timing:
 		double elapsed = 0.0;
 		BlazeTimeManager->Update();
