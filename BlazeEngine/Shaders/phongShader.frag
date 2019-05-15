@@ -1,41 +1,10 @@
 #version 430 core
+#include "BlazeCommon.glsl"
 
 // Built-in input variables:
 // in vec4 gl_FragCoord; //  location of the fragment in window space. 
 // in bool gl_FrontFacing;
 // in vec2 gl_PointCoord;
-
-
-uniform vec3 ambient;
-
-uniform vec3 keyDirection;	// Normalized, world space, points towards light source
-uniform vec3 keyColor;		// Intensity
-
-uniform mat4 in_model;
-uniform mat4 in_view;
-uniform mat4 in_projection;
-uniform mat4 in_mv;
-uniform mat4 in_mvp;
-
-//layout (location = 0) uniform sampler2D albedo;
-//layout (location = 1) uniform sampler2D normal;
-//layout (location = 2) uniform sampler2D roughness;
-//layout (location = 3) uniform sampler2D metallic;
-//layout (location = 4) uniform sampler2D ambientOcclusion;
-
-uniform sampler2D albedo;
-uniform sampler2D normal;
-uniform sampler2D RMAO;
-
-// Generic material properties:
-uniform vec3 matProperty0; // .x == Phong cosine exponent
-//uniform vec3 matProperty1;
-//uniform vec3 matProperty2;
-//uniform vec3 matProperty3;
-//uniform vec3 matProperty4;
-//uniform vec3 matProperty5;
-//uniform vec3 matProperty6;
-//uniform vec3 matProperty7;
 
 
 // NOTE: For now, this struct must be exactly the same as the one in the frag shader. 

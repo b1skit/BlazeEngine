@@ -1,35 +1,11 @@
 #version 430 core
+#include "BlazeCommon.glsl"
 
 // Define input locations:
 //layout (location = 0) in vec3 in_position;
 //layout (location = 1) in vec3 in_normal;
 //layout (location = 2) in vec3 in_color;
 //layout (location = 3) in vec2 in_uv0;
-
-uniform vec3 ambient;
-
-uniform vec3 keyDirection;	// World space normalized vector pointing towards key light
-uniform vec3 keyColor;
-
-uniform mat4 in_model;		// Local -> World
-uniform mat4 in_view;		// World -> View
-uniform mat4 in_projection; // View -> Projection
-uniform mat4 in_mv;			// View * Model
-uniform mat4 in_mvp;		// Projection * View * Model
-
-uniform sampler2D albedo;
-uniform sampler2D normal;
-uniform sampler2D RMAO;
-
-// Generic material properties:
-uniform vec3 matProperty0;
-//uniform vec3 matProperty1;
-//uniform vec3 matProperty2;
-//uniform vec3 matProperty3;
-//uniform vec3 matProperty4;
-//uniform vec3 matProperty5;
-//uniform vec3 matProperty6;
-//uniform vec3 matProperty7;
 
 in struct Input
 {

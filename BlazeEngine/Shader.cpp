@@ -86,6 +86,17 @@ namespace BlazeEngine
 			ReturnErrorShader(shaderName);
 		}
 
+		// Process #include directives:
+		#if defined(DEBUG_SHADER_SETUP_LOGGING)
+			LOG("Processing loaded Vertex shader")
+		#endif
+		LoadIncludes(vertexShader);
+
+		#if defined(DEBUG_SHADER_SETUP_LOGGING)
+			LOG("Processing loaded Fragment shader")
+		#endif
+		LoadIncludes(fragmentShader);
+
 		// Create shader objects and attach them to the program objects:
 		shaders[0] = CreateGLShaderObject(vertexShader, GL_VERTEX_SHADER);
 		shaders[1] = CreateGLShaderObject(fragmentShader, GL_FRAGMENT_SHADER);
@@ -109,7 +120,7 @@ namespace BlazeEngine
 		//glBindAttribLocation(shaderReference, 11, "keyColor");
 		//glBindAttribLocation(shaderReference, 12, "keyIntensity");
 		//// TO DO: Replace indexes with an enum??
-		//// This isn't really needed, as we explicitely define locations in the shader...
+		//// TO DO: Re-implement this
 
 		// Link our program object:
 		glLinkProgram(shaderReference);
@@ -130,7 +141,8 @@ namespace BlazeEngine
 		// Delete the shader objects now that they've been linked into the program object:
 		glDeleteShader(shaders[0]);
 		glDeleteShader(shaders[1]);
-		delete shaders;
+		delete[] shaders;
+
 
 		Shader* newShader = new Shader(shaderName, shaderReference);
 
@@ -154,6 +166,7 @@ namespace BlazeEngine
 			return nullptr; // Worst case: We can't find the error shader. This will likely cause a crash if it ever occurs.
 		}
 	}
+
 
 	string Shader::LoadShaderFile(const string& filename)
 	{
@@ -182,6 +195,101 @@ namespace BlazeEngine
 
 		return output;
 	}
+
+
+	void Shader::LoadIncludes(string& shaderText)
+	{
+		#if defined(DEBUG_SHADER_SETUP_LOGGING)
+			LOG("Processing shader #include directives");
+			bool foundInclude = false;
+		#endif
+
+		const string INCLUDE_KEYWORD = "#include";
+
+		int foundIndex = 0;
+		while (foundIndex != string::npos && foundIndex < shaderText.length())
+		{
+			foundIndex = (int)shaderText.find(INCLUDE_KEYWORD, foundIndex + 1);
+			if (foundIndex != string::npos)
+			{
+				// Check we're not on a commented line:
+				int checkIndex = foundIndex;
+				bool foundComment = false;
+				while (checkIndex >= 0 && shaderText[checkIndex] != '\n')
+				{
+					if (shaderText[checkIndex] == '/' && checkIndex > 0 && shaderText[checkIndex - 1] == '/')
+					{
+						foundComment = true;
+						break;
+					}
+					checkIndex--;
+				}
+				if (foundComment)
+				{
+					continue;
+				}
+
+				int endIndex = (int)shaderText.find("\n", foundIndex + 1);
+				if (endIndex != string::npos)
+				{
+					int firstQuoteIndex, lastQuoteIndex;
+					
+					firstQuoteIndex = (int)shaderText.find("\"", foundIndex + 1);
+					if (firstQuoteIndex != string::npos && firstQuoteIndex > 0 && firstQuoteIndex < endIndex)
+					{
+						lastQuoteIndex = (int)shaderText.find("\"", firstQuoteIndex + 1);
+						if (lastQuoteIndex != string::npos && lastQuoteIndex > firstQuoteIndex && lastQuoteIndex < endIndex)
+						{
+							firstQuoteIndex++; // Move ahead 1 element from the first quotation mark
+
+							string includeFileName = shaderText.substr(firstQuoteIndex, lastQuoteIndex - firstQuoteIndex);
+
+							#if defined(DEBUG_SHADER_SETUP_LOGGING)
+								string includeDirective = shaderText.substr(foundIndex, endIndex - foundIndex - 1);	// - 1 to move back from the index of the last "
+								LOG("Found include directive \"" + includeDirective + "\". Attempting to load file \"" + includeFileName + "\"");
+							#endif							
+
+							string includeFile = LoadShaderFile(includeFileName);
+							if (includeFile != "")
+							{
+								// Perform the insertion:
+								string firstHalf = shaderText.substr(0, foundIndex);
+								string secondHalf = shaderText.substr(endIndex + 1, shaderText.length() - 1);
+								shaderText = firstHalf + includeFile + secondHalf;								
+
+								#if defined(DEBUG_SHADER_SETUP_LOGGING)
+									LOG("Successfully processed shader directive \"" + includeDirective + "\"");
+									foundInclude = true;
+								#endif	
+							}
+							else
+							{
+								LOG_ERROR("Could not find include file. Shader loading failed.");
+								return;
+							}
+						}
+					}
+				}
+			}							
+		}
+
+		#if defined(DEBUG_SHADER_SETUP_LOGGING)
+			if (foundInclude)
+			{
+
+				#if defined(DEBUG_SHADER_PRINT_FINAL_SHADER)
+					LOG("Final shader text:\n" + shaderText);
+				#else
+					LOG("Finished processing #include directives");
+				#endif
+			}
+			else
+			{
+				LOG("No #include directives processed. Shader is unchanged");
+			}
+		#endif
+	}
+
 
 	GLuint Shader::CreateGLShaderObject(const string& shaderCode, GLenum shaderType)
 	{

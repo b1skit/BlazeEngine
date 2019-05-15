@@ -143,7 +143,7 @@ namespace BlazeEngine
 		Assimp::Importer importer;
 		aiScene const* scene = importer.ReadFile(fbxPath, 
 			aiProcess_ValidateDataStructure 
-			| aiProcess_CalcTangentSpace 
+			| aiProcess_CalcTangentSpace // TO DO: Test if this can be removed (for faster processing)?
 			| aiProcess_Triangulate 
 			| aiProcess_JoinIdenticalVertices 
 			| aiProcess_SortByPType 
