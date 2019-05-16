@@ -14,8 +14,6 @@ in vec4 in_uv2;
 in vec4 in_uv3;
 
 
-// NOTE: For now, this struct must be exactly the same as the one in the frag shader. 
-// TO DO: Implement shader #includes...
 out struct VtoF
 {
 	vec4 vertexColor;

@@ -30,18 +30,24 @@ namespace BlazeEngine
 			position = normal = tangent = bitangent = vec3(0.0f, 0.0f, 0.0f);
 			
 			color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
-			uv = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+			
+			uv0 = uv1 = uv2 = uv3 = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		}
 
 		 //Explicit constructor:
-		Vertex(const vec3& position, const vec3& normal, const vec3 tangent, const vec3 bitangent, const vec4& color, const vec4& uv)
+		Vertex(const vec3& position, const vec3& normal, const vec3 tangent, const vec3 bitangent, const vec4& color, const vec4& uv0)
 		{
 			this->position = position;
+			this->color = color;
+
 			this->normal = normal;
 			this->tangent = tangent;
 			this->bitangent = bitangent;
-			this->color = color;
-			this->uv = uv;
+			
+			this->uv0 = uv0;
+
+			// Just set these to 0 for now...
+			uv1 = uv2 = uv3 = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		}
 
 		// Copy constructor:
@@ -55,7 +61,10 @@ namespace BlazeEngine
 		vec3 tangent;
 		vec3 bitangent;
 		
-		vec4 uv;
+		vec4 uv0;
+		vec4 uv1;
+		vec4 uv2;
+		vec4 uv3;
 
 	protected:
 

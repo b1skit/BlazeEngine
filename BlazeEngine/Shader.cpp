@@ -114,10 +114,9 @@ namespace BlazeEngine
 		glBindAttribLocation(shaderReference, VERTEX_BITANGENT, "in_bitangent");
 		
 		glBindAttribLocation(shaderReference, VERTEX_UV0,		"in_uv0");
-
-		//glBindAttribLocation(shaderReference, 4, "in_uv1");
-		//glBindAttribLocation(shaderReference, 5, "in_uv2");
-		//glBindAttribLocation(shaderReference, 6, "in_uv3");
+		glBindAttribLocation(shaderReference, VERTEX_UV1,		"in_uv1");
+		glBindAttribLocation(shaderReference, VERTEX_UV2,		"in_uv2");
+		glBindAttribLocation(shaderReference, VERTEX_UV3,		"in_uv3");
 
 		//glBindAttribLocation(shaderReference, 4, "in_model");
 		//glBindAttribLocation(shaderReference, 5, "in_view");
