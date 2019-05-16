@@ -12,7 +12,7 @@
 
 void main()
 {	
-	FragColor = texture(albedo, data.uv0);
+	FragColor = texture(albedo, data.uv0.xy);
 
 	float nDotL = max(0, dot(data.fragWorldNormal, keyDirection));
 

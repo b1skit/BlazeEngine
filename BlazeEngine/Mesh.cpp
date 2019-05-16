@@ -58,8 +58,16 @@ namespace BlazeEngine
 		
 		// UV's:
 		glEnableVertexAttribArray(VERTEX_UV0);
-		glVertexAttribPointer(VERTEX_UV0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-		// TO DO: MAKE UV'S 4-CHANNEL, UPLOAD MULTIPLE SETS...
+		glVertexAttribPointer(VERTEX_UV0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+
+		glEnableVertexAttribArray(VERTEX_UV1);
+		glVertexAttribPointer(VERTEX_UV1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+		
+		glEnableVertexAttribArray(VERTEX_UV2);
+		glVertexAttribPointer(VERTEX_UV2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+		
+		glEnableVertexAttribArray(VERTEX_UV3);
+		glVertexAttribPointer(VERTEX_UV3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
 
 
 		// Buffer data:
@@ -142,12 +150,12 @@ namespace BlazeEngine
 			vec4(1.0f, 1.0f, 1.0f, 1.0f),
 		};
 
-		vec2 uvs[4]
+		vec4 uvs[4]
 		{
-			vec2(0.0f, 0.0f),
-			vec2(0.0f, 1.0f),
-			vec2(1.0f, 0.0f),
-			vec2(1.0f, 1.0f),
+			vec4(0.0f, 0.0f, 0.0f, 0.0f),
+			vec4(0.0f, 1.0f, 0.0f, 0.0f),
+			vec4(1.0f, 0.0f, 0.0f, 0.0f),
+			vec4(1.0f, 1.0f, 0.0f, 0.0f),
 		};
 
 		int numVerts = 24;

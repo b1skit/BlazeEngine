@@ -8,10 +8,10 @@ in vec3 in_normal;
 in vec3 in_tangent;
 in vec3 in_bitangent;
 
-in vec2 in_uv0;
-//in vec2 in_uv1;
-//in vec2 in_uv2;
-//in vec2 in_uv3;
+in vec4 in_uv0;
+in vec4 in_uv1;
+in vec4 in_uv2;
+in vec4 in_uv3;
 
 
 // NOTE: For now, this struct must be exactly the same as the one in the frag shader. 
@@ -24,7 +24,10 @@ out struct VtoF
 	vec3 tangent;
 	vec3 bitangent;
 
-	vec2 uv0;
+	vec4 uv0;
+	vec4 uv1;
+	vec4 uv2;
+	vec4 uv3;
 
 //	vec3 worldPos;
 	vec3 viewPos;		// Camera/eye-space position

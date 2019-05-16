@@ -9,7 +9,10 @@ in struct VtoF
 	vec3 tangent;
 	vec3 bitangent;
 
-	vec2 uv0;
+	vec4 uv0;
+	vec4 uv1;
+	vec4 uv2;
+	vec4 uv3;
 
 //	vec3 worldPos;
 	vec3 viewPos;		// Camera/eye-space position

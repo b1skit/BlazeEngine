@@ -675,7 +675,7 @@ namespace BlazeEngine
 					// Default vertex values:
 					vec3 position = vec3(0,0,0), normal = vec3(0, 0, 0), tangent = vec3(0, 0, 0), bitangent = vec3(0, 0, 0);
 					vec4 color(0, 0, 0, 1);
-					vec2 uv(0, 0);
+					vec4 uv(0, 0, 0, 0);
 
 					// Position:
 					if (scene->mMeshes[currentMesh]->HasPositions())
@@ -698,7 +698,7 @@ namespace BlazeEngine
 					// TexCoords:
 					if (scene->mMeshes[currentMesh]->HasTextureCoords(0))
 					{
-						uv = vec2(scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].x, scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].y);
+						uv = vec4(scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].x, scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].y, 0, 0);
 					}
 
 					if (scene->mMeshes[currentMesh]->HasTangentsAndBitangents())

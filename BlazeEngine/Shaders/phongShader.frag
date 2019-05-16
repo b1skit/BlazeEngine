@@ -11,8 +11,8 @@
 
 void main()
 {	
-	FragColor = texture(albedo, data.uv0);
-	float specColor = texture(RMAO, data.uv0).r;
+	FragColor = texture(albedo, data.uv0.xy);
+	float specColor = texture(RMAO, data.uv0.xy).r;
 
 	// Ambient:
 	vec4 ambientContribution = FragColor * vec4(ambient, 1);
