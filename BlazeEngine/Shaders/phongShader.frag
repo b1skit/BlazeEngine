@@ -1,27 +1,13 @@
 #version 430 core
 #include "BlazeCommon.glsl"
+#include "BlazeFragmentCommon.glsl"
+
 
 // Built-in input variables:
 // in vec4 gl_FragCoord; //  location of the fragment in window space. 
 // in bool gl_FrontFacing;
 // in vec2 gl_PointCoord;
 
-
-// NOTE: For now, this struct must be exactly the same as the one in the frag shader. 
-// TO DO: Implement shader #includes...
-in struct VtoF
-{
-	vec3 vertexColor;
-	vec3 fragWorldNormal;
-	vec3 tangent;
-	vec3 bitangent;
-	vec2 uv0;
-
-//	vec3 worldPos;
-	vec3 viewPos;
-} data;
-
-out vec4 FragColor;
 
 void main()
 {	

@@ -31,6 +31,7 @@ namespace BlazeEngine
 			
 			color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 			uv = vec2(0.0f, 0.0f);
+			// TO DO: Make this a vec4!
 		}
 
 		 //Explicit constructor:
@@ -49,10 +50,12 @@ namespace BlazeEngine
 
 
 		vec3 position;
+		vec4 color;
+		
 		vec3 normal;
 		vec3 tangent;
 		vec3 bitangent;
-		vec4 color;
+		
 		vec2 uv;
 
 	protected:
@@ -75,12 +78,17 @@ namespace BlazeEngine
 
 	enum VERTEX_ATTRIBUTE
 	{
-		VERTEX_POSITION,
-		VERTEX_NORMAL,
-		VERTEX_TANGENT,
-		VERTEX_BITANGENT,
-		VERTEX_COLOR,
-		VERTEX_UV, // TO DO: Implement multipl UV channels?
+		VERTEX_POSITION		= 0,
+		VERTEX_COLOR		= 1,
+		
+		VERTEX_NORMAL		= 2,
+		VERTEX_TANGENT		= 3,
+		VERTEX_BITANGENT	= 4,
+		
+		VERTEX_UV0			= 5, // TO DO: Implement multipl UV channels?
+		//VERTEX_UV1			= 6,
+		//VERTEX_UV2			= 7,
+		//VERTEX_UV3			= 8,
 
 		VERTEX_NUM_ATTRIBUTES	// RESERVED: The total number of vertex attributes
 	};

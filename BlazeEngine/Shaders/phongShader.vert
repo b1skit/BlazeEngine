@@ -1,44 +1,21 @@
 #version 430 core
 #include "BlazeCommon.glsl"
+#include "BlazeVertexCommon.glsl"
 
-layout (location = 0) in struct Input
-{
-	vec3 in_position;
-	vec3 in_normal;
-	vec3 in_tangent;
-	vec3 in_bitangent;
-	vec3 in_color;
-	vec2 in_uv0;
-} IN;
-
-// NOTE: For now, this struct must be exactly the same as the one in the frag shader. 
-// TO DO: Implement shader #includes...
-out struct VtoF
-{
-	vec3 vertexColor;
-	vec3 fragWorldNormal;
-	vec3 tangent;
-	vec3 bitangent;
-	vec2 uv0;
-
-//	vec3 worldPos;
-	vec3 viewPos;		// Camera/eye-space position
-} data;
-
-
+// Phong vertex shader
 void main()
 {
 	// Assign position to the predefined gl_Position clip-space output:
-    gl_Position = in_mvp * vec4(IN.in_position.x, IN.in_position.y, IN.in_position.z, 1.0);
+    gl_Position = in_mvp * vec4(in_position.x, in_position.y, in_position.z, 1.0);
 
-	data.vertexColor = IN.in_color * ambient;
+	data.vertexColor = in_color * vec4(ambient, 1);
 
-	data.fragWorldNormal = (in_model * vec4(IN.in_normal, 0.0f)).xyz;	// Object -> World normal
+	data.fragWorldNormal = (in_model * vec4(in_normal, 0.0f)).xyz;	// Object -> World normal
 
-	data.tangent = IN.in_tangent;		// DEBUG: NEED TO TRANSFORM THESE!!!
-	data.bitangent = IN.in_bitangent;
+	data.tangent = in_tangent;		// DEBUG: NEED TO TRANSFORM THESE!!!
+	data.bitangent = in_bitangent;
 
-	data.uv0 = IN.in_uv0;
+	data.uv0 = in_uv0;
 
-	data.viewPos = (in_mv * vec4(IN.in_position.xyz, 1.0f)).xyz;
+	data.viewPos = (in_mv * vec4(in_position.xyz, 1.0f)).xyz;
 }

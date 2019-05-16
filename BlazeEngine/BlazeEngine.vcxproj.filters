@@ -163,5 +163,11 @@
     <None Include="Shaders\BlazeCommon.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="Shaders\BlazeVertexCommon.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\BlazeFragmentCommon.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

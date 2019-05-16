@@ -105,11 +105,20 @@ namespace BlazeEngine
 			glAttachShader(shaderReference, shaders[i]); // Attach our shaders to the shader program
 		}
 
-		//// Associate our vertex attribute indexes with named variables:
-		//glBindAttribLocation(shaderReference, 0, "in_position"); // Bind attribute 0 as "position" in the vertex shader
-		//glBindAttribLocation(shaderReference, 1, "in_normal");
-		//glBindAttribLocation(shaderReference, 2, "in_color");
-		//glBindAttribLocation(shaderReference, 3, "in_uv0");
+		 //Associate our vertex attribute indexes with named variables:
+		glBindAttribLocation(shaderReference, VERTEX_POSITION,	"in_position");
+		glBindAttribLocation(shaderReference, VERTEX_COLOR,		"in_color");
+
+		glBindAttribLocation(shaderReference, VERTEX_NORMAL,	"in_normal");
+		glBindAttribLocation(shaderReference, VERTEX_TANGENT,	"in_tangent");
+		glBindAttribLocation(shaderReference, VERTEX_BITANGENT, "in_bitangent");
+		
+		glBindAttribLocation(shaderReference, VERTEX_UV0,		"in_uv0");
+
+		//glBindAttribLocation(shaderReference, 4, "in_uv1");
+		//glBindAttribLocation(shaderReference, 5, "in_uv2");
+		//glBindAttribLocation(shaderReference, 6, "in_uv3");
+
 		//glBindAttribLocation(shaderReference, 4, "in_model");
 		//glBindAttribLocation(shaderReference, 5, "in_view");
 		//glBindAttribLocation(shaderReference, 6, "in_projection");
@@ -119,8 +128,7 @@ namespace BlazeEngine
 		//glBindAttribLocation(shaderReference, 10, "keyDirection");
 		//glBindAttribLocation(shaderReference, 11, "keyColor");
 		//glBindAttribLocation(shaderReference, 12, "keyIntensity");
-		//// TO DO: Replace indexes with an enum??
-		//// TO DO: Re-implement this
+		
 
 		// Link our program object:
 		glLinkProgram(shaderReference);

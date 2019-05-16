@@ -33,9 +33,15 @@ namespace BlazeEngine
 		glGenBuffers(1, &meshVBOs[BUFFER_INDEXES]);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshVBOs[BUFFER_INDEXES]);
 
+
 		// Position:
 		glEnableVertexAttribArray(VERTEX_POSITION); // Indicate that the vertex attribute at index 0 is being used
 		glVertexAttribPointer(VERTEX_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position)); // Define array of vertex attribute data: index, number of components (3 = 3 elements in vec3), type, should data be normalized?, stride, offset from start to 1st component
+
+		// Color buffer:
+		glEnableVertexAttribArray(VERTEX_COLOR);
+		glVertexAttribPointer(VERTEX_COLOR, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
+
 
 		// Normals:
 		glEnableVertexAttribArray(VERTEX_NORMAL);
@@ -49,13 +55,11 @@ namespace BlazeEngine
 		glEnableVertexAttribArray(VERTEX_BITANGENT);
 		glVertexAttribPointer(VERTEX_BITANGENT, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, bitangent));
 
-		// Color buffer:
-		glEnableVertexAttribArray(VERTEX_COLOR);
-		glVertexAttribPointer(VERTEX_COLOR, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
-
+		
 		// UV's:
-		glEnableVertexAttribArray(VERTEX_UV);
-		glVertexAttribPointer(VERTEX_UV, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+		glEnableVertexAttribArray(VERTEX_UV0);
+		glVertexAttribPointer(VERTEX_UV0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+		// TO DO: MAKE UV'S 4-CHANNEL, UPLOAD MULTIPLE SETS...
 
 
 		// Buffer data:
