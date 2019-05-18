@@ -105,30 +105,6 @@ namespace BlazeEngine
 			glAttachShader(shaderReference, shaders[i]); // Attach our shaders to the shader program
 		}
 
-		 //Associate our vertex attribute indexes with named variables:
-		glBindAttribLocation(shaderReference, VERTEX_POSITION,	"in_position");
-		glBindAttribLocation(shaderReference, VERTEX_COLOR,		"in_color");
-
-		glBindAttribLocation(shaderReference, VERTEX_NORMAL,	"in_normal");
-		glBindAttribLocation(shaderReference, VERTEX_TANGENT,	"in_tangent");
-		glBindAttribLocation(shaderReference, VERTEX_BITANGENT, "in_bitangent");
-		
-		glBindAttribLocation(shaderReference, VERTEX_UV0,		"in_uv0");
-		glBindAttribLocation(shaderReference, VERTEX_UV1,		"in_uv1");
-		glBindAttribLocation(shaderReference, VERTEX_UV2,		"in_uv2");
-		glBindAttribLocation(shaderReference, VERTEX_UV3,		"in_uv3");
-
-		//glBindAttribLocation(shaderReference, 4, "in_model");
-		//glBindAttribLocation(shaderReference, 5, "in_view");
-		//glBindAttribLocation(shaderReference, 6, "in_projection");
-		//glBindAttribLocation(shaderReference, 7, "in_mv");
-		//glBindAttribLocation(shaderReference, 8, "in_mvp");
-		//glBindAttribLocation(shaderReference, 9, "ambient");
-		//glBindAttribLocation(shaderReference, 10, "keyDirection");
-		//glBindAttribLocation(shaderReference, 11, "keyColor");
-		//glBindAttribLocation(shaderReference, 12, "keyIntensity");
-		
-
 		// Link our program object:
 		glLinkProgram(shaderReference);
 		if (!CheckShaderError(shaderReference, GL_LINK_STATUS, true))

@@ -428,7 +428,7 @@ namespace BlazeEngine
 			Shader* currentShader = sceneManager->GetMaterial(i)->GetShader();
 
 			RenderManager::BindShader(currentShader->ShaderReference());
-
+			
 			// Upload key light direction (world space) and color, and ambient light color:
 			currentShader->UploadUniform("ambient", &(ambient->r), UNIFORM_Vec3fv);
 			currentShader->UploadUniform("keyDirection", &(keyDir->x), UNIFORM_Vec3fv);

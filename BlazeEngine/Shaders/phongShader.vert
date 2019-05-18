@@ -1,6 +1,7 @@
 #version 430 core
+#define BlazeVertexShader
 #include "BlazeCommon.glsl"
-#include "BlazeVertexCommon.glsl"
+
 
 // Phong vertex shader
 void main()

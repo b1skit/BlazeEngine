@@ -1,6 +1,6 @@
 #version 430 core
+#define BlazeFragmentShader
 #include "BlazeCommon.glsl"
-#include "BlazeFragmentCommon.glsl"
 
 // Built-in input variables:
 // in vec4 gl_FragCoord; //  location of the fragment in window space. 

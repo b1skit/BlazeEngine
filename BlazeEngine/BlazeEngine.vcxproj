@@ -175,18 +175,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\BlazeCommon.glsl" />
-    <None Include="Shaders\BlazeFragmentCommon.glsl" />
     <None Include="Shaders\lambertShader.frag" />
     <None Include="Shaders\lambertShader.vert" />
     <None Include="Shaders\errorShader.frag" />
     <None Include="Shaders\errorShader.vert" />
     <None Include="Shaders\phongShader.frag" />
     <None Include="Shaders\phongShader.vert" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Shaders\BlazeVertexCommon.glsl">
-      <FileType>Document</FileType>
-    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

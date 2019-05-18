@@ -98,7 +98,7 @@ namespace BlazeEngine
 		VERTEX_UV2			= 7,
 		VERTEX_UV3			= 8,
 
-		VERTEX_NUM_ATTRIBUTES	// RESERVED: The total number of vertex attributes
+		VERTEX_ATTRIBUTES_COUNT	// RESERVED: The total number of vertex attributes
 	};
 
 

@@ -1,6 +1,8 @@
 #version 430 core
+#define BlazeVertexShader
 #include "BlazeCommon.glsl"
-#include "BlazeVertexCommon.glsl"
+
+#define BlazeVertexShader
 
 // Lambert vertex shader
 void main()
