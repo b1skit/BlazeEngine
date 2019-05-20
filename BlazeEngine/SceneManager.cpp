@@ -128,8 +128,7 @@ namespace BlazeEngine
 
 		if (currentScene)
 		{
-			// TO DO: Write a destructor/cleanup correctly when deleting a scene
-			LOG("DEBUG: WARNING: A scene already currently exists. Debug handling is to just delete it, but this is likely leaking memory!");
+			LOG("Unloading existing scene");
 			delete currentScene;
 		}
 		currentScene = new Scene();
@@ -621,12 +620,17 @@ namespace BlazeEngine
 		int numMeshes = scene->mNumMeshes;
 		LOG("Found " + to_string(numMeshes) + " scene meshes");
 
+		// Allocations:
 		if (currentScene->meshes != nullptr)
 		{
 			delete currentScene->meshes;
 		}
 		currentScene->meshes	= new Mesh*[numMeshes];
 		currentScene->numMeshes = numMeshes;
+		for (int i = 0; i < numMeshes; i++)
+		{
+			currentScene->meshes[i] = nullptr;
+		}
 		
 		currentScene->gameObjects.clear();
 		currentScene->gameObjects.reserve(numMeshes); // Assuming that every GameObject will have at least 1 mesh...

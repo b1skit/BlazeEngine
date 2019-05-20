@@ -73,9 +73,9 @@ namespace BlazeEngine
 		/*vector<Camera> sceneCameras;*/	// Various render cams
 
 		// Meshes and scene objects:
-		vector<GameObject*> gameObjects;
-		vector<Renderable*> renderables; // Pointers to statically allocated renderables held by GameObjects
-		//vector<Mesh> meshes;
+		vector<GameObject*> gameObjects;	// Pointers to dynamically allocated GameObjects
+		vector<Renderable*> renderables;	// Pointers to statically allocated renderables held by GameObjects
+
 		Mesh** meshes			= nullptr;
 		int numMeshes			= -1;
 
