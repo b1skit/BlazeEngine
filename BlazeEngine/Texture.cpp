@@ -12,15 +12,19 @@
 
 using std::to_string;
 
+#define ERROR_TEXTURE_NAME "RedErrorTexture"
+
 
 namespace BlazeEngine
 {
 	// Constructor:
-	Texture::Texture(int width, int height, bool doFill /* = true */, vec4 fillColor /* = (1.0, 0.0, 0.0, 1.0) */)
+	Texture::Texture(int width, int height, string texturePath, bool doFill /* = true */, vec4 fillColor /* = (1.0, 0.0, 0.0, 1.0) */)
 	{
 		this->width = width;
 		this->height = height;
 		this->numTexels = width * height;
+
+		this->texturePath = texturePath;
 
 		// Initialize the texture:
 		texels = new vec4[numTexels];
@@ -136,8 +140,7 @@ namespace BlazeEngine
 		{
 			LOG("Attempting to load " + to_string(width) + "x" + to_string(height) + " texture with " + to_string(numChannels) + " channels");
 
-			Texture* texture = new Texture(width, height, false);
-			texture->texturePath = texturePath;
+			Texture* texture = new Texture(width, height, texturePath, false);
 
 			// Read texture values:
 			unsigned char* currentElement = imageData;
@@ -186,8 +189,7 @@ namespace BlazeEngine
 		LOG_ERROR("Could not load texture at \"" + texturePath + "\", error: \"" + string(failResult) + ".\" Returning solid red color!");
 
 		width = height = 1;
-		Texture* texture = new Texture(width, height, true, vec4(1.0f, 0.0f, 0.0f, 1.0f));
-		texture->texturePath = "errorTexture";
+		Texture* texture = new Texture(width, height, ERROR_TEXTURE_NAME, true, vec4(1.0f, 0.0f, 0.0f, 1.0f));
 
 		return texture;
 	}

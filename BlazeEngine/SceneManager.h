@@ -40,17 +40,7 @@ namespace BlazeEngine
 
 		~Scene()
 		{
-			if (meshes != nullptr)
-			{
-				for (int i = 0; i < numMeshes; i++)
-				{
-					if (meshes[i] != nullptr)
-					{
-						delete meshes[i];
-					}
-				}
-				delete[] meshes;
-			}
+			ClearMeshes();
 
 			for (int i = 0; i < gameObjects.size(); i++)
 			{
@@ -67,6 +57,11 @@ namespace BlazeEngine
 			}
 		}
 
+		// Allocate an empty mesh array. Clears any existing mesh array
+		void InitMeshArray(int maxMeshes);
+		int AddMesh(Mesh* newMesh);
+		void ClearMeshes();
+		Mesh* GetMesh(int meshIndex);
 
 		// Cameras:
 		Camera* mainCamera		= nullptr;	// Main camera: Currently points towards player object cam
@@ -76,8 +71,7 @@ namespace BlazeEngine
 		vector<GameObject*> gameObjects;	// Pointers to dynamically allocated GameObjects
 		vector<Renderable*> renderables;	// Pointers to statically allocated renderables held by GameObjects
 
-		Mesh** meshes			= nullptr;
-		int numMeshes			= -1;
+		
 
 		// Scene Lights: A scene can have ???
 		/*vector<Light> forwardLights;*/
@@ -86,6 +80,11 @@ namespace BlazeEngine
 		vec3 ambientLight		= vec3(1.0f, 1.0f, 1.0f);
 
 		Light keyLight;
+
+	private:
+		Mesh** meshes = nullptr;
+		int maxMeshes = 0;
+		int meshCount = 0;
 	};
 
 
@@ -204,6 +203,7 @@ namespace BlazeEngine
 
 		// Recursive helper function: Finds nodes containing name as a substring
 		aiNode* FindNodeRecursiveHelper(aiNode* rootNode, string name);
+
 
 		// Import light data from loaded scene
 		void ImportLightsFromScene(aiScene const* scene);

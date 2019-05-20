@@ -60,7 +60,7 @@ namespace BlazeEngine
 
 		Shader* shader		= nullptr;				// Deallocated up in SceneManager.Shutdown()
 
-		Texture** textures = nullptr;				// Pointers to textures held (and deallocated) by the scene manager
+		Texture** textures	= nullptr;				// Pointers to textures held (and deallocated) by the scene manager
 
 		GLuint samplers[TEXTURE_COUNT];
 

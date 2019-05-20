@@ -17,10 +17,72 @@ using glm::pi;
 #include <string>
 #include <stdio.h>
 
+#define INVALID_TEXTURE_PATH "InvalidTexturePath"
 
 
 namespace BlazeEngine
 {
+	void Scene::InitMeshArray(int maxMeshes)
+	{
+		if (meshes != nullptr)
+		{
+			ClearMeshes();
+		}
+
+		meshCount = 0;
+		this->maxMeshes = maxMeshes;
+
+		meshes = new Mesh* [maxMeshes];
+		for (int i = 0; i < maxMeshes; i++)
+		{
+			meshes[i] = nullptr;
+		}
+	}
+	
+	int Scene::AddMesh(Mesh* newMesh)
+	{
+		if (meshCount < maxMeshes)
+		{
+			meshes[meshCount] = newMesh;
+			return meshCount++;
+		}
+		else
+		{
+			LOG_ERROR("meshCount > maxMeshes! Returning -1");
+			return -1;
+		}
+	}
+
+
+	void Scene::ClearMeshes()
+	{
+		if (meshes == nullptr)
+		{
+			return;
+		}
+		for (int i = 0; i < meshCount; i++)
+		{
+			if (meshes[i] != nullptr)
+			{
+				delete meshes[i];
+			}
+		}
+		delete[] meshes;
+	}
+
+	Mesh* Scene::GetMesh(int meshIndex)
+	{
+		if (meshIndex >= meshCount)
+		{
+			LOG_ERROR("Invalid mesh index received: " + to_string(meshIndex) + " > " + to_string(meshCount) + ". Returning nullptr");
+			return nullptr;
+		}
+
+		return meshes[meshIndex];
+	}
+
+
+
 	SceneManager::SceneManager() : EngineComponent("SceneManager")
 	{
 		stbi_set_flip_vertically_on_load(true);	// Set stb_image to flip the y-axis on loading to match OpenGL's style (So pixel (0,0) is in the bottom-left of the image)
@@ -489,9 +551,6 @@ namespace BlazeEngine
 						newMaterial->SetTexture(emissiveTexture, TEXTURE_RMAO);
 					}
 
-					// TO DO: If no texture is detected, attempt to load the hard-coded value instead and store it in one of the material's generic properties?
-
-
 					LOG("Importing value from material's cosine power slot");
 					if (ExtractPropertyFromAiMaterial(scene->mMaterials[currentMaterial], newMaterial->Property(MATERIAL_PROPERTY_0), AI_MATKEY_SHININESS))
 					{
@@ -515,7 +574,7 @@ namespace BlazeEngine
 					{
 						LOG("Shader is the error shader: Skipping attempt to upload any uniform values");
 					}
-				#endif
+				#endif				
 
 				// Add the material to our material list:
 				AddMaterial(newMaterial, false);
@@ -527,31 +586,46 @@ namespace BlazeEngine
 
 	Texture* BlazeEngine::SceneManager::ExtractLoadTextureFromAiMaterial(aiTextureType textureType, aiMaterial* material, string sceneName)
 	{
+		Texture* newTexture = nullptr;
+
 		int textureCount = material->GetTextureCount(textureType);
 		if (textureCount <= 0)
 		{
+			// Handle special case texture fallbacks:
 			if (textureType == aiTextureType_DIFFUSE)
 			{
 				aiColor4D color;
 				if (AI_SUCCESS == material->Get("$clr.diffuse", 0, 0, color))
 				{
-					LOG_WARNING("Received material does not have the requested texture. Creating a 1x1 texture using the diffuse color");
-					Texture* newTexture = new Texture(1, 1, true, vec4(color.r, color.g, color.b, color.a));
-					return newTexture;
+					string matTextureName = string(material->GetName().C_Str()) + "_DiffuseColor";
+
+					LOG_WARNING("Material has no diffuse texture. Creating a 1x1 texture using the diffuse color with a path " + matTextureName);
+					
+					newTexture = new Texture(1, 1, matTextureName, true, vec4(color.r, color.g, color.b, color.a));
 				}
+			}
+			else if (textureType == aiTextureType_NORMALS)
+			{
+				string flatNormalName = "DefaultFlatNormal"; // Use a generic name, so this texture will be shared
+
+				LOG_WARNING("Material has no normal texture. Creating a 1x1 texture for a [0,0,1] normal with a path " + flatNormalName);
+
+				newTexture = new Texture(1, 1, flatNormalName, true, vec4(0.5f, 0.5f, 1.0f, 1.0f));
 			}
 			else
 			{
-				LOG_WARNING("Received material does not have the requested texture");
+				LOG_WARNING("Received material does not have the requested texture. Returning nullptr!");
 				return nullptr;
 			}
+			
+			return newTexture;
 		}
+
 		if (textureCount > 1)
 		{
 			LOG_WARNING("Received material has " + to_string(textureCount) + " of the requested texture type... Only the first will be extracted");
 		}
 
-		Texture* newTexture = nullptr;
 		string sceneRoot = CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + sceneName + "\\";
 
 		aiString path;
@@ -574,7 +648,7 @@ namespace BlazeEngine
 
 		if (newTexture == nullptr)
 		{
-			newTexture = FindLoadTextureByPath("errorPath"); // TO DO: Make "errorPath" a global/static string, so it can be reused anywhere?
+			newTexture = FindLoadTextureByPath(INVALID_TEXTURE_PATH);
 		}
 		
 		return newTexture;
@@ -621,16 +695,7 @@ namespace BlazeEngine
 		LOG("Found " + to_string(numMeshes) + " scene meshes");
 
 		// Allocations:
-		if (currentScene->meshes != nullptr)
-		{
-			delete currentScene->meshes;
-		}
-		currentScene->meshes	= new Mesh*[numMeshes];
-		currentScene->numMeshes = numMeshes;
-		for (int i = 0; i < numMeshes; i++)
-		{
-			currentScene->meshes[i] = nullptr;
-		}
+		currentScene->InitMeshArray(numMeshes);
 		
 		currentScene->gameObjects.clear();
 		currentScene->gameObjects.reserve(numMeshes); // Assuming that every GameObject will have at least 1 mesh...
@@ -744,7 +809,7 @@ namespace BlazeEngine
 
 				Mesh* newMesh = new Mesh(meshName, vertices, numVerts, indices, numIndices, materialIndex);
 			
-				currentScene->meshes[currentMesh] = newMesh;				
+				int meshIndex = currentScene->AddMesh(newMesh);
 
 				GameObject* gameObject = FindCreateGameObjectParents(scene, currentNode->mParent);
 
@@ -759,7 +824,7 @@ namespace BlazeEngine
 					// Set the GameObject as the parent of the mesh:
 					newMesh->GetTransform().SetParent(gameObject->GetTransform());
 
-					gameObject->GetRenderable()->AddViewMeshAsChild(currentScene->meshes[currentMesh]);
+					gameObject->GetRenderable()->AddViewMeshAsChild(currentScene->GetMesh(meshIndex));
 
 					LOG_ERROR("Created a _GAMEOBJECT for mesh \"" + meshName + "\" that did not belong to a group! GameObjects should belong to groups in the source .FBX!");
 
@@ -771,10 +836,10 @@ namespace BlazeEngine
 				aiMatrix4x4 combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode->mParent);
 				combinedTransform = combinedTransform * currentNode->mTransformation; // Combine the parent and child transforms								
 
-				InitializeTransformValues(combinedTransform, &currentScene->meshes[currentMesh]->GetTransform());  // Copy to our Mesh transform
+				InitializeTransformValues(combinedTransform, &currentScene->GetMesh(meshIndex)->GetTransform());  // Copy to our Mesh transform
 
 				// Add the mesh to the GameObject's Renderable's viewMeshes:
-				gameObject->GetRenderable()->AddViewMeshAsChild(currentScene->meshes[currentMesh]);
+				gameObject->GetRenderable()->AddViewMeshAsChild(currentScene->GetMesh(meshIndex));
 			}
 			else
 			{

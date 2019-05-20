@@ -47,7 +47,7 @@
 		//#define DEBUG_SCENEMANAGER_TRANSFORM_LOGGING	// Enable logging of transformation hierarchy setup
 		#define DEBUG_SCENEMANAGER_MATERIAL_LOGGING		// Enable logging of material creation/setup
 		//#define DEBUG_SCENEMANAGER_SHADER_LOGGING		// Enable logging of shader creation/setup
-		//#define DEBUG_SCENEMANAGER_TEXTURE_LOGGING		// Enable logging of texture creation/setup
+		#define DEBUG_SCENEMANAGER_TEXTURE_LOGGING		// Enable logging of texture creation/setup
 	#endif
 
 	//#define DEBUG_LOG_RENDERMANAGER

@@ -14,7 +14,7 @@ namespace BlazeEngine
 	class Texture
 	{
 	public:
-		Texture(int width, int height, bool doFill = true, vec4 fillColor = vec4(1.0, 0.0, 0.0, 1.0));
+		Texture(int width, int height, string texturePath, bool doFill = true, vec4 fillColor = vec4(1.0, 0.0, 0.0, 1.0));
 		~Texture();
 
 		Texture& operator=(Texture const& rhs);
@@ -67,7 +67,7 @@ namespace BlazeEngine
 		vec4* texels = nullptr;
 		unsigned int numTexels;
 
-		string texturePath = "UnloadedTexture";
+		string texturePath		= "UnloadedTexture";
 
 		// Upload a texture to the GPU. Returns true if successful, false otherwise
 		bool Buffer();
