@@ -15,7 +15,6 @@ using glm::pi;
 
 #include <algorithm>
 #include <string>
-//#include <ctype.h>
 #include <stdio.h>
 
 
@@ -622,7 +621,15 @@ namespace BlazeEngine
 		int numMeshes = scene->mNumMeshes;
 		LOG("Found " + to_string(numMeshes) + " scene meshes");
 
-		currentScene->gameObjects.clear(); // TO DO: Reserve gameObjects based on numMeshes ???
+		if (currentScene->meshes != nullptr)
+		{
+			delete currentScene->meshes;
+		}
+		currentScene->meshes	= new Mesh*[numMeshes];
+		currentScene->numMeshes = numMeshes;
+		
+		currentScene->gameObjects.clear();
+		currentScene->gameObjects.reserve(numMeshes); // Assuming that every GameObject will have at least 1 mesh...
 
 		// Loop through each mesh in the scene graph:
 		for (int currentMesh = 0; currentMesh < numMeshes; currentMesh++)
@@ -731,10 +738,9 @@ namespace BlazeEngine
 					}
 				}
 
-				Mesh newMesh(meshName, vertices, numVerts, indices, numIndices, materialIndex);
-
-				currentScene->meshes.push_back(newMesh);
-				int meshIndex = (int)currentScene->meshes.size() - 1; // Store the index so we can pass the address				
+				Mesh* newMesh = new Mesh(meshName, vertices, numVerts, indices, numIndices, materialIndex);
+			
+				currentScene->meshes[currentMesh] = newMesh;				
 
 				GameObject* gameObject = FindCreateGameObjectParents(scene, currentNode->mParent);
 
@@ -747,9 +753,9 @@ namespace BlazeEngine
 					InitializeTransformValues(combinedTransform, gameObject->GetTransform());
 						
 					// Set the GameObject as the parent of the mesh:
-					newMesh.GetTransform().SetParent(gameObject->GetTransform());
+					newMesh->GetTransform().SetParent(gameObject->GetTransform());
 
-					gameObject->GetRenderable()->AddViewMeshAsChild(&(currentScene->meshes.at(meshIndex)));
+					gameObject->GetRenderable()->AddViewMeshAsChild(currentScene->meshes[currentMesh]);
 
 					LOG_ERROR("Created a _GAMEOBJECT for mesh \"" + meshName + "\" that did not belong to a group! GameObjects should belong to groups in the source .FBX!");
 
@@ -761,10 +767,10 @@ namespace BlazeEngine
 				aiMatrix4x4 combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode->mParent);
 				combinedTransform = combinedTransform * currentNode->mTransformation; // Combine the parent and child transforms								
 
-				InitializeTransformValues(combinedTransform, &currentScene->meshes.at(meshIndex).GetTransform());  // Copy to our Mesh transform
+				InitializeTransformValues(combinedTransform, &currentScene->meshes[currentMesh]->GetTransform());  // Copy to our Mesh transform
 
 				// Add the mesh to the GameObject's Renderable's viewMeshes:
-				gameObject->GetRenderable()->AddViewMeshAsChild(&(currentScene->meshes.at(meshIndex)));
+				gameObject->GetRenderable()->AddViewMeshAsChild(currentScene->meshes[currentMesh]);
 			}
 			else
 			{

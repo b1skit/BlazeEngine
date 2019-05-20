@@ -33,7 +33,6 @@ namespace BlazeEngine
 			// TODO: Set these with meaningful values...
 			gameObjects.reserve(100);
 			renderables.reserve(100);
-			meshes.reserve(100);
 
 			/*forwardLights.reserve(100);*/
 			/*deferredLights.reserve(100);*/
@@ -41,9 +40,16 @@ namespace BlazeEngine
 
 		~Scene()
 		{
-			for (int i = 0; i < (int)meshes.size(); i++)
+			if (meshes != nullptr)
 			{
-				meshes.at(i).DestroyMesh();
+				for (int i = 0; i < numMeshes; i++)
+				{
+					if (meshes[i] != nullptr)
+					{
+						delete meshes[i];
+					}
+				}
+				delete[] meshes;
 			}
 
 			for (int i = 0; i < gameObjects.size(); i++)
@@ -69,14 +75,15 @@ namespace BlazeEngine
 		// Meshes and scene objects:
 		vector<GameObject*> gameObjects;
 		vector<Renderable*> renderables; // Pointers to statically allocated renderables held by GameObjects
-		vector<Mesh> meshes;
+		//vector<Mesh> meshes;
+		Mesh** meshes			= nullptr;
+		int numMeshes			= -1;
 
 		// Scene Lights: A scene can have ???
 		/*vector<Light> forwardLights;*/
 		/*vector<Light> deferredLights;*/
 
 		vec3 ambientLight		= vec3(1.0f, 1.0f, 1.0f);
-		float ambientIntensity	= 1.0f;
 
 		Light keyLight;
 	};
