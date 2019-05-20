@@ -1,8 +1,6 @@
 #version 430 core
-#define BlazeVertexShader
+#define BLAZE_VERTEX_SHADER
 #include "BlazeCommon.glsl"
-
-#define BlazeVertexShader
 
 // Lambert vertex shader
 void main()
@@ -12,7 +10,7 @@ void main()
 
 	data.vertexColor = in_color * vec4(ambient, 1);
 
-	data.fragWorldNormal = (in_model * vec4(in_normal, 0.0f)).xyz;	// Normal -> World normal
+	data.vertexWorldNormal = (in_model * vec4(in_normal, 0.0f)).xyz;	// Normal -> World normal
 
 	data.uv0 = in_uv0;
 }

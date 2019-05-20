@@ -163,5 +163,8 @@
     <None Include="Shaders\BlazeCommon.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="Shaders\BlazeGlobals.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

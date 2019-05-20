@@ -182,6 +182,11 @@
     <None Include="Shaders\phongShader.frag" />
     <None Include="Shaders\phongShader.vert" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\BlazeGlobals.glsl">
+      <FileType>Document</FileType>
+    </None>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

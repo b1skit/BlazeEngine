@@ -24,7 +24,7 @@ namespace BlazeEngine
 {
 	SceneManager::SceneManager() : EngineComponent("SceneManager")
 	{
-		stbi_set_flip_vertically_on_load(true);	// Tell stb_image to flip the y-axis on loading (So pixel (0,0) is in the bottom-left of the image)
+		stbi_set_flip_vertically_on_load(true);	// Set stb_image to flip the y-axis on loading to match OpenGL's style (So pixel (0,0) is in the bottom-left of the image)
 	}
 
 
@@ -143,13 +143,13 @@ namespace BlazeEngine
 		Assimp::Importer importer;
 		aiScene const* scene = importer.ReadFile(fbxPath, 
 			aiProcess_ValidateDataStructure 
-			| aiProcess_CalcTangentSpace // TO DO: Test if this can be removed (for faster processing)?
+			| aiProcess_CalcTangentSpace
 			| aiProcess_Triangulate 
 			| aiProcess_JoinIdenticalVertices 
 			| aiProcess_SortByPType 
 			| aiProcess_GenUVCoords 
 			| aiProcess_TransformUVCoords
-		); // aiProcess_FlipUVs | aiProcess_GenNormals | aiProcess_OptimizeMeshes | aiProcess_RemoveRedundantMaterials
+		); // | aiProcess_OptimizeMeshes | aiProcess_RemoveRedundantMaterials
 
 		if (!scene)
 		{

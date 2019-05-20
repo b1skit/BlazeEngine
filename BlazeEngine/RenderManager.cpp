@@ -290,12 +290,14 @@ namespace BlazeEngine
 				BindMeshBuffers(currentMesh);
 
 				// Assemble model-specific matrices:
-				mat4 model	= currentMesh->GetTransform().Model();
-				mat4 mv		= view * model;
-				mat4 mvp	= CoreEngine::GetSceneManager()->MainCamera()->ViewProjection() * model;
+				mat4 model			= currentMesh->GetTransform().Model();
+				mat4 modelRotation	= currentMesh->GetTransform().ModelRotation();
+				mat4 mv				= view * model;
+				mat4 mvp			= CoreEngine::GetSceneManager()->MainCamera()->ViewProjection() * model;
 
 				// Upload mesh-specific matrices:
 				currentShader->UploadUniform("in_model", &model[0][0], UNIFORM_Matrix4fv);
+				currentShader->UploadUniform("in_modelRotation", &modelRotation[0][0], UNIFORM_Matrix4fv);
 				currentShader->UploadUniform("in_mv", &mv[0][0], UNIFORM_Matrix4fv);
 				currentShader->UploadUniform("in_mvp", &mvp[0][0], UNIFORM_Matrix4fv);
 

@@ -35,6 +35,9 @@ namespace BlazeEngine
 		// Get the model matrix, used to transform from local->world space
 		mat4 Model();
 
+		// Get the model rotation matrix (ie. for transforming normals from local -> world space)
+		mat4 ModelRotation();
+
 		//// Set the matrices used to compose the model matrix
 		//void SetModelMatrices(mat4 translation, mat4 scale, mat4 rotation);
 		

@@ -48,6 +48,10 @@ namespace BlazeEngine
 				glUniformMatrix4fv(uniformID, 1, GL_FALSE, value);	// Location, count, transpose?, value
 				break;
 
+			case UNIFORM_Matrix3fv:
+				glUniformMatrix3fv(uniformID, 1, GL_FALSE, value);
+				break;
+
 			case UNIFORM_Vec3fv:
 				glUniform3fv(uniformID, 1, value);					// Location, count, value
 				break;

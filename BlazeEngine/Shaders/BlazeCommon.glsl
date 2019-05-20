@@ -1,9 +1,10 @@
 // Blaze Engine Shader Common
-// Defines variables, structures, and functions common to all shaders
+// Defines variables and structures common to all shaders
 
 // Vertex shader specific properties:
 //-----------------------------------
-#if defined(BlazeVertexShader)
+
+#if defined(BLAZE_VERTEX_SHADER)
 	layout(location = 0) in vec3 in_position;
 	layout(location = 1) in vec4 in_color;
 
@@ -15,65 +16,60 @@
 	layout(location = 6) in vec4 in_uv1;
 	layout(location = 7) in vec4 in_uv2;
 	layout(location = 8) in vec4 in_uv3;
-
-	layout(location = 9) out struct VtoF
-	{
-		vec4 vertexColor;
-	
-		vec3 fragWorldNormal;
-		vec3 tangent;
-		vec3 bitangent;
-
-		vec4 uv0;
-		vec4 uv1;
-		vec4 uv2;
-		vec4 uv3;
-
-	//	vec3 worldPos;
-		vec3 viewPos;		// Camera/eye-space position
-	} data;
 #endif
 
 
 // Fragment shader specific properties:
 //-------------------------------------
-#if defined(BlazeFragmentShader)
-	layout(location = 9) in struct VtoF
+
+#if defined(BLAZE_FRAGMENT_SHADER)
+	out vec4 FragColor;
+#endif
+
+
+// Common shader properties:
+//--------------------------
+
+#if defined(BLAZE_VERTEX_SHADER)
+	layout(location = 9) out struct VtoF	// Vertex output
+#elif defined(BLAZE_FRAGMENT_SHADER)
+	layout(location = 9) in struct VtoF		// Fragment input
+#endif
 	{
 		vec4 vertexColor;
-	
-		vec3 fragWorldNormal;
-		vec3 tangent;
-		vec3 bitangent;
+
+		vec3 vertexWorldNormal;
 
 		vec4 uv0;
 		vec4 uv1;
 		vec4 uv2;
 		vec4 uv3;
 
-	//	vec3 worldPos;
-		vec3 viewPos;		// Camera/eye-space position
+		vec3 viewPos;			// Camera/eye-space position
+
+		mat3 TBN;				// Normal map change-of-basis matrix
 	} data;
 
-	out vec4 FragColor;
-#endif
 
-// Common shader properties:
-//--------------------------
 uniform vec3 ambient;
 
-uniform vec3 keyDirection;	// Normalized, world space, points towards light source
+uniform vec3 keyDirection;		// Normalized, world space, points towards light source
 uniform vec3 keyColor;
 
-uniform mat4 in_model;		// Local -> World
-uniform mat4 in_view;		// World -> View
-uniform mat4 in_projection; // View -> Projection
-uniform mat4 in_mv;			// View * Model
-uniform mat4 in_mvp;		// Projection * View * Model
+uniform mat4 in_model;			// Local -> World
+uniform mat4 in_modelRotation;	// Local -> World, rotations ONLY (i.e. For transforming normals)
+uniform mat4 in_view;			// World -> View
+uniform mat4 in_projection;		// View -> Projection
+uniform mat4 in_mv;				// View * Model
+uniform mat4 in_mvp;			// Projection * View * Model
 
-uniform sampler2D albedo;
-uniform sampler2D normal;
-uniform sampler2D RMAO;
+
+								// TEXTURE:								FBX MATERIAL SOURCE SLOT:
+								//---------								-------------------------
+uniform sampler2D albedo;		// Albedo (RGB) + transparency (A)		Diffuse/color
+uniform sampler2D normal;		// Tangent-space normals (RGB)			Bump
+//uniform sampler2D emissive;	// Emissive (RGB)						Incandescence
+uniform sampler2D RMAO;			// Roughness, Metalic, albedo			Specular
 
 // Generic material properties:
 uniform vec3 matProperty0; // .x == Phong cosine exponent

@@ -13,6 +13,7 @@ namespace BlazeEngine
 	enum UNIFORM_TYPE
 	{
 		UNIFORM_Matrix4fv,		// glUniformMatrix4fv
+		UNIFORM_Matrix3fv,		// glUniformMatrix3fv
 		UNIFORM_Vec3fv,			// glUniform3fv
 
 	};

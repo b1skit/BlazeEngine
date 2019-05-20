@@ -2,14 +2,8 @@
 #include "TimeManager.h"
 #include "InputManager.h"
 #include "CoreEngine.h"
-//#include "Camera.h"
 
 #include "gtc/constants.hpp"
-
-// DEBUG:
-#include <iostream>
-using std::cout;
-using std::to_string;
 
 
 namespace BlazeEngine

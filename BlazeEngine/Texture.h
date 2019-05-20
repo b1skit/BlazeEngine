@@ -14,7 +14,7 @@ namespace BlazeEngine
 	class Texture
 	{
 	public:
-		Texture(int width, int height, bool doFill = true, vec4 fillColor = vec4(1.0,0,0,1));
+		Texture(int width, int height, bool doFill = true, vec4 fillColor = vec4(1.0, 0.0, 0.0, 1.0));
 		~Texture();
 
 		Texture& operator=(Texture const& rhs);

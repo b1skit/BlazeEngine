@@ -16,7 +16,7 @@ using std::to_string;
 namespace BlazeEngine
 {
 	// Constructor:
-	Texture::Texture(int width, int height, bool doFill /* = true */, vec4 fillColor /* = (1.0, 0, 0, 1) */)
+	Texture::Texture(int width, int height, bool doFill /* = true */, vec4 fillColor /* = (1.0, 0.0, 0.0, 1.0) */)
 	{
 		this->width = width;
 		this->height = height;
@@ -78,7 +78,7 @@ namespace BlazeEngine
 			return texels[0];
 		}
 
-		return texels[(u * width) + v];
+		return texels[(v * height) + u];
 	}
 
 	void BlazeEngine::Texture::Fill(vec4 color, bool doBuffer /*= true*/)
@@ -161,8 +161,8 @@ namespace BlazeEngine
 					{
 						currentPixel.a = 1.0f;
 					}
-
-					texture->Texel(col, row) = currentPixel;						
+		
+					texture->Texel(col, row) = currentPixel;
 				}
 			}
 

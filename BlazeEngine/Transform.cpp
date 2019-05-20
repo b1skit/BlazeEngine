@@ -53,6 +53,11 @@ namespace BlazeEngine
 		return combinedModel;
 	}
 
+	mat4 Transform::ModelRotation()
+	{
+		return rotation;
+	}
+
 
 	void Transform::SetParent(Transform* parent)
 	{

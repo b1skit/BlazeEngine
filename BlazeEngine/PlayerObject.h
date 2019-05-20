@@ -36,10 +36,10 @@ namespace BlazeEngine
 		Camera* playerCam;
 
 		// Control configuration:
-		float movementSpeed = 0.01f;
+		float movementSpeed = 0.005f;
 
 		// Saved positions
-		vec3 savedPosition = vec3(0.0f, 0.0f, 0.0f);
+		vec3 savedPosition		= vec3(0.0f, 0.0f, 0.0f);
 		vec3 savedEulerRotation = vec3(0.0f, 0.0f, 0.0f);
 	};
 
