@@ -3,6 +3,10 @@
   "Id": "80c62e80-7437-4bb9-b7e0-693fa4c402a1",
   "Items": [
     {
+      "Id": "d744714d-2f7a-47c8-9089-80766a25a3d7",
+      "Command": "-scene Sponza"
+    },
+    {
       "Id": "5d4c1892-5043-4b55-9ab1-8b9782ffa5ad",
       "Command": "-scene stanfordObjects"
     },
