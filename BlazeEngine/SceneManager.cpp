@@ -707,6 +707,8 @@ namespace BlazeEngine
 		// Loop through each mesh in the scene graph:
 		for (int currentMesh = 0; currentMesh < numMeshes; currentMesh++)
 		{
+			string meshName = string(scene->mMeshes[currentMesh]->mName.C_Str());
+
 			// Check mesh is valid:
 			if (
 				scene->mMeshes[currentMesh]->HasPositions()
@@ -721,7 +723,7 @@ namespace BlazeEngine
 			}
 			else
 			{
-				LOG_WARNING("Mesh is missing the following properties:");
+				LOG_WARNING("Mesh \"" + meshName + "\" is missing the following properties:");
 				if (!scene->mMeshes[currentMesh]->HasPositions())				LOG_WARNING("\t - positions");
 				if (!scene->mMeshes[currentMesh]->HasFaces())					LOG_WARNING("\t - faces");
 				if (!scene->mMeshes[currentMesh]->HasNormals())					LOG_WARNING("\t - normals");
@@ -731,7 +733,6 @@ namespace BlazeEngine
 			}
 
 			// See if we can find the corresponding node in the scene graph:
-			string meshName = string(scene->mMeshes[currentMesh]->mName.C_Str());
 			aiNode* currentNode = scene->mRootNode->FindNode(scene->mMeshes[currentMesh]->mName);
 
 			if (currentNode)
