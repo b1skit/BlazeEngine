@@ -3,10 +3,12 @@
 #include "Shader.h"
 #include "Texture.h"
 
+#include <vector>
+
 #include "glm.hpp"
 
 using glm::vec3;
-
+using std::vector;
 
 namespace BlazeEngine
 {
@@ -51,6 +53,11 @@ namespace BlazeEngine
 
 		void SetTexture(Texture* texture, TEXTURE_TYPE textureIndex);
 
+		void AddShaderKeyword(string const& newKeyword)
+		{
+			shaderKeywords.emplace_back(newKeyword);
+		}
+
 		
 	protected:
 
@@ -65,6 +72,8 @@ namespace BlazeEngine
 		GLuint samplers[TEXTURE_COUNT];
 
 		vec3 properties[MATERIAL_PROPERTY_COUNT];	// Generic material properties
+
+		vector<string> shaderKeywords;
 	};
 }
 

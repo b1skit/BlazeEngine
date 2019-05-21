@@ -536,6 +536,10 @@ namespace BlazeEngine
 					{
 						newMaterial->SetTexture(normalTexture, TEXTURE_NORMAL);
 					}
+					else
+					{
+						newMaterial->AddShaderKeyword("NO_NORMAL_TEXTURE");
+					}
 
 					LOG("Importing emissive map texture (RGB) from material's incandescence slot");
 					Texture* emissiveTexture = ExtractLoadTextureFromAiMaterial(aiTextureType_EMISSIVE, scene->mMaterials[currentMaterial], sceneName);
