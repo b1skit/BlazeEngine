@@ -53,7 +53,7 @@ namespace BlazeEngine
 
 
 	private:
-		vec3 color			= vec3(1.0f, 1.0f, 1.0f);	// Intensity is factored into these values
+		vec3 color			= vec3(0.0f, 0.0f, 0.0f);	// Intensity is factored into these values
 		LIGHT_TYPE type		= LIGHT_DIRECTIONAL;
 
 		string lightName	= "unnamed_light";

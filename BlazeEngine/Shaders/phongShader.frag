@@ -12,7 +12,8 @@
 void main()
 {	
 	FragColor		= texture(albedo, data.uv0.xy);
-	float specColor = texture(RMAO, data.uv0.xy).r;
+
+	
 
 	vec3 texNormal	= ObjectNormalFromTexture(data.TBN, texture(normal, data.uv0.xy).rgb);
 	texNormal		= (in_modelRotation * vec4(texNormal, 0)).xyz;		// Object -> world space
@@ -24,16 +25,16 @@ void main()
 	float nDotL = max(0, dot(texNormal, keyDirection));
 	vec4 diffuseContribution = FragColor * vec4(nDotL * keyColor, 1);
 
-	// Specular:	
+	// Specular:
+	vec3 specColor	= keyColor * texture(RMAO, data.uv0.xy).r;
 	vec3 reflectDir = normalize(reflect(-keyDirection, texNormal));		// World-space reflection dir
 	reflectDir = normalize((in_view * vec4(reflectDir, 0))).xyz;		// World -> view space
-
+	
 	vec3 viewDir = normalize(data.viewPos.xyz);							// view-space fragment view dir
-
+	
 	float vDotR = max(0, dot(viewDir, reflectDir));
 
-	float specChannelVal = specColor * pow(vDotR, matProperty0.x);
-	vec4 specContribution = vec4(specChannelVal, specChannelVal, specChannelVal, 1); //DEBUG
+	vec4 specContribution = vec4(specColor, 1) * pow(vDotR, matProperty0.x);
 
 	// Final result:
 	FragColor = ambientContribution + diffuseContribution + specContribution;

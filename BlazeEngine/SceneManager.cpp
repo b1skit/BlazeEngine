@@ -540,6 +540,7 @@ namespace BlazeEngine
 					{
 						newMaterial->AddShaderKeyword("NO_NORMAL_TEXTURE");
 					}
+				
 
 					LOG("Importing emissive map texture (RGB) from material's incandescence slot");
 					Texture* emissiveTexture = ExtractLoadTextureFromAiMaterial(aiTextureType_EMISSIVE, scene->mMaterials[currentMaterial], sceneName);
@@ -610,11 +611,33 @@ namespace BlazeEngine
 			}
 			else if (textureType == aiTextureType_NORMALS)
 			{
-				string flatNormalName = "DefaultFlatNormal"; // Use a generic name, so this texture will be shared
+				newTexture = FindTextureByNameInAiMaterial("normal", material, sceneName); // Try and find any likely texture in the material
+				
+				if (newTexture == nullptr)
+				{
+					string flatNormalName = "DefaultFlatNormal"; // Use a generic name, so this texture will be shared
 
-				LOG_WARNING("Material has no normal texture. Creating a 1x1 texture for a [0,0,1] normal with a path " + flatNormalName);
+					LOG_WARNING("Material has no normal texture. Creating a 1x1 texture for a [0,0,1] normal with a path " + flatNormalName);
+					// TO DO: Replace this with shader multi-compiles. If no normal texture is found, use vertex normals instead
 
-				newTexture = new Texture(1, 1, flatNormalName, true, vec4(0.5f, 0.5f, 1.0f, 1.0f));
+					newTexture = new Texture(1, 1, flatNormalName, true, vec4(0.5f, 0.5f, 1.0f, 1.0f));
+				}				
+			}
+			else if (aiTextureType_EMISSIVE)
+			{
+				newTexture = FindTextureByNameInAiMaterial("emissive", material, sceneName);
+			}
+			else if (textureType == aiTextureType_SPECULAR)
+			{
+				newTexture = FindTextureByNameInAiMaterial("roughness", material, sceneName);
+				if (newTexture == nullptr)
+				{
+					newTexture = FindTextureByNameInAiMaterial("metallic", material, sceneName);
+					if (newTexture == nullptr)
+					{
+						newTexture = FindTextureByNameInAiMaterial("rmao", material, sceneName);
+					}
+				}
 			}
 			else
 			{
@@ -656,6 +679,35 @@ namespace BlazeEngine
 		}
 		
 		return newTexture;
+	}
+
+	Texture* SceneManager::FindTextureByNameInAiMaterial(string nameSubstring, aiMaterial* material, string sceneName)
+	{
+		std::transform(nameSubstring.begin(), nameSubstring.end(), nameSubstring.begin(), ::tolower);
+
+		for (int currentTextureType = 0; currentTextureType < AI_TEXTURE_TYPE_MAX; currentTextureType++)
+		{
+			aiString path;
+			material->GetTexture((aiTextureType)currentTextureType, 0, &path);
+			if (path.length > 0)
+			{
+				string pathString(path.C_Str());
+				std::transform(pathString.begin(), pathString.end(), pathString.begin(), ::tolower);
+
+				if (pathString.find(nameSubstring) != string::npos)
+				{
+					//pathString = string(path.C_Str());
+					LOG_WARNING("Texture not found in expected slot. Assigning texture containing \"" + nameSubstring + "\" as a fallback");
+
+					string sceneRoot = CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + sceneName + "\\";
+					string texturePath = sceneRoot + string(path.C_Str());
+					
+					return FindLoadTextureByPath(texturePath);					
+				}
+			}
+		}
+
+		return nullptr;
 	}
 
 	bool BlazeEngine::SceneManager::ExtractPropertyFromAiMaterial(aiMaterial* material, vec3& targetProperty, char const* AI_MATKEY_TYPE, int unused0 /*= 0*/, int unused1 /*= 0*/)
@@ -732,17 +784,16 @@ namespace BlazeEngine
 				if (!scene->mMeshes[currentMesh]->HasTangentsAndBitangents())	LOG_WARNING("\t - tangents & bitangents");
 			}
 
-			// See if we can find the corresponding node in the scene graph:
+			// Find the corresponding node in the scene graph:
 			aiNode* currentNode = scene->mRootNode->FindNode(scene->mMeshes[currentMesh]->mName);
-
 			if (currentNode)
 			{
 				// We've found a corresponding node in the scene graph. Create a mesh:
-				int numVerts = scene->mMeshes[currentMesh]->mNumVertices;
-				int numFaces = scene->mMeshes[currentMesh]->mNumFaces;
-				int numUVs = scene->mMeshes[currentMesh]->mNumUVComponents[0]; // Just look at the first UV channel for now...
-				int numUVChannels = scene->mMeshes[currentMesh]->GetNumUVChannels();
-				int materialIndex = scene->mMeshes[currentMesh]->mMaterialIndex;
+				int numVerts		= scene->mMeshes[currentMesh]->mNumVertices;
+				int numFaces		= scene->mMeshes[currentMesh]->mNumFaces;
+				int numUVs			= scene->mMeshes[currentMesh]->mNumUVComponents[0]; // Just look at the first UV channel for now...
+				int numUVChannels	= scene->mMeshes[currentMesh]->GetNumUVChannels();
+				int materialIndex	= scene->mMeshes[currentMesh]->mMaterialIndex;
 
 				#if defined(DEBUG_SCENEMANAGER_MESH_LOGGING)
 					LOG("\nMesh #" + to_string(currentMesh) + " \"" + meshName + "\": " + to_string(numVerts) + " verts, " + to_string(numFaces) + " faces, " + to_string(numUVChannels) + " UV channels, " + to_string(numUVs) + " UV components in channel 0, using material #" + to_string(materialIndex));
@@ -758,6 +809,8 @@ namespace BlazeEngine
 					vec4 color(0, 0, 0, 1);
 					vec4 uv(0, 0, 0, 0);
 
+					bool hasTangentsAndBitangents, hasNormal = false;
+
 					// Position:
 					if (scene->mMeshes[currentMesh]->HasPositions())
 					{
@@ -767,6 +820,7 @@ namespace BlazeEngine
 					// Normal:
 					if (scene->mMeshes[currentMesh]->HasFaces())
 					{
+						hasNormal = true;
 						normal = vec3(scene->mMeshes[currentMesh]->mNormals[currentVert].x, scene->mMeshes[currentMesh]->mNormals[currentVert].y, scene->mMeshes[currentMesh]->mNormals[currentVert].z);
 					}
 
@@ -782,10 +836,21 @@ namespace BlazeEngine
 						uv = vec4(scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].x, scene->mMeshes[currentMesh]->mTextureCoords[0][currentVert].y, 0, 0);
 					}
 
+					// Tangents/Bitangents:
 					if (scene->mMeshes[currentMesh]->HasTangentsAndBitangents())
 					{
+						hasTangentsAndBitangents = true;
 						tangent = vec3(scene->mMeshes[currentMesh]->mTangents[currentVert].x, scene->mMeshes[currentMesh]->mTangents[currentVert].y, scene->mMeshes[currentMesh]->mTangents[currentVert].z);
 						bitangent = vec3(scene->mMeshes[currentMesh]->mBitangents[currentVert].x, scene->mMeshes[currentMesh]->mBitangents[currentVert].y, scene->mMeshes[currentMesh]->mBitangents[currentVert].z);
+					}
+
+					// Handle incorrect tangents/bitangents due to flipped UV's:
+					if (hasNormal && hasTangentsAndBitangents)
+					{
+						if (glm::dot(glm::cross(tangent, bitangent), normal) < 0)
+						{
+							tangent *= -1;
+						}
 					}
 
 					// Assemble the vertex:

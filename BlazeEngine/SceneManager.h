@@ -77,7 +77,7 @@ namespace BlazeEngine
 		/*vector<Light> forwardLights;*/
 		/*vector<Light> deferredLights;*/
 
-		vec3 ambientLight		= vec3(1.0f, 1.0f, 1.0f);
+		vec3 ambientLight		= vec3(0.0f, 0.0f, 0.0f);
 
 		Light keyLight;
 
@@ -114,17 +114,16 @@ namespace BlazeEngine
 		// sceneName == the root folder name within the ./Scenes/ directory. Must contain an .fbx file with the same name.
 		void LoadScene(string sceneName);
 
-		inline unsigned int NumMaterials()										{ return currentMaterialCount; }
-		inline Material* GetMaterial(unsigned int materialIndex)				{ return materials[materialIndex]; }
+		inline unsigned int NumMaterials()								{ return currentMaterialCount; }
+		inline Material*	GetMaterial(unsigned int materialIndex)		{ return materials[materialIndex]; }
+		Material*			GetMaterial(string materialName);
 		
-		Material* GetMaterial(string materialName);
-		
-		inline vector<Mesh*> const* GetRenderMeshes(unsigned int materialIndex) { return &materialMeshLists.at(materialIndex); } // TO DO: BOunds checking?
+		inline vector<Mesh*> const*		GetRenderMeshes(unsigned int materialIndex) { return &materialMeshLists.at(materialIndex); } // TO DO: BOunds checking?
 
-		inline vector<Renderable*>* GetRenderables()							{ return &currentScene->renderables;	}
+		inline vector<Renderable*>*		GetRenderables()							{ return &currentScene->renderables;	}
 
-		inline vec3 const& GetAmbient()											{ return currentScene->ambientLight; }
-		inline Light& GetKeyLight()												{ return currentScene->keyLight; }
+		inline vec3 const&	GetAmbient()							{ return currentScene->ambientLight; }
+		inline Light&		GetKeyLight()							{ return currentScene->keyLight; }
 		/*inline vector<Light> const& GetForwardLights() { return forwardLights; }*/
 		
 		inline Camera* MainCamera()												{ return currentScene->mainCamera; }
@@ -145,10 +144,10 @@ namespace BlazeEngine
 
 		// Material management:
 		//---------------------
-		const unsigned int MAX_MATERIALS	= 100; // TO DO: Replace this with something configurable/dynamic?
-		unsigned int currentMaterialCount	= 0;
-		Material** materials				= nullptr;
-
+		Material**			materials				= nullptr;
+		const unsigned int	MAX_MATERIALS			= 100; // TO DO: Replace this with something configurable/dynamic?
+		unsigned int		currentMaterialCount	= 0;
+		
 		// Finds an existing material, or creates one using the default shader if none exists
 		int GetMaterialIndex(string materialName);
 
@@ -166,9 +165,9 @@ namespace BlazeEngine
 
 		// Texture management:
 		//--------------------
-		const unsigned int MAX_TEXTURES		= 100; // TO DO: Replace this with something configurable/dynamic?
-		Texture** textures					= nullptr;
-		unsigned int currentTextureCount	= 0;
+		Texture** textures = nullptr;
+		const unsigned int	MAX_TEXTURES		= 100; // TO DO: Replace this with something configurable/dynamic?
+		unsigned int		currentTextureCount	= 0;
 		
 		// Find if a texture if it exists, or try and load it if it doesn't. Returns nullptr if file can't be loaded
 		Texture* FindLoadTextureByPath(string texturePath);
@@ -182,6 +181,7 @@ namespace BlazeEngine
 		
 		// Assimp scene texture import helper:
 		Texture* ExtractLoadTextureFromAiMaterial(aiTextureType textureType, aiMaterial* material, string sceneName);
+		Texture* FindTextureByNameInAiMaterial(string nameSubstring, aiMaterial* material, string sceneName);
 
 		// Assimp scene material property helper:
 		bool ExtractPropertyFromAiMaterial(aiMaterial* material, vec3& targetProperty, char const* AI_MATKEY_TYPE, int unused0 = 0, int unused1 = 0);
