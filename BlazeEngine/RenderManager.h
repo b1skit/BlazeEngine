@@ -24,6 +24,7 @@ namespace BlazeEngine
 	class Material;
 	class Mesh;
 	class Texture;
+	class Camera;
 
 
 	enum SHADER // Guaranteed shaders
@@ -53,7 +54,7 @@ namespace BlazeEngine
 		void Update();
 
 		// Member functions:
-		void Render(double alpha);
+		void Render(Camera* renderCam);
 
 		// Upload static properties to shaders
 		void InitializeShaders();

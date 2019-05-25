@@ -104,7 +104,7 @@ namespace BlazeEngine
 				elapsed -= FIXED_TIMESTEP;
 			}
 			
-			BlazeRenderManager->Render(elapsed/FIXED_TIMESTEP); // Render precise current position
+			BlazeRenderManager->Update();
 		}
 	}
 

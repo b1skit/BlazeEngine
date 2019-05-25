@@ -26,7 +26,7 @@ namespace BlazeEngine
 	{
 		if (meshes != nullptr)
 		{
-			ClearMeshes();
+			DeleteMeshes();
 		}
 
 		meshCount = 0;
@@ -39,6 +39,7 @@ namespace BlazeEngine
 		}
 	}
 	
+
 	int Scene::AddMesh(Mesh* newMesh)
 	{
 		if (meshCount < maxMeshes)
@@ -54,7 +55,7 @@ namespace BlazeEngine
 	}
 
 
-	void Scene::ClearMeshes()
+	void Scene::DeleteMeshes()
 	{
 		if (meshes == nullptr)
 		{
@@ -70,6 +71,7 @@ namespace BlazeEngine
 		delete[] meshes;
 	}
 
+
 	Mesh* Scene::GetMesh(int meshIndex)
 	{
 		if (meshIndex >= meshCount)
@@ -79,6 +81,53 @@ namespace BlazeEngine
 		}
 
 		return meshes[meshIndex];
+	}
+
+
+	void Scene::AddCamera(CAMERA_TYPE cameraType, Camera* newCamera)
+	{
+		for (int i = 0; i < cameraTypeLengths[cameraType]; i++)
+		{
+			if (sceneCameras[cameraType][i] == nullptr)
+			{
+				sceneCameras[cameraType][i] = newCamera;
+				currentCameraTypeCounts[cameraType]++;
+				return;
+			}
+		}
+		LOG_ERROR("Failed to add new camera!");
+	}
+
+
+	Camera** Scene::GetCameras(CAMERA_TYPE cameraType, int& camCount)
+	{ 
+		camCount = currentCameraTypeCounts[cameraType]; 
+		return sceneCameras[cameraType]; 
+	}
+
+
+	void Scene::ClearCameras()
+	{
+		if (sceneCameras == nullptr)
+		{
+			return;
+		}
+
+		for (int cameraType = 0; cameraType < CAMERA_TYPE_COUNT; cameraType++)
+		{
+			if (sceneCameras[cameraType] != nullptr)
+			{
+				for (int currentCamera = 0; currentCamera < cameraTypeLengths[cameraType]; currentCamera++)
+				{
+					if (sceneCameras[cameraType][currentCamera] != nullptr)
+					{
+						delete sceneCameras[cameraType][currentCamera];
+						sceneCameras[cameraType][currentCamera] = nullptr;
+					}
+				}
+				currentCameraTypeCounts[cameraType] = 0;
+			}
+		}
 	}
 
 
@@ -290,7 +339,7 @@ namespace BlazeEngine
 
 		// Create a PlayerObject:
 		//-----------------------
-		PlayerObject* player = new PlayerObject(currentScene->mainCamera);
+		PlayerObject* player = new PlayerObject(currentScene->GetMainCamera());
 		currentScene->gameObjects.push_back(player);	
 		LOG("Created PlayerObject using mainCamera");
 	}
@@ -809,7 +858,7 @@ namespace BlazeEngine
 					vec4 color(0, 0, 0, 1);
 					vec4 uv(0, 0, 0, 0);
 
-					bool hasTangentsAndBitangents, hasNormal = false;
+					bool hasTangentsAndBitangents = false, hasNormal = false;
 
 					// Position:
 					if (scene->mMeshes[currentMesh]->HasPositions())
@@ -1302,18 +1351,13 @@ namespace BlazeEngine
 
 	void BlazeEngine::SceneManager::ImportCamerasFromScene(aiScene const* scene /*= nullptr*/)
 	{
-		// Delete the existing camera, if necessary:
-		if (currentScene->mainCamera != nullptr)
-		{
-			delete currentScene->mainCamera;
-			currentScene->mainCamera = nullptr;
-		}
+		currentScene->ClearCameras();
 
 		if (scene == nullptr) // Signal to create a default camera at the origin
 		{
 			LOG("Creating a default camera");
-			currentScene->mainCamera = new Camera("defaultCamera");
-			currentScene->mainCamera->Initialize(
+			currentScene->AddCamera(CAMERA_TYPE_MAIN, new Camera("defaultCamera"));
+			currentScene->GetMainCamera()->Initialize(
 				vec3(0, 0, 0),
 				(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
 				CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultFieldOfView,
@@ -1325,7 +1369,7 @@ namespace BlazeEngine
 
 		// If we made it this far, we've imported a camera from the scene:
 		string cameraName = string(scene->mCameras[0]->mName.C_Str());
-		currentScene->mainCamera = new Camera(cameraName); // TO DO: Should main camera ALWAYS be camera 0 ??
+		currentScene->AddCamera(CAMERA_TYPE_MAIN, new Camera(cameraName));
 
 		int numCameras = scene->mNumCameras;
 		if (numCameras > 1)
@@ -1341,7 +1385,7 @@ namespace BlazeEngine
 		// Currently, camera transforms seem to be broken in Assimp...
 		// DEBUG: Set a default camera at the origin, for now
 		LOG_ERROR("Assimp camera import is broken... Creating a default camera at the origin");
-		currentScene->mainCamera->Initialize
+		currentScene->GetMainCamera()->Initialize
 		(
 			vec3(0, 0, 0),
 			(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
@@ -1403,8 +1447,8 @@ namespace BlazeEngine
 		//	InitializeTransformValues(camTransform, currentScene->mainCamera->GetTransform());
 		//}
 
-		vec3 camPosition = currentScene->mainCamera->GetTransform()->Position();
-		vec3 camRotation = currentScene->mainCamera->GetTransform()->GetEulerRotation();
+		vec3 camPosition = currentScene->GetMainCamera()->GetTransform()->Position();
+		vec3 camRotation = currentScene->GetMainCamera()->GetTransform()->GetEulerRotation();
 
 		#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING)
 			LOG("Camera is located at " + to_string(camPosition.x) + " " + to_string(camPosition.y) + " " + to_string(camPosition.z) + ". Near = " + to_string(scene->mCameras[0]->mClipPlaneNear) + ", " + "far = " + to_string(scene->mCameras[0]->mClipPlaneFar) );
@@ -1414,7 +1458,7 @@ namespace BlazeEngine
 
 		LOG_ERROR("Camera field of view is NOT currently loaded from the source file. A hard-coded default value is used for now...");
 
-		currentScene->mainCamera->Initialize(
+		currentScene->GetMainCamera()->Initialize(
 			(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
 			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultFieldOfView, //scene->mCameras[0]->mHorizontalFOV; // TO DO: Implement this (Needs to be converted to a vertical FOV???)
 			scene->mCameras[0]->mClipPlaneNear,

@@ -16,6 +16,12 @@
 
 using std::vector;
 
+// Initial allocation amounts
+#define GAMEOBJECTS_RESERVATION_AMT			100
+#define RENDERABLES_RESERVATION_AMT			100
+
+#define CAMERA_TYPE_SHADOW_ARRAY_SIZE			10
+#define CAMERA_TYPE_REFLECTION_ARRAY_SIZE		10
 
 
 namespace BlazeEngine
@@ -24,6 +30,14 @@ namespace BlazeEngine
 	class Camera;
 	class aiTexture;
 
+	enum CAMERA_TYPE // Indexes for scene cameras used for different rendering roles. Rendered in the order defined here.
+	{
+		CAMERA_TYPE_SHADOW,
+		CAMERA_TYPE_REFLECTION,
+		CAMERA_TYPE_MAIN,			// The primary scene camera
+
+		CAMERA_TYPE_COUNT			// Reserved: The number of camera types
+	};
 
 	// Container for all scene data:
 	struct Scene
@@ -31,8 +45,33 @@ namespace BlazeEngine
 		Scene()
 		{
 			// TODO: Set these with meaningful values...
-			gameObjects.reserve(100);
-			renderables.reserve(100);
+			gameObjects.reserve(GAMEOBJECTS_RESERVATION_AMT);
+			renderables.reserve(RENDERABLES_RESERVATION_AMT);
+
+			sceneCameras = new Camera**[CAMERA_TYPE_COUNT];
+
+			sceneCameras[CAMERA_TYPE_SHADOW]			= new Camera*[CAMERA_TYPE_SHADOW_ARRAY_SIZE];
+			cameraTypeLengths[CAMERA_TYPE_SHADOW]		= CAMERA_TYPE_SHADOW_ARRAY_SIZE;
+			for (int i = 0; i < CAMERA_TYPE_SHADOW_ARRAY_SIZE; i++)
+			{
+				sceneCameras[CAMERA_TYPE_SHADOW][i]		= nullptr;
+			}
+
+			sceneCameras[CAMERA_TYPE_REFLECTION]		= new Camera*[CAMERA_TYPE_REFLECTION_ARRAY_SIZE];
+			cameraTypeLengths[CAMERA_TYPE_REFLECTION]	= CAMERA_TYPE_REFLECTION_ARRAY_SIZE;
+			for (int i = 0; i < CAMERA_TYPE_REFLECTION_ARRAY_SIZE; i++)
+			{
+				sceneCameras[CAMERA_TYPE_REFLECTION][i] = nullptr;
+			}
+
+			sceneCameras[CAMERA_TYPE_MAIN]				= new Camera * [1];
+			sceneCameras[CAMERA_TYPE_MAIN][0]			= nullptr;
+			cameraTypeLengths[CAMERA_TYPE_MAIN]			= 1;
+
+			for (int i = 0; i < CAMERA_TYPE_COUNT; i++)
+			{
+				currentCameraTypeCounts[i] = 0;
+			}
 
 			/*forwardLights.reserve(100);*/
 			/*deferredLights.reserve(100);*/
@@ -40,7 +79,7 @@ namespace BlazeEngine
 
 		~Scene()
 		{
-			ClearMeshes();
+			DeleteMeshes();
 
 			for (int i = 0; i < gameObjects.size(); i++)
 			{
@@ -51,21 +90,43 @@ namespace BlazeEngine
 				}
 			}
 
-			if (mainCamera != nullptr)
+			if (sceneCameras != nullptr)
 			{
-				delete mainCamera;
+				for (int cameraType = 0; cameraType < CAMERA_TYPE_COUNT; cameraType++)
+				{
+					if (sceneCameras[cameraType] != nullptr)
+					{
+						for (int currentCamera = 0; currentCamera < cameraTypeLengths[cameraType]; currentCamera++)
+						{
+							if (sceneCameras[cameraType][currentCamera] != nullptr)
+							{
+								delete sceneCameras[cameraType][currentCamera];
+								sceneCameras[cameraType][currentCamera] = nullptr;
+							}
+						}
+						delete[] sceneCameras[cameraType];
+						sceneCameras[cameraType]			= nullptr;
+					}
+				}
+				delete[] sceneCameras;
+				sceneCameras = nullptr;
 			}
 		}
 
 		// Allocate an empty mesh array. Clears any existing mesh array
-		void InitMeshArray(int maxMeshes);
-		int AddMesh(Mesh* newMesh);
-		void ClearMeshes();
-		Mesh* GetMesh(int meshIndex);
+		void	InitMeshArray(int maxMeshes);
+
+		int		AddMesh(Mesh* newMesh);
+		void	DeleteMeshes();
+		Mesh*	GetMesh(int meshIndex);
 
 		// Cameras:
-		Camera* mainCamera		= nullptr;	// Main camera: Currently points towards player object cam
-		/*vector<Camera> sceneCameras;*/	// Various render cams
+		void		AddCamera(CAMERA_TYPE cameraType, Camera* newCamera);
+		Camera*		GetMainCamera() { return sceneCameras[CAMERA_TYPE_MAIN][0]; }
+		Camera**	GetCameras(CAMERA_TYPE cameraType, int& camCount);
+		
+		// Clears the scene's cameras (without deallocating the containing arrays)
+		void		ClearCameras();
 
 		// Meshes and scene objects:
 		vector<GameObject*> gameObjects;	// Pointers to dynamically allocated GameObjects
@@ -85,6 +146,10 @@ namespace BlazeEngine
 		Mesh** meshes = nullptr;
 		int maxMeshes = 0;
 		int meshCount = 0;
+
+		Camera*** sceneCameras = nullptr;
+		int cameraTypeLengths[CAMERA_TYPE_COUNT];	// How many CAMERA_TYPE elements in each row of the sceneCameras array
+		int currentCameraTypeCounts[CAMERA_TYPE_COUNT];
 	};
 
 
@@ -97,7 +162,7 @@ namespace BlazeEngine
 
 		// Singleton functionality:
 		static SceneManager& Instance();
-		SceneManager(SceneManager const&) = delete; // Disallow copying of our Singleton
+		SceneManager(SceneManager const&)	= delete; // Disallow copying of our Singleton
 		void operator=(SceneManager const&) = delete;
 
 		// EngineComponent interface:
@@ -114,19 +179,21 @@ namespace BlazeEngine
 		// sceneName == the root folder name within the ./Scenes/ directory. Must contain an .fbx file with the same name.
 		void LoadScene(string sceneName);
 
-		inline unsigned int NumMaterials()								{ return currentMaterialCount; }
-		inline Material*	GetMaterial(unsigned int materialIndex)		{ return materials[materialIndex]; }
+		inline unsigned int NumMaterials()											{ return currentMaterialCount; }
+		inline Material*	GetMaterial(unsigned int materialIndex)					{ return materials[materialIndex]; }
 		Material*			GetMaterial(string materialName);
 		
-		inline vector<Mesh*> const*		GetRenderMeshes(unsigned int materialIndex) { return &materialMeshLists.at(materialIndex); } // TO DO: BOunds checking?
+		inline vector<Mesh*> const*		GetRenderMeshes(unsigned int materialIndex) { return &materialMeshLists.at(materialIndex); } // TODO: BOunds checking?
 
 		inline vector<Renderable*>*		GetRenderables()							{ return &currentScene->renderables;	}
 
-		inline vec3 const&	GetAmbient()							{ return currentScene->ambientLight; }
-		inline Light&		GetKeyLight()							{ return currentScene->keyLight; }
+		inline vec3 const&	GetAmbient()											{ return currentScene->ambientLight; }
+		inline Light&		GetKeyLight()											{ return currentScene->keyLight; }
 		/*inline vector<Light> const& GetForwardLights() { return forwardLights; }*/
 		
-		inline Camera* MainCamera()												{ return currentScene->mainCamera; }
+		inline Camera** GetCameras(CAMERA_TYPE cameraType, int& camCount)			{ return currentScene->GetCameras(cameraType, camCount); }
+		inline Camera*  GetMainCamera()												{ return currentScene->GetMainCamera(); }
+
 
 	protected:
 

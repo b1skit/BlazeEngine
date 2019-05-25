@@ -247,10 +247,19 @@ namespace BlazeEngine
 
 	void RenderManager::Update()
 	{
+		for (int i = 0; i < CAMERA_TYPE_COUNT; i++)
+		{
+			int numCams = 0;
+			Camera** cameras = CoreEngine::GetSceneManager()->GetCameras((CAMERA_TYPE)i, numCams);
+			for (int currentCam = 0; currentCam < numCams; currentCam++)
+			{
+				Render(cameras[currentCam]);
+			}
+		}
 	}
 
 
-	void RenderManager::Render(double alpha)
+	void RenderManager::Render(Camera* renderCam)
 	{
 		// Clear the color and depth buffers
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -260,7 +269,7 @@ namespace BlazeEngine
 
 
 		// Assemble common (model independent) matrices:
-		mat4 view		= CoreEngine::GetSceneManager()->MainCamera()->View();
+		mat4 view = renderCam->View();
 		
 		// Loop by material (+shader), mesh:
 		unsigned int numMaterials = CoreEngine::GetSceneManager()->NumMaterials();
@@ -293,7 +302,7 @@ namespace BlazeEngine
 				mat4 model			= currentMesh->GetTransform().Model();
 				mat4 modelRotation	= currentMesh->GetTransform().ModelRotation();
 				mat4 mv				= view * model;
-				mat4 mvp			= CoreEngine::GetSceneManager()->MainCamera()->ViewProjection() * model;
+				mat4 mvp			= renderCam->ViewProjection() * model;
 
 				// Upload mesh-specific matrices:
 				currentShader->UploadUniform("in_model", &model[0][0], UNIFORM_Matrix4fv);
@@ -436,7 +445,7 @@ namespace BlazeEngine
 			currentShader->UploadUniform("keyDirection", &(keyDir->x), UNIFORM_Vec3fv);
 			currentShader->UploadUniform("keyColor", &(keyCol->r), UNIFORM_Vec3fv);
 
-			mat4 projection = sceneManager->MainCamera()->Projection();
+			mat4 projection = sceneManager->GetMainCamera()->Projection();
 			currentShader->UploadUniform("in_projection", &projection[0][0], UNIFORM_Matrix4fv);
 
 			RenderManager::BindShader(0);
