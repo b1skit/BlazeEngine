@@ -1,5 +1,6 @@
 #include "Mesh.h"
 
+
 namespace BlazeEngine
 {
 	// Vertex functions:
@@ -18,7 +19,8 @@ namespace BlazeEngine
 
 		this->materialIndex = materialIndex;
 
-		//this->transform = nullptr; // Must be set via SetTransform();
+		// Once we've stored our properties locally, we can compute the bounds:
+		ComputeBounds();
 
 
 		// Create and bind our Vertex Array Object:
@@ -86,7 +88,7 @@ namespace BlazeEngine
 	void Mesh::DestroyMesh()
 	{
 		#if defined(DEBUG_LOG_OUTPUT)
-			name = name + "_DELETED"; // Safety...
+			meshName = meshName + "_DELETED"; // Safety...
 		#endif
 
 		if (vertices)
@@ -229,6 +231,38 @@ namespace BlazeEngine
 		return Mesh("cube", cubeVerts, numVerts, cubeIndices, numIndices);
 	}
 
+	void Mesh::ComputeBounds()
+	{
+		for (unsigned int i = 0; i < numVerts; i++)
+		{
+			if (vertices[i].position.x < bounds.xMin)
+			{
+				bounds.xMin = vertices[i].position.x;
+			}
+			if (vertices[i].position.x > bounds.xMax)
+			{
+				bounds.xMax = vertices[i].position.x;
+			}
+
+			if (vertices[i].position.y < bounds.yMin)
+			{
+				bounds.yMin = vertices[i].position.y;
+			}
+			if (vertices[i].position.y > bounds.yMax)
+			{
+				bounds.yMax = vertices[i].position.y;
+			}
+
+			if (vertices[i].position.z < bounds.zMin)
+			{
+				bounds.zMin = vertices[i].position.z;
+			}
+			if (vertices[i].position.z > bounds.zMax)
+			{
+				bounds.zMax = vertices[i].position.z;
+			}
+		}
+	}
 }
 
 

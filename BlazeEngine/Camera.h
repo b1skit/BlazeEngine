@@ -57,8 +57,8 @@ namespace BlazeEngine
 		mat4 viewProjection;
 
 		bool isOrthographic		= false;
-		int orthoHalfWidth		= 5;
-		int orthoHalfHeight		= 5;
+		float orthoHalfWidth	= 5;
+		float orthoHalfHeight	= 5;
 		
 		/*bool isDirty = false;*/
 	};

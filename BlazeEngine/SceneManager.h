@@ -29,6 +29,8 @@ namespace BlazeEngine
 	// Pre-declarations:
 	class Camera;
 	class aiTexture;
+	struct Bounds;
+
 
 	enum CAMERA_TYPE // Indexes for scene cameras used for different rendering roles. Rendered in the order defined here.
 	{
@@ -39,13 +41,15 @@ namespace BlazeEngine
 		CAMERA_TYPE_COUNT			// Reserved: The number of camera types
 	};
 
+
 	// Container for all scene data:
 	struct Scene
 	{
 		Scene();
-
 		~Scene();
 
+		// Meshes:
+		//--------
 		// Allocate an empty mesh array. Clears any existing mesh array
 		void	InitMeshArray(int maxMeshes);
 
@@ -54,6 +58,7 @@ namespace BlazeEngine
 		Mesh*	GetMesh(int meshIndex);
 
 		// Cameras:
+		//---------
 		void		RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera);
 		Camera*		GetMainCamera() { return sceneCameras[CAMERA_TYPE_MAIN][0]; }
 		Camera**	GetCameras(CAMERA_TYPE cameraType, int& camCount);
@@ -61,25 +66,29 @@ namespace BlazeEngine
 		// Clears the scene's cameras (without deallocating the containing arrays)
 		void		ClearCameras();
 
-		// Meshes and scene objects:
+		// Scene object containers:
+		//-------------------------
 		vector<GameObject*> gameObjects;	// Pointers to dynamically allocated GameObjects
 		vector<Renderable*> renderables;	// Pointers to statically allocated renderables held by GameObjects
 
 		
-
+		// Lights:
+		//--------
 		// Scene Lights: A scene can have ???
 		/*vector<Light> forwardLights;*/
 		/*vector<Light> deferredLights;*/
 
-		vec3 ambientLight		= vec3(0.0f, 0.0f, 0.0f);
+		vec3	ambientLight		= vec3(0.0f, 0.0f, 0.0f);
+		Light	keyLight;
 
-		Light keyLight;
+		Bounds sceneBounds;
 
 	private:
 		Mesh** meshes = nullptr;
 		int maxMeshes = 0;
 		int meshCount = 0;
 
+		// TODO: Replace these with vector<vector<Camera*>> 
 		Camera*** sceneCameras = nullptr;
 		int cameraTypeLengths[CAMERA_TYPE_COUNT];	// How many CAMERA_TYPE elements in each row of the sceneCameras array
 		int currentCameraTypeCounts[CAMERA_TYPE_COUNT];

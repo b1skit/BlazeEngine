@@ -3,13 +3,14 @@
 #include "EventManager.h"
 #include "CoreEngine.h"
 #include "Camera.h"
+#include "Mesh.h"
 
 #include "glm.hpp"
 #include "gtc/constants.hpp"
 using glm::pi;
 
-#include "assimp/Importer.hpp"	// Importer interface
-#include "assimp/postprocess.h"	// Post processing flags
+#include "assimp/Importer.hpp"		// Importer interface
+#include "assimp/postprocess.h"		// Post processing flags
 
 #define STB_IMAGE_IMPLEMENTATION	// Only include this define ONCE in the project
 #include "stb_image.h"				// STB image loader
@@ -56,6 +57,7 @@ namespace BlazeEngine
 		/*forwardLights.reserve(100);*/
 		/*deferredLights.reserve(100);*/
 	}
+
 
 	Scene::~Scene()
 	{
@@ -116,6 +118,35 @@ namespace BlazeEngine
 	{
 		if (meshCount < maxMeshes)
 		{
+			// Update scene bounds to contain the new mesh:
+			if (newMesh->bounds.xMin < sceneBounds.xMin)
+			{
+				sceneBounds.xMin = newMesh->bounds.xMin;
+			}
+			if (newMesh->bounds.xMax > sceneBounds.xMax)
+			{
+				sceneBounds.xMax = newMesh->bounds.xMax;
+			}
+
+			if (newMesh->bounds.yMin < sceneBounds.yMin)
+			{
+				sceneBounds.yMin = newMesh->bounds.yMin;
+			}
+			if (newMesh->bounds.yMax > sceneBounds.yMax)
+			{
+				sceneBounds.yMax = newMesh->bounds.yMax;
+			}
+
+			if (newMesh->bounds.zMin < sceneBounds.zMin)
+			{
+				sceneBounds.zMin = newMesh->bounds.zMin;
+			}
+			if (newMesh->bounds.zMax > sceneBounds.zMax)
+			{
+				sceneBounds.zMax = newMesh->bounds.zMax;
+			}
+
+			// Add the mesh to our array:
 			meshes[meshCount] = newMesh;
 			return meshCount++;
 		}
@@ -210,6 +241,9 @@ namespace BlazeEngine
 	}
 
 
+	/***************************************************************************************************************************************
+	SCENE MANAGER
+	****************************************************************************************************************************************/
 
 	SceneManager::SceneManager() : EngineComponent("SceneManager")
 	{
@@ -929,7 +963,7 @@ namespace BlazeEngine
 
 				Vertex* vertices = new Vertex[numVerts];
 
-				// Fill the vertices array:
+				// Add each vertex to the vertices array:
 				for (int currentVert = 0; currentVert < numVerts; currentVert++)
 				{
 					// Default vertex values:

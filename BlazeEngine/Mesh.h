@@ -7,6 +7,7 @@
 
 #include <string>
 
+
 //using glm::vec2;
 using glm::vec3;
 using glm::vec4;
@@ -75,6 +76,20 @@ namespace BlazeEngine
 	};
 
 
+	// Bounds of a mesh, scene, etc
+	struct Bounds
+	{
+		float xMin = std::numeric_limits<float>::max();
+		float xMax = std::numeric_limits<float>::min();
+
+		float yMin = std::numeric_limits<float>::max();
+		float yMax = std::numeric_limits<float>::min();
+
+		float zMin = std::numeric_limits<float>::max();
+		float zMax = std::numeric_limits<float>::min();
+	};
+
+
 	enum VERTEX_BUFFER_OBJECT
 	{
 		BUFFER_VERTICES,
@@ -138,16 +153,18 @@ namespace BlazeEngine
 		// Create a simple cube mesh aligned to +/-1 on all axis'
 		static Mesh CreateCube();
 
+		// Mesh bounds, in local space
+		Bounds bounds;
 
 	protected:
 
 
 	private:
 		Vertex* vertices		= nullptr;		// Deallocated in SceneManager.Shutdown()
-		unsigned int numVerts	= -1;
+		unsigned int numVerts	= 0;
 
 		GLuint* indices			= nullptr;		// Deallocated in SceneManager.Shutdown()
-		unsigned int numIndices = -1;
+		unsigned int numIndices = 0;
 
 		GLuint meshVAO			= 0;
 		GLuint meshVBOs[BUFFER_COUNT];			// Buffer objects that hold vertices in GPU memory
@@ -155,7 +172,10 @@ namespace BlazeEngine
 		int materialIndex		= -1;
 
 		Transform transform;
-		string meshName			= "UNNAMED";
+		string meshName			= "UNNAMED_MESH";
+
+		// Computes mesh bounds, in local space
+		void ComputeBounds();
 	};
 }
 

@@ -2,9 +2,6 @@
 
 #pragma once
 
-
-
-
 // Flags:
 #define DEBUG_LOG_OUTPUT			// Comment this out to exclude logging for release builds
 
@@ -38,7 +35,7 @@
 
 	// Scene setup and creation logging:
 	//----------------------------------
-	#define DEBUG_LOG_SCENEMANAGER_SCENE_SETUP			// Enable/disable scene import logging
+	//#define DEBUG_LOG_SCENEMANAGER_SCENE_SETUP			// Enable/disable scene import logging
 	#if defined(DEBUG_LOG_SCENEMANAGER_SCENE_SETUP)
 		//#define DEBUG_SCENEMANAGER_LIGHT_LOGGING		// Enable logging of light import/creation
 		//#define DEBUG_SCENEMANAGER_CAMERA_LOGGING		// Enable logging of camera import/creation
@@ -72,6 +69,9 @@
 
 #if defined (DEBUG_LOG_OUTPUT)
 	#include "LogManager.h"
+	#include <string>
+	using std::to_string;
+
 	#define LOG(message)			LogManager::Log(message);
 	#define LOG_WARNING(message)	LogManager::LogWarning(message);
 	#define LOG_ERROR(message)		LogManager::LogError(message);
