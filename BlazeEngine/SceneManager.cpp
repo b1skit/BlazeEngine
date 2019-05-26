@@ -1,7 +1,8 @@
+#include "BuildConfiguration.h"
 #include "SceneManager.h"
 #include "EventManager.h"
 #include "CoreEngine.h"
-#include "BuildConfiguration.h"
+#include "Camera.h"
 
 #include "glm.hpp"
 #include "gtc/constants.hpp"
@@ -22,6 +23,77 @@ using glm::pi;
 
 namespace BlazeEngine
 {
+	Scene::Scene()
+	{
+		gameObjects.reserve(GAMEOBJECTS_RESERVATION_AMT);
+		renderables.reserve(RENDERABLES_RESERVATION_AMT);
+
+		sceneCameras = new Camera**[CAMERA_TYPE_COUNT];
+
+		sceneCameras[CAMERA_TYPE_SHADOW]			= new Camera * [CAMERA_TYPE_SHADOW_ARRAY_SIZE];
+		cameraTypeLengths[CAMERA_TYPE_SHADOW]		= CAMERA_TYPE_SHADOW_ARRAY_SIZE;
+		for (int i = 0; i < CAMERA_TYPE_SHADOW_ARRAY_SIZE; i++)
+		{
+			sceneCameras[CAMERA_TYPE_SHADOW][i]		= nullptr;
+		}
+
+		sceneCameras[CAMERA_TYPE_REFLECTION]		= new Camera* [CAMERA_TYPE_REFLECTION_ARRAY_SIZE];
+		cameraTypeLengths[CAMERA_TYPE_REFLECTION]	= CAMERA_TYPE_REFLECTION_ARRAY_SIZE;
+		for (int i = 0; i < CAMERA_TYPE_REFLECTION_ARRAY_SIZE; i++)
+		{
+			sceneCameras[CAMERA_TYPE_REFLECTION][i] = nullptr;
+		}
+
+		sceneCameras[CAMERA_TYPE_MAIN]				= new Camera * [1];
+		sceneCameras[CAMERA_TYPE_MAIN][0]			= nullptr;
+		cameraTypeLengths[CAMERA_TYPE_MAIN]			= 1;
+
+		for (int i = 0; i < CAMERA_TYPE_COUNT; i++)
+		{
+			currentCameraTypeCounts[i] = 0;
+		}
+
+		/*forwardLights.reserve(100);*/
+		/*deferredLights.reserve(100);*/
+	}
+
+	Scene::~Scene()
+	{
+		DeleteMeshes();
+
+		for (int i = 0; i < gameObjects.size(); i++)
+		{
+			if (gameObjects.at(i))
+			{
+				delete gameObjects.at(i);
+				gameObjects.at(i) = nullptr;
+			}
+		}
+
+		if (sceneCameras != nullptr)
+		{
+			for (int cameraType = 0; cameraType < CAMERA_TYPE_COUNT; cameraType++)
+			{
+				if (sceneCameras[cameraType] != nullptr)
+				{
+					for (int currentCamera = 0; currentCamera < cameraTypeLengths[cameraType]; currentCamera++)
+					{
+						if (sceneCameras[cameraType][currentCamera] != nullptr)
+						{
+							delete sceneCameras[cameraType][currentCamera];
+							sceneCameras[cameraType][currentCamera] = nullptr;
+						}
+					}
+					delete[] sceneCameras[cameraType];
+					sceneCameras[cameraType] = nullptr;
+				}
+			}
+			delete[] sceneCameras;
+			sceneCameras = nullptr;
+		}
+	}
+
+
 	void Scene::InitMeshArray(int maxMeshes)
 	{
 		if (meshes != nullptr)
@@ -84,18 +156,25 @@ namespace BlazeEngine
 	}
 
 
-	void Scene::AddCamera(CAMERA_TYPE cameraType, Camera* newCamera)
+	void Scene::RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera)
 	{
-		for (int i = 0; i < cameraTypeLengths[cameraType]; i++)
+		if (newCamera != nullptr && currentCameraTypeCounts[cameraType] < cameraTypeLengths[cameraType])
 		{
-			if (sceneCameras[cameraType][i] == nullptr)
+			for (int i = 0; i < cameraTypeLengths[cameraType]; i++)
 			{
-				sceneCameras[cameraType][i] = newCamera;
-				currentCameraTypeCounts[cameraType]++;
-				return;
+				if (sceneCameras[cameraType][i] == nullptr)
+				{
+					sceneCameras[cameraType][i] = newCamera;
+					currentCameraTypeCounts[cameraType]++;
+
+					LOG("Registered new camera \"" + newCamera->GetName() + "\"");
+
+					return;
+				}
 			}
 		}
-		LOG_ERROR("Failed to add new camera!");
+		
+		LOG_ERROR("Failed to register new camera!");
 	}
 
 
@@ -1356,20 +1435,20 @@ namespace BlazeEngine
 		if (scene == nullptr) // Signal to create a default camera at the origin
 		{
 			LOG("Creating a default camera");
-			currentScene->AddCamera(CAMERA_TYPE_MAIN, new Camera("defaultCamera"));
-			currentScene->GetMainCamera()->Initialize(
-				vec3(0, 0, 0),
-				(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
-				CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultFieldOfView,
-				CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultNear,
-				CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultFar
+			currentScene->RegisterCamera(CAMERA_TYPE_MAIN, new Camera("defaultCamera"));
+			currentScene->GetMainCamera()->Initialize
+			(
+				CoreEngine::GetCoreEngine()->GetConfig()->GetAspectRatio(),
+				CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView,
+				CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultNear,
+				CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFar
 			);
 			return;
 		}
 
 		// If we made it this far, we've imported a camera from the scene:
 		string cameraName = string(scene->mCameras[0]->mName.C_Str());
-		currentScene->AddCamera(CAMERA_TYPE_MAIN, new Camera(cameraName));
+		currentScene->RegisterCamera(CAMERA_TYPE_MAIN, new Camera(cameraName));
 
 		int numCameras = scene->mNumCameras;
 		if (numCameras > 1)
@@ -1387,13 +1466,12 @@ namespace BlazeEngine
 		LOG_ERROR("Assimp camera import is broken... Creating a default camera at the origin");
 		currentScene->GetMainCamera()->Initialize
 		(
-			vec3(0, 0, 0),
-			(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
-			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultFieldOfView,
-			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultNear,
-			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultFar
+			CoreEngine::GetCoreEngine()->GetConfig()->GetAspectRatio(),
+			CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView,
+			CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultNear,
+			CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFar
 		);
-		// END DEBUG
+		
 	
 
 		// Note: In the current version of Assimp, the mLookAt, mUp vectors seem to just be the world forward, up vectors, and mTransformation is the identity...
@@ -1460,7 +1538,7 @@ namespace BlazeEngine
 
 		currentScene->GetMainCamera()->Initialize(
 			(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
-			CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultFieldOfView, //scene->mCameras[0]->mHorizontalFOV; // TO DO: Implement this (Needs to be converted to a vertical FOV???)
+			CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView, //scene->mCameras[0]->mHorizontalFOV; // TO DO: Implement this (Needs to be converted to a vertical FOV???)
 			scene->mCameras[0]->mClipPlaneNear,
 			scene->mCameras[0]->mClipPlaneFar
 		);

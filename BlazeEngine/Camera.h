@@ -1,7 +1,7 @@
 #pragma once
 
-//#include "CoreEngine.h" // Can't compile if we include this: Circular reference between SceneObject, PlayerObject, Camera ?
 #include "SceneObject.h"
+
 
 #define GLM_FORCE_SWIZZLE
 #include "glm.hpp"
@@ -12,27 +12,14 @@ namespace BlazeEngine
 	class Camera : public SceneObject
 	{
 	public:
-		Camera(string cameraName) : SceneObject::SceneObject(cameraName)
-		{
-			/*fieldOfView		= CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultFieldOfView;
-			near			= CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultNear;
-			far				= CoreEngine::GetCoreEngine()->GetConfig()->viewCam.defaultFar;
-			aspectRatio		= (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes;*/
+		// Default constructor
+		Camera(string cameraName);
 
-			Initialize(vec3(0,0,0), fieldOfView, aspectRatio, near, far); // Initialize with our default values...
-
-			/*isDirty = false;*/
-		}
-
-		Camera(string cameraName, vec3 position, float fieldOfView, float near, float far, float aspectRatio) : SceneObject::SceneObject(cameraName)
-		{
-			Initialize(position, fieldOfView, aspectRatio, near, far);
-		}
+		Camera(string cameraName, vec3 position, float fieldOfView, float near, float far, float aspectRatio, Transform* parent = nullptr, bool isOrthographic = false, float orthoWidthHalfRes = 5, float orthoHeightHalfRes = 5);
 
 		/*~Camera();*/
 
-		void Initialize(vec3 position, float aspectRatio, float fieldOfView, float near, float far);
-		void Initialize(float aspectRatio, float fieldOfView, float near, float far);
+		void Initialize(float aspectRatio, float fieldOfView, float near, float far, Transform* parent = nullptr, vec3 position = vec3(0.0f, 0.0f, 0.0f), bool isOrthographic = false, float orthoWidthHalfRes = 5, float orthoHeightHalfRes = 5);
 
 		// BlazeObject interface:
 		void Update();
@@ -41,20 +28,19 @@ namespace BlazeEngine
 		void HandleEvent(EventInfo const* eventInfo);
 
 		// Getters/Setters:
-		inline float const& FieldOfView() const { return fieldOfView; }
-		inline float const& Near() const { return near; }
-		inline float const& Far() const { return far; }
+		inline float const& FieldOfView() const		{ return fieldOfView; }
+		inline float const& Near() const			{ return near; }
+		inline float const& Far() const				{ return far; }
 
-		mat4 const& View();
+		mat4 const&			View();
 
-		inline mat4 const& Projection() const { return projection; }
+		inline mat4 const& Projection() const		{ return projection; }
 
 		inline mat4 const& ViewProjection()
 		{
 			viewProjection = projection * View(); // TO DO: ONLY COMPUTE THIS IF SOMETHING HAS CHANGED!!!
 			return viewProjection; 
 		}
-		
 
 
 	protected:
@@ -64,12 +50,16 @@ namespace BlazeEngine
 		float fieldOfView	= 90.0f;
 		float near			= 1.0f;
 		float far			= 100.0f;
-		float aspectRatio	= 1.0f;
+		float aspectRatio	= 1.0f;				// == width / height
 
 		mat4 view;
 		mat4 projection;
 		mat4 viewProjection;
 
+		bool isOrthographic		= false;
+		int orthoHalfWidth		= 5;
+		int orthoHalfHeight		= 5;
+		
 		/*bool isDirty = false;*/
 	};
 

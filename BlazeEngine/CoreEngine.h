@@ -24,17 +24,32 @@ namespace BlazeEngine
 		struct
 		{
 			string windowTitle	= "Blaze Engine";
-			int windowXRes		= 800;
-			int windowYRes		= 600;
+			int windowXRes		= 1024;
+			int windowYRes		= 768;
 
 		} renderer;
+
+		// Compute the aspect ratio == width / height
+		float GetAspectRatio() const { return (float)renderer.windowXRes / (float)renderer.windowYRes; }
 
 		struct
 		{
 			float defaultFieldOfView	= 60.0f;
 			float defaultNear			= 1.0f;
 			float defaultFar			= 100.0f;
-		} viewCam;
+		} mainCam;
+
+		struct
+		{
+			// Orthographic camera defaults:
+			float defaultNear				= 1.0f;
+			float defaultFar				= 100.0f;
+
+			float defaultOrthoHalfWidth		= 5.0f;		// TODO: Choose appropriate values??
+			float defaultOrthoHalfHeight	= 5.0f;		// -> Function of resolution and scene width
+
+			float defaultZBias				= 0.01f;
+		} shadows;
 
 		struct
 		{

@@ -61,8 +61,11 @@ namespace BlazeEngine
 
 	void Transform::SetParent(Transform* parent)
 	{
-		this->parent = parent;
-		this->parent->RegisterChild(this);
+		if (parent != nullptr)
+		{
+			this->parent = parent;
+			this->parent->RegisterChild(this);
+		}		
 	}
 
 

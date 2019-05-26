@@ -17,7 +17,7 @@
 using std::vector;
 
 // Initial allocation amounts
-#define GAMEOBJECTS_RESERVATION_AMT			100
+#define GAMEOBJECTS_RESERVATION_AMT			100		// TODO: Set these with meaningful values...
 #define RENDERABLES_RESERVATION_AMT			100
 
 #define CAMERA_TYPE_SHADOW_ARRAY_SIZE			10
@@ -42,76 +42,9 @@ namespace BlazeEngine
 	// Container for all scene data:
 	struct Scene
 	{
-		Scene()
-		{
-			// TODO: Set these with meaningful values...
-			gameObjects.reserve(GAMEOBJECTS_RESERVATION_AMT);
-			renderables.reserve(RENDERABLES_RESERVATION_AMT);
+		Scene();
 
-			sceneCameras = new Camera**[CAMERA_TYPE_COUNT];
-
-			sceneCameras[CAMERA_TYPE_SHADOW]			= new Camera*[CAMERA_TYPE_SHADOW_ARRAY_SIZE];
-			cameraTypeLengths[CAMERA_TYPE_SHADOW]		= CAMERA_TYPE_SHADOW_ARRAY_SIZE;
-			for (int i = 0; i < CAMERA_TYPE_SHADOW_ARRAY_SIZE; i++)
-			{
-				sceneCameras[CAMERA_TYPE_SHADOW][i]		= nullptr;
-			}
-
-			sceneCameras[CAMERA_TYPE_REFLECTION]		= new Camera*[CAMERA_TYPE_REFLECTION_ARRAY_SIZE];
-			cameraTypeLengths[CAMERA_TYPE_REFLECTION]	= CAMERA_TYPE_REFLECTION_ARRAY_SIZE;
-			for (int i = 0; i < CAMERA_TYPE_REFLECTION_ARRAY_SIZE; i++)
-			{
-				sceneCameras[CAMERA_TYPE_REFLECTION][i] = nullptr;
-			}
-
-			sceneCameras[CAMERA_TYPE_MAIN]				= new Camera * [1];
-			sceneCameras[CAMERA_TYPE_MAIN][0]			= nullptr;
-			cameraTypeLengths[CAMERA_TYPE_MAIN]			= 1;
-
-			for (int i = 0; i < CAMERA_TYPE_COUNT; i++)
-			{
-				currentCameraTypeCounts[i] = 0;
-			}
-
-			/*forwardLights.reserve(100);*/
-			/*deferredLights.reserve(100);*/
-		}
-
-		~Scene()
-		{
-			DeleteMeshes();
-
-			for (int i = 0; i < gameObjects.size(); i++)
-			{
-				if (gameObjects.at(i))
-				{
-					delete gameObjects.at(i);
-					gameObjects.at(i) = nullptr;
-				}
-			}
-
-			if (sceneCameras != nullptr)
-			{
-				for (int cameraType = 0; cameraType < CAMERA_TYPE_COUNT; cameraType++)
-				{
-					if (sceneCameras[cameraType] != nullptr)
-					{
-						for (int currentCamera = 0; currentCamera < cameraTypeLengths[cameraType]; currentCamera++)
-						{
-							if (sceneCameras[cameraType][currentCamera] != nullptr)
-							{
-								delete sceneCameras[cameraType][currentCamera];
-								sceneCameras[cameraType][currentCamera] = nullptr;
-							}
-						}
-						delete[] sceneCameras[cameraType];
-						sceneCameras[cameraType]			= nullptr;
-					}
-				}
-				delete[] sceneCameras;
-				sceneCameras = nullptr;
-			}
-		}
+		~Scene();
 
 		// Allocate an empty mesh array. Clears any existing mesh array
 		void	InitMeshArray(int maxMeshes);
@@ -121,7 +54,7 @@ namespace BlazeEngine
 		Mesh*	GetMesh(int meshIndex);
 
 		// Cameras:
-		void		AddCamera(CAMERA_TYPE cameraType, Camera* newCamera);
+		void		RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera);
 		Camera*		GetMainCamera() { return sceneCameras[CAMERA_TYPE_MAIN][0]; }
 		Camera**	GetCameras(CAMERA_TYPE cameraType, int& camCount);
 		

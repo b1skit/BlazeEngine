@@ -42,9 +42,9 @@ namespace BlazeEngine
 		//void SetModelMatrices(mat4 translation, mat4 scale, mat4 rotation);
 		
 		// Hierarchy functions:
-		inline Transform* GetParent() const { return parent; }
-		void SetParent(Transform* parent);
-		void UnParent();
+		inline Transform*	GetParent() const { return parent; }
+		void				SetParent(Transform* parent);
+		void				UnParent();
 		
 		// Functionality:
 		//---------------
@@ -63,8 +63,8 @@ namespace BlazeEngine
 		// eulerXYZ = Rotation angles about each axis, in RADIANS
 		void Rotate(vec3 eulerXYZ);
 
-		inline vec3 const& GetEulerRotation() { return eulerRotation; }
-		void SetEulerRotation(vec3 eulerXYZ);
+		inline vec3 const&	GetEulerRotation() { return eulerRotation; }
+		void				SetEulerRotation(vec3 eulerXYZ);
 		
 		// Set the 
 		void SetScale(vec3 scale);

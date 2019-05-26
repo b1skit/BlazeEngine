@@ -15,6 +15,10 @@ using glm::vec4;
 
 namespace BlazeEngine
 {
+	// Pre-declarations:
+	class Camera;
+
+
 	enum LIGHT_TYPE
 	{
 		LIGHT_DIRECTIONAL,
@@ -30,7 +34,7 @@ namespace BlazeEngine
 	{
 	public:
 		Light() {}; // Default constructor
-		Light(string lightName, LIGHT_TYPE type, vec3 color);
+		Light(string lightName, LIGHT_TYPE type, vec3 color, bool hasShadow = false);
 
 		// BlazeObject interface:
 		void Update();
@@ -39,23 +43,27 @@ namespace BlazeEngine
 		void HandleEvent(EventInfo const* eventInfo);
 
 		// Getters/Setters:
-		inline vec3 const& Color() const			{ return color; }
-		inline void SetColor(vec4 color)			{ this->color = color; }
+		inline vec3 const&			Color() const			{ return color; }
+		inline void					SetColor(vec4 color)	{ this->color = color; }
 
-		inline LIGHT_TYPE const& Type() const		{ return type; }
+		inline LIGHT_TYPE const&	Type() const			{ return type; }
 
-		inline Transform& GetTransform()			{ return transform; } // Directional lights shine forward (Z+)
+		inline Transform&			GetTransform()			{ return transform; } // Directional lights shine forward (Z+)
 
-		inline string const& Name() const			{ return lightName; }
+		inline string const&		Name() const			{ return lightName; }
+		
+		inline Camera*				ShadowCam()				{ return shadowCam; }
 
 	protected:
 
 
 
 	private:
-		vec3 color			= vec3(0.0f, 0.0f, 0.0f);	// Intensity is factored into these values
-		LIGHT_TYPE type		= LIGHT_DIRECTIONAL;
+		vec3 color			= vec3(0.0f, 0.0f, 0.0f);	// Note: Intensity is factored into these values
+		LIGHT_TYPE type		= LIGHT_DIRECTIONAL;		// Default
 
-		string lightName	= "unnamed_light";
+		string lightName	= "unnamed_directional_light";
+
+		Camera* shadowCam	= nullptr;
 	};
 }

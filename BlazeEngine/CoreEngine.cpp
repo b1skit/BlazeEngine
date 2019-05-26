@@ -6,12 +6,6 @@
 #include <string>
 
 
-// DEBUG:
-#include <iostream>
-using std::cout;
-using std::to_string;
-
-
 namespace BlazeEngine
 {
 	// Static members:
