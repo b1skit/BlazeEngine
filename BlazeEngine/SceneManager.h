@@ -59,12 +59,11 @@ namespace BlazeEngine
 
 		// Cameras:
 		//---------
-		void		RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera);
-		Camera*		GetMainCamera() { return sceneCameras[CAMERA_TYPE_MAIN][0]; }
 		Camera**	GetCameras(CAMERA_TYPE cameraType, int& camCount);
+		Camera*		GetMainCamera() { return sceneCameras[CAMERA_TYPE_MAIN][0]; }
+		void		RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera);
+		void		ClearCameras();	// Destroys the scene's cameras (without deallocating the containing arrays)
 		
-		// Clears the scene's cameras (without deallocating the containing arrays)
-		void		ClearCameras();
 
 		// Scene object containers:
 		//-------------------------
@@ -81,7 +80,10 @@ namespace BlazeEngine
 		vec3	ambientLight		= vec3(0.0f, 0.0f, 0.0f);
 		Light	keyLight;
 
-		Bounds sceneBounds;
+		Bounds& WorldSpaceSceneBounds()
+		{
+			return sceneWorldBounds;
+		}
 
 	private:
 		Mesh** meshes = nullptr;
@@ -92,6 +94,8 @@ namespace BlazeEngine
 		Camera*** sceneCameras = nullptr;
 		int cameraTypeLengths[CAMERA_TYPE_COUNT];	// How many CAMERA_TYPE elements in each row of the sceneCameras array
 		int currentCameraTypeCounts[CAMERA_TYPE_COUNT];
+
+		Bounds sceneWorldBounds;
 	};
 
 
@@ -121,21 +125,19 @@ namespace BlazeEngine
 		// sceneName == the root folder name within the ./Scenes/ directory. Must contain an .fbx file with the same name.
 		void LoadScene(string sceneName);
 
-		inline unsigned int NumMaterials()											{ return currentMaterialCount; }
-		inline Material*	GetMaterial(unsigned int materialIndex)					{ return materials[materialIndex]; }
-		Material*			GetMaterial(string materialName);
+		inline unsigned int			NumMaterials()												{ return currentMaterialCount; }
+		inline Material*			GetMaterial(unsigned int materialIndex)						{ return materials[materialIndex]; }
+		Material*					GetMaterial(string materialName);
 		
-		inline vector<Mesh*> const*		GetRenderMeshes(unsigned int materialIndex) { return &materialMeshLists.at(materialIndex); } // TODO: BOunds checking?
+		inline vector<Mesh*> const*	GetRenderMeshes(unsigned int materialIndex)					{ return &materialMeshLists.at(materialIndex); } // TODO: Bounds checking?
+		inline vector<Renderable*>*	GetRenderables()											{ return &currentScene->renderables;	}
 
-		inline vector<Renderable*>*		GetRenderables()							{ return &currentScene->renderables;	}
-
-		inline vec3 const&	GetAmbient()											{ return currentScene->ambientLight; }
-		inline Light&		GetKeyLight()											{ return currentScene->keyLight; }
-		/*inline vector<Light> const& GetForwardLights() { return forwardLights; }*/
+		inline vec3 const&			GetAmbient()												{ return currentScene->ambientLight; }
+		inline Light&				GetKeyLight()												{ return currentScene->keyLight; }
 		
-		inline Camera** GetCameras(CAMERA_TYPE cameraType, int& camCount)			{ return currentScene->GetCameras(cameraType, camCount); }
-		inline Camera*  GetMainCamera()												{ return currentScene->GetMainCamera(); }
-
+		inline Camera**				GetCameras(CAMERA_TYPE cameraType, int& camCount)			{ return currentScene->GetCameras(cameraType, camCount); }
+		inline Camera*				GetMainCamera()							 					{ return currentScene->GetMainCamera(); }
+		void						RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera)	{ currentScene->RegisterCamera(cameraType, newCamera); }
 
 	protected:
 
@@ -147,9 +149,6 @@ namespace BlazeEngine
 
 		// Add a game object and register it with the various tracking lists
 		void AddGameObject(GameObject* newGameObject);
-
-		// Helper function: Copy transformation values from Assimp scene to BlazeEngine transform
-		void InitializeTransformValues(aiMatrix4x4 const& source, Transform* dest);
 
 		// Material management:
 		//---------------------
@@ -165,7 +164,7 @@ namespace BlazeEngine
 		unsigned int AddMaterial(Material* newMaterial, bool checkForExisting = true);
 		
 		// Returns index of material with matching name, or -1 otherwise
-		int FindMaterialIndex(string materialName); 
+		int GetMaterialIndexIfExists(string materialName); 
 
 		// Helper function: Compiles vectors filled with meshes that use each material. Must be called once after all meshes have finished loading
 		void AssembleMaterialMeshLists(); 
@@ -174,51 +173,50 @@ namespace BlazeEngine
 
 		// Texture management:
 		//--------------------
-		Texture** textures = nullptr;
+		Texture**			textures			= nullptr;
 		const unsigned int	MAX_TEXTURES		= 100; // TO DO: Replace this with something configurable/dynamic?
 		unsigned int		currentTextureCount	= 0;
 		
 		// Find if a texture if it exists, or try and load it if it doesn't. Returns nullptr if file can't be loaded
-		Texture* FindLoadTextureByPath(string texturePath);
+		Texture*	FindLoadTextureByPath(string texturePath);
 
 
 		// Scene setup/construction:
 		//--------------------------
 
 		// Assimp scene material and texture import helper:
-		void ImportMaterialsAndTexturesFromScene(aiScene const* scene, string sceneName);
+		void		ImportMaterialsAndTexturesFromScene(aiScene const* scene, string sceneName);
 		
 		// Assimp scene texture import helper:
-		Texture* ExtractLoadTextureFromAiMaterial(aiTextureType textureType, aiMaterial* material, string sceneName);
-		Texture* FindTextureByNameInAiMaterial(string nameSubstring, aiMaterial* material, string sceneName);
+		Texture*	ExtractLoadTextureFromAiMaterial(aiTextureType textureType, aiMaterial* material, string sceneName);
+		Texture*	FindTextureByNameInAiMaterial(string nameSubstring, aiMaterial* material, string sceneName);
 
 		// Assimp scene material property helper:
-		bool ExtractPropertyFromAiMaterial(aiMaterial* material, vec3& targetProperty, char const* AI_MATKEY_TYPE, int unused0 = 0, int unused1 = 0);
+		bool		ExtractPropertyFromAiMaterial(aiMaterial* material, vec3& targetProperty, char const* AI_MATKEY_TYPE, int unused0 = 0, int unused1 = 0);
+
 
 		// Assimp scene geo import helper:
-		void ImportGameObjectGeometryFromScene(aiScene const* scene);
-
+		void			ImportGameObjectGeometryFromScene(aiScene const* scene);
 
 		// Scene geometry import helper: Create a GameObject transform hierarchy and return the GameObject parent. 
 		// Note: Adds the GameObject to the currentScene's gameObjects
-		GameObject* FindCreateGameObjectParents(aiScene const* scene, aiNode* parent);
+		GameObject*		FindCreateGameObjectParents(aiScene const* scene, aiNode* parent);
 
 		// Scene geometry import helper : Combines seperated transform nodes found throughout the scene graph.
 		// Finds and combines the FIRST instance of Translation, Scaling, Rotation matrices in the parenting hierarchy
-		aiMatrix4x4 GetCombinedTransformFromHierarchy(aiScene const* scene, aiNode* parent);
+		aiMatrix4x4		GetCombinedTransformFromHierarchy(aiScene const* scene, aiNode* parent);
+		void			InitializeTransformValues(aiMatrix4x4 const& source, Transform* dest);	// Helper function: Copy transformation values from Assimp scene to BlazeEngine transform
 		
 		// Find a node with a name matching or containing name
-		aiNode* FindNodeContainingName(aiScene const* scene, string name);
-
-		// Recursive helper function: Finds nodes containing name as a substring
-		aiNode* FindNodeRecursiveHelper(aiNode* rootNode, string name);
+		aiNode*			FindNodeContainingName(aiScene const* scene, string name);
+		aiNode*			FindNodeRecursiveHelper(aiNode* rootNode, string name);	// Recursive helper function: Finds nodes containing name as a substring
 
 
 		// Import light data from loaded scene
-		void ImportLightsFromScene(aiScene const* scene);
+		void	ImportLightsFromScene(aiScene const* scene);
 
 		// Import camera data from loaded scene
-		void ImportCamerasFromScene(aiScene const* scene = nullptr);
+		void	ImportCamerasFromScene(aiScene const* scene = nullptr, bool clearCameras = false);
 	};
 }
 

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "SceneObject.h"
+#include "ShadowMap.h"
 
 #include "glm.hpp"
 
@@ -34,7 +35,9 @@ namespace BlazeEngine
 	{
 	public:
 		Light() {}; // Default constructor
-		Light(string lightName, LIGHT_TYPE type, vec3 color, bool hasShadow = false);
+		Light(string lightName, LIGHT_TYPE type, vec3 color, ShadowMap* shadowMap = nullptr);
+
+		void Destroy();
 
 		// BlazeObject interface:
 		void Update();
@@ -43,16 +46,16 @@ namespace BlazeEngine
 		void HandleEvent(EventInfo const* eventInfo);
 
 		// Getters/Setters:
-		inline vec3 const&			Color() const			{ return color; }
-		inline void					SetColor(vec4 color)	{ this->color = color; }
+		inline vec3 const&			Color() const							{ return color; }
+		inline void					SetColor(vec4 color)					{ this->color = color; }
 
-		inline LIGHT_TYPE const&	Type() const			{ return type; }
+		inline LIGHT_TYPE const&	Type() const							{ return type; }
 
-		inline Transform&			GetTransform()			{ return transform; } // Directional lights shine forward (Z+)
+		inline Transform&			GetTransform()							{ return transform; } // Directional lights shine forward (Z+)
 
-		inline string const&		Name() const			{ return lightName; }
+		inline string const&		Name() const							{ return lightName; }
 		
-		inline Camera*				ShadowCam()				{ return shadowCam; }
+		void						AddShadowMap(ShadowMap* newShadowMap);
 
 	protected:
 
@@ -64,6 +67,6 @@ namespace BlazeEngine
 
 		string lightName	= "unnamed_directional_light";
 
-		Camera* shadowCam	= nullptr;
+		ShadowMap* shadowMap;							// Deallocated by calling Destroy() during SceneManager.Shutdown()
 	};
 }

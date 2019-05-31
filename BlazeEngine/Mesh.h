@@ -8,10 +8,10 @@
 #include <string>
 
 
-//using glm::vec2;
+using glm::vec2;
 using glm::vec3;
 using glm::vec4;
-using glm::vec2;
+
 
 using std::string;
 
@@ -79,14 +79,94 @@ namespace BlazeEngine
 	// Bounds of a mesh, scene, etc
 	struct Bounds
 	{
+		Bounds() {};
+		Bounds(Bounds const& rhs) = default;
+
 		float xMin = std::numeric_limits<float>::max();
-		float xMax = std::numeric_limits<float>::min();
+		float xMax = -std::numeric_limits<float>::max(); // Note: -max is the furthest away from max
 
 		float yMin = std::numeric_limits<float>::max();
-		float yMax = std::numeric_limits<float>::min();
+		float yMax = -std::numeric_limits<float>::max();
 
 		float zMin = std::numeric_limits<float>::max();
-		float zMax = std::numeric_limits<float>::min();
+		float zMax = -std::numeric_limits<float>::max();
+		// TODO: Create a setter/getter for these values, ensuring they're 3D (ie. ?min != ?max)
+
+
+		// Returns a Bounds, transformed from local space using transform
+		Bounds GetTransformedBounds(mat4 const& transform)
+		{
+			// Temp: Ensure the bounds are 3D here, before we do any calculations (TODO: Getters/setters that enforce 3D bounds)
+			Make3Dimensional();
+
+			Bounds result;
+
+			vec4 points[8];
+			points[0]			= vec4(xMin, yMax, zMin, 1.0f);		// Left		top		front ("front" == forward == Z-)
+			points[1]			= vec4(xMax, yMax, zMin, 1.0f);		// Right	top		front
+			points[2]			= vec4(xMin, yMin, zMin, 1.0f);		// Left		bot		front
+			points[3]			= vec4(xMax, yMin, zMin, 1.0f);		// Right	bot		front
+
+			points[4]			= vec4(xMin, yMax, zMax, 1.0f);		// Left		top		back
+			points[5]			= vec4(xMax, yMax, zMax, 1.0f);		// Right	top		back
+			points[6]			= vec4(xMin, yMin, zMax, 1.0f);		// Left		bot		back
+			points[7]			= vec4(xMax, yMin, zMax, 1.0f);		// Right	bot		back
+
+			for (int i = 0; i < 8; i++)
+			{
+				points[i] = transform * points[i];
+
+				if (points[i].x < result.xMin)
+				{
+					result.xMin = points[i].x;
+				}
+				if (points[i].x > result.xMax)
+				{
+					result.xMax = points[i].x;
+				}
+				
+				if (points[i].y < result.yMin)
+				{
+					result.yMin = points[i].y;
+				}
+				if (points[i].y > result.yMax)
+				{
+					result.yMax = points[i].y;
+				}
+				
+				if (points[i].z < result.zMin)
+				{
+					result.zMin = points[i].z;
+				}
+				if (points[i].z > result.zMax)
+				{
+					result.zMax = points[i].z;
+				}
+			}
+
+			return result;
+		}
+
+		void Make3Dimensional()
+		{
+			if (glm::abs(xMax - xMin) < 0.01)
+			{
+				xMax += 0.01f;
+				xMin -= 0.01f;
+			}
+
+			if (glm::abs(yMax - yMin) < 0.01)
+			{
+				yMax += 0.01f;
+				yMin -= 0.01f;
+			}
+
+			if (glm::abs(zMax - zMin) < 0.01)
+			{
+				zMax += 0.01f;
+				zMin -= 0.01f;
+			}
+		}
 	};
 
 
@@ -127,21 +207,21 @@ namespace BlazeEngine
 		Mesh(const Mesh& mesh) = default;
 
 		// Getters/Setters:
-		inline string const& Name() { return meshName; }
+		inline string const&	Name()							{ return meshName; }
 
-		inline Vertex* Vertices() { return vertices; }
-		inline unsigned int NumVerts() { return this->numVerts; }
+		inline Vertex*			Vertices()						{ return vertices; }
+		inline unsigned int		NumVerts()						{ return this->numVerts; }
 		
-		inline int& MaterialIndex() { return materialIndex; }
+		inline int&				MaterialIndex()					{ return materialIndex; }
 		
-		inline GLuint* Indices() { return indices; }
-		inline unsigned int NumIndices() { return numIndices; }
+		inline GLuint*			Indices() { return indices; }
+		inline unsigned int		NumIndices()					{ return numIndices; }
 
 
-		inline Transform& GetTransform() { return transform; }
+		inline Transform&		GetTransform()					{ return transform; }
 
-		inline GLuint const& VAO() { return meshVAO; }
-		inline GLuint const& VBO(VERTEX_BUFFER_OBJECT index) { return meshVBOs[index]; }
+		inline GLuint const&	VAO() { return meshVAO; }
+		inline GLuint const&	VBO(VERTEX_BUFFER_OBJECT index)	{ return meshVBOs[index]; }
 		
 		// Deallocate and unbind this mesh object
 		void DestroyMesh();
@@ -153,8 +233,8 @@ namespace BlazeEngine
 		// Create a simple cube mesh aligned to +/-1 on all axis'
 		static Mesh CreateCube();
 
-		// Mesh bounds, in local space
-		Bounds bounds;
+		// Mesh localBounds, in local space
+		Bounds localBounds;
 
 	protected:
 
@@ -174,7 +254,7 @@ namespace BlazeEngine
 		Transform transform;
 		string meshName			= "UNNAMED_MESH";
 
-		// Computes mesh bounds, in local space
+		// Computes mesh localBounds, in local space
 		void ComputeBounds();
 	};
 }

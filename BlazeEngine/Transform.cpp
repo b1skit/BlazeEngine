@@ -151,7 +151,6 @@ namespace BlazeEngine
 	}
 
 
-	//void Transform::SetEulerRotation(vec3 eulerXYZ, bool recomputeRotationMatrix)	// recomputeRotationMatrix == true by default
 	void Transform::SetEulerRotation(vec3 eulerXYZ)
 	{
 		this->rotation = mat4(1.0f);
@@ -195,7 +194,7 @@ namespace BlazeEngine
 
 	void Transform::DebugPrint()
 	{
-		#if defined(DEBUG_LOG_OUTPUT)
+		#if defined(DEBUG_TRANSFORMS)
 			LOG("[TRANSFORM DEBUG]\n\tPostition = " + to_string(position.x) + ", " + to_string(position.y) + ", " + to_string(position.z));
 			LOG("Euler rotation = " + to_string(eulerRotation.x) + ", " + to_string(eulerRotation.y) + ", " + to_string(eulerRotation.z) + " (radians)");
 			LOG("Scale = " + to_string(worldScale.x) + ", " + to_string(worldScale.y) + ", " + to_string(worldScale.z));

@@ -35,16 +35,16 @@
 
 	// Scene setup and creation logging:
 	//----------------------------------
-	//#define DEBUG_LOG_SCENEMANAGER_SCENE_SETUP			// Enable/disable scene import logging
+	#define DEBUG_LOG_SCENEMANAGER_SCENE_SETUP			// Enable/disable scene import logging
 	#if defined(DEBUG_LOG_SCENEMANAGER_SCENE_SETUP)
 		//#define DEBUG_SCENEMANAGER_LIGHT_LOGGING		// Enable logging of light import/creation
-		//#define DEBUG_SCENEMANAGER_CAMERA_LOGGING		// Enable logging of camera import/creation
+		#define DEBUG_SCENEMANAGER_CAMERA_LOGGING		// Enable logging of camera import/creation
 		//#define DEBUG_SCENEMANAGER_MESH_LOGGING			// Enable logging of mesh import/creation
 		//#define DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING	// Enable logging of GameObject creation
-		//#define DEBUG_SCENEMANAGER_TRANSFORM_LOGGING	// Enable logging of transformation hierarchy setup
-		#define DEBUG_SCENEMANAGER_MATERIAL_LOGGING		// Enable logging of material creation/setup
+		#define DEBUG_SCENEMANAGER_TRANSFORM_LOGGING	// Enable logging of transformation hierarchy setup
+		//#define DEBUG_SCENEMANAGER_MATERIAL_LOGGING		// Enable logging of material creation/setup
 		//#define DEBUG_SCENEMANAGER_SHADER_LOGGING		// Enable logging of shader creation/setup
-		#define DEBUG_SCENEMANAGER_TEXTURE_LOGGING		// Enable logging of texture creation/setup
+		//#define DEBUG_SCENEMANAGER_TEXTURE_LOGGING		// Enable logging of texture creation/setup
 	#endif
 
 	//#define DEBUG_LOG_RENDERMANAGER
@@ -58,7 +58,11 @@
 		//#define DEBUG_SHADER_PRINT_FINAL_SHADER			// Should the final, processed shader be printed? This spews a lot of text!
 	#endif
 
-
+	
+	#define DEBUG_TRANSFORMS							// Enable transform debugging functions
+	//if defined(DEBUG_TRANSFORMS)
+	//	#define 
+	//#endif
 
 
 #endif // End of DEBUG_LOG_OUTPUT

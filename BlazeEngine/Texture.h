@@ -8,26 +8,28 @@
 using glm::vec4;
 using std::string;
 
+#define TEXTURE_ERROR_COLOR_VEC4	vec4(1.0f, 0.0f, 0.0f, 1.0f)
 
 namespace BlazeEngine
 {
 	class Texture
 	{
 	public:
-		Texture(int width, int height, string texturePath, bool doFill = true, vec4 fillColor = vec4(1.0, 0.0, 0.0, 1.0));
-		~Texture();
+		Texture();
+		Texture(int width, int height, string texturePath, bool doFill = true, vec4 fillColor = TEXTURE_ERROR_COLOR_VEC4);
+		void Destroy();	// Destroys this object. Typically called by the SceneManager
 
 		Texture& operator=(Texture const& rhs);
 
 		// Getters/Setters:
-		inline unsigned int const& Width() const { return width; }
-		inline unsigned int const& Height() const { return height; }
-		inline GLuint const& TextureID() const { return textureID; }
-		inline GLenum const& Target() const { return target; }
-		string const& TexturePath() { return texturePath; }
+		inline unsigned int const&	Width() const		{ return width; }
+		inline unsigned int const&	Height() const		{ return height; }
+		inline GLuint const&		TextureID() const	{ return textureID; }
+		inline GLenum const&		Target() const		{ return target; }
+		string const&				TexturePath()		{ return texturePath; }
 
 		// Get/set a texel value:
-		// Returns texels[0] if u = [0, width - 1], v = [0, height - 1] are out of bounds.
+		// Returns texels[0] if u = [0, width - 1], v = [0, height - 1] are out of localBounds.
 		vec4& Texel(unsigned int u, unsigned int v);
 
 		// Fill texture with a solid color
@@ -64,13 +66,14 @@ namespace BlazeEngine
 		GLenum type				= GL_FLOAT;
 		// Wrap modes?
 
-		vec4* texels = nullptr;
-		unsigned int numTexels;
+		vec4* texels			= nullptr;
+		unsigned int numTexels	= 0;
 
 		string texturePath		= "UnloadedTexture";
 
 		// Upload a texture to the GPU. Returns true if successful, false otherwise
 		bool Buffer();
+		bool resolutionHasChanged = false;
 	};
 }
 

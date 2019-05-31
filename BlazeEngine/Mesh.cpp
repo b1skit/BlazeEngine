@@ -1,5 +1,6 @@
 #include "Mesh.h"
 
+#include "BuildConfiguration.h"
 
 namespace BlazeEngine
 {
@@ -19,7 +20,7 @@ namespace BlazeEngine
 
 		this->materialIndex = materialIndex;
 
-		// Once we've stored our properties locally, we can compute the bounds:
+		// Once we've stored our properties locally, we can compute the localBounds:
 		ComputeBounds();
 
 
@@ -235,33 +236,35 @@ namespace BlazeEngine
 	{
 		for (unsigned int i = 0; i < numVerts; i++)
 		{
-			if (vertices[i].position.x < bounds.xMin)
+			if (vertices[i].position.x < localBounds.xMin)
 			{
-				bounds.xMin = vertices[i].position.x;
+				localBounds.xMin = vertices[i].position.x;
 			}
-			if (vertices[i].position.x > bounds.xMax)
+			if (vertices[i].position.x > localBounds.xMax)
 			{
-				bounds.xMax = vertices[i].position.x;
-			}
-
-			if (vertices[i].position.y < bounds.yMin)
-			{
-				bounds.yMin = vertices[i].position.y;
-			}
-			if (vertices[i].position.y > bounds.yMax)
-			{
-				bounds.yMax = vertices[i].position.y;
+				localBounds.xMax = vertices[i].position.x;
 			}
 
-			if (vertices[i].position.z < bounds.zMin)
+			if (vertices[i].position.y < localBounds.yMin)
 			{
-				bounds.zMin = vertices[i].position.z;
+				localBounds.yMin = vertices[i].position.y;
 			}
-			if (vertices[i].position.z > bounds.zMax)
+			if (vertices[i].position.y > localBounds.yMax)
 			{
-				bounds.zMax = vertices[i].position.z;
+				localBounds.yMax = vertices[i].position.y;
+			}
+
+			if (vertices[i].position.z < localBounds.zMin)
+			{
+				localBounds.zMin = vertices[i].position.z;
+			}
+			if (vertices[i].position.z > localBounds.zMax)
+			{
+				localBounds.zMax = vertices[i].position.z;
 			}
 		}
+
+		LOG("COMPUTED xyz bounds = " + to_string(localBounds.xMin) + " " + to_string(localBounds.xMax) + " " + to_string(localBounds.yMin) + " " + to_string(localBounds.yMax) + " " + to_string(localBounds.zMin) + " " + to_string(localBounds.zMax));
 	}
 }
 

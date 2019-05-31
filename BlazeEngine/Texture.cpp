@@ -17,17 +17,27 @@ using std::to_string;
 
 namespace BlazeEngine
 {
+	Texture::Texture()
+	{
+		numTexels				= width * height;
+		texels					= new vec4[numTexels];	// Allocate the default size
+		resolutionHasChanged	= true;
+		
+		Fill(TEXTURE_ERROR_COLOR_VEC4);
+	}
+
 	// Constructor:
 	Texture::Texture(int width, int height, string texturePath, bool doFill /* = true */, vec4 fillColor /* = (1.0, 0.0, 0.0, 1.0) */)
 	{
-		this->width = width;
-		this->height = height;
-		this->numTexels = width * height;
+		this->width				= width;
+		this->height			= height;
+		this->numTexels			= width * height;
 
 		this->texturePath = texturePath;
 
 		// Initialize the texture:
-		texels = new vec4[numTexels];
+		texels					= new vec4[numTexels];
+		resolutionHasChanged	= true;
 		if (doFill)
 		{
 			Fill(fillColor);
@@ -35,15 +45,20 @@ namespace BlazeEngine
 	}
 
 
-	Texture::~Texture()
+	void Texture::Destroy()
 	{
-		glDeleteTextures(1, &textureID);
-
+		if (glIsTexture(textureID))
+		{
+			glDeleteTextures(1, &textureID);
+		}
 		if (texels)
 		{
 			delete[] texels;
+			numTexels = 0;
+			resolutionHasChanged = true;
 		}
 	}
+
 
 	Texture& BlazeEngine::Texture::operator=(Texture const& rhs)
 	{
@@ -52,17 +67,19 @@ namespace BlazeEngine
 			return *this;
 		}
 
-		this->width		= rhs.width;
-		this->height	= rhs.height;
-		this->textureID = rhs.textureID;
-		this->numTexels = rhs.numTexels;
+		this->width				= rhs.width;
+		this->height			= rhs.height;
+		this->textureID			= rhs.textureID;
+		this->numTexels			= rhs.numTexels;
 
 		if (this->texels != nullptr)
 		{
 			delete[] texels;
+			numTexels = 0;
 		}
 
-		this->texels = new vec4[this->numTexels];
+		this->texels			= new vec4[this->numTexels];
+		resolutionHasChanged	= true;
 		for (unsigned int i = 0; i < this->numTexels; i++)
 		{
 			this->texels[i] = rhs.texels[i];
@@ -189,7 +206,7 @@ namespace BlazeEngine
 		LOG_ERROR("Could not load texture at \"" + texturePath + "\", error: \"" + string(failResult) + ".\" Returning solid red color!");
 
 		width = height = 1;
-		Texture* texture = new Texture(width, height, ERROR_TEXTURE_NAME, true, vec4(1.0f, 0.0f, 0.0f, 1.0f));
+		Texture* texture = new Texture(width, height, ERROR_TEXTURE_NAME, true, TEXTURE_ERROR_COLOR_VEC4);
 
 		return texture;
 	}
@@ -216,11 +233,13 @@ namespace BlazeEngine
 				return false;
 			}
 
-			// Specify a 2D image:
-			glTexImage2D(this->target, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, &this->Texel(0,0).r);
+			//// Specify a 2D image:
+			//glTexImage2D(this->target, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, &this->Texel(0,0).r);
 
-			// Set the texture properties:
-			glTexStorage2D(this->target, 1, this->internalFormat, (GLsizei)this->width, (GLsizei)this->height);
+			//// Set the texture properties:
+			//glTexStorage2D(this->target, 1, this->internalFormat, (GLsizei)this->width, (GLsizei)this->height);
+
+			//resolutionHasChanged = false;
 
 			// UV wrap mode:
 			glTexParameteri(this->target, GL_TEXTURE_WRAP_S, GL_REPEAT);	// u
@@ -237,8 +256,16 @@ namespace BlazeEngine
 			}
 		#endif
 
-		//glActiveTexture(0); // Set the active texture unit [0, 80+]
-		// Don't think we need this if we're using glBindTexture?
+		if (resolutionHasChanged)
+		{
+			// Specify a 2D image:
+			glTexImage2D(this->target, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, &this->Texel(0, 0).r);
+
+			// Set the texture properties:
+			glTexStorage2D(this->target, 1, this->internalFormat, (GLsizei)this->width, (GLsizei)this->height);
+
+			resolutionHasChanged = false;
+		}
 
 		// Upload to the GPU:
 		glTexSubImage2D(this->target, 0, 0, 0, this->width, this->height, this->format, this->type, &this->Texel(0, 0).r); // <-- GL_INVALID_ENUM ???

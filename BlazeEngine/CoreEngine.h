@@ -42,13 +42,17 @@ namespace BlazeEngine
 		struct
 		{
 			// Orthographic camera defaults:
-			float defaultNear				= 1.0f;
-			float defaultFar				= 100.0f;
+			//float defaultNear				= 1.0f;
+			//float defaultFar				= 100.0f;
 
 			float defaultOrthoHalfWidth		= 5.0f;		// TODO: Choose appropriate values??
 			float defaultOrthoHalfHeight	= 5.0f;		// -> Function of resolution and scene width
 
 			float defaultZBias				= 0.01f;
+
+			// Texture dimensions:
+			int defaultShadowMapWidth		= 1024;
+			int defaultShadowMapHeight		= 1024;
 		} shadows;
 
 		struct

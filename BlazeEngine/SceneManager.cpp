@@ -118,33 +118,40 @@ namespace BlazeEngine
 	{
 		if (meshCount < maxMeshes)
 		{
-			// Update scene bounds to contain the new mesh:
-			if (newMesh->bounds.xMin < sceneBounds.xMin)
+			//Bounds meshWorldBounds = newMesh->localBounds.GetTransformedBounds(newMesh->GetTransform().Model());
+			Bounds meshWorldBounds(newMesh->localBounds.GetTransformedBounds(newMesh->GetTransform().Model()));
+
+			LOG("Mesh world bounds = " + to_string(meshWorldBounds.xMin) + " " + to_string(meshWorldBounds.xMax) + " " + to_string(meshWorldBounds.yMin) + " " + to_string(meshWorldBounds.yMax) + " " + to_string(meshWorldBounds.zMin) + " " + to_string(meshWorldBounds.zMax));
+
+			// Update scene (world) bounds to contain the new mesh:
+			if (meshWorldBounds.xMin < sceneWorldBounds.xMin)
 			{
-				sceneBounds.xMin = newMesh->bounds.xMin;
+				sceneWorldBounds.xMin = meshWorldBounds.xMin;
 			}
-			if (newMesh->bounds.xMax > sceneBounds.xMax)
+			if (meshWorldBounds.xMax > sceneWorldBounds.xMax)
 			{
-				sceneBounds.xMax = newMesh->bounds.xMax;
+				sceneWorldBounds.xMax = meshWorldBounds.xMax;
 			}
 
-			if (newMesh->bounds.yMin < sceneBounds.yMin)
+			if (meshWorldBounds.yMin < sceneWorldBounds.yMin)
 			{
-				sceneBounds.yMin = newMesh->bounds.yMin;
+				sceneWorldBounds.yMin = meshWorldBounds.yMin;
 			}
-			if (newMesh->bounds.yMax > sceneBounds.yMax)
+			if (meshWorldBounds.yMax > sceneWorldBounds.yMax)
 			{
-				sceneBounds.yMax = newMesh->bounds.yMax;
+				sceneWorldBounds.yMax = meshWorldBounds.yMax;
 			}
 
-			if (newMesh->bounds.zMin < sceneBounds.zMin)
+			if (meshWorldBounds.zMin < sceneWorldBounds.zMin)
 			{
-				sceneBounds.zMin = newMesh->bounds.zMin;
+				sceneWorldBounds.zMin = meshWorldBounds.zMin;
 			}
-			if (newMesh->bounds.zMax > sceneBounds.zMax)
+			if (meshWorldBounds.zMax > sceneWorldBounds.zMax)
 			{
-				sceneBounds.zMax = newMesh->bounds.zMax;
+				sceneWorldBounds.zMax = meshWorldBounds.zMax;
 			}
+			
+			LOG("Scene world bounds = " + to_string(sceneWorldBounds.xMin) + " " + to_string(sceneWorldBounds.xMax) + " " + to_string(sceneWorldBounds.yMin) + " " + to_string(sceneWorldBounds.yMax) + " " + to_string(sceneWorldBounds.zMin) + " " + to_string(sceneWorldBounds.zMax));
 
 			// Add the mesh to our array:
 			meshes[meshCount] = newMesh;
@@ -288,12 +295,17 @@ namespace BlazeEngine
 	{
 		LOG("Scene manager shutting down...");
 
+		// Scene cleanup:
+		currentScene->keyLight.Destroy();
+
 		if (currentScene)
 		{
 			delete currentScene;
 			currentScene = nullptr;
 		}
 		
+
+		// Scene manager cleanup:
 		if (materials)
 		{
 			for (unsigned int i = 0; i < MAX_MATERIALS; i++)
@@ -318,7 +330,7 @@ namespace BlazeEngine
 			{
 				if (textures[i])
 				{
-					delete textures[i];
+					textures[i]->Destroy();
 				}
 			}
 			delete[] textures;
@@ -476,10 +488,9 @@ namespace BlazeEngine
 	void BlazeEngine::SceneManager::AddGameObject(GameObject* newGameObject)
 	{
 		currentScene->gameObjects.push_back(newGameObject);
-		int gameObjectIndex = (int)currentScene->gameObjects.size() - 1;
 
 		// Store a pointer to the GameObject's Renderable and add it to the list for the RenderManager
-		currentScene->renderables.push_back(currentScene->gameObjects[gameObjectIndex]->GetRenderable());
+		currentScene->renderables.push_back(newGameObject->GetRenderable());
 
 		#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
 			LOG("Added new GameObject to the scene: " + newGameObject->GetName());
@@ -491,9 +502,17 @@ namespace BlazeEngine
 	{
 		aiVector3D sourceScale, sourcePosition; // sourceRotation, 
 		aiQuaternion sourceRotation;
-		source.Decompose(sourceScale, sourceRotation, sourcePosition); // Extract the decomposed matrices
+		source.Decompose(sourceScale, sourceRotation, sourcePosition); // Decompose the source matrix into its scale, rotation, position components
 
-		// TO DO: Use Quaternions instead of euler angles...
+		#if defined(DEBUG_TRANSFORMS)
+			LOG("Decomposed aiMatrix4x4 into:");
+			LOG("\tSource Scale:    " + to_string(sourceScale.x) + " " + to_string(sourceScale.y) + " " + to_string(sourceScale.z));
+			LOG("\tSource Position: " + to_string(sourcePosition.x) + " " + to_string(sourcePosition.y) + " " + to_string(sourcePosition.z));
+			LOG("\tSource Rotation: " + to_string(sourceRotation.x) + " " + to_string(sourceRotation.y) + " " + to_string(sourceRotation.z) + " " + to_string(sourceRotation.w));
+		#endif
+
+
+		// TODO: Use Quaternions instead of Euler angles...
 		glm::quat sourceRotationAsGLMQuat(sourceRotation.w, sourceRotation.x, sourceRotation.y, sourceRotation.z);
 		vec3 eulerRotation = glm::eulerAngles(sourceRotationAsGLMQuat);
 
@@ -507,7 +526,7 @@ namespace BlazeEngine
 	int SceneManager::GetMaterialIndex(string materialName)
 	{
 		// Check if a material with the same name exists, and return it if it does:
-		int materialIndex = FindMaterialIndex(materialName);
+		int materialIndex = GetMaterialIndexIfExists(materialName);
 		if (materialIndex != -1)
 		{
 			return materialIndex;
@@ -526,7 +545,7 @@ namespace BlazeEngine
 	{
 		if (checkForExisting) // Check if a material with the same name exists, and return it if it does
 		{
-			int materialIndex = FindMaterialIndex(newMaterial->Name());
+			int materialIndex = GetMaterialIndexIfExists(newMaterial->Name());
 			if (materialIndex != -1)
 			{
 				LOG("Found existing material \"" + materials[materialIndex]->Name() + "\" at index " + to_string(materialIndex));
@@ -549,7 +568,7 @@ namespace BlazeEngine
 	}
 
 
-	int SceneManager::FindMaterialIndex(string materialName)
+	int SceneManager::GetMaterialIndexIfExists(string materialName)
 	{
 		for (unsigned int i = 0; i < MAX_MATERIALS; i++)
 		{
@@ -582,7 +601,7 @@ namespace BlazeEngine
 				int materialIndex = viewMesh->MaterialIndex();
 				if (materialIndex < 0 || (unsigned int)materialIndex >= currentMaterialCount)
 				{
-					LOG("AssembleMaterialMeshLists() is skipping a mesh with out of bounds material index!");
+					LOG("AssembleMaterialMeshLists() is skipping a mesh with out of localBounds material index!");
 				}
 				else
 				{
@@ -1040,8 +1059,6 @@ namespace BlazeEngine
 				}
 
 				Mesh* newMesh = new Mesh(meshName, vertices, numVerts, indices, numIndices, materialIndex);
-			
-				int meshIndex = currentScene->AddMesh(newMesh);
 
 				GameObject* gameObject = FindCreateGameObjectParents(scene, currentNode->mParent);
 
@@ -1052,11 +1069,10 @@ namespace BlazeEngine
 						
 					aiMatrix4x4 combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode);	// Pass the currentNode (instead of its parent), since this mesh doesn't belong to a group
 					InitializeTransformValues(combinedTransform, gameObject->GetTransform());
-						
-					// Set the GameObject as the parent of the mesh:
-					newMesh->GetTransform().SetParent(gameObject->GetTransform());
 
-					gameObject->GetRenderable()->AddViewMeshAsChild(currentScene->GetMesh(meshIndex));
+					gameObject->GetRenderable()->AddViewMeshAsChild(newMesh);		// Set gameObject as parent of newMesh
+
+					currentScene->AddMesh(newMesh);								// Also calculates bounds
 
 					LOG_ERROR("Created a _GAMEOBJECT for mesh \"" + meshName + "\" that did not belong to a group! GameObjects should belong to groups in the source .FBX!");
 
@@ -1066,18 +1082,18 @@ namespace BlazeEngine
 
 				// We have a GameObject:
 				aiMatrix4x4 combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode->mParent);
-				combinedTransform = combinedTransform * currentNode->mTransformation; // Combine the parent and child transforms								
+				combinedTransform = combinedTransform * currentNode->mTransformation;		// Combine the parent and child transforms								
+				
+				InitializeTransformValues(combinedTransform, &newMesh->GetTransform());		// Copy to our Mesh transform
 
-				InitializeTransformValues(combinedTransform, &currentScene->GetMesh(meshIndex)->GetTransform());  // Copy to our Mesh transform
+				gameObject->GetRenderable()->AddViewMeshAsChild(newMesh);					// Creates transform heirarchy
 
-				// Add the mesh to the GameObject's Renderable's viewMeshes:
-				gameObject->GetRenderable()->AddViewMeshAsChild(currentScene->GetMesh(meshIndex));
+				currentScene->AddMesh(newMesh);		// Also calculates scene bounds
 			}
 			else
 			{
 				LOG_ERROR("Could not find \"" + meshName + "\" in the scene graph");
 			}
-			
 		}
 
 		int numGameObjects = (int)currentScene->gameObjects.size();
@@ -1161,10 +1177,11 @@ namespace BlazeEngine
 			{
 				LOG("-> " + string(debug->mName.C_Str()));
 
-				LOG("\t\t" + to_string(debug->mTransformation.a1) + " " + to_string(debug->mTransformation.b1) + " " + to_string(debug->mTransformation.c1) + " " + to_string(debug->mTransformation.d1));
-				LOG("\t\t" + to_string(debug->mTransformation.a2) + " " + to_string(debug->mTransformation.b2) + " " + to_string(debug->mTransformation.c2) + " " + to_string(debug->mTransformation.d2));
-				LOG("\t\t" + to_string(debug->mTransformation.a3) + " " + to_string(debug->mTransformation.b3) + " " + to_string(debug->mTransformation.c3) + " " + to_string(debug->mTransformation.d3));
-				LOG("\t\t" + to_string(debug->mTransformation.a4) + " " + to_string(debug->mTransformation.b4) + " " + to_string(debug->mTransformation.c4) + " " + to_string(debug->mTransformation.d4));
+				// NOTE: Assimp matrices are stored in row major order
+				LOG("\t\t" + to_string(debug->mTransformation.a1) + " " + to_string(debug->mTransformation.a2) + " " + to_string(debug->mTransformation.a3) + " " + to_string(debug->mTransformation.a4));
+				LOG("\t\t" + to_string(debug->mTransformation.b1) + " " + to_string(debug->mTransformation.b2) + " " + to_string(debug->mTransformation.b3) + " " + to_string(debug->mTransformation.b4));
+				LOG("\t\t" + to_string(debug->mTransformation.c1) + " " + to_string(debug->mTransformation.c2) + " " + to_string(debug->mTransformation.c3) + " " + to_string(debug->mTransformation.c4));
+				LOG("\t\t" + to_string(debug->mTransformation.d1) + " " + to_string(debug->mTransformation.d2) + " " + to_string(debug->mTransformation.d3) + " " + to_string(debug->mTransformation.d4));
 
 				debug = debug->mParent;
 			}
@@ -1388,10 +1405,46 @@ namespace BlazeEngine
 					(
 						lightName, 
 						LIGHT_DIRECTIONAL, 
-						lightColor
+						lightColor,
+						nullptr
 					);
 
 					InitializeTransformValues(lightTransform, &currentScene->keyLight.GetTransform());
+
+					Bounds transformedBounds = currentScene->WorldSpaceSceneBounds().GetTransformedBounds(glm::inverse(currentScene->keyLight.GetTransform().ModelRotation())); // We use model rotation, because we don't want to translate the bounds
+
+					LOG("transformed bounds = " + to_string(transformedBounds.xMin) + " " + to_string(transformedBounds.xMax) + " " + to_string(transformedBounds.yMin) + " " + to_string(transformedBounds.yMax) + " " + to_string(transformedBounds.zMin) + " " + to_string(transformedBounds.zMax));
+
+					ShadowMap* keyLightShadowMap = new ShadowMap	// TEMP: We assume the key light will ALWAYS have a shadow
+					(
+						lightName,
+						CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapWidth,
+						CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapHeight,
+
+						//-std::numeric_limits<float>::max(),	// Camera will be looking down Z-, thus near > far
+						//std::numeric_limits<float>::max(),
+						//// ^^^ THIS SHOULDN'T BE NECESSARY, AND WON'T WORK ANYWAY: WE NEED NEAR/FAR FOR ENCODING/DECODING SHADOW MAP DEPTHS...
+
+						//transformedBounds.zMin * 10.01f,
+						//transformedBounds.zMax * 10.01f, 
+
+						//transformedBounds.zMin * 1.01f,
+						//transformedBounds.zMax * 1.01f,
+
+						transformedBounds.zMin,		// CURRENT ISSUE: STILL NOT CENTERED QUITE RIGHT...
+						transformedBounds.zMax,
+						
+
+						&currentScene->keyLight.GetTransform(),
+						vec3(0, 0, 0),
+						transformedBounds.xMin,
+						transformedBounds.xMax,
+						transformedBounds.yMin,	// TODO: Flip the order of these values in the constructor args...
+						transformedBounds.yMax
+					);
+
+					currentScene->keyLight.AddShadowMap(keyLightShadowMap);
+
 
 					// Note: Assimp seems to import directional lights with their "forward" vector pointing in the opposite direction.
 					// This is ok, since we use "forward" as "vector pointing towards the light" when uploading to our shaders...
@@ -1462,9 +1515,12 @@ namespace BlazeEngine
 	}
 
 
-	void BlazeEngine::SceneManager::ImportCamerasFromScene(aiScene const* scene /*= nullptr*/)
+	void BlazeEngine::SceneManager::ImportCamerasFromScene(aiScene const* scene /*= nullptr*/, bool clearCameras /*= false*/) // If scene == nullptr, create a camera at the origin
 	{
-		currentScene->ClearCameras();
+		if (clearCameras)
+		{
+			currentScene->ClearCameras();
+		}		
 
 		if (scene == nullptr) // Signal to create a default camera at the origin
 		{
@@ -1568,7 +1624,7 @@ namespace BlazeEngine
 			LOG("Camera rotation is " + to_string(camRotation.x * (180.0f / glm::pi<float>())) + " " + to_string(camRotation.y * (180.0f / glm::pi<float>())) + " " + to_string(camRotation.z * (180.0f / glm::pi<float>())) + " (degrees)");
 		#endif
 
-		LOG_ERROR("Camera field of view is NOT currently loaded from the source file. A hard-coded default value is used for now...");
+		LOG_ERROR("Camera field of view is NOT currently loaded from the source file. A hard-coded default value is used for now");
 
 		currentScene->GetMainCamera()->Initialize(
 			(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,

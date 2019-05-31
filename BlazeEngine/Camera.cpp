@@ -1,5 +1,8 @@
+#include "BuildConfiguration.h"
 #include "Camera.h"
 #include "CoreEngine.h"
+
+#include "glm.hpp"
 
 
 namespace BlazeEngine
@@ -23,9 +26,18 @@ namespace BlazeEngine
 		/*isDirty = false;*/
 	}
 
-	Camera::Camera(string cameraName, vec3 position, float fieldOfView, float near, float far, float aspectRatio, Transform* parent /*= nullptr*/, bool isOrthographic /*= false*/, float orthoHalfWidth /*= 5*/, float orthoHalfHeight /*= 5*/) : SceneObject::SceneObject(cameraName)
+
+	// Perspective constructor
+	Camera::Camera(string cameraName, float aspectRatio, float fieldOfView, float near, float far, Transform* parent /*= nullptr*/, vec3 position /*= vec3(0.0f, 0.0f, 0.0f)*/) : SceneObject::SceneObject(cameraName)
 	{
-		Initialize(fieldOfView, aspectRatio, near, far, parent, position, isOrthographic, orthoHalfWidth, orthoHalfHeight);
+		Initialize(aspectRatio, fieldOfView, near, far, parent, position);
+	}
+
+
+	// Orthographic constructor:
+	Camera::Camera(string cameraName, float near, float far, Transform* parent /*= nullptr*/, vec3 position /*= vec3(0.0f, 0.0f, 0.0f)*/, float orthoLeft /*= -5*/, float orthoRight /*= 5*/, float orthoBottom /*= -5*/, float orthoTop /*= 5*/) : SceneObject::SceneObject(cameraName)
+	{
+		Initialize(glm::abs((orthoRight - orthoLeft) / (orthoTop - orthoBottom)), 0.0f, near, far, parent, position, true, orthoLeft, orthoRight, orthoBottom, orthoTop);
 	}
 
 	
@@ -34,33 +46,43 @@ namespace BlazeEngine
 	//}*/
 
 
-	void Camera::Initialize(float aspectRatio, float fieldOfView, float near, float far, Transform* parent /*= nullptr*/, vec3 position /*= vec3(0.0f, 0.0f, 0.0f)*/, bool isOrthographic /*= false*/, float orthoHalfWidth /*= 5*/, float orthoHalfHeight /*= 5*/)
+	void Camera::Initialize(float aspectRatio, float fieldOfView, float near, float far, Transform* parent /*= nullptr*/, vec3 position /*= vec3(0.0f, 0.0f, 0.0f)*/, bool isOrthographic /*= false*/, float orthoLeft /*= -5*/, float orthoRight /*= 5*/, float orthoBottom /*= -5*/, float orthoTop /*= 5*/)
 	{
-		this->aspectRatio		= aspectRatio;
-		this->fieldOfView		= fieldOfView;
-		this->near				= near;
-		this->far				= far;
+		this->near					= near;
+		this->far					= far;
+		this->aspectRatio			= aspectRatio;
 
 		this->transform.SetPosition(position);
 
 		this->GetTransform()->SetParent(parent);
 
-		this->isOrthographic	= isOrthographic;
-		this->orthoHalfWidth	= orthoHalfWidth;
-		this->orthoHalfHeight	= orthoHalfHeight;
-
+		this->isOrthographic		= isOrthographic;
 		if (isOrthographic)
-		{
-			this->projection = glm::ortho((float)-orthoHalfWidth, (float)orthoHalfWidth, (float)-orthoHalfHeight, (float)orthoHalfHeight, this->near, this->far);
+		{	
+			this->fieldOfView		= 0.0f;
+
+			this->orthoLeft			= orthoLeft;
+			this->orthoRight		= orthoRight;
+			this->orthoBottom		= orthoBottom;
+			this->orthoTop			= orthoTop;
+
+			this->projection		= glm::ortho(orthoLeft, orthoRight, orthoBottom, orthoTop, this->near, this->far);
 		}
 		else
 		{
-			this->projection = glm::perspective(glm::radians(fieldOfView), aspectRatio, near, far);
+			this->fieldOfView		= fieldOfView;
+
+			this->orthoLeft			= 0.0f;
+			this->orthoRight		= 0.0f;
+			this->orthoBottom		= 0.0f;
+			this->orthoTop			= 0.0f;
+
+			this->projection		= glm::perspective(glm::radians(fieldOfView), aspectRatio, near, far);
 		}
 
-		View();					// Internally initialize the view matrix
+		View();						// Internally initialize the view matrix
 
-		this->viewProjection	= projection * view;
+		this->viewProjection		= projection * view;
 	}
 
 
@@ -77,6 +99,35 @@ namespace BlazeEngine
 
 	void Camera::HandleEvent(EventInfo const * eventInfo)
 	{
+	}
+
+	void Camera::DebugPrint()
+	{
+		#if defined(DEBUG_TRANSFORMS)
+			LOG("\n[CAMERA DEBUG: " + this->GetName() + "]");
+			LOG("Field of view: " + to_string(fieldOfView));
+			LOG("Near: " + to_string(near));
+			LOG("Far: " + to_string(far));
+			LOG("Aspect ratio: " + to_string(aspectRatio));
+			
+			// NOTE: OpenGL matrics are stored in column-major order
+			LOG("\nView Matrix:\n\t" + to_string(view[0][0]) + " " + to_string(view[1][0]) + " " + to_string(view[2][0]) + " " + to_string(view[3][0]) );
+			LOG("\t" + to_string(view[0][1]) + " " + to_string(view[1][1]) + " " + to_string(view[2][1]) + " " + to_string(view[3][1]));
+			LOG("\t" + to_string(view[0][2]) + " " + to_string(view[1][2]) + " " + to_string(view[2][2]) + " " + to_string(view[3][2]));
+			LOG("\t" + to_string(view[0][3]) + " " + to_string(view[1][3]) + " " + to_string(view[2][3]) + " " + to_string(view[3][3]));
+
+			LOG("\nProjection Matrix:\n\t" + to_string(projection[0][0]) + " " + to_string(projection[1][0]) + " " + to_string(projection[2][0]) + " " + to_string(projection[3][0]));
+			LOG("\t" + to_string(projection[0][1]) + " " + to_string(projection[1][1]) + " " + to_string(projection[2][1]) + " " + to_string(projection[3][1]));
+			LOG("\t" + to_string(projection[0][2]) + " " + to_string(projection[1][2]) + " " + to_string(projection[2][2]) + " " + to_string(projection[3][2]));
+			LOG("\t" + to_string(projection[0][3]) + " " + to_string(projection[1][3]) + " " + to_string(projection[2][3]) + " " + to_string(projection[3][3]));
+
+			LOG("\nView Projection Matrix:\n\t" + to_string(viewProjection[0][0]) + " " + to_string(viewProjection[1][0]) + " " + to_string(viewProjection[2][0]) + " " + to_string(viewProjection[3][0]));
+			LOG("\t" + to_string(viewProjection[0][1]) + " " + to_string(viewProjection[1][1]) + " " + to_string(viewProjection[2][1]) + " " + to_string(viewProjection[3][1]));
+			LOG("\t" + to_string(viewProjection[0][2]) + " " + to_string(viewProjection[1][2]) + " " + to_string(viewProjection[2][2]) + " " + to_string(viewProjection[3][2]));
+			LOG("\t" + to_string(viewProjection[0][3]) + " " + to_string(viewProjection[1][3]) + " " + to_string(viewProjection[2][3]) + " " + to_string(viewProjection[3][3]));
+		#else
+			return;
+		#endif
 	}
 }
 
