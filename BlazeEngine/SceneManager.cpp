@@ -1319,6 +1319,15 @@ namespace BlazeEngine
 							LOG("Found a corresponding light node in the scene graph...");
 						#endif
 						lightTransform = GetCombinedTransformFromHierarchy(scene, current->mParent);
+						lightTransform = lightTransform * current->mTransformation;	
+
+						#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+							LOG("-> " + string(current->mName.C_Str()) + " (Light's first transformation node)");
+							LOG(to_string(current->mTransformation.a1) + " " + to_string(current->mTransformation.a2) + " " + to_string(current->mTransformation.a3) + " " + to_string(current->mTransformation.a4) );
+							LOG(to_string(current->mTransformation.b1) + " " + to_string(current->mTransformation.b2) + " " + to_string(current->mTransformation.b3) + " " + to_string(current->mTransformation.b4));
+							LOG(to_string(current->mTransformation.c1) + " " + to_string(current->mTransformation.c2) + " " + to_string(current->mTransformation.c3) + " " + to_string(current->mTransformation.c4));
+							LOG(to_string(current->mTransformation.d1) + " " + to_string(current->mTransformation.d2) + " " + to_string(current->mTransformation.d3) + " " + to_string(current->mTransformation.d4));
+						#endif
 					}
 					
 					vec3 lightColor(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b);
@@ -1333,7 +1342,7 @@ namespace BlazeEngine
 
 					InitializeTransformValues(lightTransform, &currentScene->keyLight.GetTransform());
 
-					Bounds transformedBounds = currentScene->WorldSpaceSceneBounds().GetTransformedBounds(glm::inverse(currentScene->keyLight.GetTransform().ModelRotation())); // We use model rotation, because we don't want to translate the bounds
+					Bounds transformedBounds = currentScene->WorldSpaceSceneBounds().GetTransformedBounds(glm::inverse(currentScene->keyLight.GetTransform().Model()));
 
 					LOG("transformed bounds = " + to_string(transformedBounds.xMin) + " " + to_string(transformedBounds.xMax) + " " + to_string(transformedBounds.yMin) + " " + to_string(transformedBounds.yMax) + " " + to_string(transformedBounds.zMin) + " " + to_string(transformedBounds.zMax));
 
@@ -1343,19 +1352,8 @@ namespace BlazeEngine
 						CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapWidth,
 						CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapHeight,
 
-						//-std::numeric_limits<float>::max(),	// Camera will be looking down Z-, thus near > far
-						//std::numeric_limits<float>::max(),
-						//// ^^^ THIS SHOULDN'T BE NECESSARY, AND WON'T WORK ANYWAY: WE NEED NEAR/FAR FOR ENCODING/DECODING SHADOW MAP DEPTHS...
-
-						//transformedBounds.zMin * 10.01f,
-						//transformedBounds.zMax * 10.01f, 
-
-						//transformedBounds.zMin * 1.01f,
-						//transformedBounds.zMax * 1.01f,
-
-						transformedBounds.zMin,		// CURRENT ISSUE: STILL NOT CENTERED QUITE RIGHT...
-						transformedBounds.zMax,
-						
+						CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultNear,	// Note: Near/far are relative to the light's position (which is where we render our shadow from)
+						glm::abs(transformedBounds.zMax - transformedBounds.zMin),		// Far distance is the magnitude of the scene depth
 
 						&currentScene->keyLight.GetTransform(),
 						vec3(0, 0, 0),

@@ -262,8 +262,8 @@ namespace BlazeEngine
 		// TEMP DEBUG:
 		int numCams = 0;
 		
-		//Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW, numCams);
-		Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN, numCams);
+		Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW, numCams);
+		//Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN, numCams);
 		
 		Render(cameras[0]);
 
