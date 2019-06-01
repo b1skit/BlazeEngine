@@ -1062,33 +1062,36 @@ namespace BlazeEngine
 
 				GameObject* gameObject = FindCreateGameObjectParents(scene, currentNode->mParent);
 
+				aiMatrix4x4 combinedTransform;
+				Transform* targetTransform = nullptr;
+
 				// If the mesh doesn't belong to a group, create a GameObject to contain it:
 				if (gameObject == nullptr)
 				{
-					gameObject = new GameObject(meshName + "_GAMEOBJECT"); // Add a postfix to remind us that we expect GameObjects to be grouped in our .FBX from Maya
-						
-					aiMatrix4x4 combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode);	// Pass the currentNode (instead of its parent), since this mesh doesn't belong to a group
-					InitializeTransformValues(combinedTransform, gameObject->GetTransform());
+					LOG_ERROR("Creating a GameObject for mesh \"" + meshName + "\" that did not belong to a group! GameObjects should belong to groups in the source .FBX!");
+					
+					gameObject = new GameObject(meshName);
+					AddGameObject(gameObject);				// Add the new game object
 
-					gameObject->GetRenderable()->AddViewMeshAsChild(newMesh);		// Set gameObject as parent of newMesh
+					newMesh->Name() = meshName + "_MESH";	// Add a postfix to remind us that we expect GameObjects to be grouped in our .FBX from Maya
 
-					currentScene->AddMesh(newMesh);								// Also calculates bounds
+					targetTransform = gameObject->GetTransform(); // We'll use the gameobject in our transform heirarchy
+				}
+				else // We have a GameObject:
+				{
+					LOG("Found existing parent GameObject \"" + gameObject->GetName() + "\" for mesh \"" + meshName + "\"");
 
-					LOG_ERROR("Created a _GAMEOBJECT for mesh \"" + meshName + "\" that did not belong to a group! GameObjects should belong to groups in the source .FBX!");
-
-					AddGameObject(gameObject);	// We need to manually add the game object
-					continue; // We're done!
+					targetTransform = &newMesh->GetTransform();	// We'll use the mesh in our transform heirarchy
 				}
 
-				// We have a GameObject:
-				aiMatrix4x4 combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode->mParent);
-				combinedTransform = combinedTransform * currentNode->mTransformation;		// Combine the parent and child transforms								
+				combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode->mParent);	// Mesh doesn't belong to a group, so we'll give it's transform to the gameobject we've created
+				combinedTransform = combinedTransform * currentNode->mTransformation;				// Combine the parent and child transforms	
 				
-				InitializeTransformValues(combinedTransform, &newMesh->GetTransform());		// Copy to our Mesh transform
+				InitializeTransformValues(combinedTransform, targetTransform);						// Copy to our Mesh transform
 
-				gameObject->GetRenderable()->AddViewMeshAsChild(newMesh);					// Creates transform heirarchy
+				gameObject->GetRenderable()->AddViewMeshAsChild(newMesh);							// Creates transform heirarchy
 
-				currentScene->AddMesh(newMesh);		// Also calculates scene bounds
+				currentScene->AddMesh(newMesh);														// Also calculates scene bounds
 			}
 			else
 			{
@@ -1131,6 +1134,7 @@ namespace BlazeEngine
 				#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
 					LOG("Found an existing GameObject parent: \"" + parentName + "\"");
 				#endif
+
 				return currentScene->gameObjects.at(i);
 			}
 		}
@@ -1147,7 +1151,8 @@ namespace BlazeEngine
 			#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
 				LOG("Parented \"" + newGameObject->GetName() + "\" -> \"" + nextParent->GetName() + "\"");
 			#endif
-			newGameObject->GetTransform()->SetParent(nextParent->GetTransform());
+
+			newGameObject->GetTransform()->SetParent(nextParent->GetTransform()); // ?????????Doesn't work????????????????
 		}
 		
 		#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
@@ -1166,8 +1171,9 @@ namespace BlazeEngine
 			return aiMatrix4x4();
 		}
 
+
 		#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-			LOG("Received parent \"" + (parent == nullptr ? "nullptr" : string(parent->mName.C_Str())) + "\". Combining imported transformations from scene graph:");
+			LOG("Received parent \"" + string(parent->mName.C_Str()) + "\". Combining imported transformations from scene graph:");
 		#endif
 
 		#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
@@ -1188,20 +1194,7 @@ namespace BlazeEngine
 			LOG("End of transform hierarchy!");
 		#endif
 
-		string parentName = string(parent->mName.C_Str());
-		if (parentName.find("$AssimpFbx$") == string::npos)
-		{
-			#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-				LOG("\tParent \"" + parentName + "\" is not a transformation, returning identity instead of traversing up to \"" + (parent->mParent ? string(parent->mParent->mName.C_Str()) : "null parent") + "\"");
-			#endif
-			return aiMatrix4x4(); // Later, this is multiplied by the transform of the current node
-		}
-
-		#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-			LOG("Starting with transform of \"" + parentName + "\":");
-		#endif
-
-		aiMatrix4x4 combinedTransform;
+		aiMatrix4x4 combinedTransform;	// Start with the identity matrix
 		aiNode* current = parent;
 		while (current != nullptr && current != scene->mRootNode)
 		{
@@ -1235,77 +1228,6 @@ namespace BlazeEngine
 		}
 
 		return combinedTransform;
-
-
-
-		//aiMatrix4x4 translation;
-		//aiMatrix4x4 scaling;
-		//aiMatrix4x4 rotation;
-
-		//aiNode* current = parent;
-		//bool foundTranslation = false, foundScaling = false, foundRotation = false;
-		//while (current != nullptr && current != scene->mRootNode)
-		//{
-		//	string currentName = string(current->mName.C_Str());
-
-		//	// Assimp (seems to) build transformations in the order Scaling, Rotation, Translation as we walk up the tree...
-		//	if (currentName.find("$AssimpFbx$") != string::npos)
-		//	{
-		//		#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-		//				LOG("\tCurrent node is \"" + currentName + "\":");
-		//		#endif
-
-
-		//		if (!foundTranslation && currentName.find("Translation") != string::npos && currentName.find("Pivot") == string::npos)
-		//		{
-		//			translation = current->mTransformation;
-		//			foundTranslation = true;
-		//			#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-		//				LOG("\t\t\"" + currentName + "\" is a translation node!");
-		//			#endif
-		//		}
-		//		else if (!foundScaling && currentName.find("Scaling") != string::npos && currentName.find("Pivot") == string::npos)
-		//		{
-		//			scaling = current->mTransformation;
-		//			foundScaling = true;
-		//			#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-		//				LOG("\t\t\"" + currentName + "\" is a scaling node!");
-		//			#endif
-		//		}
-		//		else if (!foundRotation && currentName.find("_Rotation") != string::npos && currentName.find("Pivot") == string::npos) // We check for "_Rotation" so we can skip "PostRotation"
-		//		{
-		//			rotation = current->mTransformation;
-		//			foundRotation = true;
-		//			#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-		//				LOG("\t\t\"" + currentName + "\" is a rotation node!");
-		//			#endif
-		//		}
-		//		#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-		//			else
-		//			{
-		//				LOG("\t\tSkipping \"" + currentName + "\"...");
-		//			}
-		//		#endif
-		//	}
-		//	else 
-		//	{
-		//		#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-		//			LOG("Found a non-transformation node, stopping search");
-		//		#endif
-		//		break; // If we've found a non-transformation node, we need to stop searching
-		//	}
-
-		//	if (foundTranslation && foundScaling && foundRotation)
-		//	{
-		//		break;
-		//	}
-
-		//	current = current->mParent;
-		//}
-		//#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-		//	LOG("Finished combining transformations");
-		//#endif
-		//return translation * scaling * rotation;
 	}
 
 

@@ -207,7 +207,7 @@ namespace BlazeEngine
 		Mesh(const Mesh& mesh) = default;
 
 		// Getters/Setters:
-		inline string const&	Name()							{ return meshName; }
+		inline string&			Name()							{ return meshName; }
 
 		inline Vertex*			Vertices()						{ return vertices; }
 		inline unsigned int		NumVerts()						{ return this->numVerts; }

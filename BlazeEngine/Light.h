@@ -62,11 +62,11 @@ namespace BlazeEngine
 
 
 	private:
-		vec3 color			= vec3(0.0f, 0.0f, 0.0f);	// Note: Intensity is factored into these values
-		LIGHT_TYPE type		= LIGHT_DIRECTIONAL;		// Default
+		vec3 color				= vec3(0.0f, 0.0f, 0.0f);	// Note: Intensity is factored into these values
+		LIGHT_TYPE type			= LIGHT_DIRECTIONAL;		// Default
 
-		string lightName	= "unnamed_directional_light";
+		string lightName		= "unnamed_directional_light";
 
-		ShadowMap* shadowMap;							// Deallocated by calling Destroy() during SceneManager.Shutdown()
+		ShadowMap* shadowMap	= nullptr;							// Deallocated by calling Destroy() during SceneManager.Shutdown()
 	};
 }

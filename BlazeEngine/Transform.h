@@ -57,13 +57,13 @@ namespace BlazeEngine
 		void LookAt(vec3 camForward, vec3 camUp);
 
 		// Get the position, in (relative) world space
-		inline vec3 const& Position() { return position; }
+		inline vec3 const& Position() { return worldPosition; }
 
 		// Rotate about the world X, Y, Z axis, in that order
 		// eulerXYZ = Rotation angles about each axis, in RADIANS
 		void Rotate(vec3 eulerXYZ);
 
-		inline vec3 const&	GetEulerRotation() { return eulerRotation; }
+		inline vec3 const&	GetEulerRotation() { return eulerWorldRotation; }
 		void				SetEulerRotation(vec3 eulerXYZ);
 		
 		// Set the 
@@ -108,9 +108,9 @@ namespace BlazeEngine
 		vector<Transform*> children;
 
 		// World-space orientation:
-		vec3 position		= vec3(0.0f, 0.0f, 0.0f);
-		vec3 eulerRotation	= vec3(0.0f, 0.0f, 0.0f);	// Current world-space Euler angles (pitch, yaw, roll), in Radians
-		vec3 worldScale		= vec3(1.0f, 1.0f, 1.0f);
+		vec3 worldPosition		= vec3(0.0f, 0.0f, 0.0f);
+		vec3 eulerWorldRotation	= vec3(0.0f, 0.0f, 0.0f);	// Current world-space Euler angles (pitch, yaw, roll), in Radians
+		vec3 worldScale			= vec3(1.0f, 1.0f, 1.0f);
 		
 		// Local CS axis: BlazeEngine always uses a RHCS
 		vec3 right		= WORLD_X;

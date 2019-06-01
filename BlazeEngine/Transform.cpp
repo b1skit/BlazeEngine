@@ -81,14 +81,14 @@ namespace BlazeEngine
 		this->translation = glm::translate(this->translation, amount);
 		
 		vec4 result		= translation * vec4(0.0f, 0.0f, 0.0f, 1.0f); // TO DO: Just extract the translation from the end column of the matrix???
-		this->position	= result.xyz();
+		this->worldPosition	= result.xyz();
 	}
 
 
 	void Transform::SetPosition(vec3 position)
 	{
 		this->translation = glm::translate(mat4(1.0f), position);
-		this->position = position;
+		this->worldPosition = position;
 	}
 
 	void Transform::LookAt(vec3 camForward, vec3 camUp)
@@ -141,10 +141,10 @@ namespace BlazeEngine
 		this->forward	= normalize((this->rotation * vec4(WORLD_Z, 0)).xyz());
 		
 		// Update the rotation value, and keep xyz bound in [0, 2pi]:
-		this->eulerRotation += eulerXYZ;
-		eulerRotation.x = glm::fmod<float>(eulerRotation.x, glm::two_pi<float>()); 
-		eulerRotation.y = glm::fmod<float>(eulerRotation.y, glm::two_pi<float>());
-		eulerRotation.z = glm::fmod<float>(eulerRotation.z, glm::two_pi<float>());
+		this->eulerWorldRotation += eulerXYZ;
+		eulerWorldRotation.x = glm::fmod<float>(eulerWorldRotation.x, glm::two_pi<float>()); 
+		eulerWorldRotation.y = glm::fmod<float>(eulerWorldRotation.y, glm::two_pi<float>());
+		eulerWorldRotation.z = glm::fmod<float>(eulerWorldRotation.z, glm::two_pi<float>());
 
 		// TO DO: CONFIRM THIS WORKS FOR NEGATIVE NUMBERS!!! 
 		// Is this even necessary here, or can I just assume I'll never pass "invalid" values?
@@ -173,12 +173,12 @@ namespace BlazeEngine
 		this->up		= normalize((rotation * vec4(WORLD_Y, 0)).xyz());
 		this->forward	= normalize((rotation * vec4(WORLD_Z, 0)).xyz());
 
-		this->eulerRotation = eulerXYZ;
+		this->eulerWorldRotation = eulerXYZ;
 
 		// Keep our xyz in [0, 2pi]:
-		eulerRotation.x = glm::fmod<float>(eulerRotation.x, glm::two_pi<float>());
-		eulerRotation.y = glm::fmod<float>(eulerRotation.y, glm::two_pi<float>());
-		eulerRotation.z = glm::fmod<float>(eulerRotation.z, glm::two_pi<float>());
+		eulerWorldRotation.x = glm::fmod<float>(eulerWorldRotation.x, glm::two_pi<float>());
+		eulerWorldRotation.y = glm::fmod<float>(eulerWorldRotation.y, glm::two_pi<float>());
+		eulerWorldRotation.z = glm::fmod<float>(eulerWorldRotation.z, glm::two_pi<float>());
 
 		// TO DO: CONFIRM THIS WORKS FOR NEGATIVE NUMBERS!!! 
 		// Is this even necessary here, or can I just assume I'll never pass "invalid" values?
@@ -195,8 +195,8 @@ namespace BlazeEngine
 	void Transform::DebugPrint()
 	{
 		#if defined(DEBUG_TRANSFORMS)
-			LOG("[TRANSFORM DEBUG]\n\tPostition = " + to_string(position.x) + ", " + to_string(position.y) + ", " + to_string(position.z));
-			LOG("Euler rotation = " + to_string(eulerRotation.x) + ", " + to_string(eulerRotation.y) + ", " + to_string(eulerRotation.z) + " (radians)");
+			LOG("[TRANSFORM DEBUG]\n\tPostition = " + to_string(worldPosition.x) + ", " + to_string(worldPosition.y) + ", " + to_string(worldPosition.z));
+			LOG("Euler rotation = " + to_string(eulerWorldRotation.x) + ", " + to_string(eulerWorldRotation.y) + ", " + to_string(eulerWorldRotation.z) + " (radians)");
 			LOG("Scale = " + to_string(worldScale.x) + ", " + to_string(worldScale.y) + ", " + to_string(worldScale.z));
 		#else
 				return;
@@ -221,7 +221,7 @@ namespace BlazeEngine
 
 	void Transform::RegisterChild(Transform* child)
 	{
-		if (find(children.begin(), children.end(), child) !=  children.end())
+		if (find(children.begin(), children.end(), child) ==  children.end())
 		{
 			children.push_back(child);
 		}
@@ -239,8 +239,5 @@ namespace BlazeEngine
 			}
 		}
 	}
-
-
-
 }
 
