@@ -1344,7 +1344,7 @@ namespace BlazeEngine
 
 					Bounds transformedBounds = currentScene->WorldSpaceSceneBounds().GetTransformedBounds(glm::inverse(currentScene->keyLight.GetTransform().Model()));
 
-					LOG("transformed bounds = " + to_string(transformedBounds.xMin) + " " + to_string(transformedBounds.xMax) + " " + to_string(transformedBounds.yMin) + " " + to_string(transformedBounds.yMax) + " " + to_string(transformedBounds.zMin) + " " + to_string(transformedBounds.zMax));
+					//LOG("transformed bounds = " + to_string(transformedBounds.xMin) + " " + to_string(transformedBounds.xMax) + " " + to_string(transformedBounds.yMin) + " " + to_string(transformedBounds.yMax) + " " + to_string(transformedBounds.zMin) + " " + to_string(transformedBounds.zMax));
 
 					ShadowMap* keyLightShadowMap = new ShadowMap	// TEMP: We assume the key light will ALWAYS have a shadow
 					(
@@ -1352,7 +1352,7 @@ namespace BlazeEngine
 						CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapWidth,
 						CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapHeight,
 
-						CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultNear,	// Note: Near/far are relative to the light's position (which is where we render our shadow from)
+						transformedBounds.zMin,
 						glm::abs(transformedBounds.zMax - transformedBounds.zMin),		// Far distance is the magnitude of the scene depth
 
 						&currentScene->keyLight.GetTransform(),
