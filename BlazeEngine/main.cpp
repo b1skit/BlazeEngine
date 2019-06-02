@@ -9,7 +9,7 @@ int main(int argc, char **argv)
 {
 	cout << "Welcome to the Blaze Engine!\n\n";
 
-	BlazeEngine::CoreEngine coreEngine(argc, argv); // TO DO: Implement config file (command line) path passing
+	BlazeEngine::CoreEngine coreEngine(argc, argv); // TODO: Implement config file (command line) path passing
 
 	coreEngine.Startup();
 

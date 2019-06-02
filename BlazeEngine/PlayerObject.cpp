@@ -20,7 +20,7 @@ namespace BlazeEngine
 		vec3 camPosition = playerCamTransform->Position();
 
 		playerCamTransform->SetEulerRotation(vec3(camRotation.x, 0.0f, 0.0f));	// Set pitch
-		playerCamTransform->SetPosition(vec3(0.0f, 0.0f, 0.0f));
+		playerCamTransform->SetPosition(vec3(0.0f, 0.0f, 0.0f));				// Relative to PlayerObject parent
 		
 		this->transform.SetEulerRotation(vec3(0.0f, camRotation.y, 0.0f));		// Set yaw
 		this->transform.SetPosition(camPosition);

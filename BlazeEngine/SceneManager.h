@@ -153,7 +153,7 @@ namespace BlazeEngine
 		// Material management:
 		//---------------------
 		Material**			materials				= nullptr;
-		const unsigned int	MAX_MATERIALS			= 100; // TO DO: Replace this with something configurable/dynamic?
+		const unsigned int	MAX_MATERIALS			= 100; // TODO: Replace this with something configurable/dynamic?
 		unsigned int		currentMaterialCount	= 0;
 		
 		// Finds an existing material, or creates one using the default shader if none exists
@@ -174,7 +174,7 @@ namespace BlazeEngine
 		// Texture management:
 		//--------------------
 		Texture**			textures			= nullptr;
-		const unsigned int	MAX_TEXTURES		= 100; // TO DO: Replace this with something configurable/dynamic?
+		const unsigned int	MAX_TEXTURES		= 100; // TODO: Replace this with something configurable/dynamic?
 		unsigned int		currentTextureCount	= 0;
 		
 		// Find if a texture if it exists, or try and load it if it doesn't. Returns nullptr if file can't be loaded
@@ -204,7 +204,7 @@ namespace BlazeEngine
 
 		// Scene geometry import helper : Combines seperated transform nodes found throughout the scene graph.
 		// Finds and combines the FIRST instance of Translation, Scaling, Rotation matrices in the parenting hierarchy
-		aiMatrix4x4		GetCombinedTransformFromHierarchy(aiScene const* scene, aiNode* parent);
+		aiMatrix4x4		GetCombinedTransformFromHierarchy(aiScene const* scene, aiNode* parent, bool skipPostRotations = true);
 		void			InitializeTransformValues(aiMatrix4x4 const& source, Transform* dest);	// Helper function: Copy transformation values from Assimp scene to BlazeEngine transform
 		
 		// Find a node with a name matching or containing name

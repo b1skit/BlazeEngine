@@ -188,7 +188,7 @@ namespace BlazeEngine
 		VERTEX_TANGENT		= 3,
 		VERTEX_BITANGENT	= 4,
 		
-		VERTEX_UV0			= 5, // TO DO: Implement multipl UV channels?
+		VERTEX_UV0			= 5, // TODO: Implement multipl UV channels?
 		VERTEX_UV1			= 6,
 		VERTEX_UV2			= 7,
 		VERTEX_UV3			= 8,

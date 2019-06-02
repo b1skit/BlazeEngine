@@ -32,7 +32,7 @@ namespace BlazeEngine
 	{
 		children.reserve(10);
 
-		//isDirty				= false; // TO DO: Implement this functionality
+		isDirty				= true;
 	}
 
 	//Transform::~Transform()
@@ -42,13 +42,18 @@ namespace BlazeEngine
 
 	mat4 Transform::Model()
 	{
-		this->model = this->translation * this->scale * this->rotation;
-		mat4 combinedModel = model;
-
-		if (this->parent != nullptr)
+		if (isDirty)
 		{
-			combinedModel = this->parent->Model() * combinedModel;
-		}
+			this->model = this->translation * this->scale * this->rotation;
+
+			this->combinedModel = model;
+			if (this->parent != nullptr)
+			{
+				combinedModel = this->parent->Model() * combinedModel;
+			}
+
+			isDirty = false;
+		}	
 
 		return combinedModel;
 	}
@@ -65,7 +70,9 @@ namespace BlazeEngine
 		{
 			this->parent = parent;
 			this->parent->RegisterChild(this);
-		}		
+			
+			MarkDirty();
+		}	
 	}
 
 
@@ -73,15 +80,19 @@ namespace BlazeEngine
 	{
 		this->parent->UnregisterChild(this);
 		this->parent = nullptr;
+
+		MarkDirty();
 	}
 
 
 	void Transform::Translate(vec3 amount)
 	{
-		this->translation = glm::translate(this->translation, amount);
+		this->translation	= glm::translate(this->translation, amount);
 		
-		vec4 result		= translation * vec4(0.0f, 0.0f, 0.0f, 1.0f); // TO DO: Just extract the translation from the end column of the matrix???
+		vec4 result			= translation * vec4(0.0f, 0.0f, 0.0f, 1.0f); // TODO: Just extract the translation from the end column of the matrix???
 		this->worldPosition	= result.xyz();
+
+		MarkDirty();
 	}
 
 
@@ -89,6 +100,8 @@ namespace BlazeEngine
 	{
 		this->translation = glm::translate(mat4(1.0f), position);
 		this->worldPosition = position;
+
+		MarkDirty();
 	}
 
 	void Transform::LookAt(vec3 camForward, vec3 camUp)
@@ -113,8 +126,10 @@ namespace BlazeEngine
 		this->up		= camUp;
 		this->forward	= camForward;
 
-		// TO DO: UPDATE EULER ROTATION!!!!
+		// TODO: UPDATE EULER ROTATION!!!!
 		LOG_ERROR("DEBUG: EULER ROTATION IS NOT SET!!! GetEulerRotation() RESULTS FOR THIS TRANSFORM ARE NOW WRONG!!!!!!!!!");
+
+		MarkDirty();
 	}
 
 
@@ -132,7 +147,7 @@ namespace BlazeEngine
 		{
 			this->rotation = glm::rotate(this->rotation, eulerXYZ.z, WORLD_Z);
 		}
-		// TO DO: Work out why I do this different in SetEulerRotation()....
+		// TODO: Work out why I do this different in SetEulerRotation()....
 
 
 		// Update the world-space orientation of our local CS axis:
@@ -146,8 +161,11 @@ namespace BlazeEngine
 		eulerWorldRotation.y = glm::fmod<float>(eulerWorldRotation.y, glm::two_pi<float>());
 		eulerWorldRotation.z = glm::fmod<float>(eulerWorldRotation.z, glm::two_pi<float>());
 
-		// TO DO: CONFIRM THIS WORKS FOR NEGATIVE NUMBERS!!! 
+		// TODO: CONFIRM THIS WORKS FOR NEGATIVE NUMBERS!!! 
 		// Is this even necessary here, or can I just assume I'll never pass "invalid" values?
+
+		
+		MarkDirty();
 	}
 
 
@@ -180,8 +198,11 @@ namespace BlazeEngine
 		eulerWorldRotation.y = glm::fmod<float>(eulerWorldRotation.y, glm::two_pi<float>());
 		eulerWorldRotation.z = glm::fmod<float>(eulerWorldRotation.z, glm::two_pi<float>());
 
-		// TO DO: CONFIRM THIS WORKS FOR NEGATIVE NUMBERS!!! 
+		// TODO: CONFIRM THIS WORKS FOR NEGATIVE NUMBERS!!! 
 		// Is this even necessary here, or can I just assume I'll never pass "invalid" values?
+
+
+		MarkDirty();
 	}
 
 
@@ -189,6 +210,18 @@ namespace BlazeEngine
 	{
 		this->worldScale = scale;
 		this->scale = glm::scale(mat4(1.0f), scale);
+
+		MarkDirty();
+	}
+
+	void Transform::MarkDirty()
+	{
+		this->isDirty = true;
+
+		for (int i = 0; i < (int)children.size(); i++)
+		{
+			children.at(i)->MarkDirty();
+		}
 	}
 
 
@@ -224,6 +257,8 @@ namespace BlazeEngine
 		if (find(children.begin(), children.end(), child) ==  children.end())
 		{
 			children.push_back(child);
+
+			MarkDirty();
 		}
 	}
 
@@ -235,6 +270,7 @@ namespace BlazeEngine
 			if (children.at(i) == child)
 			{
 				children.erase(children.begin() + i);
+				MarkDirty();
 				break;
 			}
 		}

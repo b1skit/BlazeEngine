@@ -111,7 +111,7 @@ namespace BlazeEngine
 		}
 		
 
-		// TO DO: Implement writing to file
+		// TODO: Implement writing to file
 	}
 
 
@@ -127,7 +127,7 @@ namespace BlazeEngine
 		}
 
 
-		// TO DO: Implement writing to file
+		// TODO: Implement writing to file
 	}
 
 
@@ -143,7 +143,7 @@ namespace BlazeEngine
 		}
 
 
-		// TO DO: Implement writing to file
+		// TODO: Implement writing to file
 	}
 
 

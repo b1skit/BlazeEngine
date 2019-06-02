@@ -40,7 +40,7 @@ namespace BlazeEngine
 	// Control configuration:
 	struct InputBindings
 	{
-		// TO DO: Break this out into an external file...
+		// TODO: Break this out into an external file...
 
 		Sint32 Button_forward = SDLK_w;			// SDL_Keycodes, cast as signed 32 bit ints
 		Sint32 Button_backward = SDLK_s;
@@ -52,7 +52,7 @@ namespace BlazeEngine
 		unsigned short Button_leftClick = SDL_BUTTON_LEFT;
 		unsigned short Button_rightClick = SDL_BUTTON_RIGHT;
 
-		// TO DO: Bind mouse axis's
+		// TODO: Bind mouse axis's
 
 		Sint32 Button_quit = SDLK_ESCAPE;
 	};

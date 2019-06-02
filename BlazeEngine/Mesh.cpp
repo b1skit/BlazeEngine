@@ -162,7 +162,7 @@ namespace BlazeEngine
 		int numVerts = 24;
 		Vertex* cubeVerts = new Vertex[numVerts]
 		{
-			// TO DO: Implement hard-coded tangent & bitangents instead of empty vec3's...
+			// TODO: Implement hard-coded tangent & bitangents instead of empty vec3's...
 
 			// Front face:
 			Vertex(positions[0], normals[0], vec3(), vec3(), colors[0], uvs[1]), // HINT: position index should = color index

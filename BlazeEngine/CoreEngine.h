@@ -10,9 +10,9 @@
 namespace BlazeEngine
 {
 	// ENGINE CONFIG:
-	// TO DO: Implement loading/saving of this object...
-	// TO DO: Make various fields const ?
-	// TO DO: Make this object (and members) static?
+	// TODO: Implement loading/saving of this object...
+	// TODO: Make various fields const ?
+	// TODO: Make this object (and members) static?
 	struct EngineConfig
 	{
 		EngineConfig()
@@ -76,13 +76,13 @@ namespace BlazeEngine
 			string currentScene = "";			// The currently loaded scene
 		} scene;
 		
-		// TO DO: Add button config for inputmanager
+		// TODO: Add button config for inputmanager
 		//struct inputConfig
 		//{
 
 		//};
 
-		// TO DO: Implement load/save functions
+		// TODO: Implement load/save functions
 		void LoadConfig(string path);
 		void SaveConfig(string path);
 

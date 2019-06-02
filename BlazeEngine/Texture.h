@@ -56,12 +56,12 @@ namespace BlazeEngine
 
 		GLuint textureID	= 0;
 
-		// TO DO: Make these configurable/dynamically set based on loaded file??
+		// TODO: Make these configurable/dynamically set based on loaded file??
 		/*GLint level;
 		GLint xoffset;
 		GLint yoffset;*/
 		GLenum target			= GL_TEXTURE_2D;
-		GLenum internalFormat	= GL_RGBA32F;		// TO DO: Is this worth specifying per-texture?
+		GLenum internalFormat	= GL_RGBA32F;		// TODO: Is this worth specifying per-texture?
 		GLenum format			= GL_RGBA;
 		GLenum type				= GL_FLOAT;
 		// Wrap modes?

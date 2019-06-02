@@ -138,7 +138,7 @@ namespace BlazeEngine
 	{
 		LOG("Render manager started!");
 
-		// TO DO: IMPLEMENT PER-COMPONENT INITIALIZATION
+		// TODO: IMPLEMENT PER-COMPONENT INITIALIZATION
 
 		//// Initialize SDL:
 		//if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -156,11 +156,8 @@ namespace BlazeEngine
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
-		if (SDL_GL_SetAttribute(
-			SDL_GL_CONTEXT_PROFILE_MASK,
-			SDL_GL_CONTEXT_PROFILE_CORE) < 0)
+		if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE) < 0)
 		{
-			cout << "set attrib failed\n";
 			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Could not set context attribute") });
 			return;
 		}
@@ -262,8 +259,8 @@ namespace BlazeEngine
 		// TEMP DEBUG:
 		int numCams = 0;
 		
-		Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW, numCams);
-		//Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN, numCams);
+		//Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW, numCams);
+		Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN, numCams);
 		
 		Render(cameras[0]);
 
@@ -277,7 +274,7 @@ namespace BlazeEngine
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-		// TO DO: Merge ALL meshes using the same material into a single draw call
+		// TODO: Merge ALL meshes using the same material into a single draw call
 
 
 		// Assemble common (model independent) matrices:
@@ -317,12 +314,12 @@ namespace BlazeEngine
 				mat4 mvp			= renderCam->ViewProjection() * model;
 
 				// Upload mesh-specific matrices:
-				currentShader->UploadUniform("in_model", &model[0][0], UNIFORM_Matrix4fv);
-				currentShader->UploadUniform("in_modelRotation", &modelRotation[0][0], UNIFORM_Matrix4fv);
-				currentShader->UploadUniform("in_mv", &mv[0][0], UNIFORM_Matrix4fv);
-				currentShader->UploadUniform("in_mvp", &mvp[0][0], UNIFORM_Matrix4fv);
+				currentShader->UploadUniform("in_model",			&model[0][0],			UNIFORM_Matrix4fv);
+				currentShader->UploadUniform("in_modelRotation",	&modelRotation[0][0],	UNIFORM_Matrix4fv);
+				currentShader->UploadUniform("in_mv",				&mv[0][0],				UNIFORM_Matrix4fv);
+				currentShader->UploadUniform("in_mvp",				&mvp[0][0],				UNIFORM_Matrix4fv);
 
-				// TO DO: Only (compute and) upload these matrices if they've changed ^^^^
+				// TODO: Only upload these matrices if they've changed ^^^^
 
 				// Draw!
 				glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type,const GLvoid * indices);

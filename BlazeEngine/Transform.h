@@ -30,7 +30,7 @@ namespace BlazeEngine
 		Transform();
 		/*~Transform();*/
 
-		// TO DO: Copy constructor ??
+		// TODO: Copy constructor ??
 
 		// Get the model matrix, used to transform from local->world space
 		mat4 Model();
@@ -66,8 +66,12 @@ namespace BlazeEngine
 		inline vec3 const&	GetEulerRotation() { return eulerWorldRotation; }
 		void				SetEulerRotation(vec3 eulerXYZ);
 		
-		// Set the 
+		// Scaling:
 		void SetScale(vec3 scale);
+
+
+		// Mark this transform as dirty, requiring a recomputation of it's local matrices
+		void MarkDirty();
 
 
 		// Getters/Setters:
@@ -108,7 +112,7 @@ namespace BlazeEngine
 		vector<Transform*> children;
 
 		// World-space orientation:
-		vec3 worldPosition		= vec3(0.0f, 0.0f, 0.0f);
+		vec3 worldPosition		= vec3(0.0f, 0.0f, 0.0f);	// World position, relative to any parent transforms
 		vec3 eulerWorldRotation	= vec3(0.0f, 0.0f, 0.0f);	// Current world-space Euler angles (pitch, yaw, roll), in Radians
 		vec3 worldScale			= vec3(1.0f, 1.0f, 1.0f);
 		
@@ -126,11 +130,8 @@ namespace BlazeEngine
 		mat4 rotation		= mat4(1.0f);
 		mat4 translation	= mat4(1.0f);
 		
-
-		/*void Recalculate(); // TO DO: Implement this */
-		/*bool isDirty;*/
-
-		
+		bool isDirty;	// Track whether our model or combinedModel matrices need to be recomputed
+		mat4 combinedModel = mat4(1.0f);
 	};
 }
 

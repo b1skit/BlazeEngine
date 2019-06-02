@@ -44,7 +44,7 @@ namespace BlazeEngine
 
 		inline mat4 const&	Projection() const		{ return projection; }
 
-		inline mat4 const&	ViewProjection()		{ return viewProjection = projection * View(); } // TO DO: ONLY COMPUTE THIS IF SOMETHING HAS CHANGED!!!
+		inline mat4 const&	ViewProjection()		{ return viewProjection = projection * View(); } // TODO: ONLY COMPUTE THIS IF SOMETHING HAS CHANGED!!!
 
 		Texture*&			RenderTarget()			{ return renderTarget; }
 
@@ -64,12 +64,10 @@ namespace BlazeEngine
 
 		// Orthographic rendering properties:
 		bool isOrthographic		= false;
-		//float orthoHalfWidth	= 5;			// == 0 if perspective
-		//float orthoHalfHeight	= 5;			// == 0 if perspective
 		float orthoLeft			= -5;
-		float orthoRight		= -5;
+		float orthoRight		= 5;
 		float orthoBottom		= -5;
-		float orthoTop			= -5;
+		float orthoTop			= 5;
 		
 		Texture* renderTarget	= nullptr;
 

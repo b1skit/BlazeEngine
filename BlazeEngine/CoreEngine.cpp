@@ -33,7 +33,7 @@ namespace BlazeEngine
 		{
 			exit(-1);
 		}
-		// TO DO: Initialize per-component, instead of initializing everything???
+		// TODO: Initialize per-component, instead of initializing everything???
 	}
 
 
@@ -170,7 +170,7 @@ namespace BlazeEngine
 	{
 		LOG_WARNING("DEBUG: EngineConfig.LoadConfig() is not implemented. Using hard coded default values!");
 	
-		// TO DO: Implement config loading!
+		// TODO: Implement config loading!
 	}
 
 

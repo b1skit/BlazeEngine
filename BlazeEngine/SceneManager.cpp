@@ -118,10 +118,7 @@ namespace BlazeEngine
 	{
 		if (meshCount < maxMeshes)
 		{
-			//Bounds meshWorldBounds = newMesh->localBounds.GetTransformedBounds(newMesh->GetTransform().Model());
 			Bounds meshWorldBounds(newMesh->localBounds.GetTransformedBounds(newMesh->GetTransform().Model()));
-
-			LOG("Mesh world bounds = " + to_string(meshWorldBounds.xMin) + " " + to_string(meshWorldBounds.xMax) + " " + to_string(meshWorldBounds.yMin) + " " + to_string(meshWorldBounds.yMax) + " " + to_string(meshWorldBounds.zMin) + " " + to_string(meshWorldBounds.zMax));
 
 			// Update scene (world) bounds to contain the new mesh:
 			if (meshWorldBounds.xMin < sceneWorldBounds.xMin)
@@ -150,8 +147,6 @@ namespace BlazeEngine
 			{
 				sceneWorldBounds.zMax = meshWorldBounds.zMax;
 			}
-			
-			LOG("Scene world bounds = " + to_string(sceneWorldBounds.xMin) + " " + to_string(sceneWorldBounds.xMax) + " " + to_string(sceneWorldBounds.yMin) + " " + to_string(sceneWorldBounds.yMax) + " " + to_string(sceneWorldBounds.zMin) + " " + to_string(sceneWorldBounds.zMax));
 
 			// Add the mesh to our array:
 			meshes[meshCount] = newMesh;
@@ -589,7 +584,7 @@ namespace BlazeEngine
 		for (unsigned int i = 0; i < currentMaterialCount; i++)
 		{
 			materialMeshLists.emplace_back(vector<Mesh*>());
-			materialMeshLists.at(i).reserve(25);			// TO DO: Tune this value based on the actual number of meshes loaded?
+			materialMeshLists.at(i).reserve(25);			// TODO: Tune this value based on the actual number of meshes loaded?
 		}
 
 		unsigned int numMeshes = 0;
@@ -753,7 +748,7 @@ namespace BlazeEngine
 					}
 					#endif
 
-					// TO DO: Extract more generic properties?
+					// TODO: Extract more generic properties?
 				} 
 				#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING) || defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
 					else
@@ -799,7 +794,7 @@ namespace BlazeEngine
 					string flatNormalName = "DefaultFlatNormal"; // Use a generic name, so this texture will be shared
 
 					LOG_WARNING("Material has no normal texture. Creating a 1x1 texture for a [0,0,1] normal with a path " + flatNormalName);
-					// TO DO: Replace this with shader multi-compiles. If no normal texture is found, use vertex normals instead
+					// TODO: Replace this with shader multi-compiles. If no normal texture is found, use vertex normals instead
 
 					newTexture = new Texture(1, 1, flatNormalName, true, vec4(0.5f, 0.5f, 1.0f, 1.0f));
 				}				
@@ -1163,7 +1158,7 @@ namespace BlazeEngine
 	}
 
 
-	aiMatrix4x4 BlazeEngine::SceneManager::GetCombinedTransformFromHierarchy(aiScene const* scene, aiNode* parent)
+	aiMatrix4x4 BlazeEngine::SceneManager::GetCombinedTransformFromHierarchy(aiScene const* scene, aiNode* parent, bool skipPostRotations /*= true*/)
 	{
 		if (scene == nullptr || parent == nullptr)
 		{
@@ -1200,11 +1195,12 @@ namespace BlazeEngine
 		{
 			string currentName = string(current->mName.C_Str());
 
-			if (currentName.find("_Post") != string::npos) // HACK: Seems if we skip "_PostRotation" nodes, the directional light orientation will be correct
+			if (skipPostRotations && currentName.find("_Post") != string::npos) // HACK: Seems if we skip "_PostRotation" nodes, the directional light orientation will be correct. But, we need this for camera xforms...
 			{
 				#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
 					LOG("\t\tSkipped node \"" + currentName + "\"");
 				#endif
+
 				current = current->mParent;
 				continue;
 			}
@@ -1252,7 +1248,6 @@ namespace BlazeEngine
 
 	aiNode* BlazeEngine::SceneManager::FindNodeRecursiveHelper(aiNode* rootNode, string name)
 	{
-		// TO DO: Add logging: #if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
 		if (rootNode == nullptr)
 		{
 			return nullptr;
@@ -1456,9 +1451,7 @@ namespace BlazeEngine
 			return;
 		}
 
-		// If we made it this far, we've imported a camera from the scene:
 		string cameraName = string(scene->mCameras[0]->mName.C_Str());
-		currentScene->RegisterCamera(CAMERA_TYPE_MAIN, new Camera(cameraName));
 
 		int numCameras = scene->mNumCameras;
 		if (numCameras > 1)
@@ -1467,78 +1460,45 @@ namespace BlazeEngine
 		}
 		else
 		{
-			LOG("Found " + to_string(numCameras) + " scene camera");
+			LOG("Found " + to_string(numCameras) + " scene camera: \"" + cameraName + "\"");
 		}
 
+		// If we made it this far, we're importing a camera from the scene:
+		Camera* newCamera = new Camera(cameraName);
 
-		// Currently, camera transforms seem to be broken in Assimp...
-		// DEBUG: Set a default camera at the origin, for now
-		LOG_ERROR("Assimp camera import is broken... Creating a default camera at the origin");
-		currentScene->GetMainCamera()->Initialize
-		(
-			CoreEngine::GetCoreEngine()->GetConfig()->GetAspectRatio(),
-			CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView,
-			CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultNear,
-			CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFar
-		);
-		
-	
+		currentScene->RegisterCamera(CAMERA_TYPE_MAIN, newCamera); // For now, only importing the main camera is supported...
 
-		// Note: In the current version of Assimp, the mLookAt, mUp vectors seem to just be the world forward, up vectors, and mTransformation is the identity...
-		// TO DO: TEST: Are these possibly related to specific maya camera creation options?
-		// + Importing cameras vacing towards Z+ results in a flipped camera?
 
-		// TO DO: Add ALL cameras (look for a name that contains "main" to use as the main camera, or use the 1st camera otherwise)
 
-		//aiNode* camNode = scene->mRootNode->FindNode(scene->mCameras[0]->mName);
-		//if (camNode)
-		//{			
-		//	aiMatrix4x4 camTransform;
-		//	aiNode* current = camNode->mParent;
-		//	while (current != nullptr && current != scene->mRootNode)
-		//	{
-		//		string currentName = string(current->mName.C_Str());
+		// Note: In the current version of Assimp, camera import is broken.
+		// + The mLookAt, mUp vectors seem to just be the world forward, up vectors, and mTransformation is the identity...
+		// + Importing cameras facing towards Z+ results in a flipped camera?
+		// + Importing cameras facing towards Z- results in an extra +90 degree rotation about Y being applied?
 
-		//		if (currentName.find("_Post") != string::npos)
-		//		{
-		//			#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING)
-		//				LOG("Skipping camera transform node \"" + currentName + "\"");
-		//			#endif
-		//			current = current->mParent;
-		//			continue;
-		//		}
 
-		//		if (currentName.find("$AssimpFbx$") != string::npos)
-		//		{
-		//			#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING)
-		//				LOG("Found camera transform node \"" + currentName + "\"");
-		//			#endif
-		//			//camTransform = camTransform * current->mTransformation;
-		//			camTransform = current->mTransformation * camTransform;
-		//		}
-		//		else
-		//		{
-		//			#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING)
-		//				LOG("Node \"" + currentName + "\" is not a camera transform. Stopping!");
-		//			#endif
-		//			break;
-		//		}
-		//		current = current->mParent;
-		//	}
+		aiNode* camNode = scene->mRootNode->FindNode(scene->mCameras[0]->mName);
+		if (camNode)
+		{			
+			#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING) || defined(DEBUG_TRANSFORMS)
+				LOG("-> " + cameraName + " (Camera's first transformation node)");
+				LOG(to_string(camNode->mTransformation.a1) + " " + to_string(camNode->mTransformation.a2) + " " + to_string(camNode->mTransformation.a3) + " " + to_string(camNode->mTransformation.a4));
+				LOG(to_string(camNode->mTransformation.b1) + " " + to_string(camNode->mTransformation.b2) + " " + to_string(camNode->mTransformation.b3) + " " + to_string(camNode->mTransformation.b4));
+				LOG(to_string(camNode->mTransformation.c1) + " " + to_string(camNode->mTransformation.c2) + " " + to_string(camNode->mTransformation.c3) + " " + to_string(camNode->mTransformation.c4));
+				LOG(to_string(camNode->mTransformation.d1) + " " + to_string(camNode->mTransformation.d2) + " " + to_string(camNode->mTransformation.d3) + " " + to_string(camNode->mTransformation.d4));
+			#endif
+			
+			aiMatrix4x4 camTransform = GetCombinedTransformFromHierarchy(scene, camNode->mParent, false);
+			camTransform = camTransform * camNode->mTransformation;
+			 
+			InitializeTransformValues(camTransform, newCamera->GetTransform());
+		}
 
-		//	#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING)
-		//		LOG("Combining transforms with camera's local transform node \"" + string(camNode->mName.C_Str()) + "\"");
-		//	#endif
-		//	//camTransform = camTransform * camNode->mTransformation;
-		//	camTransform = camNode->mTransformation * camTransform;
-		//	 
-		//	InitializeTransformValues(camTransform, currentScene->mainCamera->GetTransform());
-		//}
-
-		vec3 camPosition = currentScene->GetMainCamera()->GetTransform()->Position();
-		vec3 camRotation = currentScene->GetMainCamera()->GetTransform()->GetEulerRotation();
+		vec3 camPosition = newCamera->GetTransform()->Position();
 
 		#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING)
+			
+			vec3 camRotation = newCamera->GetTransform()->GetEulerRotation();
+
 			LOG("Camera is located at " + to_string(camPosition.x) + " " + to_string(camPosition.y) + " " + to_string(camPosition.z) + ". Near = " + to_string(scene->mCameras[0]->mClipPlaneNear) + ", " + "far = " + to_string(scene->mCameras[0]->mClipPlaneFar) );
 			LOG("Camera rotation is " + to_string(camRotation.x) + " " + to_string(camRotation.y) + " " + to_string(camRotation.z) + " (radians)");
 			LOG("Camera rotation is " + to_string(camRotation.x * (180.0f / glm::pi<float>())) + " " + to_string(camRotation.y * (180.0f / glm::pi<float>())) + " " + to_string(camRotation.z * (180.0f / glm::pi<float>())) + " (degrees)");
@@ -1546,11 +1506,14 @@ namespace BlazeEngine
 
 		LOG_ERROR("Camera field of view is NOT currently loaded from the source file. A hard-coded default value is used for now");
 
-		currentScene->GetMainCamera()->Initialize(
+		newCamera->Initialize
+		(
 			(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
-			CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView, //scene->mCameras[0]->mHorizontalFOV; // TO DO: Implement this (Needs to be converted to a vertical FOV???)
+			CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView, //scene->mCameras[0]->mHorizontalFOV; // TODO: Implement this (Needs to be converted to a vertical FOV???)
 			scene->mCameras[0]->mClipPlaneNear,
-			scene->mCameras[0]->mClipPlaneFar
+			scene->mCameras[0]->mClipPlaneFar,
+			nullptr,
+			camPosition
 		);
 	}
 }

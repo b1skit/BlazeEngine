@@ -75,7 +75,7 @@ namespace BlazeEngine
 		LOG("Creating shader \"" + shaderName + "\"");
 
 		GLuint shaderReference;
-		unsigned int numShaders = 2; // TO DO : Allow loading of geometry shaders?
+		unsigned int numShaders = 2; // TODO : Allow loading of geometry shaders?
 		GLuint* shaders = new GLuint[numShaders];
 
 		// Create an empty shader program object, and get its reference:
