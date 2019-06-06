@@ -8,11 +8,11 @@ namespace BlazeEngine
 {
 	BlazeEngine::Light::Light(string lightName, LIGHT_TYPE type, vec3 color, ShadowMap* shadowMap /*= nullptr*/)
 	{
-		this->lightName = lightName;
-		this->type = type;
-		this->color = color;
+		this->lightName		= lightName;
+		this->type			= type;
+		this->color			= color;
 
-		this->shadowMap = shadowMap;
+		this->shadowMap		= shadowMap;
 	}
 
 
@@ -21,6 +21,7 @@ namespace BlazeEngine
 		if (shadowMap != nullptr)
 		{
 			delete shadowMap;
+			shadowMap = nullptr;
 		}
 
 		lightName += "_DELETED";
@@ -42,7 +43,9 @@ namespace BlazeEngine
 		{
 			LOG("Deleting an existing shadow map");
 			delete shadowMap;
+			shadowMap = nullptr;
 		}
+
 		shadowMap = newShadowMap;
 	}
 }

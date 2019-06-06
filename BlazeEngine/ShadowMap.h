@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Texture.h"
+#include "RenderTexture.h"
 
 #include "glm.hpp"
 
@@ -15,7 +15,6 @@ namespace BlazeEngine
 	// Pre-declarations:
 	class Camera;
 	class Transform;
-	class Texture;
 
 
 	class ShadowMap
@@ -37,8 +36,8 @@ namespace BlazeEngine
 
 
 	private:
-		Camera* shadowCam		= nullptr;
-		Texture renderTexture;
+		Camera*			shadowCam		= nullptr;
+		RenderTexture	renderTexture;
 
 	};
 }

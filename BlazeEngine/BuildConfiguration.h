@@ -38,7 +38,7 @@
 	#define DEBUG_LOG_SCENEMANAGER_SCENE_SETUP			// Enable/disable scene import logging
 	#if defined(DEBUG_LOG_SCENEMANAGER_SCENE_SETUP)
 		//#define DEBUG_SCENEMANAGER_LIGHT_LOGGING		// Enable logging of light import/creation
-		#define DEBUG_SCENEMANAGER_CAMERA_LOGGING		// Enable logging of camera import/creation
+		//#define DEBUG_SCENEMANAGER_CAMERA_LOGGING		// Enable logging of camera import/creation
 		//#define DEBUG_SCENEMANAGER_MESH_LOGGING			// Enable logging of mesh import/creation
 		//#define DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING	// Enable logging of GameObject creation
 		#define DEBUG_SCENEMANAGER_TRANSFORM_LOGGING	// Enable logging of transformation hierarchy setup
@@ -59,9 +59,9 @@
 	#endif
 
 	
-	#define DEBUG_TRANSFORMS							// Enable transform debugging functions
+	//#define DEBUG_TRANSFORMS							// Enable transform debugging functions
 	//if defined(DEBUG_TRANSFORMS)
-	//	#define 
+		//
 	//#endif
 
 

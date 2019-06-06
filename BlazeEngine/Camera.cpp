@@ -37,7 +37,20 @@ namespace BlazeEngine
 	// Orthographic constructor:
 	Camera::Camera(string cameraName, float near, float far, Transform* parent /*= nullptr*/, vec3 position /*= vec3(0.0f, 0.0f, 0.0f)*/, float orthoLeft /*= -5*/, float orthoRight /*= 5*/, float orthoBottom /*= -5*/, float orthoTop /*= 5*/) : SceneObject::SceneObject(cameraName)
 	{
-		Initialize(glm::abs((orthoRight - orthoLeft) / (orthoTop - orthoBottom)), 0.0f, near, far, parent, position, true, orthoLeft, orthoRight, orthoBottom, orthoTop);
+		Initialize
+		(
+			glm::abs((orthoRight - orthoLeft) / (orthoTop - orthoBottom)), 
+			0.0f, 
+			near, 
+			far, 
+			parent, 
+			position, 
+			true, 
+			orthoLeft, 
+			orthoRight, 
+			orthoBottom, 
+			orthoTop
+		);
 	}
 
 	

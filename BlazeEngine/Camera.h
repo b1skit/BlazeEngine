@@ -10,7 +10,7 @@
 namespace BlazeEngine
 {
 	// Pre-declarations:
-	class Texture;
+	class RenderTexture;
 
 
 	class Camera : public SceneObject
@@ -46,7 +46,7 @@ namespace BlazeEngine
 
 		inline mat4 const&	ViewProjection()		{ return viewProjection = projection * View(); } // TODO: ONLY COMPUTE THIS IF SOMETHING HAS CHANGED!!!
 
-		Texture*&			RenderTarget()			{ return renderTarget; }
+		RenderTexture*&		RenderTarget()			{ return renderTarget; }
 
 		void				DebugPrint();
 	protected:
@@ -69,7 +69,7 @@ namespace BlazeEngine
 		float orthoBottom		= -5;
 		float orthoTop			= 5;
 		
-		Texture* renderTarget	= nullptr;
+		RenderTexture* renderTarget		= nullptr;
 
 		/*bool isDirty = false;*/
 	};

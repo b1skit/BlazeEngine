@@ -213,8 +213,8 @@ namespace BlazeEngine
 		}
 
 		// Initialize glew:
-		glewExperimental = GL_TRUE; // Expose OpenGL 3.x+ interfaces
-		GLenum glStatus = glewInit();
+		glewExperimental	= GL_TRUE; // Expose OpenGL 3.x+ interfaces
+		GLenum glStatus		= glewInit();
 		if (glStatus != GLEW_OK)
 		{
 			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Render manager start failed: glStatus not ok!") });
@@ -244,27 +244,42 @@ namespace BlazeEngine
 
 	void RenderManager::Update()
 	{
-		//for (int i = 0; i < CAMERA_TYPE_COUNT; i++)
+		//// Render shadows:
+		//int numCams = 0;
+		//Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW, numCams);
+		//for (int currentCam = 0; currentCam < numCams; currentCam++)
 		//{
-		//	int numCams = 0;
-		//	Camera** cameras = CoreEngine::GetSceneManager()->GetCameras((CAMERA_TYPE)i, numCams);
-		//	for (int currentCam = 0; currentCam < numCams; currentCam++)
-		//	{
-		//		Render(cameras[currentCam]);
-		//	}
+		//	Render(cameras[currentCam]);
 		//}
-		// // ^^ISSUE: Flickering - Rendering multiple cams to the screen!!!
+
+		//// Render reflections:
+		//cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW, numCams);
+		//for (int currentCam = 0; currentCam < numCams; currentCam++)
+		//{
+		//	Render(cameras[currentCam]);
+		//}
+
+		//// Render main camera:
+		//cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN, numCams);
+		//Render(cameras[0]);
+		//
+		//// // ^^ISSUE: Flickering - Rendering multiple cams to the screen!!!
 		
+		// TO DO: Move various openGL config settings from startup to here?
+
+		// CURRENT ISSUE: Directional light STILL isn't framed correctly. Depth AND framing are still wrong :(
 
 		// TEMP DEBUG:
 		int numCams = 0;
 		
-		//Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW, numCams);
-		Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN, numCams);
+		Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW, numCams);
+		//Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN, numCams);
 		
 		Render(cameras[0]);
 
 		//cameras[0]->DebugPrint();
+
+		// Will need seperate render functions that configure the draw modes etc....
 	}
 
 
@@ -445,8 +460,9 @@ namespace BlazeEngine
 
 		for (unsigned int i = 0; i < numMaterials; i++)
 		{
-			Shader* currentShader = sceneManager->GetMaterial(i)->GetShader();
-
+			Material* currentMaterial = sceneManager->GetMaterial(i);
+			
+			Shader* currentShader = currentMaterial->GetShader();
 			RenderManager::BindShader(currentShader->ShaderReference());
 			
 			// Upload key light direction (world space) and color, and ambient light color:
@@ -454,6 +470,7 @@ namespace BlazeEngine
 			currentShader->UploadUniform("keyDirection", &(keyDir->x), UNIFORM_Vec3fv);
 			currentShader->UploadUniform("keyColor", &(keyCol->r), UNIFORM_Vec3fv);
 
+			// Upload matrices:
 			mat4 projection = sceneManager->GetMainCamera()->Projection();
 			currentShader->UploadUniform("in_projection", &projection[0][0], UNIFORM_Matrix4fv);
 

@@ -1,6 +1,8 @@
 #include "ShadowMap.h"
 #include "CoreEngine.h"
 
+//#include "BuildConfiguration.h"
+
 
 namespace BlazeEngine
 {
@@ -8,13 +10,10 @@ namespace BlazeEngine
 	{
 		shadowCam		= new Camera("Unnamed_ShadowMapCam");
 
-		renderTexture	= Texture
+		renderTexture	= RenderTexture
 		(
 			CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapWidth,
-			CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapHeight,
-			DEFAULT_SHADOWMAP_TEXPATH, 
-			true, 
-			DEFAULT_SHADOWMAP_COLOR	
+			CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapHeight
 		);
 
 		CoreEngine::GetSceneManager()->RegisterCamera(CAMERA_TYPE_SHADOW, this->shadowCam);
@@ -37,13 +36,12 @@ namespace BlazeEngine
 			orthoTop
 		);		
 		
-		this->renderTexture = Texture
+		this->renderTexture = RenderTexture
 		(
 			xRes,
 			yRes,
-			DEFAULT_SHADOWMAP_TEXPATH,
-			true,
-			DEFAULT_SHADOWMAP_COLOR			// Default to white (max far)
+			lightName + "_RenderTexture",
+			true
 		);
 
 		this->shadowCam->RenderTarget() = &renderTexture;

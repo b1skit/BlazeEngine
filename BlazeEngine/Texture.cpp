@@ -23,11 +23,11 @@ namespace BlazeEngine
 		texels					= new vec4[numTexels];	// Allocate the default size
 		resolutionHasChanged	= true;
 		
-		Fill(TEXTURE_ERROR_COLOR_VEC4);
+		Fill(TEXTURE_ERROR_COLOR_VEC4, false);
 	}
 
 	// Constructor:
-	Texture::Texture(int width, int height, string texturePath, bool doFill /* = true */, vec4 fillColor /* = (1.0, 0.0, 0.0, 1.0) */)
+	Texture::Texture(int width, int height, string texturePath, bool doFill /* = true */, vec4 fillColor /* = (1.0, 0.0, 0.0, 1.0) */, bool doBuffer /*= false*/)
 	{
 		this->width				= width;
 		this->height			= height;
@@ -40,7 +40,7 @@ namespace BlazeEngine
 		resolutionHasChanged	= true;
 		if (doFill)
 		{
-			Fill(fillColor);
+			Fill(fillColor, doBuffer);
 		}		
 	}
 
@@ -51,7 +51,8 @@ namespace BlazeEngine
 		{
 			glDeleteTextures(1, &textureID);
 		}
-		if (texels)
+
+		if (texels != nullptr)
 		{
 			delete[] texels;
 			numTexels = 0;
@@ -67,23 +68,28 @@ namespace BlazeEngine
 			return *this;
 		}
 
+		if (this->texels != nullptr)
+		{
+			delete[] texels;
+			texels = nullptr;
+			numTexels = 0;
+		}
+
 		this->width				= rhs.width;
 		this->height			= rhs.height;
 		this->textureID			= rhs.textureID;
 		this->numTexels			= rhs.numTexels;
 
-		if (this->texels != nullptr)
+		if (rhs.texels != nullptr && numTexels > 0)
 		{
-			delete[] texels;
-			numTexels = 0;
-		}
+			this->texels = new vec4[this->numTexels];
+			resolutionHasChanged = true;
 
-		this->texels			= new vec4[this->numTexels];
-		resolutionHasChanged	= true;
-		for (unsigned int i = 0; i < this->numTexels; i++)
-		{
-			this->texels[i] = rhs.texels[i];
-		}
+			for (unsigned int i = 0; i < this->numTexels; i++)
+			{
+				this->texels[i] = rhs.texels[i];
+			}
+		}		
 
 		return *this;
 	}
@@ -102,7 +108,7 @@ namespace BlazeEngine
 		return texels[(v * height) + u];
 	}
 
-	void BlazeEngine::Texture::Fill(vec4 color, bool doBuffer /*= true*/)
+	void BlazeEngine::Texture::Fill(vec4 color, bool doBuffer /*= false*/)
 	{
 		for (unsigned int row = 0; row < this->height; row++)
 		{
@@ -119,7 +125,7 @@ namespace BlazeEngine
 		}
 	}
 
-	void BlazeEngine::Texture::Fill(vec4 tl, vec4 tr, vec4 bl, vec4 br, bool doBuffer /*= true*/)
+	void BlazeEngine::Texture::Fill(vec4 tl, vec4 tr, vec4 bl, vec4 br, bool doBuffer /*= false*/)
 	{
 		for (unsigned int row = 0; row < height; row++)
 		{
@@ -146,7 +152,7 @@ namespace BlazeEngine
 	// Static functions:
 	//------------------
 
-	Texture* Texture::LoadTextureFromPath(string texturePath)
+	Texture* Texture::LoadTextureFromPath(string texturePath, bool doBuffer /*= false*/)
 	{
 		LOG("Loading texture at " + texturePath);
 
@@ -186,7 +192,7 @@ namespace BlazeEngine
 				}
 			}
 
-			if (!texture->Buffer())
+			if (doBuffer && !texture->Buffer())
 			{
 				LOG_ERROR("Texture buffering failed");
 			}
@@ -214,9 +220,7 @@ namespace BlazeEngine
 
 	bool Texture::Buffer()
 	{
-		LOG("Buffering texture...");
-
-		glBindTexture(this->target, this->textureID);
+		LOG("Buffering texture: \"" + this->TexturePath() + "\"");
 
 		// If the texture hasn't been created, create a new name:
 		if (!glIsTexture(this->textureID))
@@ -233,50 +237,63 @@ namespace BlazeEngine
 				return false;
 			}
 
-			//// Specify a 2D image:
-			//glTexImage2D(this->target, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, &this->Texel(0,0).r);
-
-			//// Set the texture properties:
-			//glTexStorage2D(this->target, 1, this->internalFormat, (GLsizei)this->width, (GLsizei)this->height);
-
-			//resolutionHasChanged = false;
-
 			// UV wrap mode:
-			glTexParameteri(this->target, GL_TEXTURE_WRAP_S, GL_REPEAT);	// u
-			glTexParameteri(this->target, GL_TEXTURE_WRAP_T, GL_REPEAT);	// v
+			glTexParameteri(this->target, GL_TEXTURE_WRAP_S, this->textureWrapS);	// u
+			glTexParameteri(this->target, GL_TEXTURE_WRAP_T, this->textureWrapT);	// v
 
 			// Mip map min/maximizing:
-			glTexParameteri(this->target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);	// Linear interpolation, nearest neighbour sampling
-			glTexParameteri(this->target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(this->target, GL_TEXTURE_MIN_FILTER, this->textureMinFilter);	// Linear interpolation, nearest neighbour sampling
+			glTexParameteri(this->target, GL_TEXTURE_MAG_FILTER, this->textureMaxFilter);
 		}
 		#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
-			else
-			{
-				LOG("Updating existing texture");
-			}
+		else
+		{
+			LOG("Found existing texture");
+			glBindTexture(this->target, this->textureID);
+		}
 		#endif
 
-		if (resolutionHasChanged)
-		{
-			// Specify a 2D image:
-			glTexImage2D(this->target, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, &this->Texel(0, 0).r);
-
-			// Set the texture properties:
-			glTexStorage2D(this->target, 1, this->internalFormat, (GLsizei)this->width, (GLsizei)this->height);
-
-			resolutionHasChanged = false;
-		}
 
 		// Upload to the GPU:
-		glTexSubImage2D(this->target, 0, 0, 0, this->width, this->height, this->format, this->type, &this->Texel(0, 0).r); // <-- GL_INVALID_ENUM ???
-		glGenerateMipmap(this->target);
+		if (texels != nullptr) // I.e. Texture:
+		{
+			if (resolutionHasChanged)
+			{
+				#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
+					LOG("Buffering texture values");
+				#endif
 
-		// Cleanup:
-		glBindTexture(this->target, 0);
+				// Specify a 2D image:
+				glTexImage2D(this->target, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, &this->Texel(0, 0).r);
 
-		#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
-			LOG("Texture buffering complete!");
-		#endif
+				// Set the texture properties:
+				glTexStorage2D(this->target, 1, this->internalFormat, (GLsizei)this->width, (GLsizei)this->height);
+
+				resolutionHasChanged = false;
+			}
+
+			glTexSubImage2D(this->target, 0, 0, 0, this->width, this->height, this->format, this->type, &this->Texel(0, 0).r);
+			glGenerateMipmap(this->target);
+
+			#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
+				LOG("Texture buffering complete!");
+			#endif
+
+			// Cleanup:
+			glBindTexture(this->target, 0);
+		}
+		else // I.e. RenderTexture:
+		{
+			if (resolutionHasChanged)
+			{
+				LOG_WARNING("Render texture has resolutionChanged flag set, but we're not handling it. TODO: Handle resizing of render textures");
+			}
+
+			glTexImage2D(this->target, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, nullptr);
+		}
+
+		//// Cleanup:
+		//glBindTexture(this->target, 0);
 
 		return true;
 	}

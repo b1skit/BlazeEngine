@@ -704,6 +704,7 @@ namespace BlazeEngine
 					if (diffuseTexture)
 					{
 						newMaterial->SetTexture(diffuseTexture, TEXTURE_ALBEDO);
+						diffuseTexture->Buffer();
 					}
 
 					LOG("Importing normal map texture (RGB) from material's bump slot");
@@ -711,6 +712,7 @@ namespace BlazeEngine
 					if (normalTexture)
 					{
 						newMaterial->SetTexture(normalTexture, TEXTURE_NORMAL);
+						normalTexture->Buffer();
 					}
 					else
 					{
@@ -723,13 +725,15 @@ namespace BlazeEngine
 					if (emissiveTexture)
 					{
 						newMaterial->SetTexture(emissiveTexture, TEXTURE_EMISSIVE);
+						emissiveTexture->Buffer();
 					}
 
 					LOG("Importing roughness, metalic, & AO textures (R+G+B) from material's specular slot");
 					Texture* RMAO = ExtractLoadTextureFromAiMaterial(aiTextureType_SPECULAR, scene->mMaterials[currentMaterial], sceneName);
-					if (emissiveTexture)
+					if (RMAO)
 					{
-						newMaterial->SetTexture(emissiveTexture, TEXTURE_RMAO);
+						newMaterial->SetTexture(RMAO, TEXTURE_RMAO);
+						RMAO->Buffer();
 					}
 
 					LOG("Importing value from material's cosine power slot");
@@ -755,7 +759,7 @@ namespace BlazeEngine
 					{
 						LOG("Shader is the error shader: Skipping attempt to upload any uniform values");
 					}
-				#endif				
+				#endif
 
 				// Add the material to our material list:
 				AddMaterial(newMaterial, false);
@@ -1063,7 +1067,9 @@ namespace BlazeEngine
 				// If the mesh doesn't belong to a group, create a GameObject to contain it:
 				if (gameObject == nullptr)
 				{
-					LOG_ERROR("Creating a GameObject for mesh \"" + meshName + "\" that did not belong to a group! GameObjects should belong to groups in the source .FBX!");
+					#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
+						LOG_ERROR("Creating a GameObject for mesh \"" + meshName + "\" that did not belong to a group! GameObjects should belong to groups in the source .FBX!");
+					#endif
 					
 					gameObject = new GameObject(meshName);
 					AddGameObject(gameObject);				// Add the new game object
@@ -1074,7 +1080,9 @@ namespace BlazeEngine
 				}
 				else // We have a GameObject:
 				{
-					LOG("Found existing parent GameObject \"" + gameObject->GetName() + "\" for mesh \"" + meshName + "\"");
+					#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
+						LOG("Found existing parent GameObject \"" + gameObject->GetName() + "\" for mesh \"" + meshName + "\"");
+					#endif
 
 					targetTransform = &newMesh->GetTransform();	// We'll use the mesh in our transform heirarchy
 				}
@@ -1337,9 +1345,11 @@ namespace BlazeEngine
 
 					InitializeTransformValues(lightTransform, &currentScene->keyLight.GetTransform());
 
-					Bounds transformedBounds = currentScene->WorldSpaceSceneBounds().GetTransformedBounds(glm::inverse(currentScene->keyLight.GetTransform().Model()));
-
-					//LOG("transformed bounds = " + to_string(transformedBounds.xMin) + " " + to_string(transformedBounds.xMax) + " " + to_string(transformedBounds.yMin) + " " + to_string(transformedBounds.yMax) + " " + to_string(transformedBounds.zMin) + " " + to_string(transformedBounds.zMax));
+					Bounds sceneWorldBounds = currentScene->WorldSpaceSceneBounds();
+					Bounds transformedBounds = sceneWorldBounds.GetTransformedBounds(glm::inverse(currentScene->keyLight.GetTransform().Model()));
+					
+					//LOG("Scene world bounds: " + to_string(sceneWorldBounds.xMin) + " < X < " + to_string(sceneWorldBounds.xMax) + ", " + to_string(sceneWorldBounds.yMin) + " < Y < " + to_string(sceneWorldBounds.yMax) + ", " + to_string(sceneWorldBounds.zMin) + " < Z < " + to_string(sceneWorldBounds.zMax));
+					//LOG("Framing light frustum about transformed scene bounds:\n\t" + to_string(transformedBounds.xMin) + " < X < " + to_string(transformedBounds.xMax) + ", " + to_string(transformedBounds.yMin) + " < Y < " + to_string(transformedBounds.yMax) + ", " + to_string(transformedBounds.zMin) + " < Z < " + to_string(transformedBounds.zMax));
 
 					ShadowMap* keyLightShadowMap = new ShadowMap	// TEMP: We assume the key light will ALWAYS have a shadow
 					(
@@ -1347,14 +1357,14 @@ namespace BlazeEngine
 						CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapWidth,
 						CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapHeight,
 
-						transformedBounds.zMin,
-						glm::abs(transformedBounds.zMax - transformedBounds.zMin),		// Far distance is the magnitude of the scene depth
+						-transformedBounds.zMax, // We negate these values because glm::ortho reverses the sign to be "helpful"
+						-transformedBounds.zMin,
 
 						&currentScene->keyLight.GetTransform(),
 						vec3(0, 0, 0),
 						transformedBounds.xMin,
 						transformedBounds.xMax,
-						transformedBounds.yMin,	// TODO: Flip the order of these values in the constructor args...
+						transformedBounds.yMin,
 						transformedBounds.yMax
 					);
 
@@ -1470,7 +1480,7 @@ namespace BlazeEngine
 
 
 
-		// Note: In the current version of Assimp, camera import is broken.
+		// TODO: In the current version of Assimp, camera import is broken.
 		// + The mLookAt, mUp vectors seem to just be the world forward, up vectors, and mTransformation is the identity...
 		// + Importing cameras facing towards Z+ results in a flipped camera?
 		// + Importing cameras facing towards Z- results in an extra +90 degree rotation about Y being applied?

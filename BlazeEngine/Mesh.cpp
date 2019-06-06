@@ -263,8 +263,6 @@ namespace BlazeEngine
 				localBounds.zMax = vertices[i].position.z;
 			}
 		}
-
-		LOG("COMPUTED xyz bounds = " + to_string(localBounds.xMin) + " " + to_string(localBounds.xMax) + " " + to_string(localBounds.yMin) + " " + to_string(localBounds.yMax) + " " + to_string(localBounds.zMin) + " " + to_string(localBounds.zMax));
 	}
 }
 

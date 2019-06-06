@@ -96,7 +96,8 @@ namespace BlazeEngine
 		// Returns a Bounds, transformed from local space using transform
 		Bounds GetTransformedBounds(mat4 const& transform)
 		{
-			// Temp: Ensure the bounds are 3D here, before we do any calculations (TODO: Getters/setters that enforce 3D bounds)
+			// Temp: Ensure the bounds are 3D here, before we do any calculations
+			// TODO: Getters/setters that enforce 3D bounds
 			Make3Dimensional();
 
 			Bounds result;
@@ -149,22 +150,23 @@ namespace BlazeEngine
 
 		void Make3Dimensional()
 		{
-			if (glm::abs(xMax - xMin) < 0.01)
+			float depthBias = 0.01f;
+			if (glm::abs(xMax - xMin) < depthBias)
 			{
-				xMax += 0.01f;
-				xMin -= 0.01f;
+				xMax += depthBias;
+				xMin -= depthBias;
 			}
 
-			if (glm::abs(yMax - yMin) < 0.01)
+			if (glm::abs(yMax - yMin) < depthBias)
 			{
-				yMax += 0.01f;
-				yMin -= 0.01f;
+				yMax += depthBias;
+				yMin -= depthBias;
 			}
 
-			if (glm::abs(zMax - zMin) < 0.01)
+			if (glm::abs(zMax - zMin) < depthBias)
 			{
-				zMax += 0.01f;
-				zMin -= 0.01f;
+				zMax += depthBias;
+				zMin -= depthBias;
 			}
 		}
 	};
