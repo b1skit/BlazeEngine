@@ -272,8 +272,8 @@ namespace BlazeEngine
 		// TEMP DEBUG:
 		int numCams = 0;
 		
-		Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW, numCams);
-		//Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN, numCams);
+		//Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW, numCams);
+		Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN, numCams);
 		
 		Render(cameras[0]);
 
@@ -324,7 +324,7 @@ namespace BlazeEngine
 
 				// Assemble model-specific matrices:
 				mat4 model			= currentMesh->GetTransform().Model();
-				mat4 modelRotation	= currentMesh->GetTransform().ModelRotation();
+				mat4 modelRotation	= currentMesh->GetTransform().Model(WORLD_ROTATION);
 				mat4 mv				= view * model;
 				mat4 mvp			= renderCam->ViewProjection() * model;
 

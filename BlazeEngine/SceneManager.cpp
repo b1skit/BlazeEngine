@@ -5,15 +5,20 @@
 #include "Camera.h"
 #include "Mesh.h"
 
+
 #include "glm.hpp"
 #include "gtc/constants.hpp"
+//#include "gtx/quaternion.hpp"
 using glm::pi;
+
 
 #include "assimp/Importer.hpp"		// Importer interface
 #include "assimp/postprocess.h"		// Post processing flags
 
+
 #define STB_IMAGE_IMPLEMENTATION	// Only include this define ONCE in the project
 #include "stb_image.h"				// STB image loader
+
 
 #include <algorithm>
 #include <string>
@@ -506,14 +511,11 @@ namespace BlazeEngine
 			LOG("\tSource Rotation: " + to_string(sourceRotation.x) + " " + to_string(sourceRotation.y) + " " + to_string(sourceRotation.z) + " " + to_string(sourceRotation.w));
 		#endif
 
-
-		// TODO: Use Quaternions instead of Euler angles...
 		glm::quat sourceRotationAsGLMQuat(sourceRotation.w, sourceRotation.x, sourceRotation.y, sourceRotation.z);
 		vec3 eulerRotation = glm::eulerAngles(sourceRotationAsGLMQuat);
 
 		dest->SetPosition(vec3(sourcePosition.x, sourcePosition.y, sourcePosition.z));
-		/*dest->SetEulerRotation(vec3(sourceRotation.x, sourceRotation.y, sourceRotation.z));*/
-		dest->SetEulerRotation(vec3(eulerRotation.x, eulerRotation.y, eulerRotation.z));
+		dest->SetRotation(sourceRotationAsGLMQuat);
 		dest->SetScale(vec3(sourceScale.x, sourceScale.y, sourceScale.z));
 	}
 
@@ -1155,7 +1157,7 @@ namespace BlazeEngine
 				LOG("Parented \"" + newGameObject->GetName() + "\" -> \"" + nextParent->GetName() + "\"");
 			#endif
 
-			newGameObject->GetTransform()->SetParent(nextParent->GetTransform()); // ?????????Doesn't work????????????????
+			newGameObject->GetTransform()->Parent(nextParent->GetTransform());
 		}
 		
 		#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)

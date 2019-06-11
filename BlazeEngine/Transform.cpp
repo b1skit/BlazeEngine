@@ -2,11 +2,6 @@
 #include "Transform.h"
 #include <algorithm>
 
-#if defined(DEBUG_LOG_OUTPUT)
-	#include <iostream>
-	using std::to_string;
-#endif
-
 #include "gtc/constants.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL 
@@ -32,55 +27,56 @@ namespace BlazeEngine
 	{
 		children.reserve(10);
 
-		isDirty				= true;
+		isDirty	= true;
 	}
 
-	//Transform::~Transform()
-	//{
-	//}
 
-
-	mat4 Transform::Model()
+	mat4 Transform::Model(MODEL_MATRIX_COMPONENT component /*= WORLD_MODEL*/)
 	{
 		if (isDirty)
 		{
-			this->model = this->translation * this->scale * this->rotation;
+			Recompute();
+		}	
 
-			this->combinedModel = model;
+		switch (component)
+		{
+		case WORLD_TRANSLATION:
+			return translation;
+			break;
+
+		case WORLD_SCALE:
+			return scale;
+			break;
+
+		case WORLD_ROTATION:
+			return rotation;
+			break;
+
+		case WORLD_MODEL:
+		default:
+			return combinedModel;
+		}		
+	}
+
+
+	void Transform::Parent(Transform* newParent)
+	{
+		// Unparent:
+		if (newParent == nullptr)
+		{
 			if (this->parent != nullptr)
 			{
-				combinedModel = this->parent->Model() * combinedModel;
+				this->parent->UnregisterChild(this);
+				this->parent = nullptr;
 			}
-
-			isDirty = false;
-		}	
-
-		return combinedModel;
-	}
-
-	mat4 Transform::ModelRotation()
-	{
-		return rotation;
-	}
-
-
-	void Transform::SetParent(Transform* parent)
-	{
-		if (parent != nullptr)
+		}
+		// Parent:
+		else 
 		{
-			this->parent = parent;
+			this->parent = newParent;
 			this->parent->RegisterChild(this);
-			
-			MarkDirty();
-		}	
-	}
-
-
-	void Transform::UnParent()
-	{
-		this->parent->UnregisterChild(this);
-		this->parent = nullptr;
-
+		}
+		
 		MarkDirty();
 	}
 
@@ -98,109 +94,87 @@ namespace BlazeEngine
 
 	void Transform::SetPosition(vec3 position)
 	{
-		this->translation = glm::translate(mat4(1.0f), position);
+		this->translation	= glm::translate(mat4(1.0f), position);
 		this->worldPosition = position;
 
 		MarkDirty();
 	}
 
-	void Transform::LookAt(vec3 camForward, vec3 camUp)
-	{
-		LOG_ERROR("DEBUG: Transform.LookAt() is not correctly implemented yet!!!");
 
-		camUp			= normalize(camUp);
-		camForward		= normalize(camForward);
-		vec3 camRight	= glm::cross(camForward, camUp);
+	//void Transform::LookAt(vec3 camForward, vec3 camUp)
+	//{
+	//	LOG_ERROR("DEBUG: Transform.LookAt() is not correctly implemented yet!!!");
 
-		LOG_ERROR("DEBUG: LOOKAT CROSS RESULT = " + to_string(camRight.x) + " " + to_string(camRight.y) + " " + to_string(camRight.z));
-		
-		// Copy values into the rotation matrix:
-		for (int i = 0; i < 3; i++)
-		{
-			this->rotation[0][i] = camRight[i];
-			this->rotation[1][i] = camUp[i];
-			this->rotation[2][i] = camForward[i];
-		}
+	//	camUp			= normalize(camUp);
+	//	camForward		= normalize(camForward);
+	//	vec3 camRight	= glm::cross(camForward, camUp);
 
-		this->right		= camRight;
-		this->up		= camUp;
-		this->forward	= camForward;
+	//	LOG_ERROR("DEBUG: LOOKAT CROSS RESULT = " + to_string(camRight.x) + " " + to_string(camRight.y) + " " + to_string(camRight.z));
+	//	
+	//	// Copy values into the rotation matrix:
+	//	for (int i = 0; i < 3; i++)
+	//	{
+	//		this->rotation[0][i] = camRight[i];
+	//		this->rotation[1][i] = camUp[i];
+	//		this->rotation[2][i] = camForward[i];
+	//	}
 
-		// TODO: UPDATE EULER ROTATION!!!!
-		LOG_ERROR("DEBUG: EULER ROTATION IS NOT SET!!! GetEulerRotation() RESULTS FOR THIS TRANSFORM ARE NOW WRONG!!!!!!!!!");
+	//	this->right		= camRight;
+	//	this->up		= camUp;
+	//	this->forward	= camForward;
 
-		MarkDirty();
-	}
+	//	// TODO: UPDATE EULER ROTATION!!!!
+	//	LOG_ERROR("DEBUG: EULER ROTATION IS NOT SET!!! GetEulerRotation() RESULTS FOR THIS TRANSFORM ARE NOW WRONG!!!!!!!!!");
+
+	//	MarkDirty();
+	//}
 
 
 	void Transform::Rotate(vec3 eulerXYZ) // Note: eulerXYZ is in RADIANS
 	{
-		if (eulerXYZ.x != 0)
-		{
-			this->rotation = glm::rotate(this->rotation, eulerXYZ.x, WORLD_X);
-		}
-		if (eulerXYZ.y != 0)
-		{
-			this->rotation = glm::rotate(this->rotation, eulerXYZ.y, WORLD_Y);
-		}
-		if (eulerXYZ.z != 0)
-		{
-			this->rotation = glm::rotate(this->rotation, eulerXYZ.z, WORLD_Z);
-		}
-		// TODO: Work out why I do this different in SetEulerRotation()....
+		// Concatenate rotations as quaternions:
+		this->worldRotation = this->worldRotation * glm::quat(eulerXYZ);
 
+		this->rotation = glm::mat4_cast(this->worldRotation);
 
 		// Update the world-space orientation of our local CS axis:
-		this->right		= normalize((this->rotation * vec4(WORLD_X, 0)).xyz());
-		this->up		= normalize((this->rotation * vec4(WORLD_Y, 0)).xyz());
-		this->forward	= normalize((this->rotation * vec4(WORLD_Z, 0)).xyz());
-		
+		UpdateLocalAxis();
+
 		// Update the rotation value, and keep xyz bound in [0, 2pi]:
 		this->eulerWorldRotation += eulerXYZ;
-		eulerWorldRotation.x = glm::fmod<float>(eulerWorldRotation.x, glm::two_pi<float>()); 
-		eulerWorldRotation.y = glm::fmod<float>(eulerWorldRotation.y, glm::two_pi<float>());
-		eulerWorldRotation.z = glm::fmod<float>(eulerWorldRotation.z, glm::two_pi<float>());
+		BoundEulerAngles();
 
-		// TODO: CONFIRM THIS WORKS FOR NEGATIVE NUMBERS!!! 
-		// Is this even necessary here, or can I just assume I'll never pass "invalid" values?
-
-		
 		MarkDirty();
 	}
 
 
-	void Transform::SetEulerRotation(vec3 eulerXYZ)
+	void Transform::SetRotation(vec3 eulerXYZ)
 	{
-		this->rotation = mat4(1.0f);
+		// Update Quaternion:
+		this->worldRotation = glm::quat(eulerXYZ);
 
-		if (eulerXYZ.x != 0)
-		{
-			this->rotation = glm::rotate(mat4(1.0f), eulerXYZ.x, WORLD_X);
-		}
-		if (eulerXYZ.y != 0)
-		{
-			this->rotation = glm::rotate(mat4(1.0f), eulerXYZ.y, WORLD_Y) * rotation;
-		}
-		if (eulerXYZ.z != 0)
-		{
-			this->rotation = glm::rotate(mat4(1.0f), eulerXYZ.z, WORLD_Z) * rotation;
-		}
+		this->rotation = glm::mat4_cast(this->worldRotation);
 
-		// Update our local CS axis:
-		this->right		= normalize((rotation * vec4(WORLD_X, 0)).xyz());
-		this->up		= normalize((rotation * vec4(WORLD_Y, 0)).xyz());
-		this->forward	= normalize((rotation * vec4(WORLD_Z, 0)).xyz());
+		UpdateLocalAxis();
 
 		this->eulerWorldRotation = eulerXYZ;
+		BoundEulerAngles();
 
-		// Keep our xyz in [0, 2pi]:
-		eulerWorldRotation.x = glm::fmod<float>(eulerWorldRotation.x, glm::two_pi<float>());
-		eulerWorldRotation.y = glm::fmod<float>(eulerWorldRotation.y, glm::two_pi<float>());
-		eulerWorldRotation.z = glm::fmod<float>(eulerWorldRotation.z, glm::two_pi<float>());
+		MarkDirty();
+	}
 
-		// TODO: CONFIRM THIS WORKS FOR NEGATIVE NUMBERS!!! 
-		// Is this even necessary here, or can I just assume I'll never pass "invalid" values?
 
+	void Transform::SetRotation(quat newRotation)
+	{
+		this->worldRotation = newRotation;
+
+		this->rotation = glm::mat4_cast(newRotation);
+
+		UpdateLocalAxis();
+
+		// Update Euler angles:
+		this->eulerWorldRotation = glm::eulerAngles(newRotation);
+		BoundEulerAngles();
 
 		MarkDirty();
 	}
@@ -240,7 +214,7 @@ namespace BlazeEngine
 	// Static helper functions:
 	//-------------------------
 
-	vec3& Transform::RotateVector(vec3& targetVector, float const & radians, vec3 const & axis)
+	vec3& Transform::RotateVector(vec3& targetVector, float const& radians, vec3 const& axis)
 	{
 		mat4 rotation = glm::rotate(mat4(1.0f), radians, axis);
 		
@@ -274,6 +248,48 @@ namespace BlazeEngine
 				break;
 			}
 		}
+	}
+
+	
+	void Transform::Recompute()
+	{
+		if (!isDirty)
+		{
+			return;
+		}			
+
+		this->model = this->translation * this->scale * this->rotation;
+
+		this->combinedModel = model;
+		if (this->parent != nullptr)
+		{
+			combinedModel = this->parent->Model() * combinedModel;
+		}
+
+		for (int i = 0; i < (int)children.size(); i++)
+		{
+			children.at(i)->MarkDirty();
+		}
+
+		isDirty = false;
+	}
+
+
+	void Transform::UpdateLocalAxis()
+	{
+		// Update the world-space orientation of our local CS axis:
+		this->right		= normalize((rotation * vec4(WORLD_X, 0)).xyz());
+		this->up		= normalize((rotation * vec4(WORLD_Y, 0)).xyz());
+		this->forward	= normalize((rotation * vec4(WORLD_Z, 0)).xyz());
+	}
+
+
+	void Transform::BoundEulerAngles()
+	{
+		// Keep (signed) Euler xyz angles in (-2pi, 2pi):
+		eulerWorldRotation.x = glm::fmod<float>(glm::abs(eulerWorldRotation.x), glm::two_pi<float>()) * glm::sign(eulerWorldRotation.x);
+		eulerWorldRotation.y = glm::fmod<float>(glm::abs(eulerWorldRotation.y), glm::two_pi<float>()) * glm::sign(eulerWorldRotation.y);
+		eulerWorldRotation.z = glm::fmod<float>(glm::abs(eulerWorldRotation.z), glm::two_pi<float>()) * glm::sign(eulerWorldRotation.z);
 	}
 }
 

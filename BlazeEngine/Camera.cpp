@@ -67,7 +67,7 @@ namespace BlazeEngine
 
 		this->transform.SetPosition(position);
 
-		this->GetTransform()->SetParent(parent);
+		this->GetTransform()->Parent(parent);
 
 		this->isOrthographic		= isOrthographic;
 		if (isOrthographic)

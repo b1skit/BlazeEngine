@@ -24,27 +24,29 @@ namespace BlazeEngine
 	//	SPACE_CLIP,
 	//};
 
+	enum MODEL_MATRIX_COMPONENT
+	{
+		WORLD_TRANSLATION,
+		WORLD_SCALE,
+		WORLD_ROTATION,
+		
+		WORLD_MODEL
+	};
+
+
 	class Transform
 	{
 	public:
 		Transform();
-		/*~Transform();*/
 
 		// TODO: Copy constructor ??
 
 		// Get the model matrix, used to transform from local->world space
-		mat4 Model();
-
-		// Get the model rotation matrix (ie. for transforming normals from local -> world space)
-		mat4 ModelRotation();
-
-		//// Set the matrices used to compose the model matrix
-		//void SetModelMatrices(mat4 translation, mat4 scale, mat4 rotation);
+		mat4 Model(MODEL_MATRIX_COMPONENT component = WORLD_MODEL);
 		
 		// Hierarchy functions:
-		inline Transform*	GetParent() const { return parent; }
-		void				SetParent(Transform* parent);
-		void				UnParent();
+		inline Transform*	Parent() const { return parent; }
+		void				Parent(Transform* newParent);
 		
 		// Functionality:
 		//---------------
@@ -54,7 +56,8 @@ namespace BlazeEngine
 
 		// Set the position, in (relative) world space
 		void SetPosition(vec3 position);
-		void LookAt(vec3 camForward, vec3 camUp);
+
+		//void LookAt(vec3 camForward, vec3 camUp);
 
 		// Get the position, in (relative) world space
 		inline vec3 const& Position() { return worldPosition; }
@@ -64,7 +67,8 @@ namespace BlazeEngine
 		void Rotate(vec3 eulerXYZ);
 
 		inline vec3 const&	GetEulerRotation() { return eulerWorldRotation; }
-		void				SetEulerRotation(vec3 eulerXYZ);
+		void				SetRotation(vec3 eulerXYZ);
+		void				SetRotation(quat newRotation);
 		
 		// Scaling:
 		void SetScale(vec3 scale);
@@ -81,10 +85,10 @@ namespace BlazeEngine
 		inline vec3 const& Forward() const { return forward; }
 
 		// Transform's world-space right (X+) vector
-		inline vec3 const& Right() const { return right; }
+		inline vec3 const& Right()	const { return right; }
 
 		// Transform's world-space up (Y+) vector
-		inline vec3 const& Up() const { return up; }
+		inline vec3 const& Up()		const { return up; }
 
 
 		// World CS axis: BlazeEngine always uses a RHCS
@@ -121,17 +125,30 @@ namespace BlazeEngine
 		vec3 up			= WORLD_Y;
 		vec3 forward	= WORLD_Z;
 
-		/*quat localRotation;
-		quat worldRotation;*/
-
 		// model == T*R*S
 		mat4 model			= mat4(1.0f);
 		mat4 scale			= mat4(1.0f);
 		mat4 rotation		= mat4(1.0f);
 		mat4 translation	= mat4(1.0f);
-		
-		bool isDirty;	// Track whether our model or combinedModel matrices need to be recomputed
-		mat4 combinedModel = mat4(1.0f);
+
+		mat4 combinedModel	= mat4(1.0f);
+
+		quat worldRotation;		// Used to assemble rotation matrix
+
+		bool isDirty;			// Do our model or combinedModel matrices need to be recomputed?
+
+
+		// Private functions:
+		//-------------------
+
+		// Recomute the components of the model matrix. Sets isDirty to false
+		void Recompute();
+
+		// Helper function: Recomputes world orientation of the right/up/forward local CS axis vectors according to the current rotation mat4
+		void UpdateLocalAxis();
+
+		// Helper function: Clamps Euler angles to be in (-2pi, 2pi)
+		void BoundEulerAngles();
 	};
 }
 

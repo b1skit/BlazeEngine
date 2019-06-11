@@ -7,13 +7,13 @@ void BlazeEngine::Renderable::SetTransform(Transform* transform)
 	// Update the parents of any view meshes
 	for (unsigned int i = 0; i < (unsigned int)viewMeshes.size(); i++)
 	{
-		viewMeshes.at(i)->GetTransform().SetParent(this->gameObjectTransform);
+		viewMeshes.at(i)->GetTransform().Parent(this->gameObjectTransform);
 	}
 }
 
 void BlazeEngine::Renderable::AddViewMeshAsChild(Mesh* mesh)
 {
-	mesh->GetTransform().SetParent(this->gameObjectTransform);
+	mesh->GetTransform().Parent(this->gameObjectTransform);
 
 	viewMeshes.push_back(mesh);
 }

@@ -11,7 +11,7 @@ namespace BlazeEngine
 	PlayerObject::PlayerObject(Camera* playerCam) : GameObject::GameObject("Player Object")
 	{
 		this->playerCam = playerCam;
-		this->playerCam->GetTransform()->SetParent(&this->transform);
+		this->playerCam->GetTransform()->Parent(&this->transform);
 
 		// Move the yaw (ie. about Y) rotation from the camera to the PlayerObject's transform:
 
@@ -19,10 +19,10 @@ namespace BlazeEngine
 		vec3 camRotation = playerCamTransform->GetEulerRotation();
 		vec3 camPosition = playerCamTransform->Position();
 
-		playerCamTransform->SetEulerRotation(vec3(camRotation.x, 0.0f, 0.0f));	// Set pitch
+		playerCamTransform->SetRotation(vec3(camRotation.x, 0.0f, 0.0f));	// Set pitch
 		playerCamTransform->SetPosition(vec3(0.0f, 0.0f, 0.0f));				// Relative to PlayerObject parent
 		
-		this->transform.SetEulerRotation(vec3(0.0f, camRotation.y, 0.0f));		// Set yaw
+		this->transform.SetRotation(vec3(0.0f, camRotation.y, 0.0f));		// Set yaw
 		this->transform.SetPosition(camPosition);
 	}
 
@@ -95,8 +95,8 @@ namespace BlazeEngine
 		if (InputManager::GetInputState(INPUT_MOUSE_LEFT))
 		{
 			this->transform.SetPosition(savedPosition);
-			this->transform.SetEulerRotation(vec3(0, savedEulerRotation.y, 0));
-			this->playerCam->GetTransform()->SetEulerRotation(vec3(savedEulerRotation.x, 0, 0));
+			this->transform.SetRotation(vec3(0, savedEulerRotation.y, 0));
+			this->playerCam->GetTransform()->SetRotation(vec3(savedEulerRotation.x, 0, 0));
 		}
 
 		// Save the current position/rotation:
