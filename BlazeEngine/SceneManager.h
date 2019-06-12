@@ -59,10 +59,10 @@ namespace BlazeEngine
 
 		// Cameras:
 		//---------
-		Camera**	GetCameras(CAMERA_TYPE cameraType, int& camCount);
-		Camera*		GetMainCamera() { return sceneCameras[CAMERA_TYPE_MAIN][0]; }
-		void		RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera);
-		void		ClearCameras();	// Destroys the scene's cameras (without deallocating the containing arrays)
+		vector<Camera*> const&	GetCameras(CAMERA_TYPE cameraType);
+		Camera*					GetMainCamera() { return sceneCameras[CAMERA_TYPE_MAIN].at(0); }
+		void					RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera);
+		void					ClearCameras();	// Destroys the scene's cameras (without deallocating the containing arrays)
 		
 
 		// Scene object containers:
@@ -73,7 +73,6 @@ namespace BlazeEngine
 		
 		// Lights:
 		//--------
-		// Scene Lights: A scene can have ???
 		/*vector<Light> forwardLights;*/
 		/*vector<Light> deferredLights;*/
 
@@ -90,10 +89,7 @@ namespace BlazeEngine
 		int maxMeshes = 0;
 		int meshCount = 0;
 
-		// TODO: Replace these with vector<vector<Camera*>> 
-		Camera*** sceneCameras = nullptr;
-		int cameraTypeLengths[CAMERA_TYPE_COUNT];	// How many CAMERA_TYPE elements in each row of the sceneCameras array
-		int currentCameraTypeCounts[CAMERA_TYPE_COUNT];
+		vector<vector<Camera*>> sceneCameras;
 
 		Bounds sceneWorldBounds;
 	};
@@ -135,7 +131,8 @@ namespace BlazeEngine
 		inline vec3 const&			GetAmbient()												{ return currentScene->ambientLight; }
 		inline Light&				GetKeyLight()												{ return currentScene->keyLight; }
 		
-		inline Camera**				GetCameras(CAMERA_TYPE cameraType, int& camCount)			{ return currentScene->GetCameras(cameraType, camCount); }
+		//inline Camera**				GetCameras(CAMERA_TYPE cameraType, int& camCount)			{ return currentScene->GetCameras(cameraType, camCount); }
+		inline vector<Camera*>		GetCameras(CAMERA_TYPE cameraType)							{ return currentScene->GetCameras(cameraType); }
 		inline Camera*				GetMainCamera()							 					{ return currentScene->GetMainCamera(); }
 		void						RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera)	{ currentScene->RegisterCamera(cameraType, newCamera); }
 

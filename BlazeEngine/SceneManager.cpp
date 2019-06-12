@@ -8,7 +8,7 @@
 
 #include "glm.hpp"
 #include "gtc/constants.hpp"
-//#include "gtx/quaternion.hpp"
+
 using glm::pi;
 
 
@@ -34,30 +34,16 @@ namespace BlazeEngine
 		gameObjects.reserve(GAMEOBJECTS_RESERVATION_AMT);
 		renderables.reserve(RENDERABLES_RESERVATION_AMT);
 
-		sceneCameras = new Camera**[CAMERA_TYPE_COUNT];
-
-		sceneCameras[CAMERA_TYPE_SHADOW]			= new Camera * [CAMERA_TYPE_SHADOW_ARRAY_SIZE];
-		cameraTypeLengths[CAMERA_TYPE_SHADOW]		= CAMERA_TYPE_SHADOW_ARRAY_SIZE;
-		for (int i = 0; i < CAMERA_TYPE_SHADOW_ARRAY_SIZE; i++)
-		{
-			sceneCameras[CAMERA_TYPE_SHADOW][i]		= nullptr;
-		}
-
-		sceneCameras[CAMERA_TYPE_REFLECTION]		= new Camera* [CAMERA_TYPE_REFLECTION_ARRAY_SIZE];
-		cameraTypeLengths[CAMERA_TYPE_REFLECTION]	= CAMERA_TYPE_REFLECTION_ARRAY_SIZE;
-		for (int i = 0; i < CAMERA_TYPE_REFLECTION_ARRAY_SIZE; i++)
-		{
-			sceneCameras[CAMERA_TYPE_REFLECTION][i] = nullptr;
-		}
-
-		sceneCameras[CAMERA_TYPE_MAIN]				= new Camera * [1];
-		sceneCameras[CAMERA_TYPE_MAIN][0]			= nullptr;
-		cameraTypeLengths[CAMERA_TYPE_MAIN]			= 1;
-
+		sceneCameras.reserve(CAMERA_TYPE_COUNT);
 		for (int i = 0; i < CAMERA_TYPE_COUNT; i++)
 		{
-			currentCameraTypeCounts[i] = 0;
+			sceneCameras.push_back(vector<Camera*>());
 		}
+		sceneCameras.at(CAMERA_TYPE_SHADOW).reserve(CAMERA_TYPE_SHADOW_ARRAY_SIZE);
+		sceneCameras.at(CAMERA_TYPE_REFLECTION).reserve(CAMERA_TYPE_REFLECTION_ARRAY_SIZE);
+		
+		sceneCameras.at(CAMERA_TYPE_MAIN).reserve(1); // Only 1 main camera
+
 
 		/*forwardLights.reserve(100);*/
 		/*deferredLights.reserve(100);*/
@@ -77,27 +63,7 @@ namespace BlazeEngine
 			}
 		}
 
-		if (sceneCameras != nullptr)
-		{
-			for (int cameraType = 0; cameraType < CAMERA_TYPE_COUNT; cameraType++)
-			{
-				if (sceneCameras[cameraType] != nullptr)
-				{
-					for (int currentCamera = 0; currentCamera < cameraTypeLengths[cameraType]; currentCamera++)
-					{
-						if (sceneCameras[cameraType][currentCamera] != nullptr)
-						{
-							delete sceneCameras[cameraType][currentCamera];
-							sceneCameras[cameraType][currentCamera] = nullptr;
-						}
-					}
-					delete[] sceneCameras[cameraType];
-					sceneCameras[cameraType] = nullptr;
-				}
-			}
-			delete[] sceneCameras;
-			sceneCameras = nullptr;
-		}
+		ClearCameras();
 	}
 
 
@@ -196,53 +162,40 @@ namespace BlazeEngine
 
 	void Scene::RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera)
 	{
-		if (newCamera != nullptr && currentCameraTypeCounts[cameraType] < cameraTypeLengths[cameraType])
+		if (newCamera != nullptr && (int)cameraType < (int)sceneCameras.size())
 		{
-			for (int i = 0; i < cameraTypeLengths[cameraType]; i++)
-			{
-				if (sceneCameras[cameraType][i] == nullptr)
-				{
-					sceneCameras[cameraType][i] = newCamera;
-					currentCameraTypeCounts[cameraType]++;
+			sceneCameras.at((int)cameraType).push_back(newCamera);
 
-					LOG("Registered new camera \"" + newCamera->GetName() + "\"");
-
-					return;
-				}
-			}
+			LOG("Registered new camera \"" + newCamera->GetName() + "\"");
 		}
-		
-		LOG_ERROR("Failed to register new camera!");
+		else
+		{
+			LOG_ERROR("Failed to register new camera!");
+		}
 	}
 
 
-	Camera** Scene::GetCameras(CAMERA_TYPE cameraType, int& camCount)
+	vector<Camera*> const& Scene::GetCameras(CAMERA_TYPE cameraType)
 	{ 
-		camCount = currentCameraTypeCounts[cameraType]; 
-		return sceneCameras[cameraType]; 
+		return sceneCameras.at(cameraType);
 	}
 
 
 	void Scene::ClearCameras()
 	{
-		if (sceneCameras == nullptr)
+		if (sceneCameras.empty())
 		{
 			return;
 		}
 
-		for (int cameraType = 0; cameraType < CAMERA_TYPE_COUNT; cameraType++)
+		for (int i = 0; i < (int)sceneCameras.size(); i++)
 		{
-			if (sceneCameras[cameraType] != nullptr)
+			for (int j = 0; j < (int)sceneCameras.at(i).size(); j++)
 			{
-				for (int currentCamera = 0; currentCamera < cameraTypeLengths[cameraType]; currentCamera++)
+				if (sceneCameras.at(i).at(j) != nullptr)
 				{
-					if (sceneCameras[cameraType][currentCamera] != nullptr)
-					{
-						delete sceneCameras[cameraType][currentCamera];
-						sceneCameras[cameraType][currentCamera] = nullptr;
-					}
+					delete sceneCameras.at(i).at(j);
 				}
-				currentCameraTypeCounts[cameraType] = 0;
 			}
 		}
 	}

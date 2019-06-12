@@ -245,37 +245,33 @@ namespace BlazeEngine
 	void RenderManager::Update()
 	{
 		//// Render shadows:
-		//int numCams = 0;
-		//Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW, numCams);
-		//for (int currentCam = 0; currentCam < numCams; currentCam++)
+		//vector<Camera*> cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW);
+		//for (int currentCam = 0; currentCam < (int)cameras.size(); currentCam++)
 		//{
-		//	Render(cameras[currentCam]);
+		//	Render(cameras.at(currentCam));
 		//}
 
 		//// Render reflections:
-		//cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW, numCams);
-		//for (int currentCam = 0; currentCam < numCams; currentCam++)
+		//cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW);
+		//for (int currentCam = 0; currentCam < (int)cameras.size(); currentCam++)
 		//{
-		//	Render(cameras[currentCam]);
+		//	Render(cameras.at(currentCam));
 		//}
 
 		//// Render main camera:
-		//cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN, numCams);
-		//Render(cameras[0]);
+		//cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN);
+		//Render(cameras.at(0));
 		//
 		//// // ^^ISSUE: Flickering - Rendering multiple cams to the screen!!!
-		
-		// TO DO: Move various openGL config settings from startup to here?
+		//
+		//// TO DO: Move various openGL config settings from startup to here?
 
-		// CURRENT ISSUE: Directional light STILL isn't framed correctly. Depth AND framing are still wrong :(
 
 		// TEMP DEBUG:
-		int numCams = 0;
+		//vector<Camera*> cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW);
+		vector<Camera*> cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN);
 		
-		//Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW, numCams);
-		Camera** cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN, numCams);
-		
-		Render(cameras[0]);
+		Render(cameras.at(0));
 
 		//cameras[0]->DebugPrint();
 

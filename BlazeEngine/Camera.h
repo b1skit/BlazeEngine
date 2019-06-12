@@ -58,9 +58,9 @@ namespace BlazeEngine
 		float far			= 100.0f;
 		float aspectRatio	= 1.0f;				// == width / height
 
-		mat4 view;
-		mat4 projection;
-		mat4 viewProjection;
+		mat4 view			= mat4();
+		mat4 projection		= mat4();
+		mat4 viewProjection = mat4();
 
 		// Orthographic rendering properties:
 		bool isOrthographic		= false;

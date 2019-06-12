@@ -61,13 +61,13 @@ namespace BlazeEngine
 
 	private:
 		// Configuration:
-		int xRes;
-		int yRes;
-		string windowTitle;
+		int xRes				= -1;
+		int yRes				= -1;
+		string windowTitle		= "Default BlazeEngine window title";
 		
 		// OpenGL components and settings:
-		SDL_Window* glWindow;
-		SDL_GLContext glContext;
+		SDL_Window* glWindow	= 0;
+		SDL_GLContext glContext = 0;
 		
 		// Private member functions:
 		//--------------------------
