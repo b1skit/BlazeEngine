@@ -4,6 +4,7 @@
 #include "CoreEngine.h"
 #include "Camera.h"
 #include "Mesh.h"
+#include "Texture.h"
 
 
 #include "glm.hpp"
@@ -33,6 +34,7 @@ namespace BlazeEngine
 	{
 		gameObjects.reserve(GAMEOBJECTS_RESERVATION_AMT);
 		renderables.reserve(RENDERABLES_RESERVATION_AMT);
+		meshes.reserve(MESHES_RESERVATION_AMT);
 
 		sceneCameras.reserve(CAMERA_TYPE_COUNT);
 		for (int i = 0; i < CAMERA_TYPE_COUNT; i++)
@@ -67,96 +69,77 @@ namespace BlazeEngine
 	}
 
 
-	void Scene::InitMeshArray(int maxMeshes)
+	void Scene::InitMeshArray()
 	{
-		if (meshes != nullptr)
-		{
-			DeleteMeshes();
-		}
-
-		meshCount = 0;
-		this->maxMeshes = maxMeshes;
-
-		meshes = new Mesh* [maxMeshes];
-		for (int i = 0; i < maxMeshes; i++)
-		{
-			meshes[i] = nullptr;
-		}
+		DeleteMeshes();
+		meshes.reserve(MESHES_RESERVATION_AMT);
 	}
 	
 
 	int Scene::AddMesh(Mesh* newMesh)
-	{
-		if (meshCount < maxMeshes)
+	{		
+		// Update scene (world) bounds to contain the new mesh:
+		Bounds meshWorldBounds(newMesh->localBounds.GetTransformedBounds(newMesh->GetTransform().Model()));
+
+		if (meshWorldBounds.xMin < sceneWorldBounds.xMin)
 		{
-			Bounds meshWorldBounds(newMesh->localBounds.GetTransformedBounds(newMesh->GetTransform().Model()));
-
-			// Update scene (world) bounds to contain the new mesh:
-			if (meshWorldBounds.xMin < sceneWorldBounds.xMin)
-			{
-				sceneWorldBounds.xMin = meshWorldBounds.xMin;
-			}
-			if (meshWorldBounds.xMax > sceneWorldBounds.xMax)
-			{
-				sceneWorldBounds.xMax = meshWorldBounds.xMax;
-			}
-
-			if (meshWorldBounds.yMin < sceneWorldBounds.yMin)
-			{
-				sceneWorldBounds.yMin = meshWorldBounds.yMin;
-			}
-			if (meshWorldBounds.yMax > sceneWorldBounds.yMax)
-			{
-				sceneWorldBounds.yMax = meshWorldBounds.yMax;
-			}
-
-			if (meshWorldBounds.zMin < sceneWorldBounds.zMin)
-			{
-				sceneWorldBounds.zMin = meshWorldBounds.zMin;
-			}
-			if (meshWorldBounds.zMax > sceneWorldBounds.zMax)
-			{
-				sceneWorldBounds.zMax = meshWorldBounds.zMax;
-			}
-
-			// Add the mesh to our array:
-			meshes[meshCount] = newMesh;
-			return meshCount++;
+			sceneWorldBounds.xMin = meshWorldBounds.xMin;
 		}
-		else
+		if (meshWorldBounds.xMax > sceneWorldBounds.xMax)
 		{
-			LOG_ERROR("meshCount > maxMeshes! Returning -1");
-			return -1;
+			sceneWorldBounds.xMax = meshWorldBounds.xMax;
 		}
+
+		if (meshWorldBounds.yMin < sceneWorldBounds.yMin)
+		{
+			sceneWorldBounds.yMin = meshWorldBounds.yMin;
+		}
+		if (meshWorldBounds.yMax > sceneWorldBounds.yMax)
+		{
+			sceneWorldBounds.yMax = meshWorldBounds.yMax;
+		}
+
+		if (meshWorldBounds.zMin < sceneWorldBounds.zMin)
+		{
+			sceneWorldBounds.zMin = meshWorldBounds.zMin;
+		}
+		if (meshWorldBounds.zMax > sceneWorldBounds.zMax)
+		{
+			sceneWorldBounds.zMax = meshWorldBounds.zMax;
+		}
+
+		// Add the mesh to our array:
+		int meshIndex = (int)meshes.size();
+		meshes.push_back(newMesh);
+		return meshIndex;
+
 	}
 
 
 	void Scene::DeleteMeshes()
 	{
-		if (meshes == nullptr)
+		for (int i = 0; i < (int)meshes.size(); i++)
 		{
-			return;
-		}
-		for (int i = 0; i < meshCount; i++)
-		{
-			if (meshes[i] != nullptr)
+			if (meshes.at(i) != nullptr)
 			{
 				delete meshes[i];
+				meshes.at(i) = nullptr;
 			}
 		}
-		delete[] meshes;
+		
+		meshes.clear();
 	}
 
 
 	Mesh* Scene::GetMesh(int meshIndex)
 	{
-		if (meshIndex >= meshCount)
+		if (meshIndex >= (int)meshes.size())
 		{
-			LOG_ERROR("Invalid mesh index received: " + to_string(meshIndex) + " > " + to_string(meshCount) + ". Returning nullptr");
+			LOG_ERROR("Invalid mesh index received: " + to_string(meshIndex) + " > " + to_string((int)meshes.size()) + ". Returning nullptr");
 			return nullptr;
 		}
 
-		return meshes[meshIndex];
+		return meshes.at(meshIndex);
 	}
 
 
@@ -194,7 +177,9 @@ namespace BlazeEngine
 			{
 				if (sceneCameras.at(i).at(j) != nullptr)
 				{
+					sceneCameras.at(i).at(j)->Destroy();
 					delete sceneCameras.at(i).at(j);
+					sceneCameras.at(i).at(j) = nullptr;
 				}
 			}
 		}
@@ -208,11 +193,6 @@ namespace BlazeEngine
 	SceneManager::SceneManager() : EngineComponent("SceneManager")
 	{
 		stbi_set_flip_vertically_on_load(true);	// Set stb_image to flip the y-axis on loading to match OpenGL's style (So pixel (0,0) is in the bottom-left of the image)
-	}
-
-
-	SceneManager::~SceneManager()
-	{
 	}
 
 
@@ -271,6 +251,7 @@ namespace BlazeEngine
 						delete materials[i]->GetShader();
 					}
 					delete materials[i];
+					materials[i] = nullptr;
 				}
 			}
 			delete[] materials;
@@ -284,9 +265,12 @@ namespace BlazeEngine
 				if (textures[i])
 				{
 					textures[i]->Destroy();
+					delete textures[i];
+					textures[i] = nullptr;
 				}
 			}
 			delete[] textures;
+			textures = nullptr;
 		}
 	}
 
@@ -319,6 +303,7 @@ namespace BlazeEngine
 		{
 			LOG("Unloading existing scene");
 			delete currentScene;
+			currentScene = nullptr;
 		}
 		currentScene = new Scene();
 
@@ -437,6 +422,17 @@ namespace BlazeEngine
 		return nullptr;
 	}
 
+	vector<Mesh*> const* BlazeEngine::SceneManager::GetRenderMeshes(int materialIndex /*= -1*/)
+	{
+		// If materialIndex is out of bounds, return ALL meshes
+		if (materialIndex < 0 || materialIndex >= (int)materialMeshLists.size())
+		{
+			return &currentScene->GetMeshes();
+		}
+
+		return &materialMeshLists.at(materialIndex);
+	}
+	
 	
 	void BlazeEngine::SceneManager::AddGameObject(GameObject* newGameObject)
 	{
@@ -880,13 +876,11 @@ namespace BlazeEngine
 
 	void SceneManager::ImportGameObjectGeometryFromScene(aiScene const* scene)
 	{
-		// NOTE: There seems to be a bug in Assimp where nested groups sometimes get incorrect rotations... I haven't been able to lock it down 100%, but as a workaround just avoid nesting
-
 		int numMeshes = scene->mNumMeshes;
 		LOG("Found " + to_string(numMeshes) + " scene meshes");
 
 		// Allocations:
-		currentScene->InitMeshArray(numMeshes);
+		currentScene->InitMeshArray();
 		
 		currentScene->gameObjects.clear();
 		currentScene->gameObjects.reserve(numMeshes); // Assuming that every GameObject will have at least 1 mesh...

@@ -33,7 +33,6 @@ namespace BlazeEngine
 		{
 			exit(-1);
 		}
-		// TODO: Initialize per-component, instead of initializing everything???
 	}
 
 
@@ -74,27 +73,28 @@ namespace BlazeEngine
 		BlazeLogManager->Update();
 
 		// Initialize game loop timing:
-		double elapsed = 0.0;
 		BlazeTimeManager->Update();
+		double elapsed = 0.0;
 
 		while (isRunning)
 		{
 			BlazeInputManager->Update(); // Note: Input processing occurs via events. This just resets the mouse state
 
-			BlazeTimeManager->Update();
+			// Process events, incase we received input
+			BlazeEventManager->Update(); // Clears SDL event queue: Must occur after any other component that listens to SDL events
+			BlazeLogManager->Update();
+
+			BlazeTimeManager->Update();	// We only need to call this once per loop. DeltaTime() effectively == #ms between calls to TimeManager.Update()
 			elapsed += BlazeTimeManager->DeltaTime();
 
 			while (elapsed >= FIXED_TIMESTEP)
 			{
-				//BlazeInputManager->Update(); // Note: Input processing occurs via events. This just resets the mouse state
-
 				// Update components:
 				BlazeEventManager->Update(); // Clears SDL event queue: Must occur after any other component that listens to SDL events
 				BlazeLogManager->Update();
 
 				BlazeSceneManager->Update(); // Updates all of the scene objects
 
-				// Update the time for the next iteration:
 				elapsed -= FIXED_TIMESTEP;
 			}
 			

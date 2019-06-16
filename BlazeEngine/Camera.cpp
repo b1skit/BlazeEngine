@@ -53,10 +53,26 @@ namespace BlazeEngine
 		);
 	}
 
-	
-	//Camera::~Camera()
-	//{
-	//}*/
+
+	void Camera::Destroy()
+	{
+		if (this->renderMaterial != nullptr)
+		{
+			for (int i = 0; i < TEXTURE_COUNT; i++)
+			{
+				Texture* currentTexture = renderMaterial->GetTexture((TEXTURE_TYPE)i);
+				if (currentTexture != nullptr)
+				{
+					currentTexture->Destroy();
+					delete currentTexture;
+					currentTexture = nullptr;
+				}
+			}
+
+			delete renderMaterial;
+			renderMaterial = nullptr;
+		}
+	}
 
 
 	void Camera::Initialize(float aspectRatio, float fieldOfView, float near, float far, Transform* parent /*= nullptr*/, vec3 position /*= vec3(0.0f, 0.0f, 0.0f)*/, bool isOrthographic /*= false*/, float orthoLeft /*= -5*/, float orthoRight /*= 5*/, float orthoBottom /*= -5*/, float orthoTop /*= 5*/)

@@ -41,7 +41,7 @@ namespace BlazeEngine
 		// Used to hash objects when inserting into an unordered_map
 		inline string GetHashString() { return hashString; }
 
-		virtual void Update() = 0;
+		virtual void Update()	= 0;
 
 	protected:
 		unsigned long objectID; // Hashed value

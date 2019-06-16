@@ -10,18 +10,14 @@ namespace BlazeEngine
 	unsigned int TimeManager::startTime;
 	unsigned int TimeManager::prevTime;
 	unsigned int TimeManager::currentTime;
-	double TimeManager::deltaTime;
+	unsigned int TimeManager::deltaTime;
 
 
 	TimeManager::TimeManager() : EngineComponent("TimeManager")
 	{
-		startTime = prevTime = currentTime = SDL_GetTicks(); // TODO: use the high res timer instead?
+		startTime = prevTime = currentTime = SDL_GetTicks();
 	}
 
-	/*TimeManager::~TimeManager()
-	{
-
-	}*/
 
 	TimeManager& TimeManager::Instance()
 	{
@@ -29,21 +25,24 @@ namespace BlazeEngine
 		return *instance;
 	}
 
+
 	void TimeManager::Startup()
 	{
 		LOG("TimeManager started!");
 	}
+
 
 	void TimeManager::Shutdown()
 	{
 		LOG("Time manager shutting down...");
 	}
 
+
 	void TimeManager::Update()
 	{
-		prevTime = currentTime;
+		prevTime	= currentTime;
 		currentTime = SDL_GetTicks();
-		deltaTime = (double)(currentTime - prevTime);
+		deltaTime	= (currentTime - prevTime);
 	}
 }
 

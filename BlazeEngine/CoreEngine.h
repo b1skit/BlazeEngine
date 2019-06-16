@@ -60,6 +60,7 @@ namespace BlazeEngine
 			const string shaderDirectory	= ".\\Shaders\\";
 			const string errorShaderName	= "errorShader";
 			const string defaultShaderName	= "lambertShader";
+			const string depthShaderName	= "depthShader";
 		} shader;
 
 		struct
@@ -115,7 +116,7 @@ namespace BlazeEngine
 		EngineConfig const* GetConfig();
 
 		// BlazeObject interface:
-		void Update() {} // Do nothing...
+		void Update()	{}	// Do nothing...
 
 		// EventListener interface:
 		void HandleEvent(EventInfo const* eventInfo);

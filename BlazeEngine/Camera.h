@@ -3,6 +3,7 @@
 #include "SceneObject.h"
 
 
+
 #define GLM_FORCE_SWIZZLE
 #include "glm.hpp"
 
@@ -10,7 +11,7 @@
 namespace BlazeEngine
 {
 	// Pre-declarations:
-	class RenderTexture;
+	class Material;
 
 
 	class Camera : public SceneObject
@@ -25,7 +26,7 @@ namespace BlazeEngine
 		// Orthographic constructor:
 		Camera(string cameraName, float near, float far, Transform* parent = nullptr, vec3 position = vec3(0.0f, 0.0f, 0.0f), float orthoLeft = -5, float orthoRight = 5, float orthoBottom = -5, float orthoTop = 5);
 
-		/*~Camera();*/
+		void Destroy();
 
 		void Initialize(float aspectRatio, float fieldOfView, float near, float far, Transform* parent = nullptr, vec3 position = vec3(0.0f, 0.0f, 0.0f), bool isOrthographic = false, float orthoLeft = -5, float orthoRight = 5, float orthoBottom = -5, float orthoTop = 5);
 
@@ -44,9 +45,9 @@ namespace BlazeEngine
 
 		inline mat4 const&	Projection() const		{ return projection; }
 
-		inline mat4 const&	ViewProjection()		{ return viewProjection = projection * View(); } // TODO: ONLY COMPUTE THIS IF SOMETHING HAS CHANGED!!!
+		inline mat4 const&	ViewProjection()		{ return viewProjection = projection * View(); } // TODO: ONLY COMPUTE THIS MATRIX IF SOMETHING HAS CHANGED!!!
 
-		RenderTexture*&		RenderTarget()			{ return renderTarget; }
+		Material*&			RenderMaterial()		{ return renderMaterial; }
 
 		void				DebugPrint();
 	protected:
@@ -69,7 +70,7 @@ namespace BlazeEngine
 		float orthoBottom		= -5;
 		float orthoTop			= 5;
 		
-		RenderTexture* renderTarget		= nullptr;
+		Material* renderMaterial	= nullptr;	// Deallocated when Destroy() is called
 
 		/*bool isDirty = false;*/
 	};

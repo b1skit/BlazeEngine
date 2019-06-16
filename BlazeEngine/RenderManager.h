@@ -4,10 +4,10 @@
 
 #include "EngineComponent.h"
 #include "EventManager.h"
-#include "Shader.h"
 
 #include <string>
 
+#include <GL/glew.h>
 
 #include "SDL.h"
 
@@ -23,7 +23,6 @@ namespace BlazeEngine
 	//------------------
 	class Material;
 	class Mesh;
-	class Texture;
 	class Camera;
 
 
@@ -53,8 +52,16 @@ namespace BlazeEngine
 
 		void Update();
 
+		
 		// Member functions:
+		//------------------
+
+		// Configure OpenGL for the next draw call
+		void ConfigureRenderSettings(Camera* const renderCam);
+
 		void Render(Camera* renderCam);
+
+		
 
 		// Upload static properties to shaders
 		void InitializeShaders();

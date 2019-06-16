@@ -1,10 +1,13 @@
 #include "RenderManager.h"
 #include "CoreEngine.h"
+#include "SceneManager.h"
 #include "Shader.h"
 #include "Mesh.h"
 #include "Transform.h"
 #include "Material.h"
+#include "Texture.h"
 #include "BuildConfiguration.h"
+
 
 #include <string>
 
@@ -138,19 +141,10 @@ namespace BlazeEngine
 	{
 		LOG("Render manager started!");
 
-		// TODO: IMPLEMENT PER-COMPONENT INITIALIZATION
-
-		//// Initialize SDL:
-		//if (SDL_Init(SDL_INIT_VIDEO) < 0)
-		//{
-		//	CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Could not initialize SDL video") });
-		//	return;
-		//}
-
 		// Cache the relevant config data:
-		this->xRes = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes;
-		this->yRes = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes;
-		this->windowTitle = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowTitle;
+		this->xRes			= CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes;
+		this->yRes			= CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes;
+		this->windowTitle	= CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowTitle;
 
 		// Configure SDL before creating a window:
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
@@ -186,7 +180,8 @@ namespace BlazeEngine
 		//SDL_GL_SetSwapInterval(1);
 
 		// Create a window:
-		glWindow = SDL_CreateWindow(
+		glWindow = SDL_CreateWindow
+		(
 			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowTitle.c_str(),
 			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
 			xRes, 
@@ -228,11 +223,12 @@ namespace BlazeEngine
 		#endif
 
 		// Configure other OpenGL settings:
-		glEnable(GL_DEPTH_TEST);			// Enable Z depth testing
 		glFrontFace(GL_CCW);				// Counter-clockwise vertex winding (OpenGL default)
+		glEnable(GL_DEPTH_TEST);			// Enable Z depth testing
 		glEnable(GL_CULL_FACE);				// Enable face culling
 		glCullFace(GL_BACK);				// Cull back faces
-		//glDepthFunc(GL_LESS);				// How to sort Z
+		glDepthFunc(GL_LESS);				// How to sort Z
+		glClearDepth((GLdouble)1.0);		// Set the default depth buffer clear value
 
 		ClearWindow(vec4(0.79f, 0.32f, 0.0f, 1.0f));
 	}
@@ -242,79 +238,124 @@ namespace BlazeEngine
 		LOG("Render manager shutting down...");
 	}
 
+
 	void RenderManager::Update()
 	{
-		//// Render shadows:
-		//vector<Camera*> cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW);
-		//for (int currentCam = 0; currentCam < (int)cameras.size(); currentCam++)
-		//{
-		//	Render(cameras.at(currentCam));
-		//}
+		// Loop through each camera queue:
+		for (int currentType = 0; currentType < (int)CAMERA_TYPE_COUNT; currentType++)
+		{
+			// Render each camera in the current queue:
+			vector<Camera*> cameras = CoreEngine::GetSceneManager()->GetCameras((CAMERA_TYPE)currentType);
+			for (int currentCam = 0; currentCam < (int)cameras.size(); currentCam++)
+			{
+				ConfigureRenderSettings(cameras.at(currentCam));
+				Render(cameras.at(currentCam));
+			}			
+		}
 
-		//// Render reflections:
-		//cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW);
-		//for (int currentCam = 0; currentCam < (int)cameras.size(); currentCam++)
-		//{
-		//	Render(cameras.at(currentCam));
-		//}
-
-		//// Render main camera:
-		//cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN);
-		//Render(cameras.at(0));
-		//
-		//// // ^^ISSUE: Flickering - Rendering multiple cams to the screen!!!
-		//
-		//// TO DO: Move various openGL config settings from startup to here?
+		// Display the final frame:
+		SDL_GL_SwapWindow(glWindow);
+	}
 
 
-		// TEMP DEBUG:
-		//vector<Camera*> cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW);
-		vector<Camera*> cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN);
-		
-		Render(cameras.at(0));
+	void RenderManager::ConfigureRenderSettings(Camera* const renderCam)
+	{
+		// TODO: Move various openGL config settings from startup to here?
 
-		//cameras[0]->DebugPrint();
+		Material* renderMaterial = renderCam->RenderMaterial();
 
-		// Will need seperate render functions that configure the draw modes etc....
+		// Render to FrameBuffer:
+		if (renderMaterial != nullptr)
+		{
+			// Bind all RenderTextures:
+			for (int i = 0; i < RENDER_TEXTURE_COUNT; i++)
+			{
+				RenderTexture* currentTexture = (RenderTexture*)renderMaterial->GetTexture((TEXTURE_TYPE)i);
+				if (currentTexture != nullptr)
+				{
+					glViewport(0, 0, currentTexture->Width(), currentTexture->Height());
+
+					glBindFramebuffer(GL_FRAMEBUFFER, currentTexture->FBO());
+				}
+			}
+		}
+		else // Render to the view window:
+		{
+			glViewport(0, 0, xRes, yRes);
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
 	}
 
 
 	void RenderManager::Render(Camera* renderCam)
 	{
-		// Clear the color and depth buffers
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
 		// TODO: Merge ALL meshes using the same material into a single draw call
 
 
 		// Assemble common (model independent) matrices:
 		mat4 view = renderCam->View();
-		
+
+		// Configure render material:
+		Material* currentMaterial	= renderCam->RenderMaterial();
+		Shader* currentShader		= nullptr;
+		GLuint shaderReference		= 0;
+
+		bool getMaterials			= true;
+		unsigned int numMaterials;
+
+		if (currentMaterial == nullptr) // Render to viewport
+		{
+			numMaterials = CoreEngine::GetSceneManager()->NumMaterials();
+		}
+		else // Render to FrameBuffers
+		{
+			numMaterials = 1;
+
+			getMaterials = false;
+		}
+
+		// Clear the required buffers before rendering
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // TODO: Configure buffer clearing via Camera/Material/RenderTexture properties
+
+
 		// Loop by material (+shader), mesh:
-		unsigned int numMaterials = CoreEngine::GetSceneManager()->NumMaterials();
 		for (unsigned int currentMaterialIndex = 0; currentMaterialIndex < numMaterials; currentMaterialIndex++)
 		{
 			// Setup the current material and shader:
-			Material* currentMaterial = CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
-			Shader* currentShader = currentMaterial->GetShader();
-			GLuint shaderReference = currentShader->ShaderReference();
+			if (getMaterials)
+			{
+				currentMaterial = CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
+			}	
+			currentShader	= currentMaterial->GetShader();
+			shaderReference = currentShader->ShaderReference();
 
+			// Bind:
 			BindShader(shaderReference);
-
-			BindSamplers(currentMaterial);
-
-			BindTextures(shaderReference, currentMaterial);
+			if (getMaterials)
+			{
+				BindSamplers(currentMaterial);
+				BindTextures(shaderReference, currentMaterial);
+			}
 
 			// Upload common shader matrices:
 			currentShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
 
 			// Loop through each mesh:
-			vector<Mesh*> const* materialMeshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
-			unsigned int numMeshes = (unsigned int)materialMeshes->size();
+			vector<Mesh*> const* meshes;
+			if (getMaterials) // TODO: Move this into the check abovce...
+			{
+				meshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
+			}
+			else
+			{
+				meshes = CoreEngine::GetSceneManager()->GetRenderMeshes();
+			}
+			
+			unsigned int numMeshes	= (unsigned int)meshes->size();
 			for (unsigned int j = 0; j < numMeshes; j++)
 			{
-				Mesh* currentMesh = materialMeshes->at(j);
+				Mesh* currentMesh = meshes->at(j);
 
 				BindMeshBuffers(currentMesh);
 
@@ -333,19 +374,20 @@ namespace BlazeEngine
 				// TODO: Only upload these matrices if they've changed ^^^^
 
 				// Draw!
-				glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type,const GLvoid * indices);
+				glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
 				// Cleanup current mesh: 
 				BindMeshBuffers();
 			}
 
 			// Cleanup current material and shader:
-			BindSamplers(currentMaterial, true);
+			if (getMaterials)
+			{
+				BindSamplers(currentMaterial, true);
+				BindTextures(0, currentMaterial);
+			}			
 			BindShader(0);
 		}
-
-		// Display the new frame:
-		SDL_GL_SwapWindow(glWindow);
 	}
 
 
@@ -384,9 +426,36 @@ namespace BlazeEngine
 		}
 	}
 
-	void BlazeEngine::RenderManager::BindTextures(GLuint const& shaderReference, Material* currentMaterial)
+	void BlazeEngine::RenderManager::BindTextures(GLuint const& shaderReference, Material* currentMaterial) // If shaderReference == 0, unbinds textures
 	{
 		Texture* albedo = currentMaterial->GetTexture(TEXTURE_ALBEDO);
+		Texture* normal = currentMaterial->GetTexture(TEXTURE_NORMAL);
+		Texture* RMAO	= currentMaterial->GetTexture(TEXTURE_RMAO);
+
+		// Handle unbinding:
+		if (shaderReference == 0)
+		{
+			if (albedo)
+			{
+				glActiveTexture(GL_TEXTURE0 + TEXTURE_ALBEDO);
+				glBindTexture(albedo->Target(), 0);
+			}
+			if (normal)
+			{
+				glActiveTexture(GL_TEXTURE0 + TEXTURE_NORMAL);
+				glBindTexture(normal->Target(), 0);
+			}
+			if (RMAO)
+			{
+				glActiveTexture(GL_TEXTURE0 + TEXTURE_RMAO);
+				glBindTexture(RMAO->Target(), 0);
+			}
+
+			return;
+		}
+
+		// TODO: I don't think we need to set the sampler locations EVERY frame... Optimize!
+
 		if (albedo)
 		{
 			GLuint samplerLocation = glGetUniformLocation(shaderReference, "albedo");
@@ -397,7 +466,6 @@ namespace BlazeEngine
 			glActiveTexture(GL_TEXTURE0 + TEXTURE_ALBEDO);
 			glBindTexture(albedo->Target(), albedo->TextureID());
 		}
-		Texture* normal = currentMaterial->GetTexture(TEXTURE_NORMAL);
 		if (normal)
 		{
 			GLuint samplerLocation = glGetUniformLocation(shaderReference, "normal");
@@ -408,7 +476,6 @@ namespace BlazeEngine
 			glActiveTexture(GL_TEXTURE0 + TEXTURE_NORMAL);
 			glBindTexture(normal->Target(), normal->TextureID());
 		}
-		Texture* RMAO = currentMaterial->GetTexture(TEXTURE_RMAO);
 		if (RMAO)
 		{
 			GLuint samplerLocation = glGetUniformLocation(shaderReference, "RMAO");

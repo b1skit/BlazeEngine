@@ -1,5 +1,4 @@
-// Blaze Engine Error Shader.
-// If this file cannot be found or cannot be compiled, the engine will likely crash.
+// Blaze Engine Depth Shader
 
 #version 430 core
 

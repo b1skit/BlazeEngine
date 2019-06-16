@@ -93,7 +93,7 @@ namespace BlazeEngine
 		
 		// Singleton functionality:
 		static EventManager& Instance();
-		EventManager(EventManager const&) = delete; // Disallow copying of our Singleton
+		EventManager(EventManager const&)	= delete; // Disallow copying of our Singleton
 		void operator=(EventManager const&) = delete;
 		
 		// EngineComponent interface:

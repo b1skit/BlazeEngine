@@ -62,7 +62,6 @@ namespace BlazeEngine
 	{
 	public:
 		InputManager();
-		/*~InputManager();*/
 
 		// Singleton functionality:
 		static InputManager& Instance();
@@ -80,9 +79,7 @@ namespace BlazeEngine
 
 		// EngineComponent interface:
 		void Startup();
-
 		void Shutdown();
-
 		void Update();
 
 		// EventListener interface:

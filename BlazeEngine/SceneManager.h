@@ -17,8 +17,9 @@
 using std::vector;
 
 // Initial allocation amounts
-#define GAMEOBJECTS_RESERVATION_AMT			100		// TODO: Set these with meaningful values...
+#define GAMEOBJECTS_RESERVATION_AMT			100		// TODO: Set these with more carefully selected values...
 #define RENDERABLES_RESERVATION_AMT			100
+#define MESHES_RESERVATION_AMT				100
 
 #define CAMERA_TYPE_SHADOW_ARRAY_SIZE			10
 #define CAMERA_TYPE_REFLECTION_ARRAY_SIZE		10
@@ -51,25 +52,26 @@ namespace BlazeEngine
 		// Meshes:
 		//--------
 		// Allocate an empty mesh array. Clears any existing mesh array
-		void	InitMeshArray(int maxMeshes);
+		void	InitMeshArray();
 
 		int		AddMesh(Mesh* newMesh);
 		void	DeleteMeshes();
 		Mesh*	GetMesh(int meshIndex);
+		inline vector<Mesh*> const& GetMeshes()			{ return meshes; }
 
 		// Cameras:
 		//---------
 		vector<Camera*> const&	GetCameras(CAMERA_TYPE cameraType);
-		Camera*					GetMainCamera() { return sceneCameras[CAMERA_TYPE_MAIN].at(0); }
+		Camera*					GetMainCamera()		{ return sceneCameras[CAMERA_TYPE_MAIN].at(0); }
 		void					RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera);
-		void					ClearCameras();	// Destroys the scene's cameras (without deallocating the containing arrays)
+		void					ClearCameras();	// Destroys the scene's cameras
 		
 
 		// Scene object containers:
 		//-------------------------
 		vector<GameObject*> gameObjects;	// Pointers to dynamically allocated GameObjects
 		vector<Renderable*> renderables;	// Pointers to statically allocated renderables held by GameObjects
-
+		
 		
 		// Lights:
 		//--------
@@ -85,11 +87,9 @@ namespace BlazeEngine
 		}
 
 	private:
-		Mesh** meshes = nullptr;
-		int maxMeshes = 0;
-		int meshCount = 0;
-
 		vector<vector<Camera*>> sceneCameras;
+
+		vector<Mesh*> meshes;				// Pointers to dynamically allocated Mesh objects
 
 		Bounds sceneWorldBounds;
 	};
@@ -100,7 +100,6 @@ namespace BlazeEngine
 	{
 	public:
 		SceneManager(); // Reserve vector memory
-		~SceneManager();
 
 		// Singleton functionality:
 		static SceneManager& Instance();
@@ -111,6 +110,7 @@ namespace BlazeEngine
 		void Startup();
 		void Shutdown();
 		void Update();
+		void Destroy() {}	// Do nothing, for now...
 
 		// EventListener interface:
 		void HandleEvent(EventInfo const* eventInfo);
@@ -121,20 +121,19 @@ namespace BlazeEngine
 		// sceneName == the root folder name within the ./Scenes/ directory. Must contain an .fbx file with the same name.
 		void LoadScene(string sceneName);
 
-		inline unsigned int			NumMaterials()												{ return currentMaterialCount; }
-		inline Material*			GetMaterial(unsigned int materialIndex)						{ return materials[materialIndex]; }
-		Material*					GetMaterial(string materialName);
+		inline unsigned int				NumMaterials()												{ return currentMaterialCount; }
+		inline Material*				GetMaterial(unsigned int materialIndex)						{ return materials[materialIndex]; }
+		Material*						GetMaterial(string materialName);
 		
-		inline vector<Mesh*> const*	GetRenderMeshes(unsigned int materialIndex)					{ return &materialMeshLists.at(materialIndex); } // TODO: Bounds checking?
-		inline vector<Renderable*>*	GetRenderables()											{ return &currentScene->renderables;	}
+		vector<Mesh*> const*			GetRenderMeshes(int materialIndex = -1);					// If materialIndex is out of bounds, returns ALL meshes
+		inline vector<Renderable*>*		GetRenderables()											{ return &currentScene->renderables;	}
 
-		inline vec3 const&			GetAmbient()												{ return currentScene->ambientLight; }
-		inline Light&				GetKeyLight()												{ return currentScene->keyLight; }
+		inline vec3 const&				GetAmbient()												{ return currentScene->ambientLight; }
+		inline Light&					GetKeyLight()												{ return currentScene->keyLight; }
 		
-		//inline Camera**				GetCameras(CAMERA_TYPE cameraType, int& camCount)			{ return currentScene->GetCameras(cameraType, camCount); }
-		inline vector<Camera*>		GetCameras(CAMERA_TYPE cameraType)							{ return currentScene->GetCameras(cameraType); }
-		inline Camera*				GetMainCamera()							 					{ return currentScene->GetMainCamera(); }
-		void						RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera)	{ currentScene->RegisterCamera(cameraType, newCamera); }
+		inline vector<Camera*> const&	GetCameras(CAMERA_TYPE cameraType)							{ return currentScene->GetCameras(cameraType); }
+		inline Camera*					GetMainCamera()							 					{ return currentScene->GetMainCamera(); }
+		void							RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera)	{ currentScene->RegisterCamera(cameraType, newCamera); }
 
 	protected:
 

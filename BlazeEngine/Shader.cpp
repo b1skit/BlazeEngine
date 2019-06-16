@@ -12,14 +12,14 @@ namespace BlazeEngine
 {
 	Shader::Shader(const string shaderName, const GLuint shaderReference)
 	{
-		this->shaderName = shaderName;
-		this->shaderReference = shaderReference;
+		this->shaderName		= shaderName;
+		this->shaderReference	= shaderReference;
 	}
 
 	Shader::Shader(const Shader& existingShader)
 	{
-		this->shaderName = existingShader.shaderName;
-		this->shaderReference = existingShader.shaderReference;
+		this->shaderName		= existingShader.shaderName;
+		this->shaderReference	= existingShader.shaderReference;
 	}
 
 	Shader::~Shader()
@@ -57,7 +57,7 @@ namespace BlazeEngine
 				break;
 
 			default:
-				LOG_ERROR("Shader uniform upload failed: Recieved invalid uniform type");
+				LOG_ERROR("Shader uniform upload failed: Recieved unimplemented uniform type");
 			}
 		}
 
@@ -129,6 +129,7 @@ namespace BlazeEngine
 		glDeleteShader(shaders[0]);
 		glDeleteShader(shaders[1]);
 		delete[] shaders;
+		shaders = nullptr;
 
 
 		Shader* newShader = new Shader(shaderName, shaderReference);

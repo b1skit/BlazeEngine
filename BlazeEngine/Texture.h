@@ -67,8 +67,8 @@ namespace BlazeEngine
 
 
 
-		unsigned int width			= 1;		// # Cols
-		unsigned int height			= 1;		// # Rows
+		unsigned int	width		= 1;		// # Cols
+		unsigned int	height		= 1;		// # Rows
 
 		vec4*			texels		= nullptr;
 		unsigned int	numTexels	= 0;
@@ -76,11 +76,7 @@ namespace BlazeEngine
 		string texturePath			= "Uninitialized_Texture";
 
 
-
-		
-
-
-		bool resolutionHasChanged	= false;
+		bool resolutionHasChanged	= false; // Does OpenGL need to be notified of new texture dimensions the next time Buffer() is called?
 
 	private:	
 

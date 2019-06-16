@@ -29,10 +29,6 @@ namespace BlazeEngine
 		}
 	}
 
-	//InputManager::~InputManager()
-	//{
-	//
-	//}
 
 	InputManager& InputManager::Instance()
 	{

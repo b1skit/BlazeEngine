@@ -17,7 +17,6 @@ namespace BlazeEngine
 	{
 	public:
 		PlayerObject(Camera* playerCam);
-		/*~PlayerObject();*/
 
 
 		// Getters/Setters:

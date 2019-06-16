@@ -5,7 +5,7 @@
 #include "CoreEngine.h"
 #include "BuildConfiguration.h"
 
-#define STBI_FAILURE_USERMSG		// TODO: Move this to BuildConfiguration.h ???
+#define STBI_FAILURE_USERMSG
 #include "stb_image.h"				// STB image loader. No need to #define STB_IMAGE_IMPLEMENTATION, as it was already defined in SceneManager
 
 #include <string>
@@ -55,6 +55,7 @@ namespace BlazeEngine
 		if (texels != nullptr)
 		{
 			delete[] texels;
+			texels = nullptr;
 			numTexels = 0;
 			resolutionHasChanged = true;
 		}
@@ -68,28 +69,49 @@ namespace BlazeEngine
 			return *this;
 		}
 
+		// Cleanup:
 		if (this->texels != nullptr)
 		{
 			delete[] texels;
 			texels = nullptr;
 			numTexels = 0;
+			resolutionHasChanged = true;
 		}
+
+
+		// Copy properties:
+		this->textureID = rhs.textureID;
+
+		this->target = rhs.target;
+		this->format = rhs.format;
+		this->internalFormat = rhs.internalFormat;
+		this->type = rhs.type;
+
+		this->textureWrapS = rhs.textureWrapS;
+		this->textureWrapT = rhs.textureWrapT;
+
+		this->textureMinFilter = rhs.textureMinFilter;
+		this->textureMaxFilter = rhs.textureMaxFilter;
+
 
 		this->width				= rhs.width;
 		this->height			= rhs.height;
-		this->textureID			= rhs.textureID;
+
 		this->numTexels			= rhs.numTexels;
 
 		if (rhs.texels != nullptr && numTexels > 0)
 		{
 			this->texels = new vec4[this->numTexels];
-			resolutionHasChanged = true;
+			this->resolutionHasChanged = true;
 
 			for (unsigned int i = 0; i < this->numTexels; i++)
 			{
 				this->texels[i] = rhs.texels[i];
 			}
-		}		
+		}
+
+
+		this->texturePath = rhs.texturePath;
 
 		return *this;
 	}
@@ -222,11 +244,13 @@ namespace BlazeEngine
 	{
 		LOG("Buffering texture: \"" + this->TexturePath() + "\"");
 
+		glBindTexture(this->target, this->textureID);
+
 		// If the texture hasn't been created, create a new name:
 		if (!glIsTexture(this->textureID))
 		{
 			#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
-				LOG("Texture has never been bound before!");
+			LOG("Texture has never been bound before!");
 			#endif
 
 			glGenTextures(1, &this->textureID);
@@ -234,6 +258,7 @@ namespace BlazeEngine
 			if (glIsTexture(this->textureID) != GL_TRUE)
 			{
 				LOG_ERROR("OpenGL failed to generate new texture name. Texture buffering failed");
+				glBindTexture(this->target, 0);
 				return false;
 			}
 
@@ -249,7 +274,6 @@ namespace BlazeEngine
 		else
 		{
 			LOG("Found existing texture");
-			glBindTexture(this->target, this->textureID);
 		}
 		#endif
 
@@ -263,10 +287,7 @@ namespace BlazeEngine
 					LOG("Buffering texture values");
 				#endif
 
-				// Specify a 2D image:
-				glTexImage2D(this->target, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, &this->Texel(0, 0).r);
-
-				// Set the texture properties:
+				// Specify storage properties for our texture:
 				glTexStorage2D(this->target, 1, this->internalFormat, (GLsizei)this->width, (GLsizei)this->height);
 
 				resolutionHasChanged = false;
@@ -283,17 +304,16 @@ namespace BlazeEngine
 			glBindTexture(this->target, 0);
 		}
 		else // I.e. RenderTexture:
-		{
-			if (resolutionHasChanged)
+		{			
+			if (resolutionHasChanged)	// We don't really care about the resolution of render textures changing, for now...
 			{
-				LOG_WARNING("Render texture has resolutionChanged flag set, but we're not handling it. TODO: Handle resizing of render textures");
+				resolutionHasChanged = false;
 			}
 
 			glTexImage2D(this->target, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, nullptr);
-		}
 
-		//// Cleanup:
-		//glBindTexture(this->target, 0);
+			// Note: We don't unbind the texture here so RenderTexture::Buffer() doesn't have to rebind it
+		}
 
 		return true;
 	}

@@ -178,5 +178,13 @@
     <None Include="Shaders\BlazeGlobals.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="depthShader.frag">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="depthShader.vert">
+      <Filter>Source Files\Shaders</Filter>
+    </Text>
   </ItemGroup>
 </Project>

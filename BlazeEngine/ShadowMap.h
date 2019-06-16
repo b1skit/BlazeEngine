@@ -30,15 +30,15 @@ namespace BlazeEngine
 		// TODO: Perspective constructor:
 
 
-		//~ShadowMap();
 
 	protected:
 
 
 	private:
-		Camera*			shadowCam		= nullptr;
-		RenderTexture	renderTexture;
+		Camera*			shadowCam		= nullptr;	// Registed in the SceneManager's currentScene, & deallocated when currentScene calls ClearCameras()
 
+		// Helper function: Init the shadow cam's material, register it, etc
+		void InitializeShadowCam(RenderTexture* renderTexture);
 	};
 }
 

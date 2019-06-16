@@ -1,5 +1,7 @@
 #include "Material.h"
 #include "CoreEngine.h"
+#include "Shader.h"
+#include "Texture.h"
 #include "BuildConfiguration.h"
 
 
@@ -9,21 +11,22 @@ using std::to_string;
 
 namespace BlazeEngine
 {
-	Material::Material(string materialName, string shaderName)
+	Material::Material(string materialName, string shaderName, bool isCameraMaterial /*= false*/)
 	{
 		this->name = materialName;
 
 		this->shader = Shader::CreateShader(shaderName);
 
 		textures = new Texture*[TEXTURE_COUNT];
-		for (int i = 0; i < TEXTURE_COUNT; i++)
+		for (int i = 0; i < (int)TEXTURE_COUNT; i++)
 		{
 			textures[i] = nullptr;
 		}
 
 		// Create samplers:
-		glGenSamplers(TEXTURE_COUNT, &samplers[0]);
-		for (int i = 0; i < TEXTURE_COUNT; i++)
+		samplers = new GLuint[(int)TEXTURE_COUNT];
+		glGenSamplers((int)TEXTURE_COUNT, &samplers[0]);
+		for (int i = 0; i < (int)TEXTURE_COUNT; i++)
 		{
 			glBindSampler(i, samplers[i]);
 			if (!glIsSampler(samplers[i]))
@@ -42,20 +45,47 @@ namespace BlazeEngine
 
 	Material::~Material()
 	{
-		glDeleteSamplers(TEXTURE_COUNT, samplers);		
+		glDeleteSamplers((int)TEXTURE_COUNT, samplers);
+
+		delete[] samplers;
+		samplers = nullptr;
 	}
 
 
+	Texture* Material::GetTexture(TEXTURE_TYPE textureIndex)
+	{
+		if (textureIndex < (int)TEXTURE_COUNT)
+		{
+			return textures[textureIndex];
+		}
+		else
+		{
+			LOG_ERROR("Cannot get texture #" + to_string(textureIndex) + " for material \"" + this->name + "\". Returning nullptr!");
+			return nullptr;
+		}		
+	}
+
 	void Material::SetTexture(Texture* texture, TEXTURE_TYPE textureIndex)
 	{
-		if (textures[textureIndex])
+		if (textureIndex < (int)TEXTURE_COUNT)
 		{
-			LOG("Replacing material \"" + this->name + "\" texture #" + std::to_string(textureIndex));
+			if (textures[textureIndex] != nullptr)
+			{
+				LOG("Replacing material \"" + this->name + "\" texture #" + std::to_string(textureIndex));
 
-			delete textures[textureIndex];
+				delete textures[textureIndex];
+				textures[textureIndex] = nullptr;
+			}
+
+			textures[textureIndex] = texture;
+
+			LOG("Set texture #" + to_string(textureIndex) + " for material \"" + this->name + "\"");
 		}
-
-		textures[textureIndex] = texture;
+		else
+		{
+			LOG_ERROR("Failed to set texture #" + to_string(textureIndex) + " for material \"" + this->name + "\"");
+			return;
+		}
 	}
 }
 

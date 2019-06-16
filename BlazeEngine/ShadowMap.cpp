@@ -8,15 +8,15 @@ namespace BlazeEngine
 {
 	ShadowMap::ShadowMap()
 	{
-		shadowCam		= new Camera("Unnamed_ShadowMapCam");
+		this->shadowCam		= new Camera("Unnamed_ShadowMapCam");
 
-		renderTexture	= RenderTexture
+		RenderTexture* depthRenderTexture = new RenderTexture
 		(
 			CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapWidth,
 			CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapHeight
 		);
 
-		CoreEngine::GetSceneManager()->RegisterCamera(CAMERA_TYPE_SHADOW, this->shadowCam);
+		InitializeShadowCam(depthRenderTexture);
 	}
 
 
@@ -36,23 +36,25 @@ namespace BlazeEngine
 			orthoTop
 		);		
 		
-		this->renderTexture = RenderTexture
+		RenderTexture* depthRenderTexture = new RenderTexture // Deallocated by Camera.Destroy()
 		(
 			xRes,
 			yRes,
 			lightName + "_RenderTexture",
 			true
 		);
-
-		this->shadowCam->RenderTarget() = &renderTexture;
-
-		CoreEngine::GetSceneManager()->RegisterCamera(CAMERA_TYPE_SHADOW, this->shadowCam);
+		
+		InitializeShadowCam(depthRenderTexture);
 	}
 
 
-	//ShadowMap::~ShadowMap()
-	//{
-	//}
+	void ShadowMap::InitializeShadowCam(RenderTexture* renderTexture)
+	{
+		this->shadowCam->RenderMaterial() = new Material(shadowCam->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->shader.depthShaderName, true);
+		this->shadowCam->RenderMaterial()->SetTexture(renderTexture, RENDER_TEXTURE_DEPTH);
+
+		CoreEngine::GetSceneManager()->RegisterCamera(CAMERA_TYPE_SHADOW, this->shadowCam);
+	}
 }
 
 

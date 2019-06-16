@@ -4,6 +4,7 @@
 #pragma once
 
 #include "EngineComponent.h"
+
 #include "Dependencies/SDL2/include/SDL_timer.h"
 
 namespace BlazeEngine
@@ -12,7 +13,6 @@ namespace BlazeEngine
 	{
 	public:
 		TimeManager();
-		/*~TimeManager();*/
 
 		// Singleton functionality:
 		static TimeManager& Instance();
@@ -21,10 +21,9 @@ namespace BlazeEngine
 		
 		// EngineComponent interface:
 		void Startup();
-
 		void Shutdown();
-
 		void Update();
+		void Destroy() {}	// Do nothing, for now...
 
 		// Member functions:
 
@@ -40,20 +39,9 @@ namespace BlazeEngine
 		//}
 
 		// Get the time elapsed since the last frame, in ms
-		static inline double DeltaTime()
-		{
-			return deltaTime;
-		}
-
-		static unsigned int GetTotalRunningTimeMs()
-		{
-			return currentTime - startTime;
-		}
-
-		static double GetTotalRunningTimeSeconds()
-		{
-			return (double)GetTotalRunningTimeMs() * 0.001;
-		}
+		static inline unsigned int	DeltaTime()						{ return deltaTime; }
+		static unsigned int			GetTotalRunningTimeMs()			{ return currentTime - startTime; }
+		static double				GetTotalRunningTimeSeconds()	{ return (double)GetTotalRunningTimeMs() * 0.001; }
 
 		
 	protected:
@@ -63,9 +51,7 @@ namespace BlazeEngine
 		static unsigned int startTime;
 		static unsigned int prevTime;
 		static unsigned int currentTime;
-		static double deltaTime;
-
-		
+		static unsigned int	deltaTime;
 
 		/*double timeScale;*/
 	};

@@ -6,16 +6,23 @@
 
 namespace BlazeEngine
 {
-	class RenderTexture : Texture
+	class RenderTexture : public Texture
 	{
 	public:
 		RenderTexture();
 		RenderTexture(int width, int height, string name = DEFAULT_RENDERTEXTURE_NAME, bool doBuffer = false);
 
-		~RenderTexture() {}	// Do nothing: Call Destroy() instead
+		RenderTexture& operator=(RenderTexture const& rhs);
+		
+
+		// TODO: COPY CONSTRUCTOR (INVOKE SUPERCLASS COPY CONSTRUCTOR!!!!!!!!!!!!!!!!!)
 
 		
-		// TODO: COPY CONSTRUCTOR (INVOKE SUPERCLASS COPY CONSTRUCTOR!!!!!!!!!!!!!!!!!)
+		GLuint FBO() const &			{ return frameBufferObject; }
+
+		GLuint DrawBuffer() const&		{ return drawBuffer; }
+		GLuint ReadBuffer() const&		{ return readBuffer; }
+		GLuint AttachmentPoint() const&	{ return attachmentPoint; }
 
 
 		void Destroy();
@@ -31,10 +38,8 @@ namespace BlazeEngine
 
 		GLuint attachmentPoint		= GL_DEPTH_ATTACHMENT;
 
-		
 		GLuint drawBuffer			= GL_NONE;	// Which of the 4 color buffers should be drawn into for the DEFAULT framebuffer
-		GLuint readMode				= GL_NONE;	// Which color buffer to use for subsequent reads
-		
+		GLuint readBuffer			= GL_NONE;	// Which color buffer to use for subsequent reads
 	};
 }
 

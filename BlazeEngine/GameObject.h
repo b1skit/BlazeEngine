@@ -42,8 +42,6 @@ namespace BlazeEngine
 			this->renderable.SetTransform(&this->transform);
 		}
 
-		/*~GameObject();*/
-
 		// BlazeObject interface:
 		void Update() override { }
 

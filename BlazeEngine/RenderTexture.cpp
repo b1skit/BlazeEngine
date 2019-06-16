@@ -21,14 +21,7 @@ namespace BlazeEngine
 		this->height				= CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapHeight;
 		numTexels					= width * height;
 
-		if (name != DEFAULT_RENDERTEXTURE_NAME)
-		{
-			this->texturePath = name;
-		}
-		else
-		{
-			this->texturePath = name;
-		}		
+		this->texturePath			= name;
 
 		this->texels				= nullptr;
 		this->resolutionHasChanged	= true;
@@ -40,8 +33,8 @@ namespace BlazeEngine
 		this->format				= GL_DEPTH_COMPONENT;
 		this->type					= GL_FLOAT;
 		
-		this->textureWrapS			= GL_REPEAT;
-		this->textureWrapT			= GL_REPEAT;
+		this->textureWrapS			= GL_CLAMP_TO_EDGE;
+		this->textureWrapT			= GL_CLAMP_TO_EDGE;
 
 		this->textureMinFilter		= GL_NEAREST;
 		this->textureMaxFilter		= GL_NEAREST;
@@ -50,6 +43,26 @@ namespace BlazeEngine
 		{
 			Buffer();
 		}
+	}
+
+
+	RenderTexture& RenderTexture::operator=(RenderTexture const& rhs)
+	{
+		if (this == &rhs)
+		{
+			return *this;
+		}
+
+		Texture::operator=(rhs);
+
+		this->frameBufferObject = rhs.frameBufferObject;
+
+		this->attachmentPoint = rhs.attachmentPoint;
+
+		this->drawBuffer = rhs.drawBuffer;
+		this->readBuffer = rhs.readBuffer;
+
+		return *this;
 	}
 
 
@@ -63,33 +76,33 @@ namespace BlazeEngine
 
 	bool RenderTexture::Buffer()
 	{
-		if (Texture::Buffer())
+		if (Texture::Buffer()) // Makes required calls to glTexParameteri, binds textureID etc 
 		{
+			glBindFramebuffer(GL_FRAMEBUFFER, frameBufferObject);
+
 			if (!glIsFramebuffer(frameBufferObject))
 			{
 				glGenFramebuffers(1, &frameBufferObject);
-
 				glBindFramebuffer(GL_FRAMEBUFFER, frameBufferObject);
-
 				if (!glIsFramebuffer(frameBufferObject))
 				{
 					LOG_ERROR("Failed to create framebuffer object");
 					return false;
 				}
 
+				glDrawBuffer(this->drawBuffer); // Sets the color buffer to draw too (eg. GL_NONE for a depth map)
+				glReadBuffer(this->readBuffer);
+
+				// Configure framebuffer parameters:
+				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_WIDTH, this->width);
+				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_HEIGHT, this->height);
+				/*glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_LAYERS, );
+				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_SAMPLES, );
+				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS, );*/
+
+				// Attach our texture to the framebuffer as a render buffer:
 				glFramebufferTexture2D(GL_FRAMEBUFFER, this->attachmentPoint, this->target, this->textureID, 0);
 			}
-			else
-			{
-				// Attach the texture as the framebuffer's depth buffer:
-				glBindFramebuffer(GL_FRAMEBUFFER, frameBufferObject);
-			}
-
-
-			//glDrawBuffer(GL_NONE); // TODO: Store these as a member variable?
-			//glReadBuffer(GL_NONE);
-			// ^^^^^THESE WILL NEED TO BE SET/UNSET, DEPENDING ON WHAT'S BEING RENDERED....
-
 
 			#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
 				LOG("Render texture setup complete!");
@@ -97,6 +110,7 @@ namespace BlazeEngine
 
 			// Cleanup:
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glBindTexture(this->target, 0);
 
 			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			{

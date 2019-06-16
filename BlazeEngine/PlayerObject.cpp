@@ -20,15 +20,12 @@ namespace BlazeEngine
 		vec3 camPosition = playerCamTransform->Position();
 
 		playerCamTransform->SetRotation(vec3(camRotation.x, 0.0f, 0.0f));	// Set pitch
-		playerCamTransform->SetPosition(vec3(0.0f, 0.0f, 0.0f));				// Relative to PlayerObject parent
+		playerCamTransform->SetPosition(vec3(0.0f, 0.0f, 0.0f));			// Relative to PlayerObject parent
 		
 		this->transform.SetRotation(vec3(0.0f, camRotation.y, 0.0f));		// Set yaw
 		this->transform.SetPosition(camPosition);
 	}
 
-	//PlayerObject::~PlayerObject()
-	//{
-	//}
 
 	void PlayerObject::Update()
 	{
