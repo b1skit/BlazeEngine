@@ -101,7 +101,7 @@ namespace BlazeEngine
 				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS, );*/
 
 				// Attach our texture to the framebuffer as a render buffer:
-				glFramebufferTexture2D(GL_FRAMEBUFFER, this->attachmentPoint, this->target, this->textureID, 0);
+				glFramebufferTexture2D(GL_FRAMEBUFFER, this->attachmentPoint, this->texTarget, this->textureID, 0);
 			}
 
 			#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
@@ -110,7 +110,7 @@ namespace BlazeEngine
 
 			// Cleanup:
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			glBindTexture(this->target, 0);
+			glBindTexture(this->texTarget, 0);
 
 			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			{

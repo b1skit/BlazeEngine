@@ -38,4 +38,12 @@ void main()
 
 	// Final result:
 	FragColor = ambientContribution + diffuseContribution + specContribution;
+
+
+
+	// DEBUG:!!!!!
+	//Depth-component textures are treated as one-component floating-point textures:
+	float depthVal = texture(key_depth, data.uv0.xy).r; // Depth buffer contains (depth, 0, 0, 0)
+
+	FragColor = vec4(depthVal, depthVal, depthVal, 1);	
 } 

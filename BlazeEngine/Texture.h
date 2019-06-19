@@ -27,7 +27,7 @@ namespace BlazeEngine
 		inline unsigned int const&	Width() const		{ return width; }
 		inline unsigned int const&	Height() const		{ return height; }
 		inline GLuint const&		TextureID() const	{ return textureID; }
-		inline GLenum const&		Target() const		{ return target; }
+		inline GLenum const&		Target() const		{ return texTarget; }
 		string const&				TexturePath()		{ return texturePath; }
 
 		// Get/set a texel value:
@@ -54,7 +54,7 @@ namespace BlazeEngine
 	protected:
 		GLuint textureID			= 0;
 		
-		GLenum target				= GL_TEXTURE_2D;
+		GLenum texTarget			= GL_TEXTURE_2D;
 		GLenum format				= GL_RGBA;
 		GLenum internalFormat		= GL_RGBA32F;
 		GLenum type					= GL_FLOAT;

@@ -1317,8 +1317,7 @@ namespace BlazeEngine
 						transformedBounds.yMax
 					);
 
-					currentScene->keyLight.AddShadowMap(keyLightShadowMap);
-
+					currentScene->keyLight.ActiveShadowMap(keyLightShadowMap);
 
 					// Note: Assimp seems to import directional lights with their "forward" vector pointing in the opposite direction.
 					// This is ok, since we use "forward" as "vector pointing towards the light" when uploading to our shaders...

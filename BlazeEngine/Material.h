@@ -27,6 +27,7 @@ namespace BlazeEngine
 		TEXTURE_EMISSIVE		= 3,
 
 		TEXTURE_COUNT			= 4,				// Reserved: Number of texture slots a material has
+		RENDER_TEXTURE_0		= 4,				// Reserved: Starting offset for binding RenderTextures (eg. In RenderManager::BindTextures())
 
 		// Alternative names for render textures:
 		RENDER_TEXTURE_DEPTH	= 0,

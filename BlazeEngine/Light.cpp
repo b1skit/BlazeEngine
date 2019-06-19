@@ -37,8 +37,14 @@ namespace BlazeEngine
 	{
 	}
 
-	void Light::AddShadowMap(ShadowMap* newShadowMap)
+	ShadowMap*& Light::ActiveShadowMap(ShadowMap* newShadowMap /*= nullptr*/)
 	{
+		// No-arg: Gets the current shadow map
+		if (newShadowMap == nullptr)
+		{
+			return this->shadowMap;
+		}
+
 		if (shadowMap != nullptr)
 		{
 			LOG("Deleting an existing shadow map");
@@ -46,7 +52,9 @@ namespace BlazeEngine
 			shadowMap = nullptr;
 		}
 
-		shadowMap = newShadowMap;
+		this->shadowMap = newShadowMap;
+
+		return this->shadowMap;
 	}
 }
 

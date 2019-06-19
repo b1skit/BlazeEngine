@@ -131,11 +131,13 @@ namespace BlazeEngine
 		SDL_Quit();
 	}
 
+
 	RenderManager& RenderManager::Instance()
 	{
 		static RenderManager* instance = new RenderManager();
 		return *instance;
 	}
+
 
 	void RenderManager::Startup()
 	{
@@ -233,6 +235,7 @@ namespace BlazeEngine
 		ClearWindow(vec4(0.79f, 0.32f, 0.0f, 1.0f));
 	}
 
+
 	void RenderManager::Shutdown()
 	{
 		LOG("Render manager shutting down...");
@@ -295,15 +298,12 @@ namespace BlazeEngine
 
 		// Assemble common (model independent) matrices:
 		mat4 view = renderCam->View();
+		mat4 key_vp = CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight().ActiveShadowMap()->ShadowCamera()->ViewProjection();
 
 		// Configure render material:
-		Material* currentMaterial	= renderCam->RenderMaterial();
-		Shader* currentShader		= nullptr;
-		GLuint shaderReference		= 0;
-
-		bool getMaterials			= true;
 		unsigned int numMaterials;
-
+		Material* currentMaterial	= renderCam->RenderMaterial();
+		bool renderingToSceen		= true;
 		if (currentMaterial == nullptr) // Render to viewport
 		{
 			numMaterials = CoreEngine::GetSceneManager()->NumMaterials();
@@ -311,47 +311,50 @@ namespace BlazeEngine
 		else // Render to FrameBuffers
 		{
 			numMaterials = 1;
-
-			getMaterials = false;
+			renderingToSceen = false;
 		}
 
 		// Clear the required buffers before rendering
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // TODO: Configure buffer clearing via Camera/Material/RenderTexture properties
 
-
 		// Loop by material (+shader), mesh:
+		Shader* currentShader				= nullptr;
+		GLuint shaderReference				= 0;
+		Material* shadowCamRenderMaterial	= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight().ActiveShadowMap()->ShadowCamera()->RenderMaterial();
 		for (unsigned int currentMaterialIndex = 0; currentMaterialIndex < numMaterials; currentMaterialIndex++)
 		{
 			// Setup the current material and shader:
-			if (getMaterials)
+			if (renderingToSceen)
 			{
 				currentMaterial = CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
 			}	
 			currentShader	= currentMaterial->GetShader();
 			shaderReference = currentShader->ShaderReference();
 
+			vector<Mesh*> const* meshes;
+
 			// Bind:
 			BindShader(shaderReference);
-			if (getMaterials)
+			if (renderingToSceen)
 			{
 				BindSamplers(currentMaterial);
-				BindTextures(shaderReference, currentMaterial);
-			}
+				BindTextures(currentMaterial, shaderReference);
 
-			// Upload common shader matrices:
-			currentShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
+				// Bind the key light depth buffer
+				BindFrameBuffers(shadowCamRenderMaterial, shaderReference);
 
-			// Loop through each mesh:
-			vector<Mesh*> const* meshes;
-			if (getMaterials) // TODO: Move this into the check abovce...
-			{
 				meshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
 			}
 			else
 			{
 				meshes = CoreEngine::GetSceneManager()->GetRenderMeshes();
 			}
-			
+
+			// Upload common shader matrices:
+			currentShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
+			currentShader->UploadUniform("key_vp", &key_vp[0][0], UNIFORM_Matrix4fv);
+
+			// Loop through each mesh:			
 			unsigned int numMeshes	= (unsigned int)meshes->size();
 			for (unsigned int j = 0; j < numMeshes; j++)
 			{
@@ -381,15 +384,18 @@ namespace BlazeEngine
 			}
 
 			// Cleanup current material and shader:
-			if (getMaterials)
+			if (renderingToSceen)
 			{
-				BindSamplers(currentMaterial, true);
-				BindTextures(0, currentMaterial);
-			}			
-			BindShader(0);
-		}
-	}
+				BindSamplers();
+				BindTextures(currentMaterial);
 
+				// Unbind the key light depth buffer
+				BindFrameBuffers(currentMaterial);
+			}
+			BindShader(0);
+		
+		} // End Material loop
+	}
 
 
 	void RenderManager::ClearWindow(vec4 clearColor)
@@ -403,21 +409,23 @@ namespace BlazeEngine
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
+
 	void BlazeEngine::RenderManager::BindShader(GLuint const& shaderReference)
 	{
 		glUseProgram(shaderReference);
 	}
 
-	void BlazeEngine::RenderManager::BindSamplers(Material* currentMaterial, bool doCleanup /*= false*/)
+
+	void BlazeEngine::RenderManager::BindSamplers(Material* currentMaterial /* = nullptr*/) // Unbinds all samplers if currentMaterial == nullptr
 	{
-		if (!doCleanup)
+		if (currentMaterial != nullptr)
 		{
 			for (int i = 0; i < TEXTURE_COUNT; i++)
 			{
 				glBindSampler(i, currentMaterial->Samplers(i));
 			}
 		}
-		else
+		else // Do cleanup:
 		{
 			for (int i = 0; i < TEXTURE_COUNT; i++)
 			{
@@ -426,7 +434,8 @@ namespace BlazeEngine
 		}
 	}
 
-	void BlazeEngine::RenderManager::BindTextures(GLuint const& shaderReference, Material* currentMaterial) // If shaderReference == 0, unbinds textures
+
+	void BlazeEngine::RenderManager::BindTextures(Material* currentMaterial, GLuint const& shaderReference /* = 0 */) // If shaderReference == 0, unbinds textures
 	{
 		Texture* albedo = currentMaterial->GetTexture(TEXTURE_ALBEDO);
 		Texture* normal = currentMaterial->GetTexture(TEXTURE_NORMAL);
@@ -489,6 +498,34 @@ namespace BlazeEngine
 	}
 
 
+	void RenderManager::BindFrameBuffers(Material* currentMaterial, GLuint const& shaderReference /* = 0 */)		// If shaderReference == 0, unbinds textures
+	{
+		Texture* depth = currentMaterial->GetTexture(RENDER_TEXTURE_DEPTH);
+
+		// Handle unbinding:
+		if (currentMaterial == nullptr || shaderReference == 0)
+		{
+			if (depth)
+			{
+				glActiveTexture(GL_TEXTURE0 + RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH);
+				glBindTexture(depth->Target(), 0);
+			}
+			return;
+		}
+
+		if (depth)
+		{
+			GLuint samplerLocation = glGetUniformLocation(shaderReference, "key_depth"); // TODO: Allow generic names...
+			if (samplerLocation >= 0)
+			{
+				glUniform1i(samplerLocation, RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH);
+			}
+			glActiveTexture(GL_TEXTURE0 + RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH);
+			glBindTexture(depth->Target(), depth->TextureID());
+		}
+	}
+
+
 	void BlazeEngine::RenderManager::BindMeshBuffers(Mesh* const mesh /*= nullptr*/) // If mesh == nullptr, binds to element 0
 	{
 		if (mesh)
@@ -504,6 +541,7 @@ namespace BlazeEngine
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		}
 	}
+
 
 	void BlazeEngine::RenderManager::InitializeShaders()
 	{

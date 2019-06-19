@@ -19,3 +19,8 @@ vec3 ObjectNormalFromTexture(mat3 TBN, vec3 textureNormal)
 	return result;
 }
 
+float GetShadowFactor(vec3 worldPos, mat4 light_vp, sampler2D shadowMap)
+{
+	// TO DO: Return a float in [0,1] for how "in shadow" a fragment is
+	return 1.0;
+}

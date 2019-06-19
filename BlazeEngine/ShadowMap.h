@@ -30,6 +30,8 @@ namespace BlazeEngine
 		// TODO: Perspective constructor:
 
 
+		// Get the current shadow camera
+		inline Camera* ShadowCamera()	{ return shadowCam; }
 
 	protected:
 

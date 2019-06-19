@@ -51,11 +51,11 @@ namespace BlazeEngine
 
 		inline LIGHT_TYPE const&	Type() const							{ return type; }
 
-		inline Transform&			GetTransform()							{ return transform; } // Directional lights shine forward (Z+)
+		inline Transform&			GetTransform()							{ return transform; }	// Directional lights shine forward (Z+)
 
 		inline string const&		Name() const							{ return lightName; }
 		
-		void						AddShadowMap(ShadowMap* newShadowMap);
+		ShadowMap*&					ActiveShadowMap(ShadowMap* newShadowMap = nullptr);				// Get/set the current shadow map
 
 	protected:
 

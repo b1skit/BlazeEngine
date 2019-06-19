@@ -82,7 +82,7 @@ namespace BlazeEngine
 		// Copy properties:
 		this->textureID = rhs.textureID;
 
-		this->target = rhs.target;
+		this->texTarget = rhs.texTarget;
 		this->format = rhs.format;
 		this->internalFormat = rhs.internalFormat;
 		this->type = rhs.type;
@@ -244,7 +244,7 @@ namespace BlazeEngine
 	{
 		LOG("Buffering texture: \"" + this->TexturePath() + "\"");
 
-		glBindTexture(this->target, this->textureID);
+		glBindTexture(this->texTarget, this->textureID);
 
 		// If the texture hasn't been created, create a new name:
 		if (!glIsTexture(this->textureID))
@@ -254,21 +254,21 @@ namespace BlazeEngine
 			#endif
 
 			glGenTextures(1, &this->textureID);
-			glBindTexture(this->target, this->textureID);
+			glBindTexture(this->texTarget, this->textureID);
 			if (glIsTexture(this->textureID) != GL_TRUE)
 			{
 				LOG_ERROR("OpenGL failed to generate new texture name. Texture buffering failed");
-				glBindTexture(this->target, 0);
+				glBindTexture(this->texTarget, 0);
 				return false;
 			}
 
 			// UV wrap mode:
-			glTexParameteri(this->target, GL_TEXTURE_WRAP_S, this->textureWrapS);	// u
-			glTexParameteri(this->target, GL_TEXTURE_WRAP_T, this->textureWrapT);	// v
+			glTexParameteri(this->texTarget, GL_TEXTURE_WRAP_S, this->textureWrapS);	// u
+			glTexParameteri(this->texTarget, GL_TEXTURE_WRAP_T, this->textureWrapT);	// v
 
 			// Mip map min/maximizing:
-			glTexParameteri(this->target, GL_TEXTURE_MIN_FILTER, this->textureMinFilter);	// Linear interpolation, nearest neighbour sampling
-			glTexParameteri(this->target, GL_TEXTURE_MAG_FILTER, this->textureMaxFilter);
+			glTexParameteri(this->texTarget, GL_TEXTURE_MIN_FILTER, this->textureMinFilter);	// Linear interpolation, nearest neighbour sampling
+			glTexParameteri(this->texTarget, GL_TEXTURE_MAG_FILTER, this->textureMaxFilter);
 		}
 		#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
 		else
@@ -288,20 +288,20 @@ namespace BlazeEngine
 				#endif
 
 				// Specify storage properties for our texture:
-				glTexStorage2D(this->target, 1, this->internalFormat, (GLsizei)this->width, (GLsizei)this->height);
+				glTexStorage2D(this->texTarget, 1, this->internalFormat, (GLsizei)this->width, (GLsizei)this->height);
 
 				resolutionHasChanged = false;
 			}
 
-			glTexSubImage2D(this->target, 0, 0, 0, this->width, this->height, this->format, this->type, &this->Texel(0, 0).r);
-			glGenerateMipmap(this->target);
+			glTexSubImage2D(this->texTarget, 0, 0, 0, this->width, this->height, this->format, this->type, &this->Texel(0, 0).r);
+			glGenerateMipmap(this->texTarget);
 
 			#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
 				LOG("Texture buffering complete!");
 			#endif
 
 			// Cleanup:
-			glBindTexture(this->target, 0);
+			glBindTexture(this->texTarget, 0);
 		}
 		else // I.e. RenderTexture:
 		{			
@@ -310,7 +310,7 @@ namespace BlazeEngine
 				resolutionHasChanged = false;
 			}
 
-			glTexImage2D(this->target, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, nullptr);
+			glTexImage2D(this->texTarget, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, nullptr);
 
 			// Note: We don't unbind the texture here so RenderTexture::Buffer() doesn't have to rebind it
 		}
