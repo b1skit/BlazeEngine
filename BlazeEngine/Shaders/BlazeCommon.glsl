@@ -46,6 +46,7 @@
 		vec4 uv3;
 
 		vec3 viewPos;			// Camera/eye-space position
+		vec3 worldPos;			// World-space position
 
 		mat3 TBN;				// Normal map change-of-basis matrix
 	} data;
@@ -54,16 +55,11 @@
 // Lighting:
 uniform vec3 ambient;
 
-uniform vec3 keyDirection;		// Normalized, world space, points towards light source
-uniform vec3 keyColor;
+uniform vec3 key_direction;		// Normalized, world space, points towards light source
+uniform vec3 key_color;
 uniform mat4 key_vp;			// Keylight: [Projection * View]
-
-
-uniform sampler2D key_depth;	// Key light's depth buffer (FBO)
-
-
 uniform float key_shadowBias;	// Used to prevent shadow acne
-// TODO: ^^^ Implement this
+
 
 
 // Matrices:
@@ -75,6 +71,7 @@ uniform mat4 in_mv;				// [View * Model]
 uniform mat4 in_mvp;			// [Projection * View * Model]
 
 
+// Texture samplers:
 								// TEXTURE:								FBX MATERIAL SOURCE SLOT:
 								//---------								-------------------------
 uniform sampler2D albedo;		// Albedo (RGB) + transparency (A)		Diffuse/color
@@ -82,6 +79,13 @@ uniform sampler2D normal;		// Tangent-space normals (RGB)			Bump
 //uniform sampler2D emissive;	// Emissive (RGB)						Incandescence
 uniform sampler2D RMAO;			// Roughness, Metalic, albedo			Specular
 
+
+// RenderTexture samplers:
+uniform sampler2D shadowDepth;	// The currently bound shadow depth map
+
+// Generic shadow map properties:
+//uniform float shadowBias;
+// TODO: Implement this^^^
 
 // Generic material properties:
 uniform vec3 matProperty0; // .x == Phong cosine exponent
@@ -94,8 +98,8 @@ uniform vec3 matProperty0; // .x == Phong cosine exponent
 //uniform vec3 matProperty7;
 
 
-// Camera variables:
-uniform vec4 zBufferParams;
-uniform vec4 screenParams;
-uniform vec3 cameraPosition;	// World-space camera position
-// TODO: ^^^Implement these
+//// Camera variables:
+//uniform vec4 zBufferParams;
+//uniform vec4 screenParams;
+//uniform vec3 cameraPosition;	// World-space camera position
+//// TODO: ^^^Implement these

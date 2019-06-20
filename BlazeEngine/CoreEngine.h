@@ -51,8 +51,8 @@ namespace BlazeEngine
 			float defaultZBias				= 0.01f;
 
 			// Texture dimensions:
-			int defaultShadowMapWidth		= 1024;
-			int defaultShadowMapHeight		= 1024;
+			int defaultShadowMapWidth		= 2048;
+			int defaultShadowMapHeight		= 2048;
 		} shadows;
 
 		struct

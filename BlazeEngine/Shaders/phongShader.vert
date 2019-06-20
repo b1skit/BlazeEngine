@@ -16,5 +16,6 @@ void main()
 
 	data.uv0		= in_uv0;
 	data.viewPos	= -(in_mv * vec4(in_position.xyz, 1.0f)).xyz;	// Negate, because camera is looking down Z-
+	data.worldPos	= (in_model * vec4(in_position.xyz, 1.0f)).xyz;
 	data.TBN		= AssembleTBN(in_tangent, in_bitangent);
 }

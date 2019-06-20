@@ -11,6 +11,15 @@ using std::to_string;
 
 namespace BlazeEngine
 {
+	// Static members:
+	const string Material::SamplerNames[RENDER_TEXTURE_COUNT] = 
+	{
+		"shadowDepth",		// RENDER_TEXTURE_DEPTH
+
+	};
+
+
+
 	Material::Material(string materialName, string shaderName, bool isCameraMaterial /*= false*/)
 	{
 		this->name = materialName;

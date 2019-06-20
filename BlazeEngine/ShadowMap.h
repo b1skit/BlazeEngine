@@ -31,7 +31,9 @@ namespace BlazeEngine
 
 
 		// Get the current shadow camera
-		inline Camera* ShadowCamera()	{ return shadowCam; }
+		inline Camera* ShadowCamera()		{ return shadowCam; }
+
+		inline float const& ShadowBias()	{ return shadowBias; }
 
 	protected:
 
@@ -41,6 +43,8 @@ namespace BlazeEngine
 
 		// Helper function: Init the shadow cam's material, register it, etc
 		void InitializeShadowCam(RenderTexture* renderTexture);
+
+		float shadowBias				= 0.005f;	// Small offset for when we're making shadow comparisons
 	};
 }
 

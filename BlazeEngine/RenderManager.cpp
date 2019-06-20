@@ -320,7 +320,8 @@ namespace BlazeEngine
 		// Loop by material (+shader), mesh:
 		Shader* currentShader				= nullptr;
 		GLuint shaderReference				= 0;
-		Material* shadowCamRenderMaterial	= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight().ActiveShadowMap()->ShadowCamera()->RenderMaterial();
+		Light* keyLight						= &CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight();
+		Material* shadowCamRenderMaterial	= keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial();
 		for (unsigned int currentMaterialIndex = 0; currentMaterialIndex < numMaterials; currentMaterialIndex++)
 		{
 			// Setup the current material and shader:
@@ -340,12 +341,13 @@ namespace BlazeEngine
 				BindSamplers(currentMaterial);
 				BindTextures(currentMaterial, shaderReference);
 
-				// Bind the key light depth buffer
+				// Bind the key light depth buffer and related data:
 				BindFrameBuffers(shadowCamRenderMaterial, shaderReference);
+				currentShader->UploadUniform("key_shadowBias", &keyLight->ActiveShadowMap()->ShadowBias(), UNIFORM_Float);				
 
 				meshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
 			}
-			else
+			else // Rendering to framebuffer:
 			{
 				meshes = CoreEngine::GetSceneManager()->GetRenderMeshes();
 			}
@@ -463,8 +465,6 @@ namespace BlazeEngine
 			return;
 		}
 
-		// TODO: I don't think we need to set the sampler locations EVERY frame... Optimize!
-
 		if (albedo)
 		{
 			GLuint samplerLocation = glGetUniformLocation(shaderReference, "albedo");
@@ -500,29 +500,35 @@ namespace BlazeEngine
 
 	void RenderManager::BindFrameBuffers(Material* currentMaterial, GLuint const& shaderReference /* = 0 */)		// If shaderReference == 0, unbinds textures
 	{
-		Texture* depth = currentMaterial->GetTexture(RENDER_TEXTURE_DEPTH);
-
-		// Handle unbinding:
 		if (currentMaterial == nullptr || shaderReference == 0)
 		{
-			if (depth)
+			for (int i = 0; i < (int)RENDER_TEXTURE_COUNT; i++)
 			{
-				glActiveTexture(GL_TEXTURE0 + RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH);
-				glBindTexture(depth->Target(), 0);
+				Texture* currentTexture = currentMaterial->GetTexture((TEXTURE_TYPE)i);
+				if (currentTexture)
+				{
+					glActiveTexture(GL_TEXTURE0 + RENDER_TEXTURE_0 + (TEXTURE_TYPE)i);
+					glBindTexture(currentTexture->Target(), 0);
+				}
 			}
-			return;
 		}
-
-		if (depth)
+		else
 		{
-			GLuint samplerLocation = glGetUniformLocation(shaderReference, "key_depth"); // TODO: Allow generic names...
-			if (samplerLocation >= 0)
+			for (int i = 0; i < (int)RENDER_TEXTURE_COUNT; i++)
 			{
-				glUniform1i(samplerLocation, RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH);
+				Texture* currentTexture = currentMaterial->GetTexture((TEXTURE_TYPE)i);
+				if (currentTexture)
+				{
+					GLuint samplerLocation = glGetUniformLocation(shaderReference, Material::SamplerNames[i].c_str());
+					if (samplerLocation >= 0)
+					{
+						glUniform1i(samplerLocation, RENDER_TEXTURE_0 + (TEXTURE_TYPE)i);
+					}
+					glActiveTexture(GL_TEXTURE0 + RENDER_TEXTURE_0 + (TEXTURE_TYPE)i);
+					glBindTexture(currentTexture->Target(), currentTexture->TextureID());
+				}
 			}
-			glActiveTexture(GL_TEXTURE0 + RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH);
-			glBindTexture(depth->Target(), depth->TextureID());
-		}
+		}		
 	}
 
 
@@ -568,8 +574,8 @@ namespace BlazeEngine
 			
 			// Upload key light direction (world space) and color, and ambient light color:
 			currentShader->UploadUniform("ambient", &(ambient->r), UNIFORM_Vec3fv);
-			currentShader->UploadUniform("keyDirection", &(keyDir->x), UNIFORM_Vec3fv);
-			currentShader->UploadUniform("keyColor", &(keyCol->r), UNIFORM_Vec3fv);
+			currentShader->UploadUniform("key_direction", &(keyDir->x), UNIFORM_Vec3fv);
+			currentShader->UploadUniform("key_color", &(keyCol->r), UNIFORM_Vec3fv);
 
 			// Upload matrices:
 			mat4 projection = sceneManager->GetMainCamera()->Projection();

@@ -11,6 +11,8 @@ void main()
 	data.vertexColor = in_color * vec4(ambient, 1);
 
 	data.vertexWorldNormal = (in_model * vec4(in_normal, 0.0f)).xyz;	// Normal -> World normal
+	
+	data.worldPos	= (in_model * vec4(in_position.xyz, 1.0f)).xyz;
 
 	data.uv0 = in_uv0;
 }

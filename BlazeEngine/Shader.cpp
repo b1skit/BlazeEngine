@@ -55,7 +55,10 @@ namespace BlazeEngine
 			case UNIFORM_Vec3fv:
 				glUniform3fv(uniformID, 1, value);					// Location, count, value
 				break;
-
+			
+			case UNIFORM_Float:
+				glUniform1f(uniformID, *value);
+				break;
 			default:
 				LOG_ERROR("Shader uniform upload failed: Recieved unimplemented uniform type");
 			}

@@ -17,7 +17,7 @@ namespace BlazeEngine
 {
 	// Pre-declarations
 	class Shader;
-
+	class Material;
 
 	enum TEXTURE_TYPE
 	{
@@ -32,7 +32,7 @@ namespace BlazeEngine
 		// Alternative names for render textures:
 		RENDER_TEXTURE_DEPTH	= 0,
 
-		RENDER_TEXTURE_COUNT	= 1
+		RENDER_TEXTURE_COUNT	= 1	// Note: If new RenderTextures are added, don't forget to update Material::SamplerNames[] as well!
 	};
 
 
@@ -73,9 +73,11 @@ namespace BlazeEngine
 			shaderKeywords.emplace_back(newKeyword);
 		}
 
+		// RenderTexture sampler names:
+		const static string SamplerNames[RENDER_TEXTURE_COUNT];
 		
 	protected:
-
+		
 
 	private:
 		string		name;									// Must be unique: Identifies this material

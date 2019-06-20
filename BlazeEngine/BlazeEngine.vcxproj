@@ -183,6 +183,7 @@
       </ExcludedFromBuild>
     </None>
     <None Include="Shaders\BlazeCommon.glsl" />
+    <None Include="Shaders\depthShader.vert" />
     <None Include="Shaders\lambertShader.frag" />
     <None Include="Shaders\lambertShader.vert" />
     <None Include="Shaders\errorShader.frag" />
@@ -194,12 +195,6 @@
     <None Include="Shaders\BlazeGlobals.glsl">
       <FileType>Document</FileType>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="depthShader.vert">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-      </ExcludedFromBuild>
-    </Text>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

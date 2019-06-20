@@ -1,6 +1,7 @@
 #version 430 core
 #define BLAZE_FRAGMENT_SHADER
 #include "BlazeCommon.glsl"
+#include "BlazeGlobals.glsl"
 
 // Built-in input variables:
 // in vec4 gl_FragCoord; //  location of the fragment in window space. 
@@ -12,7 +13,7 @@ void main()
 {	
 	FragColor = texture(albedo, data.uv0.xy);
 
-	float nDotL = max(0, dot(data.vertexWorldNormal, keyDirection));
+	float nDotL = max(0, dot(data.vertexWorldNormal, key_direction));
 
-	FragColor = (FragColor * vec4(ambient, 1) ) + (FragColor * vec4(nDotL * keyColor, 1));
+	FragColor = (FragColor * vec4(ambient, 1) ) + (FragColor * vec4(nDotL * key_color, 1) * GetShadowFactor(data.worldPos, key_vp, shadowDepth) );
 } 

@@ -37,6 +37,7 @@ namespace BlazeEngine
 	{
 	}
 
+
 	ShadowMap*& Light::ActiveShadowMap(ShadowMap* newShadowMap /*= nullptr*/)
 	{
 		// No-arg: Gets the current shadow map

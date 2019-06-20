@@ -15,7 +15,7 @@ namespace BlazeEngine
 		UNIFORM_Matrix4fv,		// glUniformMatrix4fv
 		UNIFORM_Matrix3fv,		// glUniformMatrix3fv
 		UNIFORM_Vec3fv,			// glUniform3fv
-
+		UNIFORM_Float,			// glUniform1f
 	};
 
 
