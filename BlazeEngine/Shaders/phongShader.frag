@@ -37,5 +37,6 @@ void main()
 	vec4 specContribution = vec4(specColor, 1) * pow(vDotR, matProperty0.x);
 
 	// Final result:
-	FragColor = ambientContribution + ((diffuseContribution + specContribution) * GetShadowFactor(data.worldPos, key_vp, shadowDepth));
+	float shadowFactor = GetShadowFactor(data.worldPos, key_vp, shadowDepth, texNormal, key_direction); // TEMP: Pass key direction directly... Should be passing generic light's dir
+	FragColor = ambientContribution + ((diffuseContribution + specContribution) * shadowFactor);
 } 

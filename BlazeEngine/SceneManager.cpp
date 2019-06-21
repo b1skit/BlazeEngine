@@ -228,11 +228,10 @@ namespace BlazeEngine
 	{
 		LOG("Scene manager shutting down...");
 
-		// Scene cleanup:
-		currentScene->keyLight.Destroy();
-
 		if (currentScene)
 		{
+			currentScene->keyLight.Destroy();
+
 			delete currentScene;
 			currentScene = nullptr;
 		}

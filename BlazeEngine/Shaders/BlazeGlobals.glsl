@@ -20,13 +20,15 @@ vec3 ObjectNormalFromTexture(mat3 TBN, vec3 textureNormal)
 }
 
 // Find out if a fragment (in world space) is in shadow
-float GetShadowFactor(vec3 worldPos, mat4 light_vp, sampler2D shadowMap)
+float GetShadowFactor(vec3 worldPos, mat4 light_vp, sampler2D shadowMap, vec3 fragWorldNml, vec3 lightDir)
 {
 	vec4 shadowPos = key_vp * vec4(worldPos.xyz, 1);
 
 	vec3 shadowScreen = (shadowPos.xyz + 1.0) / 2.0;
 
-	return ((shadowScreen.z - key_shadowBias) < texture(shadowMap, shadowScreen.xy).r ? 1.0 : 0.0);
+	float biasAmount = key_shadowBias * (1.0 - dot(fragWorldNml, lightDir));
+
+	return ((shadowScreen.z - biasAmount) < texture(shadowMap, shadowScreen.xy).r ? 1.0 : 0.0);
 
 //	// TO DO: Return a float in [0,1] for how "in shadow" a fragment is
 //	return 1.0;
