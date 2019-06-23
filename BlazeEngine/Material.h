@@ -30,9 +30,13 @@ namespace BlazeEngine
 		RENDER_TEXTURE_0		= 4,				// Reserved: Starting offset for binding RenderTextures (eg. In RenderManager::BindTextures())
 
 		// Alternative names for render textures:
-		RENDER_TEXTURE_DEPTH	= 0,
+		RENDER_TEXTURE_ALBEDO	= 0,
+		RENDER_TEXTURE_NORMAL	= 1,
+		RENDER_TEXTURE_RMAO		= 2,
+		RENDER_TEXTURE_EMSSIVE	= 3,
+		RENDER_TEXTURE_DEPTH	= 4,
 
-		RENDER_TEXTURE_COUNT	= 1	// Note: If new RenderTextures are added, don't forget to update Material::SamplerNames[] as well!
+		RENDER_TEXTURE_COUNT	= 5	// Note: If new enums are added, don't forget to update Material::RENDER_TEXTURE_SAMPLER_NAMES[] as well!
 	};
 
 
@@ -54,7 +58,7 @@ namespace BlazeEngine
 	class Material
 	{
 	public:
-		Material(string materialName, string shaderName);
+		Material(string materialName, string shaderName, TEXTURE_TYPE textureCount = TEXTURE_COUNT);
 		~Material();
 
 		// TODO: Copy constructor, assignment operator
@@ -66,6 +70,7 @@ namespace BlazeEngine
 		inline vec3&			Property(MATERIAL_PROPERTY_INDEX index) { return properties[index]; }
 
 		inline Texture*& AccessTexture(TEXTURE_TYPE textureType)		{ return textures[textureType]; }
+		inline int const& NumTextures()									{ return numTextures; }
 
 		void AddShaderKeyword(string const& newKeyword)
 		{
@@ -73,7 +78,8 @@ namespace BlazeEngine
 		}
 
 		// RenderTexture sampler names:
-		const static string SamplerNames[RENDER_TEXTURE_COUNT];
+		const static string RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_COUNT];
+		const static string TEXTURE_SAMPLER_NAMES[TEXTURE_COUNT];
 		
 	protected:
 		
@@ -83,6 +89,8 @@ namespace BlazeEngine
 
 		Shader*		shader		= nullptr;					// Deallocated up in SceneManager.Shutdown()
 		Texture**	textures	= nullptr;					// Deallocated when object is destroyed in SceneManager.Shutdown()
+		int			numTextures = 0;
+
 		GLuint*		samplers;								// Deallocated up in destructor
 		
 		vec3		properties[MATERIAL_PROPERTY_COUNT];	// Generic material properties

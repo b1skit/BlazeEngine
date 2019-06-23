@@ -433,7 +433,7 @@ namespace BlazeEngine
 	{
 		if (currentMaterial != nullptr)
 		{
-			for (int i = 0; i < TEXTURE_COUNT; i++)
+			for (int i = 0; i < currentMaterial->NumTextures(); i++)
 			{
 				glBindSampler(i, currentMaterial->Samplers(i));
 			}
@@ -450,70 +450,50 @@ namespace BlazeEngine
 
 	void BlazeEngine::RenderManager::BindTextures(Material* currentMaterial, GLuint const& shaderReference /* = 0 */) // If shaderReference == 0, unbinds textures
 	{
-		Texture* albedo = currentMaterial->AccessTexture(TEXTURE_ALBEDO);
-		Texture* normal = currentMaterial->AccessTexture(TEXTURE_NORMAL);
-		Texture* RMAO	= currentMaterial->AccessTexture(TEXTURE_RMAO);
-
 		// Handle unbinding:
 		if (shaderReference == 0)
 		{
-			if (albedo)
+			for (int i = 0; i < (int)TEXTURE_COUNT; i++) // We're explicitely dealing with Textures (not RenderTextures) here
 			{
-				glActiveTexture(GL_TEXTURE0 + TEXTURE_ALBEDO);
-				glBindTexture(albedo->Target(), 0);
+				Texture* currentTexture = currentMaterial->AccessTexture((TEXTURE_TYPE)i);
+				if (currentTexture)
+				{
+					glActiveTexture(GL_TEXTURE0 + i);
+					glBindTexture(currentTexture->Target(), 0);
+				}
 			}
-			if (normal)
-			{
-				glActiveTexture(GL_TEXTURE0 + TEXTURE_NORMAL);
-				glBindTexture(normal->Target(), 0);
-			}
-			if (RMAO)
-			{
-				glActiveTexture(GL_TEXTURE0 + TEXTURE_RMAO);
-				glBindTexture(RMAO->Target(), 0);
-			}
-
-			return;
 		}
-
-		if (albedo)
+		else
 		{
-			GLuint samplerLocation = glGetUniformLocation(shaderReference, "albedo");
-			if (samplerLocation >= 0)
+			for (int i = 0; i < (int)TEXTURE_COUNT; i++)
 			{
-				glUniform1i(samplerLocation, TEXTURE_ALBEDO);
+				GLuint samplerLocation = glGetUniformLocation(shaderReference, Material::TEXTURE_SAMPLER_NAMES[i].c_str());
+				if (samplerLocation >= 0)
+				{
+					glUniform1i(samplerLocation, (TEXTURE_TYPE)i);
+				}
+				Texture* currentTexture = currentMaterial->AccessTexture((TEXTURE_TYPE)i);
+				if (currentTexture)
+				{
+					glActiveTexture(GL_TEXTURE0 + (TEXTURE_TYPE)i);
+					glBindTexture(currentTexture->Target(), currentTexture->TextureID());
+				}
 			}
-			glActiveTexture(GL_TEXTURE0 + TEXTURE_ALBEDO);
-			glBindTexture(albedo->Target(), albedo->TextureID());
-		}
-		if (normal)
-		{
-			GLuint samplerLocation = glGetUniformLocation(shaderReference, "normal");
-			if (samplerLocation >= 0)
-			{
-				glUniform1i(samplerLocation, TEXTURE_NORMAL);
-			}
-			glActiveTexture(GL_TEXTURE0 + TEXTURE_NORMAL);
-			glBindTexture(normal->Target(), normal->TextureID());
-		}
-		if (RMAO)
-		{
-			GLuint samplerLocation = glGetUniformLocation(shaderReference, "RMAO");
-			if (samplerLocation >= 0)
-			{
-				glUniform1i(samplerLocation, TEXTURE_RMAO);
-			}
-			glActiveTexture(GL_TEXTURE0 + TEXTURE_RMAO);
-			glBindTexture(RMAO->Target(), RMAO->TextureID());
 		}
 	}
 
 
 	void RenderManager::BindFrameBuffers(Material* currentMaterial, GLuint const& shaderReference /* = 0 */)		// If shaderReference == 0, unbinds textures
 	{
-		if (currentMaterial == nullptr || shaderReference == 0)
+		if (currentMaterial == nullptr)
 		{
-			for (int i = 0; i < (int)RENDER_TEXTURE_COUNT; i++)
+			LOG_ERROR("Attempting to bind/unbind framebuffers, but received a null material");
+			return;
+		}
+
+		if (shaderReference == 0)
+		{
+			for (int i = 0; i < currentMaterial->NumTextures(); i++)
 			{
 				Texture* currentTexture = currentMaterial->AccessTexture((TEXTURE_TYPE)i);
 				if (currentTexture)
@@ -525,12 +505,12 @@ namespace BlazeEngine
 		}
 		else
 		{
-			for (int i = 0; i < (int)RENDER_TEXTURE_COUNT; i++)
+			for (int i = 0; i < currentMaterial->NumTextures(); i++)
 			{
 				Texture* currentTexture = currentMaterial->AccessTexture((TEXTURE_TYPE)i);
 				if (currentTexture)
 				{
-					GLuint samplerLocation = glGetUniformLocation(shaderReference, Material::SamplerNames[i].c_str());
+					GLuint samplerLocation = glGetUniformLocation(shaderReference, Material::RENDER_TEXTURE_SAMPLER_NAMES[i].c_str());
 					if (samplerLocation >= 0)
 					{
 						glUniform1i(samplerLocation, RENDER_TEXTURE_0 + (TEXTURE_TYPE)i);

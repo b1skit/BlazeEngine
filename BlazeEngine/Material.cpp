@@ -12,30 +12,42 @@ using std::to_string;
 namespace BlazeEngine
 {
 	// Static members:
-	const string Material::SamplerNames[RENDER_TEXTURE_COUNT] = 
+	const string Material::TEXTURE_SAMPLER_NAMES[TEXTURE_COUNT] =
 	{
-		"shadowDepth",		// RENDER_TEXTURE_DEPTH
+		"albedo",			// TEXTURE_ALBEDO
+		"normal",			// TEXTURE_NORMAL
+		"emissive",			// TEXTURE_RMAO
+		"RMAO",				// TEXTURE_EMISSIVE
+	};
 
+	const string Material::RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_COUNT] = 
+	{
+		"GBuffer_Albedo",	// RENDER_TEXTURE_ALBEDO
+		"GBuffer_Normal",	// RENDER_TEXTURE_NORMAL
+		"GBuffer_RMAO",		// RENDER_TEXTURE_RMAO
+		"GBuffer_Emissive",	// RENDER_TEXTURE_EMSSIVE
+		"shadowDepth",		// RENDER_TEXTURE_DEPTH
 	};
 
 
-
-	Material::Material(string materialName, string shaderName)
+	Material::Material(string materialName, string shaderName, TEXTURE_TYPE textureCount /*= TEXTURE_COUNT*/)
 	{
 		this->name = materialName;
 
 		this->shader = Shader::CreateShader(shaderName);
 
-		textures = new Texture*[TEXTURE_COUNT];
-		for (int i = 0; i < (int)TEXTURE_COUNT; i++)
+		this->numTextures = (int)textureCount;
+
+		textures = new Texture*[this->numTextures];
+		for (int i = 0; i < this->numTextures; i++)
 		{
 			textures[i] = nullptr;
 		}
 
 		// Create samplers:
-		samplers = new GLuint[(int)TEXTURE_COUNT];
-		glGenSamplers((int)TEXTURE_COUNT, &samplers[0]);
-		for (int i = 0; i < (int)TEXTURE_COUNT; i++)
+		samplers = new GLuint[this->numTextures];
+		glGenSamplers(this->numTextures, &samplers[0]);
+		for (int i = 0; i < this->numTextures; i++)
 		{
 			glBindSampler(i, samplers[i]);
 			if (!glIsSampler(samplers[i]))
@@ -54,10 +66,13 @@ namespace BlazeEngine
 
 	Material::~Material()
 	{
-		glDeleteSamplers((int)TEXTURE_COUNT, samplers);
+		if (this->samplers != nullptr)
+		{
+			glDeleteSamplers(this->numTextures, samplers);
 
-		delete[] samplers;
-		samplers = nullptr;
+			delete[] samplers;
+			samplers = nullptr;
+		}
 	}
 }
 
