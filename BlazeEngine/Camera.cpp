@@ -70,7 +70,7 @@ namespace BlazeEngine
 		{
 			for (int i = 0; i < TEXTURE_COUNT; i++)
 			{
-				Texture* currentTexture = renderMaterial->GetTexture((TEXTURE_TYPE)i);
+				Texture* currentTexture = renderMaterial->AccessTexture((TEXTURE_TYPE)i);
 				if (currentTexture != nullptr)
 				{
 					currentTexture->Destroy();

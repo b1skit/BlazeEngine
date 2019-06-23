@@ -273,7 +273,7 @@ namespace BlazeEngine
 			// Bind all RenderTextures:
 			for (int i = 0; i < RENDER_TEXTURE_COUNT; i++)
 			{
-				RenderTexture* currentTexture = (RenderTexture*)renderMaterial->GetTexture((TEXTURE_TYPE)i);
+				RenderTexture* currentTexture = (RenderTexture*)renderMaterial->AccessTexture((TEXTURE_TYPE)i);
 				if (currentTexture != nullptr)
 				{
 					glViewport(0, 0, currentTexture->Width(), currentTexture->Height());
@@ -348,7 +348,7 @@ namespace BlazeEngine
 
 				// Shadow texture 
 				vec4 shadowDepth_TexelSize(0,0,0,0);
-				RenderTexture* depthTexture = (RenderTexture*)keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial()->GetTexture(RENDER_TEXTURE_DEPTH);
+				RenderTexture* depthTexture = (RenderTexture*)keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
 				if (depthTexture)
 				{
 					shadowDepth_TexelSize = vec4(1.0f / depthTexture->Width(), 1.0f / depthTexture->Height(), depthTexture->Width(), depthTexture->Height());
@@ -450,9 +450,9 @@ namespace BlazeEngine
 
 	void BlazeEngine::RenderManager::BindTextures(Material* currentMaterial, GLuint const& shaderReference /* = 0 */) // If shaderReference == 0, unbinds textures
 	{
-		Texture* albedo = currentMaterial->GetTexture(TEXTURE_ALBEDO);
-		Texture* normal = currentMaterial->GetTexture(TEXTURE_NORMAL);
-		Texture* RMAO	= currentMaterial->GetTexture(TEXTURE_RMAO);
+		Texture* albedo = currentMaterial->AccessTexture(TEXTURE_ALBEDO);
+		Texture* normal = currentMaterial->AccessTexture(TEXTURE_NORMAL);
+		Texture* RMAO	= currentMaterial->AccessTexture(TEXTURE_RMAO);
 
 		// Handle unbinding:
 		if (shaderReference == 0)
@@ -515,7 +515,7 @@ namespace BlazeEngine
 		{
 			for (int i = 0; i < (int)RENDER_TEXTURE_COUNT; i++)
 			{
-				Texture* currentTexture = currentMaterial->GetTexture((TEXTURE_TYPE)i);
+				Texture* currentTexture = currentMaterial->AccessTexture((TEXTURE_TYPE)i);
 				if (currentTexture)
 				{
 					glActiveTexture(GL_TEXTURE0 + RENDER_TEXTURE_0 + (TEXTURE_TYPE)i);
@@ -527,7 +527,7 @@ namespace BlazeEngine
 		{
 			for (int i = 0; i < (int)RENDER_TEXTURE_COUNT; i++)
 			{
-				Texture* currentTexture = currentMaterial->GetTexture((TEXTURE_TYPE)i);
+				Texture* currentTexture = currentMaterial->AccessTexture((TEXTURE_TYPE)i);
 				if (currentTexture)
 				{
 					GLuint samplerLocation = glGetUniformLocation(shaderReference, Material::SamplerNames[i].c_str());

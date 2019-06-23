@@ -653,7 +653,7 @@ namespace BlazeEngine
 					Texture* diffuseTexture = ExtractLoadTextureFromAiMaterial(aiTextureType_DIFFUSE, scene->mMaterials[currentMaterial], sceneName);
 					if (diffuseTexture)
 					{
-						newMaterial->SetTexture(diffuseTexture, TEXTURE_ALBEDO);
+						newMaterial->AccessTexture(TEXTURE_ALBEDO) = diffuseTexture;
 						diffuseTexture->Buffer();
 					}
 
@@ -661,7 +661,7 @@ namespace BlazeEngine
 					Texture* normalTexture = ExtractLoadTextureFromAiMaterial(aiTextureType_NORMALS, scene->mMaterials[currentMaterial], sceneName);
 					if (normalTexture)
 					{
-						newMaterial->SetTexture(normalTexture, TEXTURE_NORMAL);
+						newMaterial->AccessTexture(TEXTURE_NORMAL) = normalTexture;
 						normalTexture->Buffer();
 					}
 					else
@@ -674,7 +674,7 @@ namespace BlazeEngine
 					Texture* emissiveTexture = ExtractLoadTextureFromAiMaterial(aiTextureType_EMISSIVE, scene->mMaterials[currentMaterial], sceneName);
 					if (emissiveTexture)
 					{
-						newMaterial->SetTexture(emissiveTexture, TEXTURE_EMISSIVE);
+						newMaterial->AccessTexture(TEXTURE_EMISSIVE) = emissiveTexture;
 						emissiveTexture->Buffer();
 					}
 
@@ -682,7 +682,7 @@ namespace BlazeEngine
 					Texture* RMAO = ExtractLoadTextureFromAiMaterial(aiTextureType_SPECULAR, scene->mMaterials[currentMaterial], sceneName);
 					if (RMAO)
 					{
-						newMaterial->SetTexture(RMAO, TEXTURE_RMAO);
+						newMaterial->AccessTexture(TEXTURE_RMAO) = RMAO;
 						RMAO->Buffer();
 					}
 

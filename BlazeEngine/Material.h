@@ -61,12 +61,11 @@ namespace BlazeEngine
 
 		// Getters/Setters:
 		inline string const&	Name()									{ return name; }
-		Texture*				GetTexture(TEXTURE_TYPE textureIndex);
 		inline GLuint const&	Samplers(unsigned int textureType)		{ return samplers[textureType]; }
 		inline Shader*			GetShader()								{ return shader; }
 		inline vec3&			Property(MATERIAL_PROPERTY_INDEX index) { return properties[index]; }
 
-		void SetTexture(Texture* texture, TEXTURE_TYPE textureIndex);
+		inline Texture*& AccessTexture(TEXTURE_TYPE textureType)		{ return textures[textureType]; }
 
 		void AddShaderKeyword(string const& newKeyword)
 		{

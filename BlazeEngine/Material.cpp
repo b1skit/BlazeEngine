@@ -59,42 +59,5 @@ namespace BlazeEngine
 		delete[] samplers;
 		samplers = nullptr;
 	}
-
-
-	Texture* Material::GetTexture(TEXTURE_TYPE textureIndex)
-	{
-		if (textureIndex < (int)TEXTURE_COUNT)
-		{
-			return textures[textureIndex];
-		}
-		else
-		{
-			LOG_ERROR("Cannot get texture #" + to_string(textureIndex) + " for material \"" + this->name + "\". Returning nullptr!");
-			return nullptr;
-		}		
-	}
-
-	void Material::SetTexture(Texture* texture, TEXTURE_TYPE textureIndex)
-	{
-		if (textureIndex < (int)TEXTURE_COUNT)
-		{
-			if (textures[textureIndex] != nullptr)
-			{
-				LOG("Replacing material \"" + this->name + "\" texture #" + std::to_string(textureIndex));
-
-				delete textures[textureIndex];
-				textures[textureIndex] = nullptr;
-			}
-
-			textures[textureIndex] = texture;
-
-			LOG("Set texture #" + to_string(textureIndex) + " for material \"" + this->name + "\"");
-		}
-		else
-		{
-			LOG_ERROR("Failed to set texture #" + to_string(textureIndex) + " for material \"" + this->name + "\"");
-			return;
-		}
-	}
 }
 
