@@ -693,7 +693,7 @@ namespace BlazeEngine
 							LOG("Setting shader matProperty0 uniform: " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).x) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).y) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).z));
 						#endif
 
-						currentShader->UploadUniform("matProperty0", &newMaterial->Property(MATERIAL_PROPERTY_0).x, UNIFORM_Vec3fv);
+						currentShader->UploadUniform(Material::MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_0].c_str(), &newMaterial->Property(MATERIAL_PROPERTY_0).x, UNIFORM_Vec4fv);
 					}
 					#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING)
 					else
@@ -840,7 +840,7 @@ namespace BlazeEngine
 		return nullptr;
 	}
 
-	bool BlazeEngine::SceneManager::ExtractPropertyFromAiMaterial(aiMaterial* material, vec3& targetProperty, char const* AI_MATKEY_TYPE, int unused0 /*= 0*/, int unused1 /*= 0*/)
+	bool BlazeEngine::SceneManager::ExtractPropertyFromAiMaterial(aiMaterial* material, vec4& targetProperty, char const* AI_MATKEY_TYPE, int unused0 /*= 0*/, int unused1 /*= 0*/)
 	{
 		aiColor3D color(0.f, 0.f, 0.f);
 		if (AI_SUCCESS == material->Get(AI_MATKEY_SHININESS, color))
@@ -849,7 +849,7 @@ namespace BlazeEngine
 				LOG("Successfully extracted material property from AI_MATKEY_SHININESS");
 			#endif
 
-			targetProperty = vec3(color.r, color.g, color.b);
+			targetProperty = vec4(color.r, color.g, color.b, 0.0f);	// Note: We're Initializing the last property as 0...
 
 			return true;
 		}
@@ -859,7 +859,7 @@ namespace BlazeEngine
 				LOG("Successfully extracted material property from $raw.Shininess");
 			#endif
 
-			targetProperty = vec3(color.r, color.g, color.b);
+			targetProperty = vec4(color.r, color.g, color.b, 0.0f);	// Note: We're Initializing the last property as 0...
 			return true;
 		}
 		else

@@ -29,6 +29,10 @@ namespace BlazeEngine
 		"shadowDepth",		// RENDER_TEXTURE_DEPTH
 	};
 
+	const string Material::MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_COUNT] =
+	{
+		"matProperty0",
+	};
 
 	Material::Material(string materialName, string shaderName, TEXTURE_TYPE textureCount /*= TEXTURE_COUNT*/)
 	{
@@ -59,7 +63,7 @@ namespace BlazeEngine
 
 		for (int i = 0; i < MATERIAL_PROPERTY_COUNT; i++)
 		{
-			properties[i] = vec3(0.0f, 0.0f, 0.0f);
+			properties[i] = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		}
 	}
 

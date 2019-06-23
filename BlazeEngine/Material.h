@@ -67,7 +67,7 @@ namespace BlazeEngine
 		inline string const&	Name()									{ return name; }
 		inline GLuint const&	Samplers(unsigned int textureType)		{ return samplers[textureType]; }
 		inline Shader*			GetShader()								{ return shader; }
-		inline vec3&			Property(MATERIAL_PROPERTY_INDEX index) { return properties[index]; }
+		inline vec4&			Property(MATERIAL_PROPERTY_INDEX index) { return properties[index]; }
 
 		inline Texture*& AccessTexture(TEXTURE_TYPE textureType)		{ return textures[textureType]; }
 		inline int const& NumTextures()									{ return numTextures; }
@@ -80,6 +80,7 @@ namespace BlazeEngine
 		// RenderTexture sampler names:
 		const static string RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_COUNT];
 		const static string TEXTURE_SAMPLER_NAMES[TEXTURE_COUNT];
+		const static string MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_COUNT];
 		
 	protected:
 		
@@ -93,7 +94,7 @@ namespace BlazeEngine
 
 		GLuint*		samplers;								// Deallocated up in destructor
 		
-		vec3		properties[MATERIAL_PROPERTY_COUNT];	// Generic material properties
+		vec4		properties[MATERIAL_PROPERTY_COUNT];	// Generic material properties
 
 		vector<string> shaderKeywords;
 	};

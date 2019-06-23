@@ -87,14 +87,14 @@ uniform float		minShadowBias;
 
 
 // Generic material properties:
-uniform vec3 matProperty0; // .x == Phong cosine exponent
-//uniform vec3 matProperty1;
-//uniform vec3 matProperty2;
-//uniform vec3 matProperty3;
-//uniform vec3 matProperty4;
-//uniform vec3 matProperty5;
-//uniform vec3 matProperty6;
-//uniform vec3 matProperty7;
+uniform vec4 matProperty0; // .x == Phong cosine exponent
+//uniform vec4 matProperty1;
+//uniform vec4 matProperty2;
+//uniform vec4 matProperty3;
+//uniform vec4 matProperty4;
+//uniform vec4 matProperty5;
+//uniform vec4 matProperty6;
+//uniform vec4 matProperty7;
 
 
 //// Camera variables:
