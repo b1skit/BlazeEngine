@@ -45,7 +45,7 @@ namespace BlazeEngine
 			switch (type)
 			{
 			case UNIFORM_Matrix4fv:
-				glUniformMatrix4fv(uniformID, 1, GL_FALSE, value);	// Location, count, transpose?, value
+				glUniformMatrix4fv(uniformID, 1, GL_FALSE, value);
 				break;
 
 			case UNIFORM_Matrix3fv:
@@ -53,7 +53,11 @@ namespace BlazeEngine
 				break;
 
 			case UNIFORM_Vec3fv:
-				glUniform3fv(uniformID, 1, value);					// Location, count, value
+				glUniform3fv(uniformID, 1, value);
+				break;
+
+			case UNIFORM_Vec4fv:
+				glUniform4fv(uniformID, 1, value);
 				break;
 			
 			case UNIFORM_Float:

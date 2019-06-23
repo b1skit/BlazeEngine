@@ -1,5 +1,6 @@
 #version 430 core
 #define BLAZE_FRAGMENT_SHADER
+
 #include "BlazeCommon.glsl"
 #include "BlazeGlobals.glsl"
 
@@ -22,21 +23,20 @@ void main()
 	vec4 ambientContribution	= FragColor * vec4(ambient, 1);
 
 	// Diffuse:
-	float nDotL					= max(0, dot(texNormal, key_direction));
-	vec4 diffuseContribution	= FragColor * vec4(nDotL * key_color, 1);
+	float nDotL					= max(0, dot(texNormal, lightDirection));
+	vec4 diffuseContribution	= FragColor * vec4(nDotL * lightColor, 1);
 
 	// Specular:
-	vec3 specColor	= key_color * texture(RMAO, data.uv0.xy).r;
-	vec3 reflectDir = normalize(reflect(-key_direction, texNormal));		// World-space reflection dir
+	vec3 specColor	= lightColor * texture(RMAO, data.uv0.xy).r;
+	vec3 reflectDir = normalize(reflect(-lightDirection, texNormal));		// World-space reflection dir
 	reflectDir		= normalize((in_view * vec4(reflectDir, 0))).xyz;		// World -> view space
 	
-	vec3 viewDir	= normalize(data.viewPos.xyz);							// view-space fragment view dir
+	vec3 viewDir			= normalize(data.viewPos.xyz);					// view-space fragment view dir
+	float vDotR				= max(0, dot(viewDir, reflectDir));
+	vec4 specContribution	= vec4(specColor, 1) * pow(vDotR, matProperty0.x);
+
+	float shadowFactor		= GetShadowFactor(data.shadowPos, shadowDepth, data.vertexWorldNormal, lightDirection);
 	
-	float vDotR		= max(0, dot(viewDir, reflectDir));
-
-	vec4 specContribution = vec4(specColor, 1) * pow(vDotR, matProperty0.x);
-
 	// Final result:
-	float shadowFactor = GetShadowFactor(data.worldPos, key_vp, shadowDepth, texNormal, key_direction); // TEMP: Pass key direction directly... Should be passing generic light's dir
 	FragColor = ambientContribution + ((diffuseContribution + specContribution) * shadowFactor);
 } 

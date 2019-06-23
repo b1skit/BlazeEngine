@@ -54,7 +54,7 @@ namespace BlazeEngine
 	class Material
 	{
 	public:
-		Material(string materialName, string shaderName, bool isCameraMaterial = false);
+		Material(string materialName, string shaderName);
 		~Material();
 
 		// TODO: Copy constructor, assignment operator

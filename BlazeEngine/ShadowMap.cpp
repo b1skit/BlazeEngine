@@ -50,7 +50,7 @@ namespace BlazeEngine
 
 	void ShadowMap::InitializeShadowCam(RenderTexture* renderTexture)
 	{
-		this->shadowCam->RenderMaterial() = new Material(shadowCam->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->shader.depthShaderName, true);
+		this->shadowCam->RenderMaterial() = new Material(shadowCam->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->shader.depthShaderName);
 		this->shadowCam->RenderMaterial()->SetTexture(renderTexture, RENDER_TEXTURE_DEPTH);
 
 		CoreEngine::GetSceneManager()->RegisterCamera(CAMERA_TYPE_SHADOW, this->shadowCam);

@@ -298,7 +298,7 @@ namespace BlazeEngine
 
 		// Assemble common (model independent) matrices:
 		mat4 view = renderCam->View();
-		mat4 key_vp = CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight().ActiveShadowMap()->ShadowCamera()->ViewProjection();
+		mat4 shadowCam_vp = CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight().ActiveShadowMap()->ShadowCamera()->ViewProjection();
 
 		// Configure render material:
 		unsigned int numMaterials;
@@ -343,8 +343,19 @@ namespace BlazeEngine
 
 				// Bind the key light depth buffer and related data:
 				BindFrameBuffers(shadowCamRenderMaterial, shaderReference);
-				currentShader->UploadUniform("key_shadowBias", &keyLight->ActiveShadowMap()->ShadowBias(), UNIFORM_Float);				
+				currentShader->UploadUniform("maxShadowBias", &keyLight->ActiveShadowMap()->MaxShadowBias(), UNIFORM_Float);
+				currentShader->UploadUniform("minShadowBias", &keyLight->ActiveShadowMap()->MinShadowBias(), UNIFORM_Float);
 
+				// Shadow texture 
+				vec4 shadowDepth_TexelSize(0,0,0,0);
+				RenderTexture* depthTexture = (RenderTexture*)keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial()->GetTexture(RENDER_TEXTURE_DEPTH);
+				if (depthTexture)
+				{
+					shadowDepth_TexelSize = vec4(1.0f / depthTexture->Width(), 1.0f / depthTexture->Height(), depthTexture->Width(), depthTexture->Height());
+				}
+				currentShader->UploadUniform("shadowDepth_TexelSize", &shadowDepth_TexelSize.x, UNIFORM_Vec4fv);
+
+				// Get all meshes using the current material
 				meshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
 			}
 			else // Rendering to framebuffer:
@@ -354,7 +365,7 @@ namespace BlazeEngine
 
 			// Upload common shader matrices:
 			currentShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
-			currentShader->UploadUniform("key_vp", &key_vp[0][0], UNIFORM_Matrix4fv);
+			currentShader->UploadUniform("shadowCam_vp", &shadowCam_vp[0][0], UNIFORM_Matrix4fv);
 
 			// Loop through each mesh:			
 			unsigned int numMeshes	= (unsigned int)meshes->size();
@@ -572,10 +583,11 @@ namespace BlazeEngine
 			Shader* currentShader = currentMaterial->GetShader();
 			RenderManager::BindShader(currentShader->ShaderReference());
 			
-			// Upload key light direction (world space) and color, and ambient light color:
+			// Upload light direction (world space) and color, and ambient light color:
 			currentShader->UploadUniform("ambient", &(ambient->r), UNIFORM_Vec3fv);
-			currentShader->UploadUniform("key_direction", &(keyDir->x), UNIFORM_Vec3fv);
-			currentShader->UploadUniform("key_color", &(keyCol->r), UNIFORM_Vec3fv);
+
+			currentShader->UploadUniform("lightDirection", &(keyDir->x), UNIFORM_Vec3fv); // TODO: Move these to the main render loop once we've switched to deferred rendering w/multiple lights
+			currentShader->UploadUniform("lightColor", &(keyCol->r), UNIFORM_Vec3fv);
 
 			// Upload matrices:
 			mat4 projection = sceneManager->GetMainCamera()->Projection();

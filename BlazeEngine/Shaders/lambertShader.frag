@@ -11,11 +11,11 @@
 
 void main()
 {	
-	FragColor = texture(albedo, data.uv0.xy);
+	FragColor			= texture(albedo, data.uv0.xy);
 
-	float nDotL = max(0, dot(data.vertexWorldNormal, key_direction));
+	float nDotL			= max(0, dot(data.vertexWorldNormal, lightDirection));
 
-	float shadowFactor = GetShadowFactor(data.worldPos, key_vp, shadowDepth, data.vertexWorldNormal, key_direction); // TEMP: Pass key direction directly... Should be passing generic light's dir
+	float shadowFactor	= GetShadowFactor(data.shadowPos, shadowDepth, data.vertexWorldNormal, lightDirection); // TEMP: Pass key direction directly... Should be passing generic light's dir
 	
-	FragColor = (FragColor * vec4(ambient, 1) ) + (FragColor * vec4(nDotL * key_color, 1) * shadowFactor );
+	FragColor			= (FragColor * vec4(ambient, 1) ) + (FragColor * vec4(nDotL * lightColor, 1) * shadowFactor );
 } 

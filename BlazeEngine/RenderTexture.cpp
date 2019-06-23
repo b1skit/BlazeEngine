@@ -36,8 +36,8 @@ namespace BlazeEngine
 		this->textureWrapS			= GL_CLAMP_TO_EDGE;
 		this->textureWrapT			= GL_CLAMP_TO_EDGE;
 
-		this->textureMinFilter		= GL_NEAREST;
-		this->textureMaxFilter		= GL_NEAREST;
+		this->textureMinFilter		= GL_LINEAR;
+		this->textureMaxFilter		= GL_LINEAR;
 
 		if (doBuffer)
 		{

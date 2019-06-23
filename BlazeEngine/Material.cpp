@@ -20,7 +20,7 @@ namespace BlazeEngine
 
 
 
-	Material::Material(string materialName, string shaderName, bool isCameraMaterial /*= false*/)
+	Material::Material(string materialName, string shaderName)
 	{
 		this->name = materialName;
 

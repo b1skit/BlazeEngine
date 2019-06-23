@@ -47,6 +47,7 @@
 
 		vec3 viewPos;			// Camera/eye-space position
 		vec3 worldPos;			// World-space position
+		vec3 shadowPos;			// Shadowmap projection-space position
 
 		mat3 TBN;				// Normal map change-of-basis matrix
 	} data;
@@ -55,12 +56,8 @@
 // Lighting:
 uniform vec3 ambient;
 
-uniform vec3 key_direction;		// Normalized, world space, points towards light source
-uniform vec3 key_color;
-uniform mat4 key_vp;			// Keylight: [Projection * View]
-uniform float key_shadowBias;	// Used to prevent shadow acne
-
-
+uniform vec3 lightDirection;		// Normalized, world space, points towards light source
+uniform vec3 lightColor;
 
 // Matrices:
 uniform mat4 in_model;			// Local -> World
@@ -80,12 +77,14 @@ uniform sampler2D normal;		// Tangent-space normals (RGB)			Bump
 uniform sampler2D RMAO;			// Roughness, Metalic, albedo			Specular
 
 
-// RenderTexture samplers:
-uniform sampler2D shadowDepth;	// The currently bound shadow depth map
+// Shadow map parameters:
+uniform sampler2D	shadowDepth;			// The currently bound shadow depth map
+uniform vec4		shadowDepth_TexelSize;	// .xyzw = (1/width, 1/height, width, height)
+uniform mat4		shadowCam_vp;			// Shadow map: [Projection * View]
 
-// Generic shadow map properties:
-//uniform float shadowBias;
-// TODO: Implement this^^^
+uniform float		maxShadowBias;			// Offsets for preventing shadow acne
+uniform float		minShadowBias;	
+
 
 // Generic material properties:
 uniform vec3 matProperty0; // .x == Phong cosine exponent
