@@ -1299,21 +1299,23 @@ namespace BlazeEngine
 					//LOG("Scene world bounds: " + to_string(sceneWorldBounds.xMin) + " < X < " + to_string(sceneWorldBounds.xMax) + ", " + to_string(sceneWorldBounds.yMin) + " < Y < " + to_string(sceneWorldBounds.yMax) + ", " + to_string(sceneWorldBounds.zMin) + " < Z < " + to_string(sceneWorldBounds.zMax));
 					//LOG("Framing light frustum about transformed scene bounds:\n\t" + to_string(transformedBounds.xMin) + " < X < " + to_string(transformedBounds.xMax) + ", " + to_string(transformedBounds.yMin) + " < Y < " + to_string(transformedBounds.yMax) + ", " + to_string(transformedBounds.zMin) + " < Z < " + to_string(transformedBounds.zMax));
 
-					ShadowMap* keyLightShadowMap = new ShadowMap	// TEMP: We assume the key light will ALWAYS have a shadow
+					CameraConfig shadowCamConfig;
+					shadowCamConfig.near			= -transformedBounds.zMax;
+					shadowCamConfig.far				= -transformedBounds.zMin;
+
+					shadowCamConfig.isOrthographic	= true;
+					shadowCamConfig.orthoLeft		= transformedBounds.xMin;
+					shadowCamConfig.orthoRight		= transformedBounds.xMax;
+					shadowCamConfig.orthoBottom		= transformedBounds.yMin;
+					shadowCamConfig.orthoTop		= transformedBounds.yMax;
+
+					ShadowMap* keyLightShadowMap	= new ShadowMap // TEMP: We assume the key light will ALWAYS have a shadow
 					(
 						lightName,
 						CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapWidth,
 						CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapHeight,
-
-						-transformedBounds.zMax, // We negate these values because glm::ortho reverses the sign to be "helpful"
-						-transformedBounds.zMin,
-
-						&currentScene->keyLight.GetTransform(),
-						vec3(0, 0, 0),
-						transformedBounds.xMin,
-						transformedBounds.xMax,
-						transformedBounds.yMin,
-						transformedBounds.yMax
+						shadowCamConfig,
+						&currentScene->keyLight.GetTransform()
 					);
 
 					currentScene->keyLight.ActiveShadowMap(keyLightShadowMap);
@@ -1397,14 +1399,15 @@ namespace BlazeEngine
 		if (scene == nullptr) // Signal to create a default camera at the origin
 		{
 			LOG("Creating a default camera");
-			currentScene->RegisterCamera(CAMERA_TYPE_MAIN, new Camera("defaultCamera"));
-			currentScene->GetMainCamera()->Initialize
-			(
-				CoreEngine::GetCoreEngine()->GetConfig()->GetAspectRatio(),
-				CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView,
-				CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultNear,
-				CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFar
-			);
+
+			CameraConfig camConfig;
+			camConfig.aspectRatio	= CoreEngine::GetCoreEngine()->GetConfig()->GetWindowAspectRatio();
+			camConfig.fieldOfView	= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView;
+			camConfig.near			= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultNear;
+			camConfig.far			= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFar;
+
+			currentScene->RegisterCamera(CAMERA_TYPE_MAIN, new Camera("defaultCamera", camConfig));
+
 			return;
 		}
 
@@ -1421,10 +1424,6 @@ namespace BlazeEngine
 		}
 
 		// If we made it this far, we're importing a camera from the scene:
-		Camera* newCamera = new Camera(cameraName);
-
-		currentScene->RegisterCamera(CAMERA_TYPE_MAIN, newCamera); // For now, only importing the main camera is supported...
-
 
 
 		// TODO: In the current version of Assimp, camera import is broken.
@@ -1432,6 +1431,16 @@ namespace BlazeEngine
 		// + Importing cameras facing towards Z+ results in a flipped camera?
 		// + Importing cameras facing towards Z- results in an extra +90 degree rotation about Y being applied?
 
+
+		// Camera configuration:
+		CameraConfig newCamConfig;
+		newCamConfig.aspectRatio		= (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes;
+		newCamConfig.fieldOfView		= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView; //scene->mCameras[0]->mHorizontalFOV; // TODO: Implement this (Needs to be converted to a vertical FOV???)
+		newCamConfig.near				= scene->mCameras[0]->mClipPlaneNear;
+		newCamConfig.far				= scene->mCameras[0]->mClipPlaneFar;
+		newCamConfig.isOrthographic		= false;	// This is the default, but set it here anyway for clarity
+
+		Camera* newCamera				= new Camera(cameraName, newCamConfig);
 
 		aiNode* camNode = scene->mRootNode->FindNode(scene->mCameras[0]->mName);
 		if (camNode)
@@ -1450,8 +1459,6 @@ namespace BlazeEngine
 			InitializeTransformValues(camTransform, newCamera->GetTransform());
 		}
 
-		vec3 camPosition = newCamera->GetTransform()->Position();
-
 		#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING)
 			
 			vec3 camRotation = newCamera->GetTransform()->GetEulerRotation();
@@ -1463,15 +1470,7 @@ namespace BlazeEngine
 
 		LOG_ERROR("Camera field of view is NOT currently loaded from the source file. A hard-coded default value is used for now");
 
-		newCamera->Initialize
-		(
-			(float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
-			CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView, //scene->mCameras[0]->mHorizontalFOV; // TODO: Implement this (Needs to be converted to a vertical FOV???)
-			scene->mCameras[0]->mClipPlaneNear,
-			scene->mCameras[0]->mClipPlaneFar,
-			nullptr,
-			camPosition
-		);
+		currentScene->RegisterCamera(CAMERA_TYPE_MAIN, newCamera); // For now, assume that we're only importing the main camera. No other cameras are currently supported...
 	}
 }
 

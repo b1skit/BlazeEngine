@@ -15,7 +15,7 @@ namespace BlazeEngine
 	// Pre-declarations:
 	class Camera;
 	class Transform;
-
+	struct CameraConfig;
 
 	class ShadowMap
 	{
@@ -24,11 +24,7 @@ namespace BlazeEngine
 		// Default constructor (perspective shadowcam):
 		ShadowMap();
 
-		// Orthographic constructor:
-		ShadowMap(string lightName, int xRes, int yRes, float near, float far, Transform* parent = nullptr, vec3 position = vec3(0.0f, 0.0f, 0.0f), float orthoLeft = -5, float orthoRight = 5, float orthoBottom = -5, float orthoTop = 5);
-
-		// TODO: Perspective constructor:
-
+		ShadowMap(string lightName, int xRes, int yRes, CameraConfig shadowCamConfig, Transform* shadowCamParent = nullptr, vec3 shadowCamPosition = vec3(0.0f, 0.0f, 0.0f));
 
 		// Get the current shadow camera
 		inline Camera* ShadowCamera()		{ return shadowCam; }

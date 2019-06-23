@@ -10,47 +10,57 @@ namespace BlazeEngine
 	// Default constructor
 	Camera::Camera(string cameraName) : SceneObject::SceneObject(cameraName)
 	{
-		Initialize	// Initialize with default values:
-		(		
-			CoreEngine::GetCoreEngine()->GetConfig()->GetAspectRatio(),
-			CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView,
-			CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultNear,
-			CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFar,
-			nullptr,
-			vec3(0,0,0),
-			false,
-			CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultOrthoHalfWidth,
-			CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultOrthoHalfHeight
-		); 
+		Initialize();	// Initialize with default values
 
 		/*isDirty = false;*/
 	}
 
 
-	// Perspective constructor
-	Camera::Camera(string cameraName, float aspectRatio, float fieldOfView, float near, float far, Transform* parent /*= nullptr*/, vec3 position /*= vec3(0.0f, 0.0f, 0.0f)*/) : SceneObject::SceneObject(cameraName)
+	Camera::Camera(string cameraName, CameraConfig camConfig, Transform* parent /*= nullptr*/) : SceneObject::SceneObject(cameraName)
 	{
-		Initialize(aspectRatio, fieldOfView, near, far, parent, position);
+		this->cameraConfig = camConfig;
+
+		this->transform.Parent(parent);
+
+		Initialize();
 	}
 
 
-	// Orthographic constructor:
-	Camera::Camera(string cameraName, float near, float far, Transform* parent /*= nullptr*/, vec3 position /*= vec3(0.0f, 0.0f, 0.0f)*/, float orthoLeft /*= -5*/, float orthoRight /*= 5*/, float orthoBottom /*= -5*/, float orthoTop /*= 5*/) : SceneObject::SceneObject(cameraName)
+	void Camera::Initialize()
 	{
-		Initialize
-		(
-			glm::abs((orthoRight - orthoLeft) / (orthoTop - orthoBottom)), 
-			0.0f, 
-			near, 
-			far, 
-			parent, 
-			position, 
-			true, 
-			orthoLeft, 
-			orthoRight, 
-			orthoBottom, 
-			orthoTop
-		);
+		if (this->cameraConfig.isOrthographic)
+		{
+			this->cameraConfig.fieldOfView = 0.0f;
+
+			this->projection = glm::ortho
+			(
+				this->cameraConfig.orthoLeft, 
+				this->cameraConfig.orthoRight, 
+				this->cameraConfig.orthoBottom, 
+				this->cameraConfig.orthoTop, 
+				this->cameraConfig.near, 
+				this->cameraConfig.far
+			);
+		}
+		else
+		{
+			this->cameraConfig.orthoLeft	= 0.0f;
+			this->cameraConfig.orthoRight	= 0.0f;
+			this->cameraConfig.orthoBottom	= 0.0f;
+			this->cameraConfig.orthoTop		= 0.0f;
+
+			this->projection = glm::perspective
+			(
+				glm::radians(this->cameraConfig.fieldOfView), 
+				this->cameraConfig.aspectRatio, 
+				this->cameraConfig.near, 
+				this->cameraConfig.far
+			);
+		}
+
+		View();						// Internally initializes the view matrix
+
+		this->viewProjection = projection * view;
 	}
 
 
@@ -75,51 +85,12 @@ namespace BlazeEngine
 	}
 
 
-	void Camera::Initialize(float aspectRatio, float fieldOfView, float near, float far, Transform* parent /*= nullptr*/, vec3 position /*= vec3(0.0f, 0.0f, 0.0f)*/, bool isOrthographic /*= false*/, float orthoLeft /*= -5*/, float orthoRight /*= 5*/, float orthoBottom /*= -5*/, float orthoTop /*= 5*/)
-	{
-		this->near					= near;
-		this->far					= far;
-		this->aspectRatio			= aspectRatio;
-
-		this->transform.SetPosition(position);
-
-		this->GetTransform()->Parent(parent);
-
-		this->isOrthographic		= isOrthographic;
-		if (isOrthographic)
-		{	
-			this->fieldOfView		= 0.0f;
-
-			this->orthoLeft			= orthoLeft;
-			this->orthoRight		= orthoRight;
-			this->orthoBottom		= orthoBottom;
-			this->orthoTop			= orthoTop;
-
-			this->projection		= glm::ortho(orthoLeft, orthoRight, orthoBottom, orthoTop, this->near, this->far);
-		}
-		else
-		{
-			this->fieldOfView		= fieldOfView;
-
-			this->orthoLeft			= 0.0f;
-			this->orthoRight		= 0.0f;
-			this->orthoBottom		= 0.0f;
-			this->orthoTop			= 0.0f;
-
-			this->projection		= glm::perspective(glm::radians(fieldOfView), aspectRatio, near, far);
-		}
-
-		View();						// Internally initialize the view matrix
-
-		this->viewProjection		= projection * view;
-	}
-
-
 	mat4 const& Camera::View()
 	{
 		view = inverse(transform.Model());
 		return view;
 	}
+
 
 	void Camera::Update()
 	{
@@ -129,6 +100,7 @@ namespace BlazeEngine
 	void Camera::HandleEvent(EventInfo const * eventInfo)
 	{
 	}
+
 
 	void Camera::DebugPrint()
 	{
@@ -161,5 +133,7 @@ namespace BlazeEngine
 			return;
 		#endif
 	}
+
+
 }
 

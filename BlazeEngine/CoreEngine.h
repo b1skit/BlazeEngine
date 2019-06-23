@@ -30,7 +30,7 @@ namespace BlazeEngine
 		} renderer;
 
 		// Compute the aspect ratio == width / height
-		float GetAspectRatio() const { return (float)renderer.windowXRes / (float)renderer.windowYRes; }
+		float GetWindowAspectRatio() const { return (float)renderer.windowXRes / (float)renderer.windowYRes; }
 
 		struct
 		{

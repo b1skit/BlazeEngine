@@ -20,22 +20,11 @@ namespace BlazeEngine
 	}
 
 
-	// Orthographic constructor:
-	ShadowMap::ShadowMap(string lightName, int xRes, int yRes, float near, float far, Transform* parent /*= nullptr*/, vec3 position /*= vec3(0.0f, 0.0f, 0.0f)*/, float orthoLeft /*= -5*/, float orthoRight /*= 5*/, float orthoBottom /*= -5*/, float orthoTop /*= 5*/)
+	ShadowMap::ShadowMap(string lightName, int xRes, int yRes, CameraConfig shadowCamConfig, Transform* shadowCamParent /*= nullptr*/, vec3 shadowCamPosition /* = vec3(0.0f, 0.0f, 0.0f)*/)
 	{
-		this->shadowCam = new Camera
-		(
-			lightName + "_ShadowMapCam",
-			near,
-			far,
-			parent,
-			position,
-			orthoLeft,
-			orthoRight,
-			orthoBottom, 
-			orthoTop
-		);		
-		
+		this->shadowCam = new Camera(lightName + "_ShadowMapCam", shadowCamConfig, shadowCamParent);
+		this->shadowCam->GetTransform()->SetPosition(shadowCamPosition);
+
 		RenderTexture* depthRenderTexture = new RenderTexture // Deallocated by Camera.Destroy()
 		(
 			xRes,
@@ -43,7 +32,7 @@ namespace BlazeEngine
 			lightName + "_RenderTexture",
 			true
 		);
-		
+
 		InitializeShadowCam(depthRenderTexture);
 	}
 
