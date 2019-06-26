@@ -62,6 +62,10 @@ namespace BlazeEngine
 
 		Material*&			RenderMaterial()		{ return renderMaterial; }
 
+
+		// Configure this camera for deferred rendering
+		void AttachGBuffer();
+
 		void				DebugPrint();
 	protected:
 

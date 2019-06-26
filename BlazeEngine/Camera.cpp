@@ -102,6 +102,84 @@ namespace BlazeEngine
 	}
 
 
+	void Camera::AttachGBuffer()
+	{
+		Material* gBufferMaterial	= new Material(this->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->shader.gBufferShaderName, RENDER_TEXTURE_COUNT);
+		this->RenderMaterial()		= gBufferMaterial;
+
+		// We use the albedo texture as a basis for the others
+		RenderTexture* gBuffer_albedo = new RenderTexture
+		(
+			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes,
+			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
+			this->GetName() + "_" + Material::RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_ALBEDO],
+			false
+		);
+		gBuffer_albedo->InternalFormat()	= GL_RGBA32F;
+		gBuffer_albedo->Format()			= GL_RGBA;		// NOTE: Using 4 channels for future flexibility
+		gBuffer_albedo->TextureMinFilter()	= GL_NEAREST_MIPMAP_LINEAR;
+		gBuffer_albedo->TextureMaxFilter()	= GL_LINEAR;
+
+		gBuffer_albedo->AttachmentPoint()	= GL_COLOR_ATTACHMENT0 + 0; // Need to increment by 1 each new textuer we attach. Used in RenderTexture.Buffer()->glFramebufferTexture2D()
+
+		gBuffer_albedo->ReadBuffer()		= GL_COLOR_ATTACHMENT0 + 0;
+		gBuffer_albedo->DrawBuffer()		= GL_COLOR_ATTACHMENT0 + 0;
+
+		gBuffer_albedo->Buffer();
+
+		GLuint gBufferFBO = gBuffer_albedo->FBO(); // Cache off the FBO for the other GBuffer textures
+
+		// Store references to our additonal RenderTextures:
+		int numAdditionalRTs = (int)RENDER_TEXTURE_COUNT - 2;
+		RenderTexture** additionalRTs = new RenderTexture* [numAdditionalRTs];
+
+		int insertIndex = 0;
+		int attachmentIndexOffset = 1;
+		for (int currentType = 1; currentType < (int)RENDER_TEXTURE_COUNT; currentType++)	 // -1 b/c we'll add the depth texture last
+		{
+			if ((TEXTURE_TYPE)currentType == RENDER_TEXTURE_DEPTH)
+			{
+				continue;
+			}
+
+			RenderTexture* currentRT		= new RenderTexture(*gBuffer_albedo);	// We're creating the same type of textures, attached to the same framebuffer
+			currentRT->TexturePath()		= this->GetName() + "_" + Material::RENDER_TEXTURE_SAMPLER_NAMES[(TEXTURE_TYPE)currentType];
+
+			currentRT->FBO()				= gBufferFBO;
+			currentRT->AttachmentPoint()	= GL_COLOR_ATTACHMENT0 + attachmentIndexOffset;
+			currentRT->ReadBuffer()			= GL_COLOR_ATTACHMENT0 + attachmentIndexOffset;
+			currentRT->DrawBuffer()			= GL_COLOR_ATTACHMENT0 + attachmentIndexOffset;
+
+			currentRT->Texture::Buffer();	// Generate a texture without bothering to attempt to bind a framebuffer
+
+			gBufferMaterial->AccessTexture((TEXTURE_TYPE)currentType)	= currentRT;
+			additionalRTs[insertIndex]									= currentRT;
+
+			insertIndex++;
+			attachmentIndexOffset++;
+		}
+
+		// Attach the textures to the existing FBO
+		gBuffer_albedo->AttachAdditionalRenderTexturesToFramebuffer(additionalRTs, numAdditionalRTs);
+		delete additionalRTs;	// Cleanup
+
+		// Configure the depth buffer:
+		RenderTexture* depth = new RenderTexture
+		(
+			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes,
+			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
+			this->GetName() + "_" + Material::RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_DEPTH],
+			false
+		);
+
+		depth->TexturePath()	= this->GetName() + "_" + Material::RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_DEPTH];
+		depth->FBO()			= gBufferFBO;
+
+		depth->Texture::Buffer();
+
+		gBuffer_albedo->AttachAdditionalRenderTexturesToFramebuffer(&depth, 1);
+	}
+
 	void Camera::DebugPrint()
 	{
 		#if defined(DEBUG_TRANSFORMS)

@@ -702,7 +702,7 @@ namespace BlazeEngine
 					}
 					#endif
 
-					// TODO: Extract more generic properties?
+					// TODO: Extract additional generic properties?
 				} 
 				#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING) || defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
 					else
@@ -1442,6 +1442,10 @@ namespace BlazeEngine
 
 		Camera* newCamera				= new Camera(cameraName, newCamConfig);
 
+		// Attach a GBuffer for deferred rendering:
+		newCamera->AttachGBuffer();		
+
+		// Copy transform values:
 		aiNode* camNode = scene->mRootNode->FindNode(scene->mCameras[0]->mName);
 		if (camNode)
 		{			
@@ -1453,8 +1457,8 @@ namespace BlazeEngine
 				LOG(to_string(camNode->mTransformation.d1) + " " + to_string(camNode->mTransformation.d2) + " " + to_string(camNode->mTransformation.d3) + " " + to_string(camNode->mTransformation.d4));
 			#endif
 			
-			aiMatrix4x4 camTransform = GetCombinedTransformFromHierarchy(scene, camNode->mParent, false);
-			camTransform = camTransform * camNode->mTransformation;
+			aiMatrix4x4 camTransform	= GetCombinedTransformFromHierarchy(scene, camNode->mParent, false);
+			camTransform				= camTransform * camNode->mTransformation;
 			 
 			InitializeTransformValues(camTransform, newCamera->GetTransform());
 		}

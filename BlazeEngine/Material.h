@@ -30,14 +30,16 @@ namespace BlazeEngine
 		RENDER_TEXTURE_0		= 4,				// Reserved: Starting offset for binding RenderTextures (eg. In RenderManager::BindTextures())
 
 		// Alternative names for render textures:
-		RENDER_TEXTURE_ALBEDO	= 0,
-		RENDER_TEXTURE_NORMAL	= 1,
-		RENDER_TEXTURE_RMAO		= 2,
-		RENDER_TEXTURE_EMSSIVE	= 3,
-		RENDER_TEXTURE_DEPTH	= 4,
+		RENDER_TEXTURE_ALBEDO			= 0,
+		RENDER_TEXTURE_WORLD_NORMAL		= 1,
+		RENDER_TEXTURE_RMAO				= 2,
+		RENDER_TEXTURE_EMISSIVE			= 3,
+		RENDER_TEXTURE_WORLD_POSITION	= 4,
+		//RENDER_TEXTURE_MATERIAL_INDEX	= ?
+		RENDER_TEXTURE_DEPTH			= 5,		// Make this the last element
 
-		RENDER_TEXTURE_COUNT	= 5	// Note: If new enums are added, don't forget to update Material::RENDER_TEXTURE_SAMPLER_NAMES[] as well!
-	};
+		RENDER_TEXTURE_COUNT	= 6	
+	}; // Note: If new enums are added, don't forget to update Material::RENDER_TEXTURE_SAMPLER_NAMES[] as well!
 
 
 	enum MATERIAL_PROPERTY_INDEX
@@ -52,7 +54,7 @@ namespace BlazeEngine
 		//MATERIAL_PROPERTY_7,		// Shader's matProperty7
 
 		MATERIAL_PROPERTY_COUNT		// Reserved: Number of properties a material can hold
-	};
+	}; // Note: If new enums are added, don't forget to update Material::MATERIAL_PROPERTY_NAMES[] as well!
 
 
 	class Material

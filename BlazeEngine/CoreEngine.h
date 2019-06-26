@@ -61,6 +61,7 @@ namespace BlazeEngine
 			const string errorShaderName	= "errorShader";
 			const string defaultShaderName	= "lambertShader";
 			const string depthShaderName	= "depthShader";
+			const string gBufferShaderName	= "gBufferShader";
 		} shader;
 
 		struct

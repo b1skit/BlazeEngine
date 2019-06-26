@@ -19,6 +19,9 @@ namespace BlazeEngine
 	public:
 		Texture();
 		Texture(int width, int height, string texturePath, bool doFill = true, vec4 fillColor = TEXTURE_ERROR_COLOR_VEC4, bool doBuffer = false);
+
+		Texture(Texture const& rhs);
+
 		void Destroy();	// Destroys this object. Typically called by the SceneManager
 
 		Texture& operator=(Texture const& rhs);
@@ -26,9 +29,24 @@ namespace BlazeEngine
 		// Getters/Setters:
 		inline unsigned int const&	Width() const		{ return width; }
 		inline unsigned int const&	Height() const		{ return height; }
+
+		// OpenGL Property getters/setters:
 		inline GLuint const&		TextureID() const	{ return textureID; }
-		inline GLenum const&		Target() const		{ return texTarget; }
-		string const&				TexturePath()		{ return texturePath; }
+
+		inline GLenum&				TextureTarget()		{ return texTarget; }
+		inline GLenum&				Format()			{ return format; }
+		inline GLenum&				InternalFormat()	{ return internalFormat; }
+		inline GLenum&				Type()				{ return type; }
+
+		inline GLenum&				TextureWrap_S()		{ return textureWrapS; }
+		inline GLenum&				TextureWrap_T()		{ return textureWrapS; }
+
+		inline GLenum&				TextureMinFilter()	{ return textureMinFilter; }
+		inline GLenum&				TextureMaxFilter()	{ return textureMaxFilter; }
+
+
+		string&						TexturePath()		{ return texturePath; }
+
 
 		// Get/set a texel value:
 		// Returns texels[0] if u = [0, width - 1], v = [0, height - 1] are out of localBounds.
@@ -42,6 +60,10 @@ namespace BlazeEngine
 
 		// Upload a texture to the GPU. Returns true if successful, false otherwise
 		bool Buffer();
+
+		
+
+
 
 
 		// Public static functions:

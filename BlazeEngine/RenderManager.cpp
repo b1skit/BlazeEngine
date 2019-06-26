@@ -256,6 +256,21 @@ namespace BlazeEngine
 			}			
 		}
 
+
+		// TEMP DEBUG: Remove the main camera's render material, render, then reattach it
+		vector<Camera*> cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN);
+		for (int currentCam = 0; currentCam < (int)cameras.size(); currentCam++)
+		{
+			Material* temp = cameras.at(currentCam)->RenderMaterial();
+			cameras.at(currentCam)->RenderMaterial() = nullptr;
+
+			ConfigureRenderSettings(cameras.at(currentCam));
+			Render(cameras.at(currentCam));
+
+			cameras.at(currentCam)->RenderMaterial() = temp;
+		}
+
+
 		// Display the final frame:
 		SDL_GL_SwapWindow(glWindow);
 	}
@@ -303,7 +318,7 @@ namespace BlazeEngine
 		// Configure render material:
 		unsigned int numMaterials;
 		Material* currentMaterial	= renderCam->RenderMaterial();
-		bool renderingToSceen		= true;
+		bool renderingToScreen		= true;
 		if (currentMaterial == nullptr) // Render to viewport
 		{
 			numMaterials = CoreEngine::GetSceneManager()->NumMaterials();
@@ -311,7 +326,7 @@ namespace BlazeEngine
 		else // Render to FrameBuffers
 		{
 			numMaterials = 1;
-			renderingToSceen = false;
+			renderingToScreen = false;
 		}
 
 		// Clear the required buffers before rendering
@@ -325,7 +340,7 @@ namespace BlazeEngine
 		for (unsigned int currentMaterialIndex = 0; currentMaterialIndex < numMaterials; currentMaterialIndex++)
 		{
 			// Setup the current material and shader:
-			if (renderingToSceen)
+			if (renderingToScreen)
 			{
 				currentMaterial = CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
 			}	
@@ -336,7 +351,7 @@ namespace BlazeEngine
 
 			// Bind:
 			BindShader(shaderReference);
-			if (renderingToSceen)
+			if (renderingToScreen)
 			{
 				BindSamplers(currentMaterial);
 				BindTextures(currentMaterial, shaderReference);
@@ -397,7 +412,7 @@ namespace BlazeEngine
 			}
 
 			// Cleanup current material and shader:
-			if (renderingToSceen)
+			if (renderingToScreen)
 			{
 				BindSamplers();
 				BindTextures(currentMaterial);
@@ -459,7 +474,7 @@ namespace BlazeEngine
 				if (currentTexture)
 				{
 					glActiveTexture(GL_TEXTURE0 + i);
-					glBindTexture(currentTexture->Target(), 0);
+					glBindTexture(currentTexture->TextureTarget(), 0);
 				}
 			}
 		}
@@ -476,7 +491,7 @@ namespace BlazeEngine
 				if (currentTexture)
 				{
 					glActiveTexture(GL_TEXTURE0 + (TEXTURE_TYPE)i);
-					glBindTexture(currentTexture->Target(), currentTexture->TextureID());
+					glBindTexture(currentTexture->TextureTarget(), currentTexture->TextureID());
 				}
 			}
 		}
@@ -499,7 +514,7 @@ namespace BlazeEngine
 				if (currentTexture)
 				{
 					glActiveTexture(GL_TEXTURE0 + RENDER_TEXTURE_0 + (TEXTURE_TYPE)i);
-					glBindTexture(currentTexture->Target(), 0);
+					glBindTexture(currentTexture->TextureTarget(), 0);
 				}
 			}
 		}
@@ -516,7 +531,7 @@ namespace BlazeEngine
 						glUniform1i(samplerLocation, RENDER_TEXTURE_0 + (TEXTURE_TYPE)i);
 					}
 					glActiveTexture(GL_TEXTURE0 + RENDER_TEXTURE_0 + (TEXTURE_TYPE)i);
-					glBindTexture(currentTexture->Target(), currentTexture->TextureID());
+					glBindTexture(currentTexture->TextureTarget(), currentTexture->TextureID());
 				}
 			}
 		}		

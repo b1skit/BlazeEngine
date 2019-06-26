@@ -44,6 +44,53 @@ namespace BlazeEngine
 		}		
 	}
 
+	Texture::Texture(Texture const& rhs)
+	{
+		// Cleanup:
+		if (this->texels != nullptr)
+		{
+			delete[] texels;
+			texels = nullptr;
+			numTexels = 0;
+			resolutionHasChanged = true;
+		}
+
+		// Copy properties:
+		/*this->textureID				= rhs.textureID;*/
+		this->textureID				= 0;	// NOTE: We set the frame buffer to 0, since we don't want to stomp any existing ones
+
+
+		this->texTarget				= rhs.texTarget;
+		this->format				= rhs.format;
+		this->internalFormat		= rhs.internalFormat;
+		this->type					= rhs.type;
+
+		this->textureWrapS			= rhs.textureWrapS;
+		this->textureWrapT			= rhs.textureWrapT;
+
+		this->textureMinFilter		= rhs.textureMinFilter;
+		this->textureMaxFilter		= rhs.textureMaxFilter;
+
+
+		this->width					= rhs.width;
+		this->height				= rhs.height;
+
+		this->numTexels				= rhs.numTexels;
+
+		if (rhs.texels != nullptr && numTexels > 0)
+		{
+			this->texels				= new vec4[this->numTexels];
+			this->resolutionHasChanged	= true;
+
+			for (unsigned int i = 0; i < this->numTexels; i++)
+			{
+				this->texels[i] = rhs.texels[i];
+			}
+		}
+
+		this->texturePath = rhs.texturePath;
+	}
+
 
 	void Texture::Destroy()
 	{
@@ -80,18 +127,19 @@ namespace BlazeEngine
 
 
 		// Copy properties:
-		this->textureID = rhs.textureID;
+		/*this->textureID			= rhs.textureID;*/
+		this->textureID			= 0;	// NOTE: We set the frame buffer to 0, since we don't want to stomp any existing ones
 
-		this->texTarget = rhs.texTarget;
-		this->format = rhs.format;
-		this->internalFormat = rhs.internalFormat;
-		this->type = rhs.type;
+		this->texTarget			= rhs.texTarget;
+		this->format			= rhs.format;
+		this->internalFormat	= rhs.internalFormat;
+		this->type				= rhs.type;
 
-		this->textureWrapS = rhs.textureWrapS;
-		this->textureWrapT = rhs.textureWrapT;
+		this->textureWrapS		= rhs.textureWrapS;
+		this->textureWrapT		= rhs.textureWrapT;
 
-		this->textureMinFilter = rhs.textureMinFilter;
-		this->textureMaxFilter = rhs.textureMaxFilter;
+		this->textureMinFilter	= rhs.textureMinFilter;
+		this->textureMaxFilter	= rhs.textureMaxFilter;
 
 
 		this->width				= rhs.width;
@@ -101,15 +149,14 @@ namespace BlazeEngine
 
 		if (rhs.texels != nullptr && numTexels > 0)
 		{
-			this->texels = new vec4[this->numTexels];
-			this->resolutionHasChanged = true;
+			this->texels				= new vec4[this->numTexels];
+			this->resolutionHasChanged	= true;
 
 			for (unsigned int i = 0; i < this->numTexels; i++)
 			{
 				this->texels[i] = rhs.texels[i];
 			}
 		}
-
 
 		this->texturePath = rhs.texturePath;
 

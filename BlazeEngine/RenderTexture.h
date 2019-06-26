@@ -2,6 +2,10 @@
 
 #include "Texture.h"
 
+#include <GL/glew.h>
+#include "glm.hpp"
+
+
 #define DEFAULT_RENDERTEXTURE_NAME "UNNAMED_RenderTexture"
 
 namespace BlazeEngine
@@ -12,18 +16,19 @@ namespace BlazeEngine
 		RenderTexture();
 		RenderTexture(int width, int height, string name = DEFAULT_RENDERTEXTURE_NAME, bool doBuffer = false);
 
+		RenderTexture(RenderTexture const& rhs, bool doBuffer);
+
 		RenderTexture& operator=(RenderTexture const& rhs);
 		
 
-		// TODO: COPY CONSTRUCTOR (INVOKE SUPERCLASS COPY CONSTRUCTOR!!!!!!!!!!!!!!!!!)
+		void AttachAdditionalRenderTexturesToFramebuffer(RenderTexture** additionalRTs, int numRTs, bool isDepth = false);
 
 		
-		GLuint FBO() const &			{ return frameBufferObject; }
+		GLuint& FBO()						{ return frameBufferObject; }
 
-		GLuint DrawBuffer() const&		{ return drawBuffer; }
-		GLuint ReadBuffer() const&		{ return readBuffer; }
-		GLuint AttachmentPoint() const&	{ return attachmentPoint; }
-
+		GLuint& AttachmentPoint()			{ return attachmentPoint; }
+		GLuint& DrawBuffer()				{ return drawBuffer; }
+		GLuint& ReadBuffer()				{ return readBuffer; }
 
 		void Destroy();
 
@@ -36,10 +41,11 @@ namespace BlazeEngine
 	private:
 		GLuint frameBufferObject	= 0;
 
-		GLuint attachmentPoint		= GL_DEPTH_ATTACHMENT;
+		GLuint attachmentPoint		= GL_DEPTH_ATTACHMENT; // OR, GL_COLOR_ATTACHMENTi....?
 
 		GLuint drawBuffer			= GL_NONE;	// Which of the 4 color buffers should be drawn into for the DEFAULT framebuffer
 		GLuint readBuffer			= GL_NONE;	// Which color buffer to use for subsequent reads
+		// ^^ OR, GL_COLOR_ATTACHMENTi....? (Same as the attachment point)
 	};
 }
 

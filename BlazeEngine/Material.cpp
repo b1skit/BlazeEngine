@@ -23,9 +23,11 @@ namespace BlazeEngine
 	const string Material::RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_COUNT] = 
 	{
 		"GBuffer_Albedo",	// RENDER_TEXTURE_ALBEDO
-		"GBuffer_Normal",	// RENDER_TEXTURE_NORMAL
+		"GBuffer_Normal",	// RENDER_TEXTURE_WORLD_NORMAL
 		"GBuffer_RMAO",		// RENDER_TEXTURE_RMAO
-		"GBuffer_Emissive",	// RENDER_TEXTURE_EMSSIVE
+		"GBuffer_Emissive",	// RENDER_TEXTURE_EMISSIVE
+		"GBuffer_Position",	// RENDER_TEXTURE_WORLD_POSITION
+
 		"shadowDepth",		// RENDER_TEXTURE_DEPTH
 	};
 

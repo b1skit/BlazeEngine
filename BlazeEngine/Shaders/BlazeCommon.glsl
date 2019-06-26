@@ -22,7 +22,7 @@
 // Fragment shader specific properties:
 //-------------------------------------
 
-#if defined(BLAZE_FRAGMENT_SHADER)
+#if defined(BLAZE_FRAGMENT_SHADER) && !defined(BLAZE_GBUFFER)
 	out vec4 FragColor;
 #endif
 
@@ -84,6 +84,12 @@ uniform mat4		shadowCam_vp;			// Shadow map: [Projection * View]
 
 uniform float		maxShadowBias;			// Offsets for preventing shadow acne
 uniform float		minShadowBias;	
+
+// GBuffer samplers:
+uniform sampler2D GBuffer_Albedo;
+uniform sampler2D GBuffer_Normal;
+uniform sampler2D GBuffer_RMAO;
+uniform sampler2D GBuffer_Emissive;
 
 
 // Generic material properties:
