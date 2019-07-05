@@ -232,6 +232,49 @@ namespace BlazeEngine
 		return Mesh("cube", cubeVerts, numVerts, cubeIndices, numIndices);
 	}
 
+	Mesh Mesh::CreateQuad(vec3 tl /*= vec3(-0.5f, 0.5f, 0.0f)*/, vec3 tr /*= vec3(0.5f, 0.5f, 0.0f)*/, vec3 bl /*= vec3(-0.5f, -0.5f, 0.0f)*/, vec3 br /*= vec3(0.5f, -0.5f, 0.0f)*/)
+	{
+		vec3 tangent	= normalize(vec3(br - bl));
+		vec3 bitangent	= normalize(vec3(tl - bl));
+		vec3 quadNormal = normalize(cross(tangent, bitangent));
+		vec4 redColor	= vec4(1, 0, 0, 1); // Assign a bright red color by default...
+
+		vec4 uvs[4]
+		{
+			vec4(0, 1, 0, 0), // tl
+			vec4(0, 0, 0, 0), // bl
+			vec4(1, 1, 0, 0), // tr
+			vec4(1, 0, 0, 0)  // br
+		};	
+
+		int numVerts = 4;
+		Vertex* quadVerts = new Vertex[numVerts]
+		{
+			// tl
+			Vertex(tl, quadNormal, tangent, bitangent, redColor, uvs[0]),
+			
+			// bl
+			Vertex(bl, quadNormal, tangent, bitangent, redColor, uvs[1]),
+
+			// tr
+			Vertex(tr, quadNormal, tangent, bitangent, redColor, uvs[2]),
+
+			// br
+			Vertex(br, quadNormal, tangent, bitangent, redColor, uvs[3])
+		};
+
+		int numIndices = 6;
+		GLuint* quadIndices = new GLuint[numIndices]
+		{
+			// TL face:
+			0, 1, 2,
+			// BR face:
+			2, 1, 3
+		}; // Note: CCW winding
+
+		return Mesh("quad", quadVerts, numVerts, quadIndices, numIndices);
+	}
+
 	void Mesh::ComputeBounds()
 	{
 		for (unsigned int i = 0; i < numVerts; i++)

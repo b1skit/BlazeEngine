@@ -19,6 +19,19 @@ vec3 ObjectNormalFromTexture(mat3 TBN, vec3 textureNormal)
 	return result;
 }
 
+
+vec3 WorldNormalFromTexture(mat3 TBN, vec3 textureNormal, mat4 modelRotation)
+{
+	textureNormal	= normalize((textureNormal * 2.0) - 1.0);	// Transform [0,1] -> [-1,1]
+
+	vec3 result		= normalize(TBN * textureNormal);
+
+	result			= normalize((modelRotation * vec4(result, 0)).xyz);
+
+	return result;
+}
+
+
 // Find out if a fragment (in world space) is in shadow
 float GetShadowFactor(vec3 shadowPos, sampler2D shadowMap, vec3 worldNml, vec3 lightDir)
 {

@@ -36,9 +36,10 @@ namespace BlazeEngine
 		RENDER_TEXTURE_EMISSIVE			= 3,
 		RENDER_TEXTURE_WORLD_POSITION	= 4,
 		//RENDER_TEXTURE_MATERIAL_INDEX	= ?
+
 		RENDER_TEXTURE_DEPTH			= 5,		// Make this the last element
 
-		RENDER_TEXTURE_COUNT	= 6	
+		RENDER_TEXTURE_COUNT			= 6	
 	}; // Note: If new enums are added, don't forget to update Material::RENDER_TEXTURE_SAMPLER_NAMES[] as well!
 
 
@@ -71,8 +72,8 @@ namespace BlazeEngine
 		inline Shader*			GetShader()								{ return shader; }
 		inline vec4&			Property(MATERIAL_PROPERTY_INDEX index) { return properties[index]; }
 
-		inline Texture*& AccessTexture(TEXTURE_TYPE textureType)		{ return textures[textureType]; }
-		inline int const& NumTextures()									{ return numTextures; }
+		inline Texture*&		AccessTexture(TEXTURE_TYPE textureType)	{ return textures[textureType]; }
+		inline int const&		NumTextures()							{ return numTextures; }
 
 		void AddShaderKeyword(string const& newKeyword)
 		{

@@ -26,11 +26,13 @@ namespace BlazeEngine
 		Shader() {} // Do nothing
 		Shader(const string shaderName, const GLuint shaderReference);
 		Shader(const Shader& existingShader);
-		~Shader();
+		/*~Shader() {}*/
+
+		void Destroy();
 
 		// Getters/Setters:
-		inline string const& Name()				{ return shaderName; }
-		inline GLuint ShaderReference() const	{ return shaderReference; }
+		inline string const& Name()						{ return shaderName; }
+		inline GLuint const& ShaderReference() const	{ return shaderReference; }
 
 		void UploadUniform(GLchar const* uniformName, GLfloat const* value, UNIFORM_TYPE const& type);
 

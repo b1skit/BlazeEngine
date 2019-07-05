@@ -246,7 +246,7 @@ namespace BlazeEngine
 				{
 					if (materials[i]->GetShader() != nullptr)
 					{
-						glDeleteProgram(materials[i]->GetShader()->ShaderReference());
+						materials[i]->GetShader()->Destroy();
 						delete materials[i]->GetShader();
 					}
 					delete materials[i];
@@ -968,8 +968,8 @@ namespace BlazeEngine
 					if (scene->mMeshes[currentMesh]->HasTangentsAndBitangents())
 					{
 						hasTangentsAndBitangents = true;
-						tangent = vec3(scene->mMeshes[currentMesh]->mTangents[currentVert].x, scene->mMeshes[currentMesh]->mTangents[currentVert].y, scene->mMeshes[currentMesh]->mTangents[currentVert].z);
-						bitangent = vec3(scene->mMeshes[currentMesh]->mBitangents[currentVert].x, scene->mMeshes[currentMesh]->mBitangents[currentVert].y, scene->mMeshes[currentMesh]->mBitangents[currentVert].z);
+						tangent		= vec3(scene->mMeshes[currentMesh]->mTangents[currentVert].x, scene->mMeshes[currentMesh]->mTangents[currentVert].y, scene->mMeshes[currentMesh]->mTangents[currentVert].z);
+						bitangent	= vec3(scene->mMeshes[currentMesh]->mBitangents[currentVert].x, scene->mMeshes[currentMesh]->mBitangents[currentVert].y, scene->mMeshes[currentMesh]->mBitangents[currentVert].z);
 					}
 
 					// Handle incorrect tangents/bitangents due to flipped UV's:

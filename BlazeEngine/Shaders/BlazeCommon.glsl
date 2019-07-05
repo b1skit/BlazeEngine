@@ -85,11 +85,13 @@ uniform mat4		shadowCam_vp;			// Shadow map: [Projection * View]
 uniform float		maxShadowBias;			// Offsets for preventing shadow acne
 uniform float		minShadowBias;	
 
-// GBuffer samplers:
-uniform sampler2D GBuffer_Albedo;
+// GBuffer samplers: (For reading FROM the GBuffer)
+//uniform sampler2D GBuffer_Albedo;
+layout(binding=4) uniform sampler2D GBuffer_Albedo;
 uniform sampler2D GBuffer_Normal;
 uniform sampler2D GBuffer_RMAO;
 uniform sampler2D GBuffer_Emissive;
+// TODO: Use assigned locations here? Based on active texture set in RenderManager::BindTextures()
 
 
 // Generic material properties:

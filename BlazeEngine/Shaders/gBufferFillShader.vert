@@ -5,6 +5,8 @@
 #define BLAZE_VERTEX_SHADER
 
 #include "BlazeCommon.glsl"
+#include "BlazeGlobals.glsl"
+
 
 
 
@@ -35,12 +37,10 @@ void main()
 	data.vertexWorldNormal	= (in_model * vec4(in_normal, 0.0f)).xyz;	// Normal -> World normal
 	
 	data.worldPos			= (in_model * vec4(in_position.xyz, 1.0f)).xyz;
-//	data.shadowPos			= (shadowCam_vp * vec4(data.worldPos, 1)).xyz;
 
 	data.uv0 = in_uv0;
 
-//	gBuffer_albedo = vec4(0,1,0,1);
-//	gBuffer_worldNormal = vec4(0,1,0,1);
+	data.TBN				= AssembleTBN(in_tangent, in_bitangent);
 }
 
 // TODO: Review this, and make sure it's optimized!!!!!!!!

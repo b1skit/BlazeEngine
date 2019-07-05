@@ -36,25 +36,28 @@ out vec4 gBuffer_out_position;
 
 void main()
 {	
-//	FragColor			= texture(albedo, data.uv0.xy);
-//
-//	float nDotL			= max(0, dot(data.vertexWorldNormal, lightDirection));
-//
-//	float shadowFactor	= GetShadowFactor(data.shadowPos, shadowDepth, data.vertexWorldNormal, lightDirection); // TEMP: Pass key direction directly... Should be passing generic light's dir
-//	
-//	FragColor			= (FragColor * vec4(ambient, 1) ) + (FragColor * vec4(nDotL * lightColor, 1) * shadowFactor );
+	gBuffer_out_albedo		= texture(albedo, data.uv0.xy);
 
-//	FragColor = vec4(1,0,0,1);
+	gBuffer_out_worldNormal = 
+	(
+		vec4
+		(
+			WorldNormalFromTexture
+			(
+				data.TBN, 
+				texture(normal, data.uv0.xy).rgb, 
+				in_modelRotation
+			).xyz, 
+			0
+		)
+	); // Could pack something else in .a??
+	// ^^^ Issue: Doesn't work if the mesh doesn't have a normal? (Doesn't look right in RenderDoc)
 
-//	gBuffer_out_albedo = vec4(1,0,0,1);
-	gBuffer_out_albedo = texture(albedo, data.uv0.xy);
-	gBuffer_out_worldNormal = vec4(1,0,0,1);
-	gBuffer_out_RMAO = vec4(1,0,0,1);
-	gBuffer_out_emissive = vec4(0,1,0,1);
+	gBuffer_out_RMAO		= texture(RMAO, data.uv0.xy);
+	gBuffer_out_emissive	= vec4(1,1,0,1); // Yellow debug for now...
 
-	gBuffer_out_position = vec4(0,0,1,1);// DEPTH
+	gBuffer_out_position	= vec4(data.worldPos.xyz, 0); // .a unused?
+	// ^^Issue: Only records values in [0,1]...
 
-	 gl_FragDepth = gl_FragCoord.z; // Not actually needed, but this is what's happening
+	 gl_FragDepth			= gl_FragCoord.z; // Not actually needed, but this is what's happening
 }
-
-// ^^ GARBAGE!! Just trying to get it to compile for debugging....

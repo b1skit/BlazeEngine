@@ -184,10 +184,16 @@
     <None Include="Shaders\depthShader.vert">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\gBufferShader.frag">
+    <None Include="Shaders\gBufferFillShader.frag">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\gBufferShader.vert">
+    <None Include="Shaders\gBufferFillShader.vert">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\gBufferDrawShader.frag">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\gBufferDrawShader.vert">
       <Filter>Source Files\Shaders</Filter>
     </None>
   </ItemGroup>

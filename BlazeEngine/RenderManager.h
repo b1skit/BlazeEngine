@@ -24,6 +24,7 @@ namespace BlazeEngine
 	class Material;
 	class Mesh;
 	class Camera;
+	class Shader;
 
 
 	enum SHADER // Guaranteed shaders
@@ -59,9 +60,9 @@ namespace BlazeEngine
 		// Configure OpenGL for the next draw call
 		void ConfigureRenderSettings(Camera* const renderCam);
 
-		void Render(Camera* renderCam);
-
-		
+		void Render(Camera* renderCam, bool attachMaterialTextures = false);
+		void RenderFromGBuffer(Camera* renderCam);
+		//TODO: Make these render functions private?
 
 		// Upload static properties to shaders
 		void InitializeShaders();
@@ -75,6 +76,10 @@ namespace BlazeEngine
 		// OpenGL components and settings:
 		SDL_Window* glWindow	= 0;
 		SDL_GLContext glContext = 0;
+
+		// GBuffer:
+		vector<Mesh*> screenAlignedQuad;
+		Shader* gBufferDrawShader	= nullptr;		// Deallocated in Shutdown()
 		
 		// Private member functions:
 		//--------------------------

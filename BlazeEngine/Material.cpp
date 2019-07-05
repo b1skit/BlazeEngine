@@ -55,7 +55,7 @@ namespace BlazeEngine
 		glGenSamplers(this->numTextures, &samplers[0]);
 		for (int i = 0; i < this->numTextures; i++)
 		{
-			glBindSampler(i, samplers[i]);
+			glBindSampler(i, samplers[i]); // SHOULD THIS BE DONE WITHIN EACH TEXTURE?
 			if (!glIsSampler(samplers[i]))
 			{
 				LOG_ERROR("Material could not create sampler #" + to_string(i));

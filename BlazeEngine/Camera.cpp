@@ -104,7 +104,7 @@ namespace BlazeEngine
 
 	void Camera::AttachGBuffer()
 	{
-		Material* gBufferMaterial	= new Material(this->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->shader.gBufferShaderName, RENDER_TEXTURE_COUNT);
+		Material* gBufferMaterial	= new Material(this->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->shader.gBufferFillShaderName, RENDER_TEXTURE_COUNT);
 		this->RenderMaterial()		= gBufferMaterial;
 
 		// We use the albedo texture as a basis for the others
@@ -129,6 +129,8 @@ namespace BlazeEngine
 
 		GLuint gBufferFBO = gBuffer_albedo->FBO(); // Cache off the FBO for the other GBuffer textures
 
+		gBufferMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO) = gBuffer_albedo;
+
 		// Store references to our additonal RenderTextures:
 		int numAdditionalRTs = (int)RENDER_TEXTURE_COUNT - 2;
 		RenderTexture** additionalRTs = new RenderTexture* [numAdditionalRTs];
@@ -152,6 +154,8 @@ namespace BlazeEngine
 
 			currentRT->Texture::Buffer();	// Generate a texture without bothering to attempt to bind a framebuffer
 
+			glBindTexture(currentRT->TextureTarget(), 0); // Cleanup: Texture was never unbound in Texture::Buffer, so we must unbind it here
+
 			gBufferMaterial->AccessTexture((TEXTURE_TYPE)currentType)	= currentRT;
 			additionalRTs[insertIndex]									= currentRT;
 
@@ -161,7 +165,7 @@ namespace BlazeEngine
 
 		// Attach the textures to the existing FBO
 		gBuffer_albedo->AttachAdditionalRenderTexturesToFramebuffer(additionalRTs, numAdditionalRTs);
-		delete additionalRTs;	// Cleanup
+		delete [] additionalRTs;	// Cleanup
 
 		// Configure the depth buffer:
 		RenderTexture* depth = new RenderTexture
@@ -176,8 +180,10 @@ namespace BlazeEngine
 		depth->FBO()			= gBufferFBO;
 
 		depth->Texture::Buffer();
+		glBindTexture(depth->TextureTarget(), 0); // Cleanup: Texture was never unbound in Texture::Buffer, so we must unbind it here
 
-		gBuffer_albedo->AttachAdditionalRenderTexturesToFramebuffer(&depth, 1);
+		gBuffer_albedo->AttachAdditionalRenderTexturesToFramebuffer(&depth, 1, true);
+
 	}
 
 	void Camera::DebugPrint()

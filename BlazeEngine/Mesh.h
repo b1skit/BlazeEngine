@@ -36,7 +36,7 @@ namespace BlazeEngine
 		}
 
 		 //Explicit constructor:
-		Vertex(const vec3& position, const vec3& normal, const vec3 tangent, const vec3 bitangent, const vec4& color, const vec4& uv0)
+		Vertex(vec3 const& position, vec3 const& normal, vec3 const tangent, vec3 const bitangent, vec4 const& color, const vec4& uv0)
 		{
 			this->position = position;
 			this->color = color;
@@ -205,8 +205,9 @@ namespace BlazeEngine
 		Mesh(string name, Vertex* vertices, unsigned int numVerts, GLuint* indices, unsigned int numIndices, int materialIndex = -1);
 		/*~Mesh();*/
 
-		// Copy constructor:
-		Mesh(const Mesh& mesh) = default;
+		// Default copy constructor and assignment operator:
+		Mesh(const Mesh& mesh)				= default;
+		Mesh& operator=(Mesh const& rhs)	= default;
 
 		// Getters/Setters:
 		inline string&			Name()							{ return meshName; }
@@ -228,6 +229,9 @@ namespace BlazeEngine
 		// Deallocate and unbind this mesh object
 		void DestroyMesh();
 
+		// Mesh localBounds, in local space
+		Bounds localBounds; // TODO: Should this use a Bounds& getter/setter?
+
 
 		// Static functions:
 		//------------------
@@ -235,8 +239,8 @@ namespace BlazeEngine
 		// Create a simple cube mesh aligned to +/-1 on all axis'
 		static Mesh CreateCube();
 
-		// Mesh localBounds, in local space
-		Bounds localBounds;
+		static Mesh CreateQuad(vec3 tl = vec3(-0.5f, 0.5f, 0.0f), vec3 tr = vec3(0.5f, 0.5f, 0.0f), vec3 bl = vec3(-0.5f, -0.5f, 0.0f), vec3 br = vec3(0.5f, -0.5f, 0.0f));
+
 
 	protected:
 

@@ -57,11 +57,12 @@ namespace BlazeEngine
 
 		struct
 		{
-			const string shaderDirectory	= ".\\Shaders\\";
-			const string errorShaderName	= "errorShader";
-			const string defaultShaderName	= "lambertShader";
-			const string depthShaderName	= "depthShader";
-			const string gBufferShaderName	= "gBufferShader";
+			const string shaderDirectory		= ".\\Shaders\\";
+			const string errorShaderName		= "errorShader";
+			const string defaultShaderName		= "lambertShader";
+			const string depthShaderName		= "depthShader";
+			const string gBufferFillShaderName	= "gBufferFillShader";
+			const string gBufferDrawShaderName	= "gBufferDrawShader";
 		} shader;
 
 		struct

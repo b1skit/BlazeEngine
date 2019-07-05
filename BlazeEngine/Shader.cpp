@@ -22,9 +22,10 @@ namespace BlazeEngine
 		this->shaderReference	= existingShader.shaderReference;
 	}
 
-	Shader::~Shader()
+	void Shader::Destroy()
 	{
-		
+		glDeleteProgram(this->shaderReference);
+		this->shaderReference = 0;
 	}
 
 

@@ -87,7 +87,7 @@ namespace BlazeEngine
 	// NOTE: additionalRTs must be cleaned up by the caller
 	// NOTE: The correct attachment points must already be configured for each RenderTexture
 	// NOTE: The additionalRT's must have already successfully called Texture::Buffer()
-	void RenderTexture::AttachAdditionalRenderTexturesToFramebuffer(RenderTexture** additionalRTs, int numRTs, bool isDepth)
+	void RenderTexture::AttachAdditionalRenderTexturesToFramebuffer(RenderTexture** additionalRTs, int numRTs, bool isDepth /*=false*/)
 	{
 		if (isDepth && numRTs != 1)
 		{
@@ -160,9 +160,12 @@ namespace BlazeEngine
 				// Configure framebuffer parameters:
 				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_WIDTH, this->width);
 				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_HEIGHT, this->height);
-				/*glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_LAYERS, );
-				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_SAMPLES, );
-				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS, );*/
+				
+				// ????? DO I NEED THIS STUFF? IF SO, DO I MAKE IT A MEMBER VARIABLE???
+				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_LAYERS, 0);
+				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_SAMPLES, 1);
+				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS, 1);
+				// ?????
 
 				// Attach our texture to the framebuffer as a render buffer:
 				glFramebufferTexture2D(GL_FRAMEBUFFER, this->attachmentPoint, this->texTarget, this->textureID, 0);

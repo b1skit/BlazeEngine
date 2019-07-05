@@ -184,8 +184,10 @@
     </None>
     <None Include="Shaders\BlazeCommon.glsl" />
     <None Include="Shaders\depthShader.vert" />
-    <None Include="Shaders\gBufferShader.frag" />
-    <None Include="Shaders\gBufferShader.vert" />
+    <None Include="Shaders\gBufferDrawShader.frag" />
+    <None Include="Shaders\gBufferDrawShader.vert" />
+    <None Include="Shaders\gBufferFillShader.frag" />
+    <None Include="Shaders\gBufferFillShader.vert" />
     <None Include="Shaders\lambertShader.frag" />
     <None Include="Shaders\lambertShader.vert" />
     <None Include="Shaders\errorShader.frag" />
