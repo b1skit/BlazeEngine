@@ -40,7 +40,7 @@ void main()
 	// TODO: ^^^ Issue: Doesn't work if the mesh doesn't have a normal? (Doesn't look right in RenderDoc)
 
 	gBuffer_out_RMAO		= texture(RMAO, data.uv0.xy);
-	gBuffer_out_emissive	= vec4(1,1,0,1);				// Yellow debug for now...
+	gBuffer_out_emissive	= texture(emissive, data.uv0.xy);
 
 	gBuffer_out_position	= vec4(data.worldPos.xyz, 0); // .a unused?
 

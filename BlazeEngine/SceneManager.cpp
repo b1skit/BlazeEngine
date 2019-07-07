@@ -631,11 +631,11 @@ namespace BlazeEngine
 					newMaterial = new Material(matName, shaderName);
 				}
 
-				// Extract material properties, and set the in the shader:
+				// Extract material properties, and set them in the shader:
 				Shader* currentShader = newMaterial->GetShader();
 				if (currentShader->Name() != CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName)
 				{
-					/* NOTE: For simplicity, BlazeEngine interprets phong shaders loaded from FBX files:
+					/* NOTE: For simplicity, BlazeEngine interprets Phong shaders (only) loaded from FBX files:
 					Shader name:	Attempt to use whatever follows the last _underscore as a shader name (Eg. myMaterial_phong)
 					Albedo:			Phong's color (rgb)
 					Transparency:	Phong's color (a)
@@ -723,10 +723,10 @@ namespace BlazeEngine
 	{
 		Texture* newTexture = nullptr;
 
+		// Handle special case texture fallbacks:
 		int textureCount = material->GetTextureCount(textureType);
 		if (textureCount <= 0)
 		{
-			// Handle special case texture fallbacks:
 			if (textureType == aiTextureType_DIFFUSE)
 			{
 				aiColor4D color;

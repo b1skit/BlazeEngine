@@ -74,8 +74,9 @@ uniform mat4 in_mvp;			// [Projection * View * Model]
 												//---------								-------------------------
 layout(binding = 0) uniform sampler2D albedo;	// Albedo (RGB) + transparency (A)		Diffuse/color
 layout(binding = 1) uniform sampler2D normal;	// Tangent-space normals (RGB)			Bump
-layout(binding = 2) uniform sampler2D emissive;	// Emissive (RGB)						Incandescence
-layout(binding = 3) uniform sampler2D RMAO;		// Roughness, Metalic, albedo			Specular
+layout(binding = 2) uniform sampler2D RMAO;		// Roughness, Metalic, albedo			Specular
+layout(binding = 3) uniform sampler2D emissive;	// Emissive (RGB)						Incandescence
+
 
 
 // GBuffer samplers: (For reading FROM the GBuffer)

@@ -278,7 +278,7 @@ namespace BlazeEngine
 		Camera* mainCam = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN).at(0);
 		RenderToGBuffer(mainCam);
 
-		//// Forward render: Leaving this around for a while for debug purposes
+		// Forward render: Leaving this around for a while for debug purposes
 		//RenderForward(mainCam);
 
 		// Render from GBuffer:
