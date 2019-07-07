@@ -642,7 +642,7 @@ namespace BlazeEngine
 					Normal:			Phong's bump (rgb)
 					Emissive:		Phong's incandescence (rgb)
 
-					Packed Roughness + Metalic + AO channels:
+					Packed Roughness + Metalic + AO channels (RMAO):
 						Roughness:		Phong's specular color (r)
 						Metalic:		Phong's specular color (g)
 						AO:				Phong's specular color (b)
@@ -757,7 +757,7 @@ namespace BlazeEngine
 			{
 				newTexture = FindTextureByNameInAiMaterial("emissive", material, sceneName);
 			}
-			else if (textureType == aiTextureType_SPECULAR)
+			else if (textureType == aiTextureType_SPECULAR) // RGB = RMAO
 			{
 				newTexture = FindTextureByNameInAiMaterial("roughness", material, sceneName);
 				if (newTexture == nullptr)

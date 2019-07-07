@@ -81,10 +81,6 @@ namespace BlazeEngine
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
-	//Mesh::~Mesh()
-	//{
-	//	// Cleanup should be handled by whatever owns the mesh, by calling DestroyMesh()
-	//}
 
 	void Mesh::DestroyMesh()
 	{

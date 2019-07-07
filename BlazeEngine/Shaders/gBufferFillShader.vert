@@ -7,26 +7,6 @@
 #include "BlazeCommon.glsl"
 #include "BlazeGlobals.glsl"
 
-
-
-
-
-//layout (location = 0) in vec4 gBuffer_in_albedo;
-//layout (location = 1) in vec4 gBuffer_in_worldNormal;
-//layout (location = 2) in vec4 gBuffer_in_RMAO; // I can use my existing samplers?????????
-//layout (location = 3) in vec4 gBuffer_in_emissive;
-////layout (location = 4) in vec4 gBuffer_in_depth;
-//layout (location = 4) in vec4 gBuffer_in_position;
-
-
-//out vec4 gBuffer_albedo;
-//out vec4 gBuffer_worldNormal;
-//out vec4 gBuffer_RMAO;
-//out vec4 gBuffer_emissive;
-//out vec4 gBuffer_depth;
-//out vec4 gBuffer_position;
-
-
 void main()
 {
 	// Assign position to the predefined gl_Position clip-space output:
@@ -38,9 +18,7 @@ void main()
 	
 	data.worldPos			= (in_model * vec4(in_position.xyz, 1.0f)).xyz;
 
-	data.uv0 = in_uv0;
+	data.uv0				= in_uv0;
 
 	data.TBN				= AssembleTBN(in_tangent, in_bitangent);
 }
-
-// TODO: Review this, and make sure it's optimized!!!!!!!!

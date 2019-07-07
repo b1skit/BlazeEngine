@@ -41,11 +41,10 @@ namespace BlazeEngine
 	private:
 		GLuint frameBufferObject	= 0;
 
-		GLuint attachmentPoint		= GL_DEPTH_ATTACHMENT; // OR, GL_COLOR_ATTACHMENTi....?
+		GLuint attachmentPoint		= GL_DEPTH_ATTACHMENT;
 
 		GLuint drawBuffer			= GL_NONE;	// Which of the 4 color buffers should be drawn into for the DEFAULT framebuffer
 		GLuint readBuffer			= GL_NONE;	// Which color buffer to use for subsequent reads
-		// ^^ OR, GL_COLOR_ATTACHMENTi....? (Same as the attachment point)
 	};
 }
 

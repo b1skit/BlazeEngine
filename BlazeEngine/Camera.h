@@ -44,10 +44,10 @@ namespace BlazeEngine
 		void Destroy();
 
 		// BlazeObject interface:
-		void Update();
+		void Update() {} // Do nothing
 
 		// EventListener interface:
-		void HandleEvent(EventInfo const* eventInfo);
+		void HandleEvent(EventInfo const* eventInfo) {} // Do nothing
 
 		// Getters/Setters:
 		inline float const& FieldOfView() const		{ return cameraConfig.fieldOfView; }

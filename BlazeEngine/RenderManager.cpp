@@ -167,11 +167,6 @@ namespace BlazeEngine
 
 		//SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32); // Crashes if uncommented???
 
-		// /* Enable multisampling for a nice antialiased effect */
-		//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-		//SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
-
-
 		SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, "1", SDL_HINT_OVERRIDE);
 		SDL_SetRelativeMouseMode(SDL_TRUE);	// Lock the mouse to the window
 
@@ -232,8 +227,7 @@ namespace BlazeEngine
 		ClearWindow(vec4(0.79f, 0.32f, 0.0f, 1.0f));
 
 		// Create a screen aligned quad mesh for rendering the GBuffer:
-		screenAlignedQuad = vector<Mesh*>(1);	// Only holds 1 element
-		screenAlignedQuad.at(0) = new Mesh
+		screenAlignedQuad = new Mesh
 		(
 			Mesh::CreateQuad
 			(
@@ -252,16 +246,12 @@ namespace BlazeEngine
 	{
 		LOG("Render manager shutting down...");
 
-		for (int i = 0; i < (int)screenAlignedQuad.size(); i++)
+		if (screenAlignedQuad != nullptr)
 		{
-			if (screenAlignedQuad.at(i) != nullptr)
-			{
-				screenAlignedQuad.at(i)->DestroyMesh();
-				delete screenAlignedQuad.at(i);
-				screenAlignedQuad.at(i) = nullptr;
-			}
+			screenAlignedQuad->DestroyMesh();
+			delete screenAlignedQuad;
+			screenAlignedQuad = nullptr;
 		}
-		screenAlignedQuad.clear();
 
 		if (gBufferDrawShader != nullptr)
 		{
@@ -274,178 +264,199 @@ namespace BlazeEngine
 
 	void RenderManager::Update()
 	{
-		// Render shadow maps
-		vector<Camera*> cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_SHADOW);
-		for (int currentCam = 0; currentCam < (int)cameras.size(); currentCam++)
-		{
-			ConfigureRenderSettings(cameras.at(currentCam));
-			Render(cameras.at(currentCam));
-		}
+		// TODO: Merge ALL meshes using the same material into a single draw call
+
+
+		// Temporary hack: Render the keylight directly, since that's all we support at the moment... TODO: Loop through multiple lights
+		RenderLightShadowMap(&CoreEngine::GetSceneManager()->GetKeyLight());
+
 
 		// TODO: Render reflection probes
 
-		// Fill GBuffer
-		cameras = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN);
-		ConfigureRenderSettings(cameras.at(0));
-		Render(cameras.at(0), true);
 
+		// Fill GBuffer:
+		Camera* mainCam = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN).at(0);
+		RenderToGBuffer(mainCam);
 
-		//// TODO: Render scene using GBuffer
-		//// TEMP: Detach main cameras render material, render, then reattach it
-		//Material* temp = cameras.at(0)->RenderMaterial();
-		//cameras.at(0)->RenderMaterial() = nullptr;
+		//// Forward render: Leaving this around for a while for debug purposes
+		//RenderForward(mainCam);
 
-		//ConfigureRenderSettings(cameras.at(0));
-		//Render(cameras.at(0));
-
-		//cameras.at(0)->RenderMaterial() = temp;
-
-
-
-
-		// Render the final image from the GBuffer:
-		Material* temp = cameras.at(0)->RenderMaterial();
-		cameras.at(0)->RenderMaterial() = nullptr;
-
-		ConfigureRenderSettings(cameras.at(0)); // UNBIND FBO (since RenderMaterial is null
-
-		// TEST: reattach material now that we've called ConfigureRenderSettings()
-		cameras.at(0)->RenderMaterial() = temp;
-
-		RenderFromGBuffer(cameras.at(0));
-
-		//
-
-		// PROBLEMS:
-		// We're not unbinding the attached framebuffer UNTIL ConfigureRenderSettings is called AGAIN (w/cam w/no material)
-		// We need to attach Camera's render textures for reading
-
+		// Render from GBuffer:
+		RenderFromGBuffer(mainCam);
 
 		// Display the final frame:
 		SDL_GL_SwapWindow(glWindow);
 	}
 
 
-	void RenderManager::ConfigureRenderSettings(Camera* const renderCam)
+	void RenderManager::RenderLightShadowMap(Light* currentLight)
 	{
-		// TODO: Move various openGL config settings from startup to here?
+		RenderTexture* lightDepthTexture = (RenderTexture*)currentLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
+		glViewport(0, 0, lightDepthTexture->Width(), lightDepthTexture->Height());
+		glBindFramebuffer(GL_FRAMEBUFFER, lightDepthTexture->FBO());
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
 
-		Material* renderMaterial = renderCam->RenderMaterial();
+		Camera* shadowCam = currentLight->ActiveShadowMap()->ShadowCamera();
 
-		// Render to FrameBuffer:
-		if (renderMaterial != nullptr)
+		Shader* lightShader				= shadowCam->RenderMaterial()->GetShader();		
+
+		// Bind:
+		BindShader(lightShader->ShaderReference());
+
+		// Loop through each mesh:			
+		vector<Mesh*> const* meshes = CoreEngine::GetSceneManager()->GetRenderMeshes();
+		unsigned int numMeshes	= (unsigned int)meshes->size();
+		for (unsigned int j = 0; j < numMeshes; j++)
 		{
-			// Bind all RenderTextures:
-			for (int i = 0; i < RENDER_TEXTURE_COUNT; i++)
-			{
-				RenderTexture* currentTexture = (RenderTexture*)renderMaterial->AccessTexture((TEXTURE_TYPE)i);
-				if (currentTexture != nullptr)
-				{
-					// TODO: Should binding/unbinding be a RenderTexture member function??
-					// Need a way to bind for reading OR writing
-					// We could totally nuke this whole function then...
-					glViewport(0, 0, currentTexture->Width(), currentTexture->Height());
+			Mesh* currentMesh = meshes->at(j);
 
-					glBindFramebuffer(GL_FRAMEBUFFER, currentTexture->FBO());
-					// TODO: we only need to set this once per material? No need to keep binding the same FBO...
+			BindMeshBuffers(currentMesh);
 
-					// Writing: Set the viewport, bind the FBO (ie this function)
-					// Reading: Bind the render textures as textures, ?
-				}
-			}
+			// Assemble model-specific matrices:
+			mat4 mvp			= shadowCam->ViewProjection() * currentMesh->GetTransform().Model();
+
+			// Upload mesh-specific matrices:
+			lightShader->UploadUniform("in_mvp",				&mvp[0][0],				UNIFORM_Matrix4fv);
+
+			// TODO: Only upload these matrices if they've changed ^^^^
+
+			// Draw!
+			glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
+			
+			// Cleanup current mesh:
+			BindMeshBuffers();
 		}
-		else // Render to the view window:
-		{
-			glViewport(0, 0, xRes, yRes);
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		}
+
+		// Cleanup current material and shader:
+		BindShader(0);
 	}
 
 
-	void RenderManager::Render(Camera* renderCam, bool renderingToGBuffer /*= false*/)
-	{
-
-		// TODO: Merge ALL meshes using the same material into a single draw call
-
+	void BlazeEngine::RenderManager::RenderToGBuffer(Camera* const renderCam)
+	{		
+		// For now, we just find the first valid texture, and assume it's FBO is the one we want to bind:
+		GLuint gBufferFBO				= 0;
+		RenderTexture* renderTexture	= nullptr;
+		for (int i = 0; i < renderCam->RenderMaterial()->NumTextures(); i++)
+		{
+			renderTexture = (RenderTexture*)renderCam->RenderMaterial()->AccessTexture((TEXTURE_TYPE)i);
+			if (renderTexture)
+			{
+				gBufferFBO = renderTexture->FBO();
+				break;
+			}
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
+		glViewport(0, 0, renderTexture->Width(), renderTexture->Height());
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
 
 		// Assemble common (model independent) matrices:
 		mat4 view			= renderCam->View();
-		mat4 shadowCam_vp	= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight().ActiveShadowMap()->ShadowCamera()->ViewProjection();
 
 		// Configure render material:
-		unsigned int numMaterials;
+		unsigned int numMaterials	= CoreEngine::GetSceneManager()->NumMaterials();
 		Material* currentMaterial	= renderCam->RenderMaterial();
-		bool renderingToScreen		= true;
-		if (currentMaterial == nullptr || renderingToGBuffer) // Render to viewport
-		{
-			numMaterials = CoreEngine::GetSceneManager()->NumMaterials();
-		}
-		else // Render to FrameBuffers
-		{
-			numMaterials = 1;
-			renderingToScreen = false;
-		}
 
-		// Clear the required buffers before rendering
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // TODO: Configure buffer clearing via Camera/Material/RenderTexture properties
-
-		// Loop by material (+shader), mesh:
 		Shader* currentShader				= nullptr;
 		GLuint shaderReference				= 0;
-		Light* keyLight						= &CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight();
-		Material* shadowCamRenderMaterial	= keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial();
+
+		// Loop by material (+shader), mesh:
 		for (unsigned int currentMaterialIndex = 0; currentMaterialIndex < numMaterials; currentMaterialIndex++)
 		{
 			// Setup the current material and shader:
-			if (renderingToScreen || renderingToGBuffer)
-			{
-				currentMaterial = CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
-			}
-			
-			if (renderingToGBuffer)
-			{
-				currentShader = renderCam->RenderMaterial()->GetShader();
-			}
-			else
-			{
-				currentShader = currentMaterial->GetShader();
-			}			
-			shaderReference = currentShader->ShaderReference();
+			currentMaterial		= CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
+			currentShader		= renderCam->RenderMaterial()->GetShader();
+			shaderReference		= currentShader->ShaderReference();
 
 			vector<Mesh*> const* meshes;
 
 			// Bind:
 			BindShader(shaderReference);
-			if (renderingToScreen || renderingToGBuffer)
+			BindTextures(currentMaterial, shaderReference);
+
+			// Get all meshes that use the current material
+			meshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
+
+			// Loop through each mesh:			
+			unsigned int numMeshes	= (unsigned int)meshes->size();
+			for (unsigned int j = 0; j < numMeshes; j++)
 			{
-				BindSamplers(currentMaterial);
-				BindTextures(currentMaterial, shaderReference);
+				Mesh* currentMesh = meshes->at(j);
 
-				if (!renderingToGBuffer) // No need to attach shadows for gbuffer...
-				{
-					// Bind the key light depth buffer and related data:
-					BindFrameBuffers(shadowCamRenderMaterial, shaderReference); // TODO: CHECK IF I AM OR SHOULD BE UNBINDING THIS????????????
-					currentShader->UploadUniform("maxShadowBias", &keyLight->ActiveShadowMap()->MaxShadowBias(), UNIFORM_Float);
-					currentShader->UploadUniform("minShadowBias", &keyLight->ActiveShadowMap()->MinShadowBias(), UNIFORM_Float);
+				BindMeshBuffers(currentMesh);
 
-					// Shadow texture 
-					vec4 shadowDepth_TexelSize(0, 0, 0, 0);
-					RenderTexture* depthTexture = (RenderTexture*)keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
-					if (depthTexture)
-					{
-						shadowDepth_TexelSize = vec4(1.0f / depthTexture->Width(), 1.0f / depthTexture->Height(), depthTexture->Width(), depthTexture->Height());
-						// ^^ TODO: Compute this once and cache it for uploading
-					}
-					currentShader->UploadUniform("shadowDepth_TexelSize", &shadowDepth_TexelSize.x, UNIFORM_Vec4fv);
-				}
+				// Assemble model-specific matrices:
+				mat4 model			= currentMesh->GetTransform().Model();
+				mat4 modelRotation	= currentMesh->GetTransform().Model(WORLD_ROTATION);
+				mat4 mvp			= renderCam->ViewProjection() * model;
 
-				// Get all meshes that use the current material
-				meshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
+				// Upload mesh-specific matrices:
+				currentShader->UploadUniform("in_model",			&model[0][0],			UNIFORM_Matrix4fv);
+				currentShader->UploadUniform("in_modelRotation",	&modelRotation[0][0],	UNIFORM_Matrix4fv);
+				currentShader->UploadUniform("in_mvp",				&mvp[0][0],				UNIFORM_Matrix4fv);
+
+				// TODO: Only upload these matrices if they've changed ^^^^
+
+				// Draw!
+				glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
+
+				// Cleanup current mesh: 
+				BindMeshBuffers();
 			}
-			else // Rendering to framebuffer: Get all the meshes in 1 pass
+
+			// Cleanup current material and shader:
+			BindTextures(currentMaterial);
+			BindShader(0);
+
+		} // End Material loop
+	}
+
+
+	void RenderManager::RenderForward(Camera* renderCam)
+	{
+		glViewport(0, 0, this->xRes, this->yRes);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
+
+		// Assemble common (model independent) matrices:
+		mat4 view			= renderCam->View();
+		mat4 shadowCam_vp	= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight().ActiveShadowMap()->ShadowCamera()->ViewProjection();
+
+		// Cache required values once outside of the loop:
+		Light* keyLight						= &CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight();
+		Material* shadowCamRenderMaterial	= keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial();
+
+		// Loop by material (+shader), mesh:
+		unsigned int numMaterials = CoreEngine::GetSceneManager()->NumMaterials();
+		for (unsigned int currentMaterialIndex = 0; currentMaterialIndex < numMaterials; currentMaterialIndex++)
+		{
+			// Setup the current material and shader:
+			Material* currentMaterial	= CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
+			Shader* currentShader		= currentMaterial->GetShader();		
+			GLuint shaderReference		= currentShader->ShaderReference();
+
+			// Bind:
+			BindShader(shaderReference);
+			BindTextures(currentMaterial, shaderReference);
+
+			// Bind the key light depth buffer and related data:
+			BindTextures(shadowCamRenderMaterial, shaderReference);
+
+			currentShader->UploadUniform("maxShadowBias", &keyLight->ActiveShadowMap()->MaxShadowBias(), UNIFORM_Float);
+			currentShader->UploadUniform("minShadowBias", &keyLight->ActiveShadowMap()->MinShadowBias(), UNIFORM_Float);
+
+			// Shadow texture 
+			vec4 shadowDepth_TexelSize(0, 0, 0, 0);
+			RenderTexture* depthTexture = (RenderTexture*)keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
+			if (depthTexture)
 			{
-				meshes = CoreEngine::GetSceneManager()->GetRenderMeshes();
+				shadowDepth_TexelSize = vec4(1.0f / depthTexture->Width(), 1.0f / depthTexture->Height(), depthTexture->Width(), depthTexture->Height());
+				// ^^ TODO: Compute this once and cache it for uploading
 			}
+			currentShader->UploadUniform("shadowDepth_TexelSize", &shadowDepth_TexelSize.x, UNIFORM_Vec4fv);
+
+			// Get all meshes that use the current material
+			vector<Mesh*> const* meshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
 
 			// Upload common shader matrices:
 			currentShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
@@ -456,7 +467,6 @@ namespace BlazeEngine
 			for (unsigned int j = 0; j < numMeshes; j++)
 			{
 				Mesh* currentMesh = meshes->at(j);
-
 				BindMeshBuffers(currentMesh);
 
 				// Assemble model-specific matrices:
@@ -481,111 +491,47 @@ namespace BlazeEngine
 			}
 
 			// Cleanup current material and shader:
-			if (renderingToScreen || renderingToGBuffer)
-			{
-				BindSamplers();
-				BindTextures(currentMaterial);
+			BindTextures(currentMaterial);
 
-				// Unbind the key light depth buffer
-				if (!renderingToGBuffer)
-				{
-					BindFrameBuffers(currentMaterial);
-				}
-			}
+			// Unbind the key light depth buffer
+			BindTextures(currentMaterial);
+			BindTextures(shadowCamRenderMaterial, 0);
 			BindShader(0);
-		
+
 		} // End Material loop
 	}
 
 
 	void BlazeEngine::RenderManager::RenderFromGBuffer(Camera* renderCam)
 	{
-		// We're rendering w/a generic shader
-		//	possibly, all shaders in the scene depending on a stencil mask... But for now, we'll just use phong
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, this->xRes, this->yRes);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
 
 		// Assemble common (model independent) matrices:
 		mat4 view			= renderCam->View();
-		//mat4 shadowCam_vp	= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight().ActiveShadowMap()->ShadowCamera()->ViewProjection();
+		mat4 shadowCam_vp	= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight().ActiveShadowMap()->ShadowCamera()->ViewProjection();
 
-		// Clear the required buffers before rendering
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // TODO: Configure buffer clearing via Camera/Material/RenderTexture properties
-		
-		GLuint shaderReference		= gBufferDrawShader->ShaderReference();
-
+		Shader* currentShader			= gBufferDrawShader;
+		GLuint shaderReference			= gBufferDrawShader->ShaderReference();
+	
 		// Bind:
-		BindShader(gBufferDrawShader->ShaderReference());
-		
-		
-		//BindTextures(renderCam->RenderMaterial(), shaderReference); // DOESN'T WORK FOR FRAMEBUFFERS
+		BindShader(shaderReference);
 
-		//for (int i = 0; i < renderCam->RenderMaterial()->NumTextures(); i++)
-		//{
-		//	if (renderCam->RenderMaterial()->AccessTexture((TEXTURE_TYPE)i) != nullptr)
-		//	{
-		//		((RenderTexture*)renderCam->RenderMaterial()->AccessTexture((TEXTURE_TYPE)i))->AttachmentPoint() = GL_READ_FRAMEBUFFER;
-		//	}
-		//}
+		BindTextures(renderCam->RenderMaterial(), shaderReference);
 
-		//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-		//glBindFramebuffer(GL_READ_FRAMEBUFFER, ((RenderTexture*)renderCam->RenderMaterial()->AccessTexture((TEXTURE_TYPE)0))->FBO());
-
-		BindFrameBuffers(renderCam->RenderMaterial(), shaderReference); // <-- Binds like textures
-
-		//BindSamplers(renderCam->RenderMaterial()); // <-- This DOES make a difference for framebuffers!!!!!!!
-
-
-		//Light* keyLight						= &CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight();
-		//Material* shadowCamRenderMaterial	= keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial();
-
-		//BindFrameBuffers(shadowCamRenderMaterial, shaderReference);
-		//gBufferDrawShader->UploadUniform("maxShadowBias", &keyLight->ActiveShadowMap()->MaxShadowBias(), UNIFORM_Float);
-		//gBufferDrawShader->UploadUniform("minShadowBias", &keyLight->ActiveShadowMap()->MinShadowBias(), UNIFORM_Float);
-
-		//// Shadow texture 
-		//vec4 shadowDepth_TexelSize(0, 0, 0, 0);
-		//RenderTexture* depthTexture = (RenderTexture*)keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
-		//if (depthTexture)
-		//{
-		//	shadowDepth_TexelSize = vec4(1.0f / depthTexture->Width(), 1.0f / depthTexture->Height(), depthTexture->Width(), depthTexture->Height());
-		//	// ^^ TODO: Compute this once and cache it for uploading
-		//}
-		//gBufferDrawShader->UploadUniform("shadowDepth_TexelSize", &shadowDepth_TexelSize.x, UNIFORM_Vec4fv);
+		BindMeshBuffers(screenAlignedQuad);
 
 		// Upload common shader matrices:
-		gBufferDrawShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
-		//gBufferDrawShader->UploadUniform("shadowCam_vp", &shadowCam_vp[0][0], UNIFORM_Matrix4fv);
-
-		BindMeshBuffers(screenAlignedQuad.at(0));
-
-		// TODO: Only upload this stuff if it has changed ^^^^
-
+		currentShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
+		currentShader->UploadUniform("shadowCam_vp", &shadowCam_vp[0][0], UNIFORM_Matrix4fv);
 
 		// Draw!
-		glDrawElements(GL_TRIANGLES, screenAlignedQuad.at(0)->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
+		glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
-
-		for (int i = 0; i < renderCam->RenderMaterial()->NumTextures(); i++)
-		{
-			if (renderCam->RenderMaterial()->AccessTexture((TEXTURE_TYPE)i) != nullptr)
-			{
-				((RenderTexture*)renderCam->RenderMaterial()->AccessTexture((TEXTURE_TYPE)i))->AttachmentPoint() = GL_FRAMEBUFFER;
-			}
-		}
-
-		glBindFramebuffer(GL_FRAMEBUFFER, ((RenderTexture*)renderCam->RenderMaterial()->AccessTexture((TEXTURE_TYPE)0))->FBO());
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		
-
-
-		// Cleanup: 
-		BindMeshBuffers();
-		BindSamplers(); // <-- Wouldn't we need to call this for multiple textures???
-						// Also, this is hard-coded for Textures. What about RTs?
-		//BindTextures(shadowCamRenderMaterial);
-		//BindFrameBuffers(shadowCamRenderMaterial);
-		BindTextures(renderCam->RenderMaterial());
-		BindFrameBuffers(renderCam->RenderMaterial());
+		BindTextures(renderCam->RenderMaterial(), 0);
 		BindShader(0);
+		BindMeshBuffers();
 	}
 
 
@@ -607,30 +553,16 @@ namespace BlazeEngine
 	}
 
 
-	void BlazeEngine::RenderManager::BindSamplers(Material* currentMaterial /* = nullptr*/) // Unbinds all samplers if currentMaterial == nullptr
-	{
-		// I THINK THIS IS ONLY APPROPRIATE FOR TEXTURES (NOT RT'S)
-		// TODO: WRAP THIS INTO BindTextures, like for BindFrameBuffers
-		if (currentMaterial != nullptr)
-		{
-			for (int i = 0; i < currentMaterial->NumTextures(); i++)
-			{
-				glBindSampler(i, currentMaterial->Samplers(i));
-			}
-		}
-		else // Do cleanup:
-		{
-			//for (int i = 0; i < TEXTURE_COUNT; i++)
-			for (int i = 0; i < RENDER_TEXTURE_COUNT; i++)
-			{
-				glBindSampler(i, 0); // Assign to index/unit 0
-			}
-		}
-	}
-
-
 	void BlazeEngine::RenderManager::BindTextures(Material* currentMaterial, GLuint const& shaderReference /* = 0 */) // If shaderReference == 0, unbinds textures
 	{
+		// Temp hack: We'll need to replace this with some sort of flag if ever TEXTURE_COUNT == RENDER_TEXTURE_COUNT
+		bool isRenderTexture = currentMaterial->NumTextures() == RENDER_TEXTURE_COUNT;
+		int textureOffset = 0;
+		if (isRenderTexture)
+		{
+			textureOffset = RENDER_TEXTURE_0;
+		}
+
 		// Handle unbinding:
 		if (shaderReference == 0)
 		{
@@ -639,8 +571,9 @@ namespace BlazeEngine
 				Texture* currentTexture = currentMaterial->AccessTexture((TEXTURE_TYPE)i);
 				if (currentTexture)
 				{
-					glActiveTexture(GL_TEXTURE0 + i);
+					glActiveTexture(GL_TEXTURE0 + textureOffset + i);
 					glBindTexture(currentTexture->TextureTarget(), 0);
+					glBindSampler(i, 0); // Assign to index/unit 0
 				}
 			}
 		}
@@ -648,110 +581,15 @@ namespace BlazeEngine
 		{
 			for (int i = 0; i < currentMaterial->NumTextures(); i++)
 			{
-				// TEMP HACK:
-				bool isRenderTexture = currentMaterial->NumTextures() == RENDER_TEXTURE_COUNT ? true : false;
-
-				GLint samplerLocation;
-				if (isRenderTexture)
-				{
-					samplerLocation = glGetUniformLocation(shaderReference, Material::RENDER_TEXTURE_SAMPLER_NAMES[i].c_str());
-				}
-				else
-				{
-					samplerLocation = glGetUniformLocation(shaderReference, Material::TEXTURE_SAMPLER_NAMES[i].c_str());
-				}
-				if (samplerLocation >= 0)
-				{
-					glUniform1i(samplerLocation, (TEXTURE_TYPE)i);
-				}
-				// ^^^ Should this be here???? Am I using samplers right???
-
 				Texture* currentTexture = currentMaterial->AccessTexture((TEXTURE_TYPE)i);
 				if (currentTexture)
 				{
-					if (isRenderTexture)
-					{
-						glActiveTexture(GL_TEXTURE0 + RENDER_TEXTURE_0 + (TEXTURE_TYPE)i);
-						glBindTexture(currentTexture->TextureTarget(), currentTexture->TextureID());
-					}
-					else
-					{
-						glActiveTexture(GL_TEXTURE0 + (TEXTURE_TYPE)i);
-						glBindTexture(currentTexture->TextureTarget(), currentTexture->TextureID());
-					}
-				}
-				// IS THIS NECCESSARY??? ^^^^^
-				//  (DONT THINK SO!!! REVERT THIS!!!!!)
-
-				//GLint samplerLocation = glGetUniformLocation(shaderReference, Material::TEXTURE_SAMPLER_NAMES[i].c_str());
-				//if (samplerLocation >= 0)
-				//{
-				//	glUniform1i(samplerLocation, (TEXTURE_TYPE)i);
-				//}
-				//// ^^^ Should this be here???? Am I using samplers right???
-
-				//Texture* currentTexture = currentMaterial->AccessTexture((TEXTURE_TYPE)i);
-				//if (currentTexture)
-				//{
-				//	glActiveTexture(GL_TEXTURE0 + (TEXTURE_TYPE)i);
-				//	glBindTexture(currentTexture->TextureTarget(), currentTexture->TextureID());
-				//}
-			}
-		}
-	}
-
-
-	void RenderManager::BindFrameBuffers(Material* currentMaterial, GLuint const& shaderReference /* = 0 */)		// If shaderReference == 0, unbinds textures
-	{
-		// TODO: Rename this to BindFrameBufferTextures
-
-		if (currentMaterial == nullptr)
-		{
-			LOG_ERROR("Attempting to bind/unbind framebuffers, but received a null material");
-			return;
-		}
-
-		// Unbind:
-		if (shaderReference == 0)
-		{
-			for (int i = 0; i < currentMaterial->NumTextures(); i++)
-			{
-				Texture* currentTexture = currentMaterial->AccessTexture((TEXTURE_TYPE)i);
-				if (currentTexture)
-				{
-					glActiveTexture(GL_TEXTURE0 + RENDER_TEXTURE_0 + i);
-					glBindTexture(currentTexture->TextureTarget(), 0);
+					glActiveTexture(GL_TEXTURE0 + textureOffset + i);
+					glBindTexture(currentTexture->TextureTarget(), currentTexture->TextureID());
+					glBindSampler(i, currentMaterial->Samplers(i));
 				}
 			}
-			return;
 		}
-
-		// Bind:
-		for (int i = 0; i < currentMaterial->NumTextures(); i++)
-		{
-			Texture* currentTexture = currentMaterial->AccessTexture((TEXTURE_TYPE)i);
-			if (currentTexture)
-			{
-				glActiveTexture(GL_TEXTURE0 + RENDER_TEXTURE_0 + i);
-				glBindTexture(currentTexture->TextureTarget(), currentTexture->TextureID());
-				// binds to TEXTURE_2D....
-
-				// Bind samplers:
-				GLint samplerLocation = glGetUniformLocation(shaderReference, Material::RENDER_TEXTURE_SAMPLER_NAMES[i].c_str());
-				if (samplerLocation >= 0)
-				{
-					LOG_ERROR("FOUND SAMPLER: " + string(Material::RENDER_TEXTURE_SAMPLER_NAMES[i].c_str()));
-
-					glUniform1i(samplerLocation, RENDER_TEXTURE_0 + i);
-				}
-
-				else
-					LOG_ERROR("MISSING SAMPLER: " + string(Material::RENDER_TEXTURE_SAMPLER_NAMES[i].c_str()));
-
-				//glActiveTexture(GL_TEXTURE0 + RENDER_TEXTURE_0 + i);
-				//glBindTexture(currentTexture->TextureTarget(), currentTexture->TextureID());
-			}
-		}		
 	}
 
 
@@ -793,7 +631,26 @@ namespace BlazeEngine
 			Material* currentMaterial = sceneManager->GetMaterial(i);
 			
 			Shader* currentShader = currentMaterial->GetShader();
-			RenderManager::BindShader(currentShader->ShaderReference());
+			BindShader(currentShader->ShaderReference());
+
+			// Upload Texture sampler locations. Note: These must align with the locations defined in Material.h
+			for (int j = 0; j < TEXTURE_COUNT; j++)
+			{
+				GLint samplerLocation = glGetUniformLocation(currentShader->ShaderReference(), Material::TEXTURE_SAMPLER_NAMES[j].c_str());
+				if (samplerLocation >= 0)
+				{
+					glUniform1i(samplerLocation, (TEXTURE_TYPE)j);
+				}
+			}
+			// Upload RenderTexture sampler locations:
+			for (int j = 0; j < RENDER_TEXTURE_COUNT; j++)
+			{
+				GLint samplerLocation = glGetUniformLocation(currentShader->ShaderReference(), Material::RENDER_TEXTURE_SAMPLER_NAMES[j].c_str());
+				if (samplerLocation >= 0)
+				{
+					glUniform1i(samplerLocation, (int)(RENDER_TEXTURE_0 + (TEXTURE_TYPE)j));
+				}
+			}
 			
 			// Upload light direction (world space) and color, and ambient light color:
 			currentShader->UploadUniform("ambient", &(ambient->r), UNIFORM_Vec3fv);
@@ -805,7 +662,7 @@ namespace BlazeEngine
 			mat4 projection = sceneManager->GetMainCamera()->Projection();
 			currentShader->UploadUniform("in_projection", &projection[0][0], UNIFORM_Matrix4fv);
 
-			RenderManager::BindShader(0);
+			BindShader(0);
 		}
 	}
 

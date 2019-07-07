@@ -26,16 +26,15 @@ namespace BlazeEngine
 		TEXTURE_RMAO			= 2,				// Packed Roughness, Metalic, AmbientOcclusion (RGB) + unused A
 		TEXTURE_EMISSIVE		= 3,
 
-		TEXTURE_COUNT			= 4,				// Reserved: Number of texture slots a material has
-		RENDER_TEXTURE_0		= 4,				// Reserved: Starting offset for binding RenderTextures (eg. In RenderManager::BindTextures())
+		TEXTURE_COUNT			= 4,				// RESERVED: Number of Texture slots a material has
+		RENDER_TEXTURE_0		= 4,				// RESERVED: Starting offset for binding RenderTextures (eg. In RenderManager::BindTextures())
 
-		// Alternative names for render textures:
+		// Alternative RenderTexture names:
 		RENDER_TEXTURE_ALBEDO			= 0,
 		RENDER_TEXTURE_WORLD_NORMAL		= 1,
 		RENDER_TEXTURE_RMAO				= 2,
 		RENDER_TEXTURE_EMISSIVE			= 3,
 		RENDER_TEXTURE_WORLD_POSITION	= 4,
-		//RENDER_TEXTURE_MATERIAL_INDEX	= ?
 
 		RENDER_TEXTURE_DEPTH			= 5,		// Make this the last element
 

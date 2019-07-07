@@ -68,30 +68,32 @@ uniform mat4 in_mv;				// [View * Model]
 uniform mat4 in_mvp;			// [Projection * View * Model]
 
 
-// Texture samplers:
-								// TEXTURE:								FBX MATERIAL SOURCE SLOT:
-								//---------								-------------------------
-uniform sampler2D albedo;		// Albedo (RGB) + transparency (A)		Diffuse/color
-uniform sampler2D normal;		// Tangent-space normals (RGB)			Bump
-//uniform sampler2D emissive;	// Emissive (RGB)						Incandescence
-uniform sampler2D RMAO;			// Roughness, Metalic, albedo			Specular
+// Texture samplers
+// NOTE: Binding locations must match the definitions in material.h
+												// TEXTURE:								FBX MATERIAL SOURCE SLOT:
+												//---------								-------------------------
+layout(binding = 0) uniform sampler2D albedo;	// Albedo (RGB) + transparency (A)		Diffuse/color
+layout(binding = 1) uniform sampler2D normal;	// Tangent-space normals (RGB)			Bump
+layout(binding = 2) uniform sampler2D emissive;	// Emissive (RGB)						Incandescence
+layout(binding = 3) uniform sampler2D RMAO;		// Roughness, Metalic, albedo			Specular
 
+
+// GBuffer samplers: (For reading FROM the GBuffer)
+layout(binding = 4) uniform sampler2D GBuffer_Albedo;
+layout(binding = 5) uniform sampler2D GBuffer_Normal;
+layout(binding = 6) uniform sampler2D GBuffer_RMAO;
+layout(binding = 7) uniform sampler2D GBuffer_Emissive;
+
+layout(binding = 8) uniform sampler2D GBuffer_Position;
 
 // Shadow map parameters:
-uniform sampler2D	shadowDepth;			// The currently bound shadow depth map
+layout(binding = 9) uniform sampler2D shadowDepth;			// The currently bound shadow depth map
+
 uniform vec4		shadowDepth_TexelSize;	// .xyzw = (1/width, 1/height, width, height)
 uniform mat4		shadowCam_vp;			// Shadow map: [Projection * View]
 
 uniform float		maxShadowBias;			// Offsets for preventing shadow acne
-uniform float		minShadowBias;	
-
-// GBuffer samplers: (For reading FROM the GBuffer)
-//uniform sampler2D GBuffer_Albedo;
-layout(binding=4) uniform sampler2D GBuffer_Albedo;
-uniform sampler2D GBuffer_Normal;
-uniform sampler2D GBuffer_RMAO;
-uniform sampler2D GBuffer_Emissive;
-// TODO: Use assigned locations here? Based on active texture set in RenderManager::BindTextures()
+uniform float		minShadowBias;
 
 
 // Generic material properties:

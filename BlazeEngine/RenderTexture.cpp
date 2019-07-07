@@ -33,7 +33,7 @@ namespace BlazeEngine
 		this->format				= GL_DEPTH_COMPONENT;
 		this->type					= GL_FLOAT; // Same as Texture...
 		
-		this->textureWrapS			= GL_CLAMP_TO_EDGE;
+		this->textureWrapS			= GL_CLAMP_TO_EDGE; // NOTE: Mandatory for non-power-of-two textures
 		this->textureWrapT			= GL_CLAMP_TO_EDGE;
 
 		this->textureMinFilter		= GL_LINEAR;
@@ -161,11 +161,12 @@ namespace BlazeEngine
 				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_WIDTH, this->width);
 				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_HEIGHT, this->height);
 				
-				// ????? DO I NEED THIS STUFF? IF SO, DO I MAKE IT A MEMBER VARIABLE???
-				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_LAYERS, 0);
-				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_SAMPLES, 1);
-				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS, 1);
-				// ?????
+
+				// TODO: CHECK IF I NEED THIS STUFF? IF SO, DO I MAKE THEM MEMBER VARIABLES!!!!!!!!!!!!!!
+				//glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_LAYERS, 0);
+				//glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_SAMPLES, 1);
+				//glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS, 1);
+
 
 				// Attach our texture to the framebuffer as a render buffer:
 				glFramebufferTexture2D(GL_FRAMEBUFFER, this->attachmentPoint, this->texTarget, this->textureID, 0);

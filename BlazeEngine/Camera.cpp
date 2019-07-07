@@ -92,16 +92,6 @@ namespace BlazeEngine
 	}
 
 
-	void Camera::Update()
-	{
-	}
-
-
-	void Camera::HandleEvent(EventInfo const * eventInfo)
-	{
-	}
-
-
 	void Camera::AttachGBuffer()
 	{
 		Material* gBufferMaterial	= new Material(this->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->shader.gBufferFillShaderName, RENDER_TEXTURE_COUNT);
@@ -116,8 +106,9 @@ namespace BlazeEngine
 			false
 		);
 		gBuffer_albedo->InternalFormat()	= GL_RGBA32F;
-		gBuffer_albedo->Format()			= GL_RGBA;		// NOTE: Using 4 channels for future flexibility
-		gBuffer_albedo->TextureMinFilter()	= GL_NEAREST_MIPMAP_LINEAR;
+		gBuffer_albedo->Format()			= GL_RGBA;		// Note: Using 4 channels for future flexibility
+		
+		gBuffer_albedo->TextureMinFilter()	= GL_LINEAR;	// Note: Output is black if this is GL_NEAREST_MIPMAP_LINEAR
 		gBuffer_albedo->TextureMaxFilter()	= GL_LINEAR;
 
 		gBuffer_albedo->AttachmentPoint()	= GL_COLOR_ATTACHMENT0 + 0; // Need to increment by 1 each new textuer we attach. Used in RenderTexture.Buffer()->glFramebufferTexture2D()
@@ -183,7 +174,6 @@ namespace BlazeEngine
 		glBindTexture(depth->TextureTarget(), 0); // Cleanup: Texture was never unbound in Texture::Buffer, so we must unbind it here
 
 		gBuffer_albedo->AttachAdditionalRenderTexturesToFramebuffer(&depth, 1, true);
-
 	}
 
 	void Camera::DebugPrint()

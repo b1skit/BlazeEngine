@@ -18,10 +18,6 @@ using std::string;
 
 namespace BlazeEngine
 {
-	//// Pre-declarations:
-	//class Transform;
-
-
 	// Vertex structure:
 	struct Vertex
 	{
@@ -203,7 +199,8 @@ namespace BlazeEngine
 	{
 	public:
 		Mesh(string name, Vertex* vertices, unsigned int numVerts, GLuint* indices, unsigned int numIndices, int materialIndex = -1);
-		/*~Mesh();*/
+		
+		/*~Mesh(); // Cleanup should be handled by whatever owns the mesh, by calling DestroyMesh() */
 
 		// Default copy constructor and assignment operator:
 		Mesh(const Mesh& mesh)				= default;

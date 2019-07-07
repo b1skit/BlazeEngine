@@ -63,9 +63,6 @@ namespace BlazeEngine
 
 		
 
-
-
-
 		// Public static functions:
 		//-------------------------
 		

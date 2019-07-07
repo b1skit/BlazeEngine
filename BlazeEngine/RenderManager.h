@@ -25,6 +25,7 @@ namespace BlazeEngine
 	class Mesh;
 	class Camera;
 	class Shader;
+	class Light;
 
 
 	enum SHADER // Guaranteed shaders
@@ -57,18 +58,22 @@ namespace BlazeEngine
 		// Member functions:
 		//------------------
 
-		// Configure OpenGL for the next draw call
-		void ConfigureRenderSettings(Camera* const renderCam);
-
-		void Render(Camera* renderCam, bool attachMaterialTextures = false);
-		void RenderFromGBuffer(Camera* renderCam);
-		//TODO: Make these render functions private?
-
 		// Upload static properties to shaders
 		void InitializeShaders();
 
+
 	private:
+		void RenderLightShadowMap(Light* currentLight);
+		//void RenderReflectionProbe();
+
+		void RenderToGBuffer(Camera* const renderCam);	// Note: renderCam MUST have an attached GBuffer
+
+		void RenderForward(Camera* renderCam);
+		void RenderFromGBuffer(Camera* renderCam);
+
+
 		// Configuration:
+		//---------------
 		int xRes				= -1;
 		int yRes				= -1;
 		string windowTitle		= "Default BlazeEngine window title";
@@ -78,7 +83,7 @@ namespace BlazeEngine
 		SDL_GLContext glContext = 0;
 
 		// GBuffer:
-		vector<Mesh*> screenAlignedQuad;
+		Mesh* screenAlignedQuad;
 		Shader* gBufferDrawShader	= nullptr;		// Deallocated in Shutdown()
 		
 		// Private member functions:
@@ -90,14 +95,8 @@ namespace BlazeEngine
 		// Sets the active shader
 		void BindShader(GLuint const& shaderReference);
 
-		// Bind a material's samplers to the currently bound shader. If doCleanup == true, binds to unit 0 (ie. for cleanup)
-		void BindSamplers(Material* currentMaterial = nullptr);
-
-		// Bind a material's textures to the currently bound shader
+		// Bind a material's Textures/RenderTextures and samplers to the currently bound shader
 		void BindTextures(Material* currentMaterial, GLuint const& shaderReference = 0);	// If shaderReference == 0, unbinds textures
-
-		// Bind a material's RenderTextures
-		void BindFrameBuffers(Material* currentMaterial, GLuint const& shaderReference = 0);		// If shaderReference == 0, unbinds textures
 
 		// Bind the mesh VAO, position, and index buffers. If mesh == nullptr, binds all elements to index 0 (ie. for cleanup)
 		void BindMeshBuffers(Mesh* const mesh = nullptr);
