@@ -10,17 +10,30 @@ using std::ifstream;
 
 namespace BlazeEngine
 {
+	// Static members:
+	const string Shader::SHADER_KEYWORDS[SHADER_KEYWORD_COUNT] = 
+	{
+		"NO_ALBEDO_TEXTURE",
+		"NO_NORMAL_TEXTURE",
+		"NO_EMISSIVE_TEXTURE",
+		"NO_RMAO_TEXTURE",
+		"NO_COSINE_POWER",
+	};
+
+
 	Shader::Shader(const string shaderName, const GLuint shaderReference)
 	{
 		this->shaderName		= shaderName;
 		this->shaderReference	= shaderReference;
 	}
 
+
 	Shader::Shader(const Shader& existingShader)
 	{
 		this->shaderName		= existingShader.shaderName;
 		this->shaderReference	= existingShader.shaderReference;
 	}
+
 
 	void Shader::Destroy()
 	{
@@ -75,10 +88,11 @@ namespace BlazeEngine
 		}
 	}
 
+
 	// Static functions:
 	//*******************
 
-	Shader* Shader::CreateShader(string shaderName)
+	Shader* Shader::CreateShader(string shaderName, vector<string> const*  shaderKeywords /*= nullptr*/)
 	{
 		LOG("Creating shader \"" + shaderName + "\"");
 
@@ -98,14 +112,27 @@ namespace BlazeEngine
 			ReturnErrorShader(shaderName);
 		}
 
+		if (shaderKeywords != nullptr)
+		{
+			#if defined(DEBUG_SHADER_SETUP_LOGGING)
+				LOG("Inserting defines into loaded vertex shader text")
+			#endif
+			InsertDefines(vertexShader, shaderKeywords);
+
+			#if defined(DEBUG_SHADER_SETUP_LOGGING)
+				LOG("Inserting defines into loaded vertex shader text")
+			#endif
+			InsertDefines(fragmentShader, shaderKeywords);
+		}
+
 		// Process #include directives:
 		#if defined(DEBUG_SHADER_SETUP_LOGGING)
-			LOG("Processing loaded Vertex shader")
+			LOG("Inserting includes into loaded Vertex shader")
 		#endif
 		LoadIncludes(vertexShader);
 
 		#if defined(DEBUG_SHADER_SETUP_LOGGING)
-			LOG("Processing loaded Fragment shader")
+			LOG("Inserting includes into loaded Fragment shader")
 		#endif
 		LoadIncludes(fragmentShader);
 
@@ -286,6 +313,37 @@ namespace BlazeEngine
 		#endif
 	}
 
+
+	void Shader::InsertDefines(string& shaderText, vector<string> const* shaderKeywords)
+	{
+		if ((int)shaderText.length() <= 0 || shaderKeywords == nullptr || (int)shaderKeywords->size() <= 0)
+		{
+			return;
+		}
+
+		// Find the #version directive, and insert our keywords immediately after it
+
+		int foundIndex = (int)shaderText.find("#version", 0);
+		if (foundIndex == string::npos)
+		{
+			foundIndex = 0;
+		}
+		// Find the next newline character:
+		int endLine = (int)shaderText.find("\n", foundIndex + 1);
+
+		// Assemble our #define lines:
+		const string DEFINE_KEYWORD = "#define ";
+		string assembledKeywords = "";
+		for (int currentKeyword = 0; currentKeyword < (int)shaderKeywords->size(); currentKeyword++)
+		{
+			string defineLine = DEFINE_KEYWORD + shaderKeywords->at(currentKeyword) + "\n";
+
+			assembledKeywords += defineLine;
+		}
+
+		// Insert our #define lines:
+		shaderText.insert(endLine + 1, assembledKeywords);		
+	}
 
 	GLuint Shader::CreateGLShaderObject(const string& shaderCode, GLenum shaderType)
 	{

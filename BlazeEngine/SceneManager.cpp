@@ -244,11 +244,7 @@ namespace BlazeEngine
 			{
 				if (materials[i])
 				{
-					if (materials[i]->GetShader() != nullptr)
-					{
-						materials[i]->GetShader()->Destroy();
-						delete materials[i]->GetShader();
-					}
+					materials[i]->Destroy();
 					delete materials[i];
 					materials[i] = nullptr;
 				}
@@ -261,7 +257,7 @@ namespace BlazeEngine
 		{
 			for (unsigned int i = 0; i < currentTextureCount; i++)
 			{
-				if (textures[i])
+				if (textures[i] != nullptr)
 				{
 					textures[i]->Destroy();
 					delete textures[i];
@@ -431,6 +427,41 @@ namespace BlazeEngine
 
 		return &materialMeshLists.at(materialIndex);
 	}
+
+	int BlazeEngine::SceneManager::AddTexture(Texture* newTexture)
+	{
+		if (newTexture == nullptr)
+		{
+			LOG_ERROR("Cannot add null texture to textures array. Returning 0");
+			return 0;
+		}
+
+		bool foundEmpty = false;
+		int freeIndex	= -1;
+		for (unsigned int i = 0; i < MAX_TEXTURES; i++)
+		{
+			if (!foundEmpty && textures[i] == nullptr)
+			{
+				freeIndex = i;
+				foundEmpty = true;
+			}
+
+			if (textures[i] != nullptr && textures[i]->TexturePath() == newTexture->TexturePath())
+			{	
+				return i;
+			}
+		}
+		
+		if (foundEmpty)
+		{
+			textures[freeIndex] = newTexture;
+			currentTextureCount++;
+			return freeIndex;
+		}
+
+		LOG_ERROR("Failed to add new texture: textures array already contains MAX_TEXTURES elements. Returning 0!");
+		return 0;
+	}
 	
 	
 	void BlazeEngine::SceneManager::AddGameObject(GameObject* newGameObject)
@@ -546,7 +577,7 @@ namespace BlazeEngine
 				int materialIndex = viewMesh->MaterialIndex();
 				if (materialIndex < 0 || (unsigned int)materialIndex >= currentMaterialCount)
 				{
-					LOG("AssembleMaterialMeshLists() is skipping a mesh with out of localBounds material index!");
+					LOG("AssembleMaterialMeshLists() is skipping a mesh with out of bounds material index!");
 				}
 				else
 				{
@@ -560,11 +591,11 @@ namespace BlazeEngine
 	}
 
 
-	Texture* BlazeEngine::SceneManager::FindLoadTextureByPath(string texturePath)
+	Texture* BlazeEngine::SceneManager::FindLoadTextureByPath(string texturePath, bool loadIfNotFound /*= true*/)
 	{
 		for (unsigned int i = 0; i < currentTextureCount; i++)
 		{
-			if (textures[i] && textures[i]->TexturePath() == texturePath)
+			if (textures[i] != nullptr && textures[i]->TexturePath() == texturePath)
 			{
 				LOG("Texture at path " + texturePath + " has already been loaded");
 				return textures[i];
@@ -572,8 +603,19 @@ namespace BlazeEngine
 		}
 
 		// If we've made it this far, load the texture
-		currentTextureCount++;
-		return Texture::LoadTextureFromPath(texturePath);
+		if (loadIfNotFound)
+		{
+			Texture* result = Texture::LoadTextureFromPath(texturePath);
+			if (result != nullptr)
+			{
+				AddTexture(result);
+			}
+			return result;
+		}
+		else
+		{
+			return nullptr;
+		}
 	}
 
 
@@ -610,32 +652,12 @@ namespace BlazeEngine
 					}
 				}
 
-				Material* newMaterial = nullptr;
+				// Create a material using the error shader, for now:
+				Material* newMaterial = new Material(matName, CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName);
+				
+				// Extract textures, and add them to the material:
 
-				// Assign shader based on the material name
-				std::size_t shaderNameIndex = matName.find_last_of("_");
-				if (shaderNameIndex == string::npos)
-				{
-					LOG_ERROR("Could not find a shader name prefixed with an underscore in the material name. Assigning the error shader");
-
-					newMaterial = new Material(matName, CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName);
-				}
-				else
-				{
-					string shaderName = matName.substr(shaderNameIndex + 1, matName.length() - (shaderNameIndex + 1));
-
-					#if defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
-						LOG("Attempting to assign shader \"" + shaderName + "\" to material");
-					#endif
-
-					newMaterial = new Material(matName, shaderName);
-				}
-
-				// Extract material properties, and set them in the shader:
-				Shader* currentShader = newMaterial->GetShader();
-				if (currentShader->Name() != CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName)
-				{
-					/* NOTE: For simplicity, BlazeEngine interprets Phong shaders (only) loaded from FBX files:
+				/* NOTE: For simplicity, BlazeEngine interprets Phong shaders (only) loaded from FBX files:
 					Shader name:	Attempt to use whatever follows the last _underscore as a shader name (Eg. myMaterial_phong)
 					Albedo:			Phong's color (rgb)
 					Transparency:	Phong's color (a)
@@ -646,70 +668,126 @@ namespace BlazeEngine
 						Roughness:		Phong's specular color (r)
 						Metalic:		Phong's specular color (g)
 						AO:				Phong's specular color (b)
-					*/
+				*/
 
-					// Extract material's textures:
-					LOG("Importing albedo + transparency texture (RGB+A) from material's diffuse/color slot");
-					Texture* diffuseTexture = ExtractLoadTextureFromAiMaterial(aiTextureType_DIFFUSE, scene->mMaterials[currentMaterial], sceneName);
-					if (diffuseTexture)
-					{
-						newMaterial->AccessTexture(TEXTURE_ALBEDO) = diffuseTexture;
-						diffuseTexture->Buffer();
-					}
+				// Extract material's textures:
+				LOG("Importing albedo + transparency texture (RGB+A) from material's diffuse/color slot");
+				Texture* diffuseTexture = ExtractLoadTextureFromAiMaterial(aiTextureType_DIFFUSE, scene->mMaterials[currentMaterial], sceneName);
+				if (diffuseTexture)
+				{
+					newMaterial->AccessTexture(TEXTURE_ALBEDO) = diffuseTexture;
+				}
+				else
+				{
+					newMaterial->AddShaderKeyword(Shader::SHADER_KEYWORDS[NO_ALBEDO_TEXTURE]);
+				}
 
-					LOG("Importing normal map texture (RGB) from material's bump slot");
-					Texture* normalTexture = ExtractLoadTextureFromAiMaterial(aiTextureType_NORMALS, scene->mMaterials[currentMaterial], sceneName);
-					if (normalTexture)
-					{
-						newMaterial->AccessTexture(TEXTURE_NORMAL) = normalTexture;
-						normalTexture->Buffer();
-					}
-					else
-					{
-						newMaterial->AddShaderKeyword("NO_NORMAL_TEXTURE");
-					}
+				LOG("Importing normal map texture (RGB) from material's bump slot");
+				Texture* normalTexture = ExtractLoadTextureFromAiMaterial(aiTextureType_NORMALS, scene->mMaterials[currentMaterial], sceneName);
+				if (normalTexture)
+				{
+					newMaterial->AccessTexture(TEXTURE_NORMAL) = normalTexture;
+				}
+				else
+				{
+					newMaterial->AddShaderKeyword(Shader::SHADER_KEYWORDS[NO_NORMAL_TEXTURE]);
+				}
 				
 
-					LOG("Importing emissive map texture (RGB) from material's incandescence slot");
-					Texture* emissiveTexture = ExtractLoadTextureFromAiMaterial(aiTextureType_EMISSIVE, scene->mMaterials[currentMaterial], sceneName);
-					if (emissiveTexture)
-					{
-						newMaterial->AccessTexture(TEXTURE_EMISSIVE) = emissiveTexture;
-						emissiveTexture->Buffer();
-					}
+				LOG("Importing emissive map texture (RGB) from material's incandescence slot");
+				Texture* emissiveTexture = ExtractLoadTextureFromAiMaterial(aiTextureType_EMISSIVE, scene->mMaterials[currentMaterial], sceneName);
+				if (emissiveTexture)
+				{
+					newMaterial->AccessTexture(TEXTURE_EMISSIVE) = emissiveTexture;
+				}
+				else
+				{
+					newMaterial->AddShaderKeyword(Shader::SHADER_KEYWORDS[NO_EMISSIVE_TEXTURE]);
+				}
 
-					LOG("Importing roughness, metalic, & AO textures (R+G+B) from material's specular slot");
-					Texture* RMAO = ExtractLoadTextureFromAiMaterial(aiTextureType_SPECULAR, scene->mMaterials[currentMaterial], sceneName);
-					if (RMAO)
-					{
-						newMaterial->AccessTexture(TEXTURE_RMAO) = RMAO;
-						RMAO->Buffer();
-					}
+				LOG("Importing roughness, metalic, & AO textures (R+G+B) from material's specular slot");
+				Texture* RMAO = ExtractLoadTextureFromAiMaterial(aiTextureType_SPECULAR, scene->mMaterials[currentMaterial], sceneName);
+				if (RMAO)
+				{
+					newMaterial->AccessTexture(TEXTURE_RMAO) = RMAO;
+				}
+				else
+				{
+					newMaterial->AddShaderKeyword(Shader::SHADER_KEYWORDS[NO_RMAO_TEXTURE]);
+				}
 
-					LOG("Importing value from material's cosine power slot");
-					if (ExtractPropertyFromAiMaterial(scene->mMaterials[currentMaterial], newMaterial->Property(MATERIAL_PROPERTY_0), AI_MATKEY_SHININESS))
-					{
-						#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING)
-							LOG("Setting shader matProperty0 uniform: " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).x) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).y) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).z));
-						#endif
-
-						currentShader->UploadUniform(Material::MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_0].c_str(), &newMaterial->Property(MATERIAL_PROPERTY_0).x, UNIFORM_Vec4fv);
-					}
+				// Cache uniforms, so we can upload them once the shader is loaded:
+				LOG("Importing value from material's cosine power slot");
+				if (ExtractPropertyFromAiMaterial(scene->mMaterials[currentMaterial], newMaterial->Property(MATERIAL_PROPERTY_0), AI_MATKEY_SHININESS))
+				{
 					#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING)
-					else
-					{
+						LOG("Setting shader matProperty0 uniform: " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).x) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).y) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).z));
+					#endif
+				}
+				else
+				{
+					newMaterial->AddShaderKeyword(Shader::SHADER_KEYWORDS[NO_COSINE_POWER]);
+
+					#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING)
 						LOG_WARNING("Could not find material cosine power slot");
-					}
+					#endif
+				}
+				
+				// TODO: Extract additional generic properties?
+
+
+				// Create a shader, using the keywords we've built
+				bool loadedValidShader = false;
+				std::size_t shaderNameIndex = matName.find_last_of("_");
+				if (shaderNameIndex == string::npos)
+				{
+					LOG_ERROR("Could not find a shader name prefixed with an underscore in the material name. Destroying loaded textures and assigning error shader");
+				}
+				else
+				{
+					string shaderName = matName.substr(shaderNameIndex + 1, matName.length() - (shaderNameIndex + 1));
+
+					#if defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
+						LOG("Attempting to assign shader \"" + shaderName + "\" to material");
 					#endif
 
-					// TODO: Extract additional generic properties?
-				} 
-				#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING) || defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
-					else
+					Shader* newShader = Shader::CreateShader(shaderName, &newMaterial->ShaderKeywords());
+					if (newShader->Name() != CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName)
 					{
-						LOG("Shader is the error shader: Skipping attempt to upload any uniform values");
+						newMaterial->GetShader() = newShader;
+						loadedValidShader = true;
 					}
-				#endif
+				}
+
+
+				// If we didn't load a valid shader, delete any textures we might have loaded:
+				if (!loadedValidShader)
+				{
+					for (int currentTexture = 0; currentTexture < newMaterial->NumTextureSlots(); currentTexture++)
+					{
+						if (newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture) != nullptr)
+						{
+							newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture)->Destroy();
+							delete newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture);
+							newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture) = nullptr;
+						}
+					}
+				}
+				else
+				{
+					// Buffer all of the textures:
+					for (int currentTexture = 0; currentTexture < newMaterial->NumTextureSlots(); currentTexture++)
+					{
+						if (newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture) != nullptr)
+						{
+							newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture)->Buffer();
+							newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture)->BindSampler((TEXTURE_TYPE)currentTexture, false);
+						}
+					}
+
+					// Buffer uniforms:
+					newMaterial->GetShader()->UploadUniform(Material::MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_0].c_str(), &newMaterial->Property(MATERIAL_PROPERTY_0).x, UNIFORM_Vec4fv);
+				}
 
 				// Add the material to our material list:
 				AddMaterial(newMaterial, false);
@@ -732,11 +810,18 @@ namespace BlazeEngine
 				aiColor4D color;
 				if (AI_SUCCESS == material->Get("$clr.diffuse", 0, 0, color))
 				{
-					string matTextureName = string(material->GetName().C_Str()) + "_DiffuseColor";
+					string matTextureName = "DiffuseColor_" + to_string(color.r) + "_" + to_string(color.g) + "_" + to_string(color.b) + "_" + to_string(color.a);
 
 					LOG_WARNING("Material has no diffuse texture. Creating a 1x1 texture using the diffuse color with a path " + matTextureName);
-					
-					newTexture = new Texture(1, 1, matTextureName, true, vec4(color.r, color.g, color.b, color.a));
+
+					// Find an already loaded version
+					newTexture = FindLoadTextureByPath(matTextureName, false);
+
+					// Create it if it wasn't already loaded:
+					if (newTexture == nullptr)
+					{
+						newTexture = new Texture(1, 1, matTextureName, true, vec4(color.r, color.g, color.b, color.a));
+					}
 				}
 			}
 			else if (textureType == aiTextureType_NORMALS)
@@ -750,7 +835,14 @@ namespace BlazeEngine
 					LOG_WARNING("Material has no normal texture. Creating a 1x1 texture for a [0,0,1] normal with a path " + flatNormalName);
 					// TODO: Replace this with shader multi-compiles. If no normal texture is found, use vertex normals instead
 
-					newTexture = new Texture(1, 1, flatNormalName, true, vec4(0.5f, 0.5f, 1.0f, 1.0f));
+					// Find an already loaded version
+					newTexture = FindLoadTextureByPath(flatNormalName, false);
+
+					// Create it if it wasn't already loaded:
+					if (newTexture == nullptr)
+					{
+						newTexture = new Texture(1, 1, flatNormalName, true, vec4(0.5f, 0.5f, 1.0f, 1.0f));
+					}
 				}				
 			}
 			else if (aiTextureType_EMISSIVE)

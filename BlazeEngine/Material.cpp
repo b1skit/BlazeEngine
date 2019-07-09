@@ -16,8 +16,8 @@ namespace BlazeEngine
 	{
 		"albedo",			// TEXTURE_ALBEDO
 		"normal",			// TEXTURE_NORMAL
-		"emissive",			// TEXTURE_RMAO
 		"RMAO",				// TEXTURE_EMISSIVE
+		"emissive",			// TEXTURE_RMAO
 	};
 
 	const string Material::RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_COUNT] = 
@@ -26,6 +26,7 @@ namespace BlazeEngine
 		"GBuffer_Normal",	// RENDER_TEXTURE_WORLD_NORMAL
 		"GBuffer_RMAO",		// RENDER_TEXTURE_RMAO
 		"GBuffer_Emissive",	// RENDER_TEXTURE_EMISSIVE
+
 		"GBuffer_Position",	// RENDER_TEXTURE_WORLD_POSITION
 
 		"shadowDepth",		// RENDER_TEXTURE_DEPTH
@@ -34,13 +35,20 @@ namespace BlazeEngine
 	const string Material::MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_COUNT] =
 	{
 		"matProperty0",
+		//"matProperty1",
+		//"matProperty2",
+		//"matProperty3",
+		//"matProperty4",
+		//"matProperty5",
+		//"matProperty6",
+		//"matProperty7"
 	};
 
 	Material::Material(string materialName, string shaderName, TEXTURE_TYPE textureCount /*= TEXTURE_COUNT*/)
 	{
 		this->name = materialName;
 
-		this->shader = Shader::CreateShader(shaderName);
+		this->shader = Shader::CreateShader(shaderName, &shaderKeywords);
 
 		this->numTextures = (int)textureCount;
 
@@ -50,34 +58,9 @@ namespace BlazeEngine
 			textures[i] = nullptr;
 		}
 
-		// Create samplers:
-		samplers = new GLuint[this->numTextures];
-		glGenSamplers(this->numTextures, &samplers[0]);
-		for (int i = 0; i < this->numTextures; i++)
-		{
-			glBindSampler(i, samplers[i]); // SHOULD THIS BE DONE WITHIN EACH TEXTURE?
-			if (!glIsSampler(samplers[i]))
-			{
-				LOG_ERROR("Material could not create sampler #" + to_string(i));
-			}
-			glBindSampler(i, 0);
-		}
-
 		for (int i = 0; i < MATERIAL_PROPERTY_COUNT; i++)
 		{
 			properties[i] = vec4(0.0f, 0.0f, 0.0f, 0.0f);
-		}
-	}
-
-
-	Material::~Material()
-	{
-		if (this->samplers != nullptr)
-		{
-			glDeleteSamplers(this->numTextures, samplers);
-
-			delete[] samplers;
-			samplers = nullptr;
 		}
 	}
 }

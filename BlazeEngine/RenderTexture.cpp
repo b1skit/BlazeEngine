@@ -48,13 +48,12 @@ namespace BlazeEngine
 
 	RenderTexture::RenderTexture(RenderTexture const& rhs, bool doBuffer /*= false */) : Texture(rhs)
 	{
-		//this->frameBufferObject = rhs.frameBufferObject;
 		this->frameBufferObject = 0;	// NOTE: We set the frame buffer to 0, since we don't want to stomp any existing ones
 
-		this->attachmentPoint = rhs.attachmentPoint;
+		this->attachmentPoint	= rhs.attachmentPoint;
 
-		this->drawBuffer = rhs.drawBuffer;
-		this->readBuffer = rhs.readBuffer;
+		this->drawBuffer		= rhs.drawBuffer;
+		this->readBuffer		= rhs.readBuffer;
 
 		if (doBuffer)
 		{
@@ -72,8 +71,8 @@ namespace BlazeEngine
 
 		Texture::operator=(rhs);
 
-		//this->frameBufferObject	= rhs.frameBufferObject;
-		this->frameBufferObject = 0;	// NOTE: We set the frame buffer to 0, since we don't want to stomp any existing ones
+		//this->frameBufferObject = 0;	// NOTE: We set the frame buffer to 0, since we don't want to stomp any existing ones
+		this->frameBufferObject	= rhs.frameBufferObject;
 
 		this->attachmentPoint	= rhs.attachmentPoint;
 
@@ -109,9 +108,9 @@ namespace BlazeEngine
 			}
 
 			// Assemble a list of attachment points
-			int totalRTs = numRTs + 1;
+			int totalRTs		= numRTs + 1;
 			GLenum* drawBuffers = new GLenum[totalRTs];
-			drawBuffers[0] = this->attachmentPoint;
+			drawBuffers[0]		= this->attachmentPoint;
 			for (int i = 1; i < totalRTs; i++)
 			{
 				drawBuffers[i] = additionalRTs[i - 1]->attachmentPoint;
@@ -160,13 +159,6 @@ namespace BlazeEngine
 				// Configure framebuffer parameters:
 				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_WIDTH, this->width);
 				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_HEIGHT, this->height);
-				
-
-				// TODO: CHECK IF I NEED THIS STUFF? IF SO, DO I MAKE THEM MEMBER VARIABLES!!!!!!!!!!!!!!
-				//glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_LAYERS, 0);
-				//glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_SAMPLES, 1);
-				//glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_FIXED_SAMPLE_LOCATIONS, 1);
-
 
 				// Attach our texture to the framebuffer as a render buffer:
 				glFramebufferTexture2D(GL_FRAMEBUFFER, this->attachmentPoint, this->texTarget, this->textureID, 0);
@@ -176,17 +168,17 @@ namespace BlazeEngine
 				LOG("Render texture setup complete!");
 			#endif
 
+			bool result = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+			if (!result)
+			{
+				LOG_ERROR("Framebuffer is not complete!");
+			}
+
 			// Cleanup:
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glBindTexture(this->texTarget, 0);
 
-			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-			{
-				LOG_ERROR("Framebuffer is not complete!");
-				return false;
-			}
-
-			return true;
+			return result;
 		}
 		else
 		{

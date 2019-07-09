@@ -66,9 +66,11 @@ uniform mat4 in_view;			// World -> View
 uniform mat4 in_projection;		// View -> Projection
 uniform mat4 in_mv;				// [View * Model]
 uniform mat4 in_mvp;			// [Projection * View * Model]
+// TODO: Assign locations for these uniforms, and bind them to each shader in the RenderManager
+// Probably need to be offset somehow (b/c of size of VtoF struct?)???
 
 
-// Texture samplers
+// Texture samplers:
 // NOTE: Binding locations must match the definitions in material.h
 												// TEXTURE:								FBX MATERIAL SOURCE SLOT:
 												//---------								-------------------------
@@ -79,17 +81,15 @@ layout(binding = 3) uniform sampler2D emissive;	// Emissive (RGB)						Incandesc
 
 
 
-// GBuffer samplers: (For reading FROM the GBuffer)
+// GBuffer samplers: (For reading FROM GBuffer textures)
 layout(binding = 4) uniform sampler2D GBuffer_Albedo;
-layout(binding = 5) uniform sampler2D GBuffer_Normal;
+layout(binding = 5) uniform sampler2D GBuffer_Normal;	// TODO: Rename as GBuffer_WorldNormal
 layout(binding = 6) uniform sampler2D GBuffer_RMAO;
 layout(binding = 7) uniform sampler2D GBuffer_Emissive;
-
-layout(binding = 8) uniform sampler2D GBuffer_Position;
+layout(binding = 8) uniform sampler2D GBuffer_Position;	// TODO: Rename as GBuffer_WorldPosition
+layout(binding = 9) uniform sampler2D shadowDepth;			// GBuffer depth or the currently bound shadow depth map
 
 // Shadow map parameters:
-layout(binding = 9) uniform sampler2D shadowDepth;			// The currently bound shadow depth map
-
 uniform vec4		shadowDepth_TexelSize;	// .xyzw = (1/width, 1/height, width, height)
 uniform mat4		shadowCam_vp;			// Shadow map: [Projection * View]
 

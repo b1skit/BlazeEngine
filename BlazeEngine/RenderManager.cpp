@@ -278,7 +278,7 @@ namespace BlazeEngine
 		Camera* mainCam = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN).at(0);
 		RenderToGBuffer(mainCam);
 
-		// Forward render: Leaving this around for a while for debug purposes
+		// //Forward render: Leaving this around for a while for debug purposes
 		//RenderForward(mainCam);
 
 		// Render from GBuffer:
@@ -291,12 +291,13 @@ namespace BlazeEngine
 
 	void RenderManager::RenderLightShadowMap(Light* currentLight)
 	{
-		RenderTexture* lightDepthTexture = (RenderTexture*)currentLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
+		Camera* shadowCam = currentLight->ActiveShadowMap()->ShadowCamera();
+
+		// Configure the FrameBuffer:
+		RenderTexture* lightDepthTexture = (RenderTexture*)shadowCam->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
 		glViewport(0, 0, lightDepthTexture->Width(), lightDepthTexture->Height());
 		glBindFramebuffer(GL_FRAMEBUFFER, lightDepthTexture->FBO());
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
-
-		Camera* shadowCam = currentLight->ActiveShadowMap()->ShadowCamera();
 
 		Shader* lightShader				= shadowCam->RenderMaterial()->GetShader();		
 
@@ -335,17 +336,21 @@ namespace BlazeEngine
 	void BlazeEngine::RenderManager::RenderToGBuffer(Camera* const renderCam)
 	{		
 		// For now, we just find the first valid texture, and assume it's FBO is the one we want to bind:
-		GLuint gBufferFBO				= 0;
-		RenderTexture* renderTexture	= nullptr;
-		for (int i = 0; i < renderCam->RenderMaterial()->NumTextures(); i++)
+		RenderTexture* renderTexture	= (RenderTexture*)renderCam->RenderMaterial()->AccessTexture((TEXTURE_TYPE)0);
+		if (renderTexture == nullptr)
 		{
-			renderTexture = (RenderTexture*)renderCam->RenderMaterial()->AccessTexture((TEXTURE_TYPE)i);
-			if (renderTexture)
+			for (int i = 1; i < renderCam->RenderMaterial()->NumTextureSlots(); i++)
 			{
-				gBufferFBO = renderTexture->FBO();
-				break;
+				renderTexture = (RenderTexture*)renderCam->RenderMaterial()->AccessTexture((TEXTURE_TYPE)i);
+				if (renderTexture != nullptr)
+				{
+					break;
+				}
 			}
 		}
+
+		GLuint gBufferFBO				= renderTexture->FBO();
+		
 		glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
 		glViewport(0, 0, renderTexture->Width(), renderTexture->Height());
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
@@ -404,7 +409,8 @@ namespace BlazeEngine
 				BindMeshBuffers();
 			}
 
-			// Cleanup current material and shader:
+			// Cleanup:
+			//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			BindTextures(currentMaterial);
 			BindShader(0);
 
@@ -553,10 +559,11 @@ namespace BlazeEngine
 	}
 
 
+	// TODO: Should this be a per-texture member function ????
 	void BlazeEngine::RenderManager::BindTextures(Material* currentMaterial, GLuint const& shaderReference /* = 0 */) // If shaderReference == 0, unbinds textures
 	{
-		// Temp hack: We'll need to replace this with some sort of flag if ever TEXTURE_COUNT == RENDER_TEXTURE_COUNT
-		bool isRenderTexture = currentMaterial->NumTextures() == RENDER_TEXTURE_COUNT;
+		// Temp hack: We'll need to replace this with some sort of isRenderMaterial flag in material if ever TEXTURE_COUNT == RENDER_TEXTURE_COUNT
+		bool isRenderTexture = currentMaterial->NumTextureSlots() == RENDER_TEXTURE_COUNT;
 		int textureOffset = 0;
 		if (isRenderTexture)
 		{
@@ -566,7 +573,7 @@ namespace BlazeEngine
 		// Handle unbinding:
 		if (shaderReference == 0)
 		{
-			for (int i = 0; i < currentMaterial->NumTextures(); i++)
+			for (int i = 0; i < currentMaterial->NumTextureSlots(); i++)
 			{
 				Texture* currentTexture = currentMaterial->AccessTexture((TEXTURE_TYPE)i);
 				if (currentTexture)
@@ -577,16 +584,17 @@ namespace BlazeEngine
 				}
 			}
 		}
-		else
+		else // Handle binding:
 		{
-			for (int i = 0; i < currentMaterial->NumTextures(); i++)
+			for (int i = 0; i < currentMaterial->NumTextureSlots(); i++)
 			{
 				Texture* currentTexture = currentMaterial->AccessTexture((TEXTURE_TYPE)i);
 				if (currentTexture)
 				{
 					glActiveTexture(GL_TEXTURE0 + textureOffset + i);
 					glBindTexture(currentTexture->TextureTarget(), currentTexture->TextureID());
-					glBindSampler(i, currentMaterial->Samplers(i));
+					//glBindSampler(i, currentMaterial->Samplers(i));
+					glBindSampler(i, currentTexture->Sampler()); // TODO: MOVE THIS WHOLE FUNCTION INTO THE TEXTURE!!!!!!!!!!!!!!!!!!!!!!!!!
 				}
 			}
 		}
@@ -626,44 +634,191 @@ namespace BlazeEngine
 			LOG("Key Col: " + to_string(keyCol->r) + ", " + to_string(keyCol->g) + ", " + to_string(keyCol->b));
 		#endif
 
+
+
+
+		// Add all Material Shaders to a list:
+		vector<Shader*> shaders;
 		for (unsigned int i = 0; i < numMaterials; i++)
 		{
-			Material* currentMaterial = sceneManager->GetMaterial(i);
+			shaders.push_back(sceneManager->GetMaterial(i)->GetShader());
+		}
+
+		// Add all Camera Shaders:	
+		for (int i = 0; i < CAMERA_TYPE_COUNT; i++)
+		{
+			vector<Camera*> cameras = CoreEngine::GetCoreEngine()->GetSceneManager()->GetCameras((CAMERA_TYPE)i);
+			for (int currentCam = 0; currentCam < cameras.size(); currentCam++)
+			{
+				if (cameras.at(currentCam)->RenderMaterial() && cameras.at(currentCam)->RenderMaterial()->GetShader())
+				{
+					shaders.push_back(cameras.at(currentCam)->RenderMaterial()->GetShader());
+				}
+			}
+		}
 			
-			Shader* currentShader = currentMaterial->GetShader();
-			BindShader(currentShader->ShaderReference());
+		// Add the GBuffer Shader:
+		shaders.push_back(this->gBufferDrawShader);
+
+
+		// Configure all of the shaders:
+		for (unsigned int i = 0; i < (int)shaders.size(); i++)
+		{
+			BindShader(shaders.at(i)->ShaderReference());
 
 			// Upload Texture sampler locations. Note: These must align with the locations defined in Material.h
-			for (int j = 0; j < TEXTURE_COUNT; j++)
+			for (int currentTexture = 0; currentTexture < TEXTURE_COUNT; currentTexture++)
 			{
-				GLint samplerLocation = glGetUniformLocation(currentShader->ShaderReference(), Material::TEXTURE_SAMPLER_NAMES[j].c_str());
+				GLint samplerLocation = glGetUniformLocation(shaders.at(i)->ShaderReference(), Material::TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
 				if (samplerLocation >= 0)
 				{
-					glUniform1i(samplerLocation, (TEXTURE_TYPE)j);
+					glUniform1i(samplerLocation, (TEXTURE_TYPE)currentTexture);
 				}
 			}
 			// Upload RenderTexture sampler locations:
-			for (int j = 0; j < RENDER_TEXTURE_COUNT; j++)
+			for (int currentTexture = 0; currentTexture < RENDER_TEXTURE_COUNT; currentTexture++)
 			{
-				GLint samplerLocation = glGetUniformLocation(currentShader->ShaderReference(), Material::RENDER_TEXTURE_SAMPLER_NAMES[j].c_str());
+				GLint samplerLocation = glGetUniformLocation(shaders.at(i)->ShaderReference(), Material::RENDER_TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
 				if (samplerLocation >= 0)
 				{
-					glUniform1i(samplerLocation, (int)(RENDER_TEXTURE_0 + (TEXTURE_TYPE)j));
+					glUniform1i(samplerLocation, (int)(RENDER_TEXTURE_0 + (TEXTURE_TYPE)currentTexture));
 				}
 			}
-			
-			// Upload light direction (world space) and color, and ambient light color:
-			currentShader->UploadUniform("ambient", &(ambient->r), UNIFORM_Vec3fv);
 
-			currentShader->UploadUniform("lightDirection", &(keyDir->x), UNIFORM_Vec3fv); // TODO: Move these to the main render loop once we've switched to deferred rendering w/multiple lights
-			currentShader->UploadUniform("lightColor", &(keyCol->r), UNIFORM_Vec3fv);
+			// Upload light direction (world space) and color, and ambient light color:
+			shaders.at(i)->UploadUniform("ambient", &(ambient->r), UNIFORM_Vec3fv);
+
+			shaders.at(i)->UploadUniform("lightDirection", &(keyDir->x), UNIFORM_Vec3fv); // TODO: Move these to the main render loop once we've switched to deferred rendering w/multiple lights
+			shaders.at(i)->UploadUniform("lightColor", &(keyCol->r), UNIFORM_Vec3fv);
 
 			// Upload matrices:
 			mat4 projection = sceneManager->GetMainCamera()->Projection();
-			currentShader->UploadUniform("in_projection", &projection[0][0], UNIFORM_Matrix4fv);
+			shaders.at(i)->UploadUniform("in_projection", &projection[0][0], UNIFORM_Matrix4fv);
 
 			BindShader(0);
 		}
+
+
+
+
+
+
+
+
+		//
+
+		//for (unsigned int i = 0; i < numMaterials; i++)
+		//{
+		//	Material* currentMaterial = sceneManager->GetMaterial(i);
+		//	
+		//	Shader* currentShader = currentMaterial->GetShader();
+		//	BindShader(currentShader->ShaderReference());
+
+		//	// Upload Texture sampler locations. Note: These must align with the locations defined in Material.h
+		//	for (int currentTexture = 0; currentTexture < TEXTURE_COUNT; currentTexture++)
+		//	{
+		//		GLint samplerLocation = glGetUniformLocation(currentShader->ShaderReference(), Material::TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
+		//		if (samplerLocation >= 0)
+		//		{
+		//			glUniform1i(samplerLocation, (TEXTURE_TYPE)currentTexture);
+		//		}
+		//	}
+		//	// Upload RenderTexture sampler locations:
+		//	for (int currentTexture = 0; currentTexture < RENDER_TEXTURE_COUNT; currentTexture++)
+		//	{
+		//		GLint samplerLocation = glGetUniformLocation(currentShader->ShaderReference(), Material::RENDER_TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
+		//		if (samplerLocation >= 0)
+		//		{
+		//			glUniform1i(samplerLocation, (int)(RENDER_TEXTURE_0 + (TEXTURE_TYPE)currentTexture));
+		//		}
+		//	}
+		//	
+		//	// Upload light direction (world space) and color, and ambient light color:
+		//	currentShader->UploadUniform("ambient", &(ambient->r), UNIFORM_Vec3fv);
+
+		//	currentShader->UploadUniform("lightDirection", &(keyDir->x), UNIFORM_Vec3fv); // TODO: Move these to the main render loop once we've switched to deferred rendering w/multiple lights
+		//	currentShader->UploadUniform("lightColor", &(keyCol->r), UNIFORM_Vec3fv);
+
+		//	// Upload matrices:
+		//	mat4 projection = sceneManager->GetMainCamera()->Projection();
+		//	currentShader->UploadUniform("in_projection", &projection[0][0], UNIFORM_Matrix4fv);
+
+		//	BindShader(0);
+		//}
+
+
+		//// TEMP HACK:
+		//// TODO: Roll this into a loop 
+
+		//// Configure the GBuffer draw shader:
+		//BindShader(this->gBufferDrawShader->ShaderReference());
+
+		//// Upload Texture sampler locations. Note: These must align with the locations defined in Material.h
+		//for (int currentTexture = 0; currentTexture < TEXTURE_COUNT; currentTexture++)
+		//{
+		//	GLint samplerLocation = glGetUniformLocation(this->gBufferDrawShader->ShaderReference(), Material::TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
+		//	if (samplerLocation >= 0)
+		//	{
+		//		glUniform1i(samplerLocation, (TEXTURE_TYPE)currentTexture);
+		//	}
+		//}
+		//// Upload RenderTexture sampler locations:
+		//for (int currentTexture = 0; currentTexture < RENDER_TEXTURE_COUNT; currentTexture++)
+		//{
+		//	GLint samplerLocation = glGetUniformLocation(this->gBufferDrawShader->ShaderReference(), Material::RENDER_TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
+		//	if (samplerLocation >= 0)
+		//	{
+		//		glUniform1i(samplerLocation, (int)(RENDER_TEXTURE_0 + (TEXTURE_TYPE)currentTexture));
+		//	}
+		//}
+
+		//// Upload light direction (world space) and color, and ambient light color:
+		//this->gBufferDrawShader->UploadUniform("ambient", &(ambient->r), UNIFORM_Vec3fv);
+
+		//this->gBufferDrawShader->UploadUniform("lightDirection", &(keyDir->x), UNIFORM_Vec3fv); // TODO: Move these to the main render loop once we've switched to deferred rendering w/multiple lights
+		//this->gBufferDrawShader->UploadUniform("lightColor", &(keyCol->r), UNIFORM_Vec3fv);
+
+		//// Upload matrices:
+		//mat4 projection = sceneManager->GetMainCamera()->Projection();
+		//this->gBufferDrawShader->UploadUniform("in_projection", &projection[0][0], UNIFORM_Matrix4fv);
+
+		//BindShader(0);
+
+
+
+		//// Configure the GBuffer fill shader:
+		//BindShader(CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera()->RenderMaterial()->GetShader()->ShaderReference());
+
+		//// Upload Texture sampler locations. Note: These must align with the locations defined in Material.h
+		//for (int currentTexture = 0; currentTexture < TEXTURE_COUNT; currentTexture++)
+		//{
+		//	GLint samplerLocation = glGetUniformLocation(CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera()->RenderMaterial()->GetShader()->ShaderReference(), Material::TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
+		//	if (samplerLocation >= 0)
+		//	{
+		//		glUniform1i(samplerLocation, (TEXTURE_TYPE)currentTexture);
+		//	}
+		//}
+		//// Upload RenderTexture sampler locations:
+		//for (int currentTexture = 0; currentTexture < RENDER_TEXTURE_COUNT; currentTexture++)
+		//{
+		//	GLint samplerLocation = glGetUniformLocation(CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera()->RenderMaterial()->GetShader()->ShaderReference(), Material::RENDER_TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
+		//	if (samplerLocation >= 0)
+		//	{
+		//		glUniform1i(samplerLocation, (int)(RENDER_TEXTURE_0 + (TEXTURE_TYPE)currentTexture));
+		//	}
+		//}
+
+		//// Upload light direction (world space) and color, and ambient light color:
+		//CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera()->RenderMaterial()->GetShader()->UploadUniform("ambient", &(ambient->r), UNIFORM_Vec3fv);
+
+		//CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera()->RenderMaterial()->GetShader()->UploadUniform("lightDirection", &(keyDir->x), UNIFORM_Vec3fv); // TODO: Move these to the main render loop once we've switched to deferred rendering w/multiple lights
+		//CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera()->RenderMaterial()->GetShader()->UploadUniform("lightColor", &(keyCol->r), UNIFORM_Vec3fv);
+
+		//// Upload matrices:
+		////mat4 projection = sceneManager->GetMainCamera()->Projection();
+		//CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera()->RenderMaterial()->GetShader()->UploadUniform("in_projection", &projection[0][0], UNIFORM_Matrix4fv);
+
+		//BindShader(0);
 	}
 
 

@@ -56,9 +56,7 @@ namespace BlazeEngine
 		}
 
 		// Copy properties:
-		/*this->textureID				= rhs.textureID;*/
-		this->textureID				= 0;	// NOTE: We set the frame buffer to 0, since we don't want to stomp any existing ones
-
+		this->textureID				= 0;	// NOTE: This could potentially result in some textures never being destroyed (ie. If this is called on a non-duplicated texture) TODO: Investigate this
 
 		this->texTarget				= rhs.texTarget;
 		this->format				= rhs.format;
@@ -77,7 +75,7 @@ namespace BlazeEngine
 
 		this->numTexels				= rhs.numTexels;
 
-		if (rhs.texels != nullptr && numTexels > 0)
+		if (rhs.texels != nullptr && this->numTexels > 0)
 		{
 			this->texels				= new vec4[this->numTexels];
 			this->resolutionHasChanged	= true;
@@ -106,6 +104,8 @@ namespace BlazeEngine
 			numTexels = 0;
 			resolutionHasChanged = true;
 		}
+
+		glDeleteSamplers(1, &this->sampler);
 	}
 
 
@@ -119,16 +119,12 @@ namespace BlazeEngine
 		// Cleanup:
 		if (this->texels != nullptr)
 		{
-			delete[] texels;
-			texels = nullptr;
-			numTexels = 0;
-			resolutionHasChanged = true;
+			Destroy();
 		}
 
 
 		// Copy properties:
-		/*this->textureID			= rhs.textureID;*/
-		this->textureID			= 0;	// NOTE: We set the frame buffer to 0, since we don't want to stomp any existing ones
+		this->textureID			= 0;	// NOTE: Texture.Buffer() must be called before this texture can be used
 
 		this->texTarget			= rhs.texTarget;
 		this->format			= rhs.format;
@@ -297,7 +293,7 @@ namespace BlazeEngine
 		if (!glIsTexture(this->textureID))
 		{
 			#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
-			LOG("Texture has never been bound before!");
+				LOG("Texture has never been bound before!");
 			#endif
 
 			glGenTextures(1, &this->textureID);
@@ -356,13 +352,39 @@ namespace BlazeEngine
 			{
 				resolutionHasChanged = false;
 			}
-
 			glTexImage2D(this->texTarget, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, nullptr);
 
 			// Note: We don't unbind the texture here so RenderTexture::Buffer() doesn't have to rebind it
 		}
 
 		return true;
+	}
+	void Texture::BindSampler(TEXTURE_TYPE textureType, bool isRenderTexture)
+	{
+		int textureUnit = (int)textureType;
+		if (isRenderTexture)
+		{
+			textureUnit += RENDER_TEXTURE_0;
+		}
+
+		// Generate/bind the sampler:
+		glGenSamplers(1, &this->sampler);
+
+		glBindSampler(textureUnit, this->sampler);
+		if (!glIsSampler(this->sampler))
+		{
+			LOG_ERROR("Texture could not create sampler");
+		}
+		else
+		{
+			glSamplerParameteri(this->sampler, GL_TEXTURE_WRAP_S, this->textureWrapS);
+			glSamplerParameteri(this->sampler, GL_TEXTURE_WRAP_T, this->textureWrapT);				
+
+			glSamplerParameteri(this->sampler, GL_TEXTURE_MIN_FILTER, this->textureMinFilter);
+			glSamplerParameteri(this->sampler, GL_TEXTURE_MAG_FILTER, this->textureMaxFilter);
+		}
+
+		glBindSampler(textureUnit, 0);
 	}
 }
 

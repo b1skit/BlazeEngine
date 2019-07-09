@@ -21,7 +21,7 @@ layout (location = 5) out vec4 gBuffer_out_depth;
 
 
 void main()
-{	
+{
 	gBuffer_out_albedo		= texture(albedo, data.uv0.xy);
 
 	gBuffer_out_worldNormal = 

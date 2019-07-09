@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Texture.h"
+#include "Shader.h"
 
 #include <vector>
 #include <string>
@@ -15,10 +16,6 @@ using std::string;
 
 namespace BlazeEngine
 {
-	// Pre-declarations
-	class Shader;
-	class Material;
-
 	enum TEXTURE_TYPE
 	{
 		TEXTURE_ALBEDO			= 0,				// Contains transparency in the alpha channel
@@ -34,6 +31,7 @@ namespace BlazeEngine
 		RENDER_TEXTURE_WORLD_NORMAL		= 1,
 		RENDER_TEXTURE_RMAO				= 2,
 		RENDER_TEXTURE_EMISSIVE			= 3,
+
 		RENDER_TEXTURE_WORLD_POSITION	= 4,
 
 		RENDER_TEXTURE_DEPTH			= 5,		// Make this the last element
@@ -61,23 +59,33 @@ namespace BlazeEngine
 	{
 	public:
 		Material(string materialName, string shaderName, TEXTURE_TYPE textureCount = TEXTURE_COUNT);
-		~Material();
+
+		void Destroy()
+		{
+			if (this->shader != nullptr)
+			{
+				this->shader->Destroy();
+				delete this->shader;
+			}
+		}
 
 		// TODO: Copy constructor, assignment operator
 
 		// Getters/Setters:
 		inline string const&	Name()									{ return name; }
-		inline GLuint const&	Samplers(unsigned int textureType)		{ return samplers[textureType]; }
-		inline Shader*			GetShader()								{ return shader; }
+		//inline GLuint const&	Samplers(unsigned int textureType)		{ return samplers[textureType]; }
+		inline Shader*&			GetShader()								{ return shader; }
 		inline vec4&			Property(MATERIAL_PROPERTY_INDEX index) { return properties[index]; }
 
 		inline Texture*&		AccessTexture(TEXTURE_TYPE textureType)	{ return textures[textureType]; }
-		inline int const&		NumTextures()							{ return numTextures; }
+		inline int const&		NumTextureSlots()						{ return numTextures; }
 
 		void AddShaderKeyword(string const& newKeyword)
 		{
 			shaderKeywords.emplace_back(newKeyword);
 		}
+
+		vector<string> const& ShaderKeywords() const					{ return shaderKeywords; }
 
 		// RenderTexture sampler names:
 		const static string RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_COUNT];
@@ -93,8 +101,6 @@ namespace BlazeEngine
 		Shader*		shader		= nullptr;					// Deallocated up in SceneManager.Shutdown()
 		Texture**	textures	= nullptr;					// Deallocated when object is destroyed in SceneManager.Shutdown()
 		int			numTextures = 0;
-
-		GLuint*		samplers;								// Deallocated up in destructor
 		
 		vec4		properties[MATERIAL_PROPERTY_COUNT];	// Generic material properties
 

@@ -135,6 +135,9 @@ namespace BlazeEngine
 		inline Camera*					GetMainCamera()							 					{ return currentScene->GetMainCamera(); }
 		void							RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera)	{ currentScene->RegisterCamera(cameraType, newCamera); }
 
+		int								AddTexture(Texture* newTexture); // Returns index of inserted texture
+
+
 	protected:
 
 
@@ -169,12 +172,12 @@ namespace BlazeEngine
 
 		// Texture management:
 		//--------------------
-		Texture**			textures			= nullptr;
-		const unsigned int	MAX_TEXTURES		= 100; // TODO: Replace this with something configurable/dynamic?
+		Texture**			textures			= nullptr;	// TODO: Replace this with vector<Texture*>
+		const unsigned int	MAX_TEXTURES		= 100;
 		unsigned int		currentTextureCount	= 0;
 		
-		// Find if a texture if it exists, or try and load it if it doesn't. Returns nullptr if file can't be loaded
-		Texture*	FindLoadTextureByPath(string texturePath);
+		// Find if a texture if it exists, or try and load it if it doesn't. Returns nullptr if file isn't/can't be loaded
+		Texture*	FindLoadTextureByPath(string texturePath, bool loadIfNotFound = true);
 
 
 		// Scene setup/construction:

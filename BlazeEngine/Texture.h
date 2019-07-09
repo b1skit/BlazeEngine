@@ -14,6 +14,10 @@ using std::string;
 
 namespace BlazeEngine
 {
+	// Pre-declarations:
+	enum TEXTURE_TYPE;
+
+
 	class Texture
 	{
 	public:
@@ -44,8 +48,9 @@ namespace BlazeEngine
 		inline GLenum&				TextureMinFilter()	{ return textureMinFilter; }
 		inline GLenum&				TextureMaxFilter()	{ return textureMaxFilter; }
 
+		inline GLuint&				Sampler()			{ return sampler; }
 
-		string&						TexturePath()		{ return texturePath; }
+		inline string&				TexturePath()		{ return texturePath; }
 
 
 		// Get/set a texel value:
@@ -61,7 +66,7 @@ namespace BlazeEngine
 		// Upload a texture to the GPU. Returns true if successful, false otherwise
 		bool Buffer();
 
-		
+		void BindSampler(TEXTURE_TYPE textureType, bool isRenderTexture);
 
 		// Public static functions:
 		//-------------------------
@@ -84,7 +89,7 @@ namespace BlazeEngine
 		GLenum textureMinFilter		= GL_NEAREST_MIPMAP_LINEAR;
 		GLenum textureMaxFilter		= GL_LINEAR;
 
-
+		GLuint sampler				= 0;
 
 		unsigned int	width		= 1;		// # Cols
 		unsigned int	height		= 1;		// # Rows

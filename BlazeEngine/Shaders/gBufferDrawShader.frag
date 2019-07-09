@@ -15,11 +15,9 @@
 void main()
 {	
 	// DEBUG: Just output an element
-//	FragColor = texture(GBuffer_Albedo, data.uv0.xy);
+	FragColor = texture(GBuffer_Albedo, data.uv0.xy);
 //	FragColor = texture(GBuffer_Normal, data.uv0.xy);
-	FragColor = texture(GBuffer_RMAO, data.uv0.xy);
+//	FragColor = texture(GBuffer_RMAO, data.uv0.xy);
 //	FragColor = texture(GBuffer_Emissive, data.uv0.xy);
 //	FragColor = texture(GBuffer_Position, data.uv0.xy);
-	
-
 } 

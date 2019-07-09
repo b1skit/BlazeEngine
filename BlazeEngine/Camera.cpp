@@ -105,8 +105,8 @@ namespace BlazeEngine
 			this->GetName() + "_" + Material::RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_ALBEDO],
 			false
 		);
-		gBuffer_albedo->InternalFormat()	= GL_RGBA32F;
 		gBuffer_albedo->Format()			= GL_RGBA;		// Note: Using 4 channels for future flexibility
+		gBuffer_albedo->InternalFormat()	= GL_RGBA32F;		
 		
 		gBuffer_albedo->TextureMinFilter()	= GL_LINEAR;	// Note: Output is black if this is GL_NEAREST_MIPMAP_LINEAR
 		gBuffer_albedo->TextureMaxFilter()	= GL_LINEAR;
@@ -117,18 +117,19 @@ namespace BlazeEngine
 		gBuffer_albedo->DrawBuffer()		= GL_COLOR_ATTACHMENT0 + 0;
 
 		gBuffer_albedo->Buffer();
+		gBuffer_albedo->BindSampler(TEXTURE_ALBEDO, true);
 
 		GLuint gBufferFBO = gBuffer_albedo->FBO(); // Cache off the FBO for the other GBuffer textures
 
 		gBufferMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO) = gBuffer_albedo;
 
 		// Store references to our additonal RenderTextures:
-		int numAdditionalRTs = (int)RENDER_TEXTURE_COUNT - 2;
-		RenderTexture** additionalRTs = new RenderTexture* [numAdditionalRTs];
+		int numAdditionalRTs = (int)RENDER_TEXTURE_COUNT - 2; // -2 b/c we already have 1, and we'll add the depth texture last
+		RenderTexture** additionalRTs = new RenderTexture*[numAdditionalRTs];
 
 		int insertIndex = 0;
 		int attachmentIndexOffset = 1;
-		for (int currentType = 1; currentType < (int)RENDER_TEXTURE_COUNT; currentType++)	 // -1 b/c we'll add the depth texture last
+		for (int currentType = 1; currentType < (int)RENDER_TEXTURE_COUNT; currentType++)	 
 		{
 			if ((TEXTURE_TYPE)currentType == RENDER_TEXTURE_DEPTH)
 			{
@@ -144,6 +145,7 @@ namespace BlazeEngine
 			currentRT->DrawBuffer()			= GL_COLOR_ATTACHMENT0 + attachmentIndexOffset;
 
 			currentRT->Texture::Buffer();	// Generate a texture without bothering to attempt to bind a framebuffer
+			currentRT->BindSampler((TEXTURE_TYPE)currentType, true);
 
 			glBindTexture(currentRT->TextureTarget(), 0); // Cleanup: Texture was never unbound in Texture::Buffer, so we must unbind it here
 
@@ -171,6 +173,7 @@ namespace BlazeEngine
 		depth->FBO()			= gBufferFBO;
 
 		depth->Texture::Buffer();
+		depth->BindSampler(RENDER_TEXTURE_DEPTH, true);
 		glBindTexture(depth->TextureTarget(), 0); // Cleanup: Texture was never unbound in Texture::Buffer, so we must unbind it here
 
 		gBuffer_albedo->AttachAdditionalRenderTexturesToFramebuffer(&depth, 1, true);

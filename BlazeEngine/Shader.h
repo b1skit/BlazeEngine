@@ -5,6 +5,7 @@
 #include <vector>
 
 using std::string;
+using std::vector;
 
 
 namespace BlazeEngine
@@ -20,12 +21,26 @@ namespace BlazeEngine
 	};
 
 
+	// Shader #define keywords
+	enum SHADER_KEYWORDS
+	{
+		NO_ALBEDO_TEXTURE,
+		NO_NORMAL_TEXTURE,
+		NO_EMISSIVE_TEXTURE,
+		NO_RMAO_TEXTURE, 
+		NO_COSINE_POWER,
+
+		SHADER_KEYWORD_COUNT	// RESERVED: How many shader keywords we have
+	}; // Note: If new enums are added, don't forget to update Shader::TEXTURE_SAMPLER_NAMES[] as well!
+
+
 	class Shader
 	{
 	public:
 		Shader() {} // Do nothing
 		Shader(const string shaderName, const GLuint shaderReference);
 		Shader(const Shader& existingShader);
+
 		/*~Shader() {}*/
 
 		void Destroy();
@@ -36,9 +51,14 @@ namespace BlazeEngine
 
 		void UploadUniform(GLchar const* uniformName, GLfloat const* value, UNIFORM_TYPE const& type);
 
-		// Static functions:
-		static Shader* CreateShader(string shaderName);
 
+		// Static functions:
+		//------------------
+		static Shader* CreateShader(string shaderName, vector<string> const*  shaderKeywords = nullptr);
+
+
+		// Static members:
+		const static string SHADER_KEYWORDS[SHADER_KEYWORD_COUNT];
 
 	protected:
 
@@ -59,6 +79,9 @@ namespace BlazeEngine
 
 		// Helper function: Processes #include directives, loading included files from within the shaders directory
 		static void LoadIncludes(string& shaderText);
+
+		// Helper function: Inserts #define statements into shader text
+		static void InsertDefines(string& shaderText, vector<string> const* shaderKeywords);
 
 		static GLuint CreateGLShaderObject(const string& text, GLenum shaderType);
 		static bool CheckShaderError(GLuint shader, GLuint flag, bool isProgram);
