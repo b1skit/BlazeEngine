@@ -5,6 +5,7 @@
 
 #include "SceneObject.h"
 #include "ShadowMap.h"
+//#include "Mesh.h"
 
 #include "glm.hpp"
 
@@ -18,7 +19,8 @@ namespace BlazeEngine
 {
 	// Pre-declarations:
 	class Camera;
-
+	class Material;
+	class Mesh;
 
 	enum LIGHT_TYPE
 	{
@@ -28,7 +30,7 @@ namespace BlazeEngine
 		LIGHT_AREA,
 		LIGHT_TUBE,
 
-		NUM_LIGHT_TYPES // Resereved: The number of light types
+		LIGHT_TYPE_COUNT // Resereved: The number of light types
 	};
 
 	class Light : public SceneObject
@@ -57,16 +59,24 @@ namespace BlazeEngine
 		
 		ShadowMap*&					ActiveShadowMap(ShadowMap* newShadowMap = nullptr);				// Get/set the current shadow map
 
+		inline Mesh*& DeferredMesh()							{ return deferredMesh; }
+		inline Material*& DeferredMaterial()					{ return deferredMaterial; }
+
+
 	protected:
 
 
 
 	private:
-		vec3 color				= vec3(0.0f, 0.0f, 0.0f);	// Note: Intensity is factored into these values
-		LIGHT_TYPE type			= LIGHT_DIRECTIONAL;		// Default
+		vec3 color					= vec3(0.0f, 0.0f, 0.0f);	// Note: Intensity is factored into these values
+		LIGHT_TYPE type				= LIGHT_DIRECTIONAL;		// Default
 
-		string lightName		= "unnamed_directional_light";
+		string lightName			= "unnamed_directional_light";
 
-		ShadowMap* shadowMap	= nullptr;							// Deallocated by calling Destroy() during SceneManager.Shutdown()
+		ShadowMap* shadowMap		= nullptr;							// Deallocated by calling Destroy() during SceneManager.Shutdown()
+
+		// Deferred light setup:
+		Mesh* deferredMesh			= nullptr;
+		Material* deferredMaterial	= nullptr;
 	};
 }

@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "Mesh.h"
 #include "Texture.h"
+#include "Material.h"
 
 
 #include "glm.hpp"
@@ -1411,6 +1412,35 @@ namespace BlazeEngine
 					);
 
 					currentScene->keyLight.ActiveShadowMap(keyLightShadowMap);
+
+					// Deferred light setup:
+					// Attach a screen aligned mesh for deferred rendering:
+					currentScene->keyLight.DeferredMesh() = new Mesh
+					(
+						Mesh::CreateQuad
+						(
+							vec3(-1.0f,	1.0f,	0.0f),	// TL
+							vec3(1.0f,	1.0f,	0.0f),	// TR
+							vec3(-1.0f,	-1.0f,	0.0f),	// BL
+							vec3(1.0f,	-1.0f,	0.0f)	// BR
+						)
+					);
+
+					currentScene->keyLight.DeferredMaterial() = new Material
+					(
+						"keyLightMaterial",	
+						CoreEngine::GetCoreEngine()->GetConfig()->shader.deferredKeylightShaderName,
+						(TEXTURE_TYPE)0	
+					);
+		(
+			Mesh::CreateQuad
+			(
+				vec3(-1.0f,	1.0f,	0.0f),	// TL
+				vec3(1.0f,	1.0f,	0.0f),	// TR
+				vec3(-1.0f,	-1.0f,	0.0f),	// BL
+				vec3(1.0f,	-1.0f,	0.0f)	// BR
+			)
+		);
 
 					// Note: Assimp seems to import directional lights with their "forward" vector pointing in the opposite direction.
 					// This is ok, since we use "forward" as "vector pointing towards the light" when uploading to our shaders...

@@ -46,11 +46,11 @@ namespace BlazeEngine
 
 	Material::Material(string materialName, string shaderName, TEXTURE_TYPE textureCount /*= TEXTURE_COUNT*/)
 	{
-		this->name = materialName;
+		this->name			= materialName;
 
-		this->shader = Shader::CreateShader(shaderName, &shaderKeywords);
+		this->shader		= Shader::CreateShader(shaderName, &shaderKeywords);
 
-		this->numTextures = (int)textureCount;
+		this->numTextures	= (int)textureCount;
 
 		textures = new Texture*[this->numTextures];
 		for (int i = 0; i < this->numTextures; i++)
@@ -62,6 +62,12 @@ namespace BlazeEngine
 		{
 			properties[i] = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		}
+	}
+
+
+	Texture*& Material::AccessTexture(TEXTURE_TYPE textureType)
+	{
+		return textures[textureType];
 	}
 }
 

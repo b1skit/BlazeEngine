@@ -69,7 +69,8 @@ namespace BlazeEngine
 		void RenderToGBuffer(Camera* const renderCam);	// Note: renderCam MUST have an attached GBuffer
 
 		void RenderForward(Camera* renderCam);
-		void RenderFromGBuffer(Camera* renderCam);
+
+		void RenderDeferredLight(Light* deferredLight);
 
 
 		// Configuration:
@@ -82,9 +83,6 @@ namespace BlazeEngine
 		SDL_Window* glWindow	= 0;
 		SDL_GLContext glContext = 0;
 
-		// GBuffer:
-		Mesh* screenAlignedQuad;
-		Shader* gBufferDrawShader	= nullptr;		// Deallocated in Shutdown()
 		
 		// Private member functions:
 		//--------------------------

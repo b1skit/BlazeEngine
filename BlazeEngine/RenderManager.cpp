@@ -225,40 +225,12 @@ namespace BlazeEngine
 		glClearDepth((GLdouble)1.0);		// Set the default depth buffer clear value
 
 		ClearWindow(vec4(0.79f, 0.32f, 0.0f, 1.0f));
-
-		// Create a screen aligned quad mesh for rendering the GBuffer:
-		screenAlignedQuad = new Mesh
-		(
-			Mesh::CreateQuad
-			(
-				vec3(-1.0f,	1.0f,	0.0f),	// TL
-				vec3(1.0f,	1.0f,	0.0f),	// TR
-				vec3(-1.0f,	-1.0f,	0.0f),	// BL
-				vec3(1.0f,	-1.0f,	0.0f)	// BR
-			)
-		);
-
-		gBufferDrawShader = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.gBufferDrawShaderName);
 	}
 
 
 	void RenderManager::Shutdown()
 	{
 		LOG("Render manager shutting down...");
-
-		if (screenAlignedQuad != nullptr)
-		{
-			screenAlignedQuad->DestroyMesh();
-			delete screenAlignedQuad;
-			screenAlignedQuad = nullptr;
-		}
-
-		if (gBufferDrawShader != nullptr)
-		{
-			gBufferDrawShader->Destroy();
-			delete gBufferDrawShader;
-			gBufferDrawShader = nullptr;
-		}
 	}
 
 
@@ -281,8 +253,8 @@ namespace BlazeEngine
 		// //Forward render: Leaving this around for a while for debug purposes
 		//RenderForward(mainCam);
 
-		// Render from GBuffer:
-		RenderFromGBuffer(mainCam);
+		// Temp hack: Render the keylight directly:
+		RenderDeferredLight(&CoreEngine::GetSceneManager()->GetKeyLight());
 
 		// Display the final frame:
 		SDL_GL_SwapWindow(glWindow);
@@ -410,11 +382,12 @@ namespace BlazeEngine
 			}
 
 			// Cleanup:
-			//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			BindTextures(currentMaterial);
 			BindShader(0);
 
 		} // End Material loop
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 
@@ -507,9 +480,9 @@ namespace BlazeEngine
 		} // End Material loop
 	}
 
-
-	void BlazeEngine::RenderManager::RenderFromGBuffer(Camera* renderCam)
+	void BlazeEngine::RenderManager::RenderDeferredLight(Light* deferredLight)
 	{
+		Camera* renderCam = CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(0, 0, this->xRes, this->yRes);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
@@ -518,29 +491,29 @@ namespace BlazeEngine
 		mat4 view			= renderCam->View();
 		mat4 shadowCam_vp	= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight().ActiveShadowMap()->ShadowCamera()->ViewProjection();
 
-		Shader* currentShader			= gBufferDrawShader;
-		GLuint shaderReference			= gBufferDrawShader->ShaderReference();
-	
+		Shader* currentShader			= deferredLight->DeferredMaterial()->GetShader();
+		GLuint shaderReference			= currentShader->ShaderReference();
+
 		// Bind:
 		BindShader(shaderReference);
 
 		BindTextures(renderCam->RenderMaterial(), shaderReference);
 
-		BindMeshBuffers(screenAlignedQuad);
+		BindMeshBuffers(deferredLight->DeferredMesh());
 
 		// Upload common shader matrices:
 		currentShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
 		currentShader->UploadUniform("shadowCam_vp", &shadowCam_vp[0][0], UNIFORM_Matrix4fv);
 
 		// Draw!
-		glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
+		glDrawElements(GL_TRIANGLES, deferredLight->DeferredMesh()->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
 		BindTextures(renderCam->RenderMaterial(), 0);
 		BindShader(0);
 		BindMeshBuffers();
 	}
 
-
+	
 	void RenderManager::ClearWindow(vec4 clearColor)
 	{
 		// Set the initial color in both buffers:
@@ -657,8 +630,15 @@ namespace BlazeEngine
 			}
 		}
 			
-		// Add the GBuffer Shader:
-		shaders.push_back(this->gBufferDrawShader);
+		// TODO Add shader attached to lights
+		// Add all light shaders:
+		//for (int currentType = 0; currentType < LIGHT_TYPE_COUNT; currentType)
+		//{
+		//	for(int currentLight = 0; currentLight < )
+		//}
+
+		shaders.push_back(CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight().DeferredMaterial()->GetShader());
+		LOG_WARNING("Adding keylight directly to render manager's shader init");
 
 
 		// Configure all of the shaders:
@@ -697,128 +677,6 @@ namespace BlazeEngine
 
 			BindShader(0);
 		}
-
-
-
-
-
-
-
-
-		//
-
-		//for (unsigned int i = 0; i < numMaterials; i++)
-		//{
-		//	Material* currentMaterial = sceneManager->GetMaterial(i);
-		//	
-		//	Shader* currentShader = currentMaterial->GetShader();
-		//	BindShader(currentShader->ShaderReference());
-
-		//	// Upload Texture sampler locations. Note: These must align with the locations defined in Material.h
-		//	for (int currentTexture = 0; currentTexture < TEXTURE_COUNT; currentTexture++)
-		//	{
-		//		GLint samplerLocation = glGetUniformLocation(currentShader->ShaderReference(), Material::TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
-		//		if (samplerLocation >= 0)
-		//		{
-		//			glUniform1i(samplerLocation, (TEXTURE_TYPE)currentTexture);
-		//		}
-		//	}
-		//	// Upload RenderTexture sampler locations:
-		//	for (int currentTexture = 0; currentTexture < RENDER_TEXTURE_COUNT; currentTexture++)
-		//	{
-		//		GLint samplerLocation = glGetUniformLocation(currentShader->ShaderReference(), Material::RENDER_TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
-		//		if (samplerLocation >= 0)
-		//		{
-		//			glUniform1i(samplerLocation, (int)(RENDER_TEXTURE_0 + (TEXTURE_TYPE)currentTexture));
-		//		}
-		//	}
-		//	
-		//	// Upload light direction (world space) and color, and ambient light color:
-		//	currentShader->UploadUniform("ambient", &(ambient->r), UNIFORM_Vec3fv);
-
-		//	currentShader->UploadUniform("lightDirection", &(keyDir->x), UNIFORM_Vec3fv); // TODO: Move these to the main render loop once we've switched to deferred rendering w/multiple lights
-		//	currentShader->UploadUniform("lightColor", &(keyCol->r), UNIFORM_Vec3fv);
-
-		//	// Upload matrices:
-		//	mat4 projection = sceneManager->GetMainCamera()->Projection();
-		//	currentShader->UploadUniform("in_projection", &projection[0][0], UNIFORM_Matrix4fv);
-
-		//	BindShader(0);
-		//}
-
-
-		//// TEMP HACK:
-		//// TODO: Roll this into a loop 
-
-		//// Configure the GBuffer draw shader:
-		//BindShader(this->gBufferDrawShader->ShaderReference());
-
-		//// Upload Texture sampler locations. Note: These must align with the locations defined in Material.h
-		//for (int currentTexture = 0; currentTexture < TEXTURE_COUNT; currentTexture++)
-		//{
-		//	GLint samplerLocation = glGetUniformLocation(this->gBufferDrawShader->ShaderReference(), Material::TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
-		//	if (samplerLocation >= 0)
-		//	{
-		//		glUniform1i(samplerLocation, (TEXTURE_TYPE)currentTexture);
-		//	}
-		//}
-		//// Upload RenderTexture sampler locations:
-		//for (int currentTexture = 0; currentTexture < RENDER_TEXTURE_COUNT; currentTexture++)
-		//{
-		//	GLint samplerLocation = glGetUniformLocation(this->gBufferDrawShader->ShaderReference(), Material::RENDER_TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
-		//	if (samplerLocation >= 0)
-		//	{
-		//		glUniform1i(samplerLocation, (int)(RENDER_TEXTURE_0 + (TEXTURE_TYPE)currentTexture));
-		//	}
-		//}
-
-		//// Upload light direction (world space) and color, and ambient light color:
-		//this->gBufferDrawShader->UploadUniform("ambient", &(ambient->r), UNIFORM_Vec3fv);
-
-		//this->gBufferDrawShader->UploadUniform("lightDirection", &(keyDir->x), UNIFORM_Vec3fv); // TODO: Move these to the main render loop once we've switched to deferred rendering w/multiple lights
-		//this->gBufferDrawShader->UploadUniform("lightColor", &(keyCol->r), UNIFORM_Vec3fv);
-
-		//// Upload matrices:
-		//mat4 projection = sceneManager->GetMainCamera()->Projection();
-		//this->gBufferDrawShader->UploadUniform("in_projection", &projection[0][0], UNIFORM_Matrix4fv);
-
-		//BindShader(0);
-
-
-
-		//// Configure the GBuffer fill shader:
-		//BindShader(CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera()->RenderMaterial()->GetShader()->ShaderReference());
-
-		//// Upload Texture sampler locations. Note: These must align with the locations defined in Material.h
-		//for (int currentTexture = 0; currentTexture < TEXTURE_COUNT; currentTexture++)
-		//{
-		//	GLint samplerLocation = glGetUniformLocation(CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera()->RenderMaterial()->GetShader()->ShaderReference(), Material::TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
-		//	if (samplerLocation >= 0)
-		//	{
-		//		glUniform1i(samplerLocation, (TEXTURE_TYPE)currentTexture);
-		//	}
-		//}
-		//// Upload RenderTexture sampler locations:
-		//for (int currentTexture = 0; currentTexture < RENDER_TEXTURE_COUNT; currentTexture++)
-		//{
-		//	GLint samplerLocation = glGetUniformLocation(CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera()->RenderMaterial()->GetShader()->ShaderReference(), Material::RENDER_TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
-		//	if (samplerLocation >= 0)
-		//	{
-		//		glUniform1i(samplerLocation, (int)(RENDER_TEXTURE_0 + (TEXTURE_TYPE)currentTexture));
-		//	}
-		//}
-
-		//// Upload light direction (world space) and color, and ambient light color:
-		//CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera()->RenderMaterial()->GetShader()->UploadUniform("ambient", &(ambient->r), UNIFORM_Vec3fv);
-
-		//CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera()->RenderMaterial()->GetShader()->UploadUniform("lightDirection", &(keyDir->x), UNIFORM_Vec3fv); // TODO: Move these to the main render loop once we've switched to deferred rendering w/multiple lights
-		//CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera()->RenderMaterial()->GetShader()->UploadUniform("lightColor", &(keyCol->r), UNIFORM_Vec3fv);
-
-		//// Upload matrices:
-		////mat4 projection = sceneManager->GetMainCamera()->Projection();
-		//CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera()->RenderMaterial()->GetShader()->UploadUniform("in_projection", &projection[0][0], UNIFORM_Matrix4fv);
-
-		//BindShader(0);
 	}
 
 

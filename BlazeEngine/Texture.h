@@ -14,8 +14,8 @@ using std::string;
 
 namespace BlazeEngine
 {
-	// Pre-declarations:
-	enum TEXTURE_TYPE;
+	//// Pre-declarations:
+	//enum TEXTURE_TYPE;
 
 
 	class Texture
@@ -66,7 +66,8 @@ namespace BlazeEngine
 		// Upload a texture to the GPU. Returns true if successful, false otherwise
 		bool Buffer();
 
-		void BindSampler(TEXTURE_TYPE textureType, bool isRenderTexture);
+		//void BindSampler(TEXTURE_TYPE textureType, bool isRenderTexture);
+		void BindSampler(int textureType, bool isRenderTexture);
 
 		// Public static functions:
 		//-------------------------

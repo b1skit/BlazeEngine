@@ -24,6 +24,18 @@ namespace BlazeEngine
 			shadowMap = nullptr;
 		}
 
+		if (deferredMesh != nullptr)
+		{
+			delete deferredMesh;
+			deferredMesh = nullptr;
+		}
+
+		if (deferredMaterial != nullptr)
+		{
+			delete deferredMaterial;
+			deferredMaterial = nullptr;
+		}
+
 		lightName += "_DELETED";
 	}
 

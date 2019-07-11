@@ -73,11 +73,10 @@ namespace BlazeEngine
 
 		// Getters/Setters:
 		inline string const&	Name()									{ return name; }
-		//inline GLuint const&	Samplers(unsigned int textureType)		{ return samplers[textureType]; }
 		inline Shader*&			GetShader()								{ return shader; }
 		inline vec4&			Property(MATERIAL_PROPERTY_INDEX index) { return properties[index]; }
 
-		inline Texture*&		AccessTexture(TEXTURE_TYPE textureType)	{ return textures[textureType]; }
+		Texture*&				AccessTexture(TEXTURE_TYPE textureType);// { return textures[textureType]; }
 		inline int const&		NumTextureSlots()						{ return numTextures; }
 
 		void AddShaderKeyword(string const& newKeyword)
