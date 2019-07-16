@@ -56,7 +56,7 @@
 // Lighting:
 uniform vec3 ambient;
 
-uniform vec3 lightDirection;		// Normalized, world space, points towards light source
+uniform vec3 lightWorldDir;		// Normalized, world space, points towards light source
 uniform vec3 lightColor;
 
 // Matrices:

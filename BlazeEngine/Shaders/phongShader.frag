@@ -23,19 +23,19 @@ void main()
 	vec4 ambientContribution	= FragColor * vec4(ambient, 1);
 
 	// Diffuse:
-	float nDotL					= max(0, dot(texNormal, lightDirection));
+	float nDotL					= max(0, dot(texNormal, lightWorldDir));
 	vec4 diffuseContribution	= FragColor * vec4(nDotL * lightColor, 1);
 
 	// Specular:
-	vec3 specColor	= lightColor * texture(RMAO, data.uv0.xy).r;
-	vec3 reflectDir = normalize(reflect(-lightDirection, texNormal));		// World-space reflection dir
+	vec3 specColor	= lightColor * texture(RMAO, data.uv0.xy).r;			// Light color * roughness
+	vec3 reflectDir = normalize(reflect(-lightWorldDir, texNormal));		// World-space reflection dir
 	reflectDir		= normalize((in_view * vec4(reflectDir, 0))).xyz;		// World -> view space
 	
 	vec3 viewDir			= normalize(data.viewPos.xyz);					// view-space fragment view dir
 	float vDotR				= max(0, dot(viewDir, reflectDir));
 	vec4 specContribution	= vec4(specColor, 1) * pow(vDotR, matProperty0.x);
 
-	float shadowFactor		= GetShadowFactor(data.shadowPos, shadowDepth, data.vertexWorldNormal, lightDirection);
+	float shadowFactor		= GetShadowFactor(data.shadowPos, shadowDepth, data.vertexWorldNormal, lightWorldDir);
 	
 	// Final result:
 	FragColor = ambientContribution + ((diffuseContribution + specContribution) * shadowFactor);

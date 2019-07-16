@@ -359,7 +359,8 @@ namespace BlazeEngine
 
 		return true;
 	}
-	//void Texture::BindSampler(TEXTURE_TYPE textureType, bool isRenderTexture)
+
+	
 	void Texture::BindSampler(int textureType, bool isRenderTexture)
 	{
 		int textureUnit = (int)textureType;

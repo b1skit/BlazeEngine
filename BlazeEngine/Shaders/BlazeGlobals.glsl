@@ -2,10 +2,14 @@
 // Defines functions common to all shaders
 //----------------------------------------
 
-mat3 AssembleTBN(vec3 tangent, vec3 bitangent)
+mat3 AssembleTBN(vec3 localTangent, vec3 localBitangent, mat4 worldRotation)
 {
-	vec3 faceNormal = normalize(cross(tangent, bitangent));
-	return mat3(tangent, bitangent, faceNormal);
+	vec3 worldTangent = (worldRotation * vec4(localTangent, 0)).xyz;
+	vec3 worldBitangent = (worldRotation * vec4(localBitangent, 0)).xyz;
+
+	vec3 worldFaceNormal = normalize(cross(worldTangent, worldBitangent));
+	
+	return mat3(worldTangent, worldBitangent, worldFaceNormal);
 }
 
 

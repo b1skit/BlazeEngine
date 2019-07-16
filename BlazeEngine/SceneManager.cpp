@@ -312,8 +312,8 @@ namespace BlazeEngine
 		aiScene const* scene = importer.ReadFile(fbxPath, 
 			aiProcess_ValidateDataStructure 
 			| aiProcess_CalcTangentSpace
-			| aiProcess_Triangulate 
-			| aiProcess_JoinIdenticalVertices 
+			| aiProcess_Triangulate
+			| aiProcess_JoinIdenticalVertices
 			| aiProcess_SortByPType 
 			| aiProcess_GenUVCoords 
 			| aiProcess_TransformUVCoords
@@ -429,7 +429,7 @@ namespace BlazeEngine
 		return &materialMeshLists.at(materialIndex);
 	}
 
-	int BlazeEngine::SceneManager::AddTexture(Texture* newTexture)
+	int BlazeEngine::SceneManager::AddTexture(Texture*& newTexture)
 	{
 		if (newTexture == nullptr)
 		{
@@ -449,6 +449,14 @@ namespace BlazeEngine
 
 			if (textures[i] != nullptr && textures[i]->TexturePath() == newTexture->TexturePath())
 			{	
+				if (textures[i] != newTexture)
+				{
+					LOG_WARNING("Cannot add texture with an identical path. Deleting duplicate, and updating reference");
+					delete newTexture;
+
+					newTexture = textures[i];
+				}
+
 				return i;
 			}
 		}
@@ -742,7 +750,7 @@ namespace BlazeEngine
 				std::size_t shaderNameIndex = matName.find_last_of("_");
 				if (shaderNameIndex == string::npos)
 				{
-					LOG_ERROR("Could not find a shader name prefixed with an underscore in the material name. Destroying loaded textures and assigning error shader");
+					LOG_ERROR("Could not find a shader name prefixed with an underscore in the material name. Destroying loaded textures and assigning error shader - GBuffer data will be garbage!!!");
 				}
 				else
 				{
@@ -771,6 +779,21 @@ namespace BlazeEngine
 							newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture)->Destroy();
 							delete newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture);
 							newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture) = nullptr;
+						}
+					}
+
+					// Assign a pink error albedo texture:
+					string errorTextureName = "errorTexture"; // TODO: Store this in a config?
+					newMaterial->AccessTexture(TEXTURE_ALBEDO) = FindLoadTextureByPath(errorTextureName, false);
+					if (newMaterial->AccessTexture(TEXTURE_ALBEDO) == nullptr)
+					{
+						newMaterial->AccessTexture(TEXTURE_ALBEDO) = new Texture(1, 1, errorTextureName, true, vec4(1.0f, 0.0f, 1.0f, 1.0f));
+
+						if (newMaterial->AccessTexture(TEXTURE_ALBEDO)->Buffer())
+						{
+							newMaterial->AccessTexture(TEXTURE_ALBEDO)->BindSampler(TEXTURE_ALBEDO, false); // TODO: Can this be part of calling Buffer() ???
+							
+							AddTexture(newMaterial->AccessTexture(TEXTURE_ALBEDO));
 						}
 					}
 				}
@@ -842,7 +865,7 @@ namespace BlazeEngine
 					// Create it if it wasn't already loaded:
 					if (newTexture == nullptr)
 					{
-						newTexture = new Texture(1, 1, flatNormalName, true, vec4(0.5f, 0.5f, 1.0f, 1.0f));
+						newTexture = new Texture(1, 1, flatNormalName, true, vec4(0.5f, 0.5f, 1.0f, 0.0f)); // <--- IS THIS MY BUG!??!?!!?!?!?!?!?!? 0 * 2 - 1 = -1...
 					}
 				}				
 			}
@@ -919,7 +942,6 @@ namespace BlazeEngine
 
 				if (pathString.find(nameSubstring) != string::npos)
 				{
-					//pathString = string(path.C_Str());
 					LOG_WARNING("Texture not found in expected slot. Assigning texture containing \"" + nameSubstring + "\" as a fallback");
 
 					string sceneRoot = CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + sceneName + "\\";
@@ -1039,7 +1061,7 @@ namespace BlazeEngine
 					}
 
 					// Normal:
-					if (scene->mMeshes[currentMesh]->HasFaces())
+					if (scene->mMeshes[currentMesh]->HasNormals())
 					{
 						hasNormal = true;
 						normal = vec3(scene->mMeshes[currentMesh]->mNormals[currentVert].x, scene->mMeshes[currentMesh]->mNormals[currentVert].y, scene->mMeshes[currentMesh]->mNormals[currentVert].z);
@@ -1070,7 +1092,7 @@ namespace BlazeEngine
 					{
 						if (glm::dot(glm::cross(tangent, bitangent), normal) < 0)
 						{
-							tangent *= -1;
+							tangent *= -1.0f;
 						}
 					}
 
@@ -1102,7 +1124,6 @@ namespace BlazeEngine
 
 				GameObject* gameObject = FindCreateGameObjectParents(scene, currentNode->mParent);
 
-				aiMatrix4x4 combinedTransform;
 				Transform* targetTransform = nullptr;
 
 				// If the mesh doesn't belong to a group, create a GameObject to contain it:
@@ -1128,8 +1149,8 @@ namespace BlazeEngine
 					targetTransform = &newMesh->GetTransform();	// We'll use the mesh in our transform heirarchy
 				}
 
-				combinedTransform = GetCombinedTransformFromHierarchy(scene, currentNode->mParent);	// Mesh doesn't belong to a group, so we'll give it's transform to the gameobject we've created
-				combinedTransform = combinedTransform * currentNode->mTransformation;				// Combine the parent and child transforms	
+				aiMatrix4x4 combinedTransform	= GetCombinedTransformFromHierarchy(scene, currentNode->mParent);	// Mesh doesn't belong to a group, so we'll give it's transform to the gameobject we've created
+				combinedTransform				= combinedTransform * currentNode->mTransformation;					// Combine the parent and child transforms	
 				
 				InitializeTransformValues(combinedTransform, targetTransform);						// Copy to our Mesh transform
 
@@ -1516,74 +1537,82 @@ namespace BlazeEngine
 		if (clearCameras)
 		{
 			currentScene->ClearCameras();
-		}		
+		}
+
+		string cameraName;
+		CameraConfig newCamConfig;
+		Camera* newCamera = nullptr;
+		int numCameras = 0;
 
 		if (scene == nullptr) // Signal to create a default camera at the origin
 		{
 			LOG("Creating a default camera");
 
-			CameraConfig camConfig;
-			camConfig.aspectRatio	= CoreEngine::GetCoreEngine()->GetConfig()->GetWindowAspectRatio();
-			camConfig.fieldOfView	= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView;
-			camConfig.near			= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultNear;
-			camConfig.far			= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFar;
+			newCamConfig.aspectRatio	= CoreEngine::GetCoreEngine()->GetConfig()->GetWindowAspectRatio();
+			newCamConfig.fieldOfView	= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView;
+			newCamConfig.near			= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultNear;
+			newCamConfig.far			= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFar;
 
-			currentScene->RegisterCamera(CAMERA_TYPE_MAIN, new Camera("defaultCamera", camConfig));
+			cameraName					= "defaultCamera";
+		}
+		else
+		{
+			// TODO: In the current version of Assimp, camera import is broken.
+			// + The mLookAt, mUp vectors seem to just be the world forward, up vectors, and mTransformation is the identity...
+			// + Importing cameras facing towards Z+ results in a flipped camera?
+			// + Importing cameras facing towards Z- results in an extra +90 degree rotation about Y being applied?
 
-			return;
+
+			// Camera configuration:
+			newCamConfig.aspectRatio		= (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes;
+			newCamConfig.fieldOfView		= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView; //scene->mCameras[0]->mHorizontalFOV; // TODO: Implement this (Needs to be converted to a vertical FOV???)
+			newCamConfig.near				= scene->mCameras[0]->mClipPlaneNear;
+			newCamConfig.far				= scene->mCameras[0]->mClipPlaneFar;
+			newCamConfig.isOrthographic		= false;	// This is the default, but set it here anyway for clarity
+
+			cameraName						= string(scene->mCameras[0]->mName.C_Str());
+
+			numCameras						= scene->mNumCameras;
 		}
 
-		string cameraName = string(scene->mCameras[0]->mName.C_Str());
-
-		int numCameras = scene->mNumCameras;
 		if (numCameras > 1)
 		{
 			LOG_ERROR("Found " + to_string(numCameras) + " cameras in the scene. Currently, only 1 camera is supported. Setting the FIRST camera received camera as the main camera.");
 		}
 		else
 		{
-			LOG("Found " + to_string(numCameras) + " scene camera: \"" + cameraName + "\"");
+			LOG("Found " + to_string(numCameras) + " scene camera(s): Adding camera \"" + cameraName + "\"");
 		}
 
-		// If we made it this far, we're importing a camera from the scene:
+		// Create a new camera, attach a GBuffer, and register:
+		newCamera						= new Camera(cameraName, newCamConfig);
+		newCamera->AttachGBuffer();
 
-
-		// TODO: In the current version of Assimp, camera import is broken.
-		// + The mLookAt, mUp vectors seem to just be the world forward, up vectors, and mTransformation is the identity...
-		// + Importing cameras facing towards Z+ results in a flipped camera?
-		// + Importing cameras facing towards Z- results in an extra +90 degree rotation about Y being applied?
-
-
-		// Camera configuration:
-		CameraConfig newCamConfig;
-		newCamConfig.aspectRatio		= (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes;
-		newCamConfig.fieldOfView		= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView; //scene->mCameras[0]->mHorizontalFOV; // TODO: Implement this (Needs to be converted to a vertical FOV???)
-		newCamConfig.near				= scene->mCameras[0]->mClipPlaneNear;
-		newCamConfig.far				= scene->mCameras[0]->mClipPlaneFar;
-		newCamConfig.isOrthographic		= false;	// This is the default, but set it here anyway for clarity
-
-		Camera* newCamera				= new Camera(cameraName, newCamConfig);
-
-		// Attach a GBuffer for deferred rendering:
-		newCamera->AttachGBuffer();		
+		currentScene->RegisterCamera(CAMERA_TYPE_MAIN, newCamera); // For now, assume that we're only importing the main camera. No other cameras are currently supported...
 
 		// Copy transform values:
-		aiNode* camNode = scene->mRootNode->FindNode(scene->mCameras[0]->mName);
-		if (camNode)
-		{			
-			#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING) || defined(DEBUG_TRANSFORMS)
-				LOG("-> " + cameraName + " (Camera's first transformation node)");
-				LOG(to_string(camNode->mTransformation.a1) + " " + to_string(camNode->mTransformation.a2) + " " + to_string(camNode->mTransformation.a3) + " " + to_string(camNode->mTransformation.a4));
-				LOG(to_string(camNode->mTransformation.b1) + " " + to_string(camNode->mTransformation.b2) + " " + to_string(camNode->mTransformation.b3) + " " + to_string(camNode->mTransformation.b4));
-				LOG(to_string(camNode->mTransformation.c1) + " " + to_string(camNode->mTransformation.c2) + " " + to_string(camNode->mTransformation.c3) + " " + to_string(camNode->mTransformation.c4));
-				LOG(to_string(camNode->mTransformation.d1) + " " + to_string(camNode->mTransformation.d2) + " " + to_string(camNode->mTransformation.d3) + " " + to_string(camNode->mTransformation.d4));
-			#endif
+		if (scene != nullptr)
+		{
 			
-			aiMatrix4x4 camTransform	= GetCombinedTransformFromHierarchy(scene, camNode->mParent, false);
-			camTransform				= camTransform * camNode->mTransformation;
-			 
-			InitializeTransformValues(camTransform, newCamera->GetTransform());
-		}
+			aiNode* camNode = scene->mRootNode->FindNode(scene->mCameras[0]->mName);
+			if (camNode)
+			{			
+				#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING) || defined(DEBUG_TRANSFORMS)
+					LOG("-> " + cameraName + " (Camera's first transformation node)");
+					LOG(to_string(camNode->mTransformation.a1) + " " + to_string(camNode->mTransformation.a2) + " " + to_string(camNode->mTransformation.a3) + " " + to_string(camNode->mTransformation.a4));
+					LOG(to_string(camNode->mTransformation.b1) + " " + to_string(camNode->mTransformation.b2) + " " + to_string(camNode->mTransformation.b3) + " " + to_string(camNode->mTransformation.b4));
+					LOG(to_string(camNode->mTransformation.c1) + " " + to_string(camNode->mTransformation.c2) + " " + to_string(camNode->mTransformation.c3) + " " + to_string(camNode->mTransformation.c4));
+					LOG(to_string(camNode->mTransformation.d1) + " " + to_string(camNode->mTransformation.d2) + " " + to_string(camNode->mTransformation.d3) + " " + to_string(camNode->mTransformation.d4));
+				#endif
+
+				aiMatrix4x4 camTransform	= GetCombinedTransformFromHierarchy(scene, camNode->mParent, false);
+				camTransform				= camTransform * camNode->mTransformation;
+
+				InitializeTransformValues(camTransform, newCamera->GetTransform());
+			}
+
+			LOG_ERROR("Camera field of view is NOT currently loaded from the source file. A hard-coded default value is used for now");
+		}		
 
 		#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING)
 			
@@ -1592,11 +1621,7 @@ namespace BlazeEngine
 			LOG("Camera is located at " + to_string(camPosition.x) + " " + to_string(camPosition.y) + " " + to_string(camPosition.z) + ". Near = " + to_string(scene->mCameras[0]->mClipPlaneNear) + ", " + "far = " + to_string(scene->mCameras[0]->mClipPlaneFar) );
 			LOG("Camera rotation is " + to_string(camRotation.x) + " " + to_string(camRotation.y) + " " + to_string(camRotation.z) + " (radians)");
 			LOG("Camera rotation is " + to_string(camRotation.x * (180.0f / glm::pi<float>())) + " " + to_string(camRotation.y * (180.0f / glm::pi<float>())) + " " + to_string(camRotation.z * (180.0f / glm::pi<float>())) + " (degrees)");
-		#endif
-
-		LOG_ERROR("Camera field of view is NOT currently loaded from the source file. A hard-coded default value is used for now");
-
-		currentScene->RegisterCamera(CAMERA_TYPE_MAIN, newCamera); // For now, assume that we're only importing the main camera. No other cameras are currently supported...
+		#endif		
 	}
 }
 

@@ -306,7 +306,7 @@ namespace BlazeEngine
 
 
 	void BlazeEngine::RenderManager::RenderToGBuffer(Camera* const renderCam)
-	{		
+	{
 		// For now, we just find the first valid texture, and assume it's FBO is the one we want to bind:
 		RenderTexture* renderTexture	= (RenderTexture*)renderCam->RenderMaterial()->AccessTexture((TEXTURE_TYPE)0);
 		if (renderTexture == nullptr)
@@ -325,8 +325,28 @@ namespace BlazeEngine
 		
 		glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
 		glViewport(0, 0, renderTexture->Width(), renderTexture->Height());
+		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
 
+		// Clear the FBO texture buffers:
+		renderTexture = nullptr;
+		for (int currentTexture = 0; currentTexture < renderCam->RenderMaterial()->NumTextureSlots(); currentTexture++)
+		{
+			// Temp hack: No need to manually clear the depth texture
+			if ((TEXTURE_TYPE)currentTexture == RENDER_TEXTURE_DEPTH)
+			{
+				continue;
+			}
+
+			renderTexture = (RenderTexture*)renderCam->RenderMaterial()->AccessTexture((TEXTURE_TYPE)currentTexture);
+			if (renderTexture != nullptr)
+			{
+				glClearBufferfv(GL_COLOR, currentTexture, &renderTexture->ClearColor().r);
+				renderTexture = nullptr;
+			}			
+		}
+		
+		
 		// Assemble common (model independent) matrices:
 		mat4 view			= renderCam->View();
 
@@ -371,6 +391,22 @@ namespace BlazeEngine
 				currentShader->UploadUniform("in_model",			&model[0][0],			UNIFORM_Matrix4fv);
 				currentShader->UploadUniform("in_modelRotation",	&modelRotation[0][0],	UNIFORM_Matrix4fv);
 				currentShader->UploadUniform("in_mvp",				&mvp[0][0],				UNIFORM_Matrix4fv);
+
+				//LOG("model:");
+				//
+				//LOG("\n" + to_string(model[0][0]) + " " + to_string(model[1][0]) + " " + to_string(model[2][0]) + " " + to_string(model[3][0]) );
+				//LOG("\t" + to_string(model[0][1]) + " " + to_string(model[1][1]) + " " + to_string(model[2][1]) + " " + to_string(model[3][1]));
+				//LOG("\t" + to_string(model[0][2]) + " " + to_string(model[1][2]) + " " + to_string(model[2][2]) + " " + to_string(model[3][2]));
+				//LOG("\t" + to_string(model[0][3]) + " " + to_string(model[1][3]) + " " + to_string(model[2][3]) + " " + to_string(model[3][3]));
+
+				//LOG("modelRotation:");
+
+				//LOG("\n" + to_string(modelRotation[0][0]) + " " + to_string(modelRotation[1][0]) + " " + to_string(modelRotation[2][0]) + " " + to_string(modelRotation[3][0]) );
+				//LOG("\t" + to_string(modelRotation[0][1]) + " " + to_string(modelRotation[1][1]) + " " + to_string(modelRotation[2][1]) + " " + to_string(modelRotation[3][1]));
+				//LOG("\t" + to_string(modelRotation[0][2]) + " " + to_string(modelRotation[1][2]) + " " + to_string(modelRotation[2][2]) + " " + to_string(modelRotation[3][2]));
+				//LOG("\t" + to_string(modelRotation[0][3]) + " " + to_string(modelRotation[1][3]) + " " + to_string(modelRotation[2][3]) + " " + to_string(modelRotation[3][3]));
+
+
 
 				// TODO: Only upload these matrices if they've changed ^^^^
 
@@ -494,10 +530,15 @@ namespace BlazeEngine
 		Shader* currentShader			= deferredLight->DeferredMaterial()->GetShader();
 		GLuint shaderReference			= currentShader->ShaderReference();
 
+		
+
+
 		// Bind:
 		BindShader(shaderReference);
 
 		BindTextures(renderCam->RenderMaterial(), shaderReference);
+		BindTextures(deferredLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial(), shaderReference);
+			//BindTextures(shadowCamRenderMaterial, shaderReference);
 
 		BindMeshBuffers(deferredLight->DeferredMesh());
 
@@ -505,10 +546,29 @@ namespace BlazeEngine
 		currentShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
 		currentShader->UploadUniform("shadowCam_vp", &shadowCam_vp[0][0], UNIFORM_Matrix4fv);
 
+		if (deferredLight->ActiveShadowMap() != nullptr)
+		{
+			currentShader->UploadUniform("maxShadowBias", &deferredLight->ActiveShadowMap()->MaxShadowBias(), UNIFORM_Float);
+			currentShader->UploadUniform("minShadowBias", &deferredLight->ActiveShadowMap()->MinShadowBias(), UNIFORM_Float);
+
+			vec4 shadowDepth_TexelSize(0, 0, 0, 0);
+			RenderTexture* depthTexture = (RenderTexture*)deferredLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
+			if (depthTexture)
+			{
+				shadowDepth_TexelSize = vec4(1.0f / depthTexture->Width(), 1.0f / depthTexture->Height(), depthTexture->Width(), depthTexture->Height());
+				// ^^ TODO: Compute this once and cache it for uploading
+			}
+			currentShader->UploadUniform("shadowDepth_TexelSize", &shadowDepth_TexelSize.x, UNIFORM_Vec4fv);
+
+			// TODO: Only upload this if it changes
+		}
+	
+
 		// Draw!
 		glDrawElements(GL_TRIANGLES, deferredLight->DeferredMesh()->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
 		BindTextures(renderCam->RenderMaterial(), 0);
+		BindTextures(deferredLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial(), 0);
 		BindShader(0);
 		BindMeshBuffers();
 	}
@@ -516,6 +576,8 @@ namespace BlazeEngine
 	
 	void RenderManager::ClearWindow(vec4 clearColor)
 	{
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 		// Set the initial color in both buffers:
 		glClearColor(GLclampf(clearColor.r), GLclampf(clearColor.g), GLclampf(clearColor.b), GLclampf(clearColor.a));
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -637,8 +699,9 @@ namespace BlazeEngine
 		//	for(int currentLight = 0; currentLight < )
 		//}
 
-		shaders.push_back(CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight().DeferredMaterial()->GetShader());
 		LOG_WARNING("Adding keylight directly to render manager's shader init");
+		shaders.push_back(CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight().DeferredMaterial()->GetShader());
+		
 
 
 		// Configure all of the shaders:
@@ -668,7 +731,7 @@ namespace BlazeEngine
 			// Upload light direction (world space) and color, and ambient light color:
 			shaders.at(i)->UploadUniform("ambient", &(ambient->r), UNIFORM_Vec3fv);
 
-			shaders.at(i)->UploadUniform("lightDirection", &(keyDir->x), UNIFORM_Vec3fv); // TODO: Move these to the main render loop once we've switched to deferred rendering w/multiple lights
+			shaders.at(i)->UploadUniform("lightWorldDir", &(keyDir->x), UNIFORM_Vec3fv); // TODO: Move these to the main render loop once we've switched to deferred rendering w/multiple lights
 			shaders.at(i)->UploadUniform("lightColor", &(keyCol->r), UNIFORM_Vec3fv);
 
 			// Upload matrices:

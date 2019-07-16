@@ -34,14 +34,14 @@ namespace BlazeEngine
 		 //Explicit constructor:
 		Vertex(vec3 const& position, vec3 const& normal, vec3 const tangent, vec3 const bitangent, vec4 const& color, const vec4& uv0)
 		{
-			this->position = position;
-			this->color = color;
+			this->position	= position;
+			this->color		= color;
 
-			this->normal = normal;
-			this->tangent = tangent;
+			this->normal	= normal;
+			this->tangent	= tangent;
 			this->bitangent = bitangent;
 			
-			this->uv0 = uv0;
+			this->uv0		= uv0;
 
 			// Just set these to 0 for now...
 			uv1 = uv2 = uv3 = vec4(0.0f, 0.0f, 0.0f, 0.0f);

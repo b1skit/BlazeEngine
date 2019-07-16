@@ -135,7 +135,7 @@ namespace BlazeEngine
 		inline Camera*					GetMainCamera()							 					{ return currentScene->GetMainCamera(); }
 		void							RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera)	{ currentScene->RegisterCamera(cameraType, newCamera); }
 
-		int								AddTexture(Texture* newTexture); // Returns index of inserted texture
+		int								AddTexture(Texture*& newTexture); // Returns index of inserted texture. Updates pointer if duplicate texture exists
 
 
 	protected:

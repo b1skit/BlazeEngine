@@ -30,10 +30,13 @@ namespace BlazeEngine
 		GLuint& DrawBuffer()				{ return drawBuffer; }
 		GLuint& ReadBuffer()				{ return readBuffer; }
 
+		vec4& ClearColor()					{ return clearColor; }
+
 		void Destroy();
 
 		// Configure GPU framebuffer object. Returns true if successful, false otherwise. Also calls Texture.Buffer()
 		bool Buffer();
+
 
 	protected:
 
@@ -45,6 +48,8 @@ namespace BlazeEngine
 
 		GLuint drawBuffer			= GL_NONE;	// Which of the 4 color buffers should be drawn into for the DEFAULT framebuffer
 		GLuint readBuffer			= GL_NONE;	// Which color buffer to use for subsequent reads
+
+		vec4 clearColor				= vec4(0, 0, 0, 1);
 	};
 }
 

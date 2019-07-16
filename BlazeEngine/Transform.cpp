@@ -38,23 +38,24 @@ namespace BlazeEngine
 			Recompute();
 		}	
 
+		// Return the *combined* world transformations of the entire hierarchy
 		switch (component)
 		{
 		case WORLD_TRANSLATION:
-			return translation;
+			return this->combinedTranslation;
 			break;
 
 		case WORLD_SCALE:
-			return scale;
+			return this->combinedScale;
 			break;
 
 		case WORLD_ROTATION:
-			return rotation;
+			return this->combinedRotation;
 			break;
 
 		case WORLD_MODEL:
 		default:
-			return combinedModel;
+			return this->combinedModel;
 		}		
 	}
 
@@ -260,10 +261,16 @@ namespace BlazeEngine
 
 		this->model = this->translation * this->scale * this->rotation;
 
-		this->combinedModel = model;
+		this->combinedModel			= this->model;
+		this->combinedScale			= this->scale;
+		this->combinedRotation		= this->rotation;
+		this->combinedTranslation	= this->translation;
 		if (this->parent != nullptr)
 		{
-			combinedModel = this->parent->Model() * combinedModel;
+			this->combinedModel			= this->parent->Model(WORLD_MODEL) * combinedModel;
+			this->combinedScale			= this->parent->Model(WORLD_SCALE) * combinedScale;
+			this->combinedRotation		= this->parent->Model(WORLD_ROTATION) * combinedRotation;
+			this->combinedTranslation	= this->parent->Model(WORLD_TRANSLATION) * combinedTranslation;
 		}
 
 		for (int i = 0; i < (int)children.size(); i++)

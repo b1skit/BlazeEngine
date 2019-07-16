@@ -22,27 +22,23 @@ layout (location = 5) out vec4 gBuffer_out_depth;
 
 void main()
 {
+	// Albedo:
 	gBuffer_out_albedo		= texture(albedo, data.uv0.xy);
 
-	gBuffer_out_worldNormal = 
-	(
-		vec4
-		(
-			WorldNormalFromTexture
-			(
-				data.TBN, 
-				texture(normal, data.uv0.xy).rgb, 
-				in_modelRotation
-			).xyz, 
-			0
-		)
-	); // Could pack something else in .a??
-	// TODO: ^^^ Issue: Doesn't work if the mesh doesn't have a normal? (Doesn't look right in RenderDoc)
+	// Normal:
+	vec3 texNormal			= texture(normal, data.uv0.xy).xyz;
+	texNormal				= texNormal * 2.0 - 1.0;	 // [0,1] -> [-1,1]
+	gBuffer_out_worldNormal = vec4( normalize(data.TBN * texNormal), 0);
 
+	// RMAO:
 	gBuffer_out_RMAO		= texture(RMAO, data.uv0.xy);
+
+	// Emissive:
 	gBuffer_out_emissive	= texture(emissive, data.uv0.xy);
 
-	gBuffer_out_position	= vec4(data.worldPos.xyz, 0); // .a unused?
+	// Position:
+	gBuffer_out_position	= vec4(data.worldPos.xyz, 1); // Homogenize ????
 
+	// Depth:
 	gBuffer_out_depth		= vec4(gl_FragCoord.z, gl_FragCoord.z, gl_FragCoord.z, 1.0);
 }

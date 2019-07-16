@@ -16,14 +16,6 @@ using std::vector;
 
 namespace BlazeEngine
 {
-	//enum SPACE
-	//{
-	//	SPACE_LOCAL,
-	//	SPACE_WORLD,
-	//	SPACE_VIEW,
-	//	SPACE_CLIP,
-	//};
-
 	enum MODEL_MATRIX_COMPONENT
 	{
 		WORLD_TRANSLATION,
@@ -131,9 +123,12 @@ namespace BlazeEngine
 		mat4 rotation		= mat4(1.0f);
 		mat4 translation	= mat4(1.0f);
 
-		mat4 combinedModel	= mat4(1.0f);
+		mat4 combinedModel			= mat4(1.0f);
+		mat4 combinedScale			= mat4(1.0f);
+		mat4 combinedRotation		= mat4(1.0f);
+		mat4 combinedTranslation	= mat4(1.0f);
 
-		quat worldRotation;		// Used to assemble rotation matrix
+		quat worldRotation;		// Rotation of this transform. Used to assemble rotation matrix
 
 		bool isDirty;			// Do our model or combinedModel matrices need to be recomputed?
 

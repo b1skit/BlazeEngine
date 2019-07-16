@@ -190,12 +190,6 @@
     <None Include="Shaders\gBufferFillShader.vert">
       <Filter>Source Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\gBufferDrawShader.frag">
-      <Filter>Source Files\Shaders</Filter>
-    </None>
-    <None Include="Shaders\gBufferDrawShader.vert">
-      <Filter>Source Files\Shaders</Filter>
-    </None>
     <None Include="Shaders\deferredKeyLightShader.frag">
       <Filter>Source Files\Shaders</Filter>
     </None>

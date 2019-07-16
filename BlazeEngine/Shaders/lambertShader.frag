@@ -13,9 +13,9 @@ void main()
 {	
 	FragColor			= texture(albedo, data.uv0.xy);
 
-	float nDotL			= max(0, dot(data.vertexWorldNormal, lightDirection));
+	float nDotL			= max(0, dot(data.vertexWorldNormal, lightWorldDir));
 
-	float shadowFactor	= GetShadowFactor(data.shadowPos, shadowDepth, data.vertexWorldNormal, lightDirection); // TEMP: Pass key direction directly... Should be passing generic light's dir
+	float shadowFactor	= GetShadowFactor(data.shadowPos, shadowDepth, data.vertexWorldNormal, lightWorldDir);
 	
 	FragColor			= (FragColor * vec4(ambient, 1) ) + (FragColor * vec4(nDotL * lightColor, 1) * shadowFactor );
 } 
