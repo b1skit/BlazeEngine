@@ -32,11 +32,12 @@ namespace BlazeEngine
 		RENDER_TEXTURE_RMAO				= 2,
 		RENDER_TEXTURE_EMISSIVE			= 3,
 
-		RENDER_TEXTURE_WORLD_POSITION	= 4,
+		RENDER_TEXTURE_WORLD_POSITION		= 4,
+		RENDER_TEXTURE_MATERIAL_PROPERTY_0	= 5,	// MATERIAL_PROPERTY_0
 
-		RENDER_TEXTURE_DEPTH			= 5,		// Make this the last element
+		RENDER_TEXTURE_DEPTH				= 6,	// Make this the last element
 
-		RENDER_TEXTURE_COUNT			= 6	
+		RENDER_TEXTURE_COUNT				= 7
 	}; // Note: If new enums are added, don't forget to update Material::RENDER_TEXTURE_SAMPLER_NAMES[] as well!
 
 

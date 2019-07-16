@@ -83,11 +83,12 @@ layout(binding = 3) uniform sampler2D emissive;	// Emissive (RGB)						Incandesc
 
 // GBuffer samplers: (For reading FROM GBuffer textures)
 layout(binding = 4) uniform sampler2D GBuffer_Albedo;
-layout(binding = 5) uniform sampler2D GBuffer_Normal;	// TODO: Rename as GBuffer_WorldNormal
+layout(binding = 5) uniform sampler2D GBuffer_WorldNormal;
 layout(binding = 6) uniform sampler2D GBuffer_RMAO;
 layout(binding = 7) uniform sampler2D GBuffer_Emissive;
-layout(binding = 8) uniform sampler2D GBuffer_Position;	// TODO: Rename as GBuffer_WorldPosition
-layout(binding = 9) uniform sampler2D shadowDepth;			// GBuffer depth or the currently bound shadow depth map
+layout(binding = 8) uniform sampler2D GBuffer_WorldPos;
+layout(binding = 9) uniform sampler2D GBuffer_MatProp0;
+layout(binding = 10) uniform sampler2D shadowDepth;			// GBuffer depth or the currently bound shadow depth map
 
 // Shadow map parameters:
 uniform vec4		shadowDepth_TexelSize;	// .xyzw = (1/width, 1/height, width, height)
@@ -98,7 +99,7 @@ uniform float		minShadowBias;
 
 
 // Generic material properties:
-uniform vec4 matProperty0; // .x == Phong cosine exponent
+uniform vec4 matProperty0;		// .x == Phong cosine exponent
 //uniform vec4 matProperty1;
 //uniform vec4 matProperty2;
 //uniform vec4 matProperty3;

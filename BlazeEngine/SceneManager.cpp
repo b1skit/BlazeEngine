@@ -735,6 +735,8 @@ namespace BlazeEngine
 				}
 				else
 				{
+					newMaterial->Property(MATERIAL_PROPERTY_0) = vec4(0, 0, 0, 0);
+
 					newMaterial->AddShaderKeyword(Shader::SHADER_KEYWORDS[NO_COSINE_POWER]);
 
 					#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING)

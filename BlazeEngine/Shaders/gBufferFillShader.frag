@@ -17,7 +17,8 @@ layout (location = 1) out vec4 gBuffer_out_worldNormal;
 layout (location = 2) out vec4 gBuffer_out_RMAO;
 layout (location = 3) out vec4 gBuffer_out_emissive;
 layout (location = 4) out vec4 gBuffer_out_position;
-layout (location = 5) out vec4 gBuffer_out_depth;
+layout (location = 5) out vec4 gBuffer_out_matProp0;
+layout (location = 6) out vec4 gBuffer_out_depth;
 
 
 void main()
@@ -38,6 +39,9 @@ void main()
 
 	// Position:
 	gBuffer_out_position	= vec4(data.worldPos.xyz, 1); // Homogenize ????
+
+	// Material properties:
+	gBuffer_out_matProp0	= matProperty0;
 
 	// Depth:
 	gBuffer_out_depth		= vec4(gl_FragCoord.z, gl_FragCoord.z, gl_FragCoord.z, 1.0);

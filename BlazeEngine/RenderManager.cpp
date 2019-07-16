@@ -371,6 +371,9 @@ namespace BlazeEngine
 			BindShader(shaderReference);
 			BindTextures(currentMaterial, shaderReference);
 
+			// Upload material properties:
+			currentShader->UploadUniform(Material::MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_0].c_str(), &currentMaterial->Property(MATERIAL_PROPERTY_0).x, UNIFORM_Vec4fv);
+
 			// Get all meshes that use the current material
 			meshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
 
@@ -391,22 +394,6 @@ namespace BlazeEngine
 				currentShader->UploadUniform("in_model",			&model[0][0],			UNIFORM_Matrix4fv);
 				currentShader->UploadUniform("in_modelRotation",	&modelRotation[0][0],	UNIFORM_Matrix4fv);
 				currentShader->UploadUniform("in_mvp",				&mvp[0][0],				UNIFORM_Matrix4fv);
-
-				//LOG("model:");
-				//
-				//LOG("\n" + to_string(model[0][0]) + " " + to_string(model[1][0]) + " " + to_string(model[2][0]) + " " + to_string(model[3][0]) );
-				//LOG("\t" + to_string(model[0][1]) + " " + to_string(model[1][1]) + " " + to_string(model[2][1]) + " " + to_string(model[3][1]));
-				//LOG("\t" + to_string(model[0][2]) + " " + to_string(model[1][2]) + " " + to_string(model[2][2]) + " " + to_string(model[3][2]));
-				//LOG("\t" + to_string(model[0][3]) + " " + to_string(model[1][3]) + " " + to_string(model[2][3]) + " " + to_string(model[3][3]));
-
-				//LOG("modelRotation:");
-
-				//LOG("\n" + to_string(modelRotation[0][0]) + " " + to_string(modelRotation[1][0]) + " " + to_string(modelRotation[2][0]) + " " + to_string(modelRotation[3][0]) );
-				//LOG("\t" + to_string(modelRotation[0][1]) + " " + to_string(modelRotation[1][1]) + " " + to_string(modelRotation[2][1]) + " " + to_string(modelRotation[3][1]));
-				//LOG("\t" + to_string(modelRotation[0][2]) + " " + to_string(modelRotation[1][2]) + " " + to_string(modelRotation[2][2]) + " " + to_string(modelRotation[3][2]));
-				//LOG("\t" + to_string(modelRotation[0][3]) + " " + to_string(modelRotation[1][3]) + " " + to_string(modelRotation[2][3]) + " " + to_string(modelRotation[3][3]));
-
-
 
 				// TODO: Only upload these matrices if they've changed ^^^^
 
@@ -530,15 +517,11 @@ namespace BlazeEngine
 		Shader* currentShader			= deferredLight->DeferredMaterial()->GetShader();
 		GLuint shaderReference			= currentShader->ShaderReference();
 
-		
-
-
 		// Bind:
 		BindShader(shaderReference);
 
 		BindTextures(renderCam->RenderMaterial(), shaderReference);
 		BindTextures(deferredLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial(), shaderReference);
-			//BindTextures(shadowCamRenderMaterial, shaderReference);
 
 		BindMeshBuffers(deferredLight->DeferredMesh());
 

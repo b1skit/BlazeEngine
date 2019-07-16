@@ -22,14 +22,15 @@ namespace BlazeEngine
 
 	const string Material::RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_COUNT] = 
 	{
-		"GBuffer_Albedo",	// RENDER_TEXTURE_ALBEDO
-		"GBuffer_Normal",	// RENDER_TEXTURE_WORLD_NORMAL
-		"GBuffer_RMAO",		// RENDER_TEXTURE_RMAO
-		"GBuffer_Emissive",	// RENDER_TEXTURE_EMISSIVE
+		"GBuffer_Albedo",		// RENDER_TEXTURE_ALBEDO
+		"GBuffer_WorldNormal",	// RENDER_TEXTURE_WORLD_NORMAL
+		"GBuffer_RMAO",			// RENDER_TEXTURE_RMAO
+		"GBuffer_Emissive",		// RENDER_TEXTURE_EMISSIVE
 
-		"GBuffer_Position",	// RENDER_TEXTURE_WORLD_POSITION
+		"GBuffer_WorldPos",		// RENDER_TEXTURE_WORLD_POSITION
+		"GBuffer_MatProp0"		// RENDER_TEXTURE_MATERIAL_PROPERTY_0
 
-		"shadowDepth",		// RENDER_TEXTURE_DEPTH
+		"shadowDepth",			// RENDER_TEXTURE_DEPTH
 	};
 
 	const string Material::MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_COUNT] =
