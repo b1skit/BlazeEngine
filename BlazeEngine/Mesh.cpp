@@ -82,7 +82,7 @@ namespace BlazeEngine
 	}
 
 
-	void Mesh::DestroyMesh()
+	void Mesh::Destroy()
 	{
 		#if defined(DEBUG_LOG_OUTPUT)
 			meshName = meshName + "_DELETED"; // Safety...

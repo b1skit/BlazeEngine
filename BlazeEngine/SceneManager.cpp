@@ -47,9 +47,7 @@ namespace BlazeEngine
 		
 		sceneCameras.at(CAMERA_TYPE_MAIN).reserve(1); // Only 1 main camera
 
-
-		/*forwardLights.reserve(100);*/
-		/*deferredLights.reserve(100);*/
+		deferredLights.reserve(DEFERRED_LIGHTS_RESERVATION_AMT);
 	}
 
 
@@ -57,7 +55,7 @@ namespace BlazeEngine
 	{
 		DeleteMeshes();
 
-		for (int i = 0; i < gameObjects.size(); i++)
+		for (int i = 0; i < (int)gameObjects.size(); i++)
 		{
 			if (gameObjects.at(i))
 			{
@@ -65,6 +63,18 @@ namespace BlazeEngine
 				gameObjects.at(i) = nullptr;
 			}
 		}
+
+
+		for (int i = 0; i < (int)deferredLights.size(); i++)
+		{
+			if (deferredLights.at(i) != nullptr)
+			{
+				deferredLights.at(i)->Destroy();
+				delete deferredLights.at(i);
+				deferredLights.at(i) = nullptr;
+			}
+		}
+		deferredLights.clear();
 
 		ClearCameras();
 	}
@@ -186,6 +196,52 @@ namespace BlazeEngine
 		}
 	}
 
+	void Scene::AddLight(Light* newLight)
+	{
+		switch (newLight->Type())
+		{
+		// Check if we've got any existing ambient or directional lights:
+		case LIGHT_AMBIENT:
+		case LIGHT_DIRECTIONAL:
+		{
+			bool foundExisting = false;
+			for (int currentLight = 0; currentLight < (int)deferredLights.size(); currentLight++)
+			{
+				if (deferredLights.at(currentLight)->Type() == newLight->Type())
+				{
+					foundExisting = true;
+					LOG_ERROR("Found an existing light with type " + to_string((int)newLight->Type()) + ". New light will not be added");
+					break;
+				}
+			}
+			if (!foundExisting)
+			{
+				deferredLights.push_back(newLight);
+
+				if (newLight->Type() == LIGHT_DIRECTIONAL)
+				{
+					this->keyLight = newLight;
+				}
+				else
+				{
+					this->ambientLight = newLight;
+				}
+			}
+
+			break;
+		}
+
+		// Don't need to do anything special with other light types
+		case LIGHT_POINT:
+		case LIGHT_SPOT:
+		case LIGHT_AREA:
+		case LIGHT_TUBE:
+		default:
+			deferredLights.push_back(newLight);
+			break;
+		}
+	}
+
 
 	/***************************************************************************************************************************************
 	SCENE MANAGER
@@ -231,8 +287,6 @@ namespace BlazeEngine
 
 		if (currentScene)
 		{
-			currentScene->keyLight.Destroy();
-
 			delete currentScene;
 			currentScene = nullptr;
 		}
@@ -1399,21 +1453,19 @@ namespace BlazeEngine
 					
 					vec3 lightColor(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b);
 
-					currentScene->keyLight = Light
+					Light* keyLight = new Light
 					(
 						lightName, 
 						LIGHT_DIRECTIONAL, 
 						lightColor,
 						nullptr
 					);
+					currentScene->AddLight(keyLight);
 
-					InitializeTransformValues(lightTransform, &currentScene->keyLight.GetTransform());
+					InitializeTransformValues(lightTransform, &currentScene->keyLight->GetTransform());
 
 					Bounds sceneWorldBounds = currentScene->WorldSpaceSceneBounds();
-					Bounds transformedBounds = sceneWorldBounds.GetTransformedBounds(glm::inverse(currentScene->keyLight.GetTransform().Model()));
-					
-					//LOG("Scene world bounds: " + to_string(sceneWorldBounds.xMin) + " < X < " + to_string(sceneWorldBounds.xMax) + ", " + to_string(sceneWorldBounds.yMin) + " < Y < " + to_string(sceneWorldBounds.yMax) + ", " + to_string(sceneWorldBounds.zMin) + " < Z < " + to_string(sceneWorldBounds.zMax));
-					//LOG("Framing light frustum about transformed scene bounds:\n\t" + to_string(transformedBounds.xMin) + " < X < " + to_string(transformedBounds.xMax) + ", " + to_string(transformedBounds.yMin) + " < Y < " + to_string(transformedBounds.yMax) + ", " + to_string(transformedBounds.zMin) + " < Z < " + to_string(transformedBounds.zMax));
+					Bounds transformedBounds = sceneWorldBounds.GetTransformedBounds(glm::inverse(currentScene->keyLight->GetTransform().Model()));
 
 					CameraConfig shadowCamConfig;
 					shadowCamConfig.near			= -transformedBounds.zMax;
@@ -1431,39 +1483,10 @@ namespace BlazeEngine
 						CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapWidth,
 						CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapHeight,
 						shadowCamConfig,
-						&currentScene->keyLight.GetTransform()
+						&currentScene->keyLight->GetTransform()
 					);
 
-					currentScene->keyLight.ActiveShadowMap(keyLightShadowMap);
-
-					// Deferred light setup:
-					// Attach a screen aligned mesh for deferred rendering:
-					currentScene->keyLight.DeferredMesh() = new Mesh
-					(
-						Mesh::CreateQuad
-						(
-							vec3(-1.0f,	1.0f,	0.0f),	// TL
-							vec3(1.0f,	1.0f,	0.0f),	// TR
-							vec3(-1.0f,	-1.0f,	0.0f),	// BL
-							vec3(1.0f,	-1.0f,	0.0f)	// BR
-						)
-					);
-
-					currentScene->keyLight.DeferredMaterial() = new Material
-					(
-						"keyLightMaterial",	
-						CoreEngine::GetCoreEngine()->GetConfig()->shader.deferredKeylightShaderName,
-						(TEXTURE_TYPE)0	
-					);
-		(
-			Mesh::CreateQuad
-			(
-				vec3(-1.0f,	1.0f,	0.0f),	// TL
-				vec3(1.0f,	1.0f,	0.0f),	// TR
-				vec3(-1.0f,	-1.0f,	0.0f),	// BL
-				vec3(1.0f,	-1.0f,	0.0f)	// BR
-			)
-		);
+					currentScene->keyLight->ActiveShadowMap(keyLightShadowMap);
 
 					// Note: Assimp seems to import directional lights with their "forward" vector pointing in the opposite direction.
 					// This is ok, since we use "forward" as "vector pointing towards the light" when uploading to our shaders...
@@ -1489,8 +1512,11 @@ namespace BlazeEngine
 				{
 					foundAmbient = true;
 
-					currentScene->ambientLight = vec3(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b);
+					vec3 ambientColor(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b);
+					Light* ambientLight = new Light("ambientLight", LIGHT_AMBIENT, ambientColor, nullptr);
 					
+					currentScene->AddLight(ambientLight);
+
 					#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
 						LOG("Created ambient light from \"" + lightName +"\"");
 					#endif

@@ -64,7 +64,7 @@ namespace BlazeEngine
 
 
 		// Configure this camera for deferred rendering
-		void AttachGBuffer();
+		void				AttachGBuffer();
 
 		void				DebugPrint();
 	protected:

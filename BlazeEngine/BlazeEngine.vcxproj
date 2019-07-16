@@ -183,6 +183,10 @@
       </ExcludedFromBuild>
     </None>
     <None Include="Shaders\BlazeCommon.glsl" />
+    <None Include="Shaders\blitShader.frag" />
+    <None Include="Shaders\blitShader.vert" />
+    <None Include="Shaders\deferredAmbientLightShader.frag" />
+    <None Include="Shaders\deferredAmbientLightShader.vert" />
     <None Include="Shaders\deferredKeyLightShader.frag" />
     <None Include="Shaders\deferredKeyLightShader.vert" />
     <None Include="Shaders\depthShader.vert" />

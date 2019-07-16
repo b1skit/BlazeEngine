@@ -21,6 +21,8 @@ using std::vector;
 #define RENDERABLES_RESERVATION_AMT			100
 #define MESHES_RESERVATION_AMT				100
 
+#define DEFERRED_LIGHTS_RESERVATION_AMT		25
+
 #define CAMERA_TYPE_SHADOW_ARRAY_SIZE			10
 #define CAMERA_TYPE_REFLECTION_ARRAY_SIZE		10
 
@@ -66,6 +68,7 @@ namespace BlazeEngine
 		void					RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera);
 		void					ClearCameras();	// Destroys the scene's cameras
 		
+		void					AddLight(Light* newLight);
 
 		// Scene object containers:
 		//-------------------------
@@ -73,13 +76,11 @@ namespace BlazeEngine
 		vector<Renderable*> renderables;	// Pointers to statically allocated renderables held by GameObjects
 		
 		
-		// Lights:
-		//--------
-		/*vector<Light> forwardLights;*/
-		/*vector<Light> deferredLights;*/
-
-		vec3	ambientLight		= vec3(0.0f, 0.0f, 0.0f);
-		Light	keyLight;
+		// Duplicate pointers to lights contained in deferredLights
+		Light* ambientLight			= nullptr;		
+		Light*	keyLight			= nullptr;					
+		
+		vector<Light*> const& GetDeferredLights() { return deferredLights; }
 
 		Bounds& WorldSpaceSceneBounds()
 		{
@@ -92,6 +93,10 @@ namespace BlazeEngine
 		vector<Mesh*> meshes;				// Pointers to dynamically allocated Mesh objects
 
 		Bounds sceneWorldBounds;
+
+		// Lights:
+		//--------
+		vector<Light*> deferredLights;
 	};
 
 
@@ -128,8 +133,8 @@ namespace BlazeEngine
 		vector<Mesh*> const*			GetRenderMeshes(int materialIndex = -1);					// If materialIndex is out of bounds, returns ALL meshes
 		inline vector<Renderable*>*		GetRenderables()											{ return &currentScene->renderables;	}
 
-		inline vec3 const&				GetAmbient()												{ return currentScene->ambientLight; }
-		inline Light&					GetKeyLight()												{ return currentScene->keyLight; }
+		inline Light* const&			GetAmbient()												{ return currentScene->ambientLight; }
+		inline Light*					GetKeyLight()												{ return currentScene->keyLight; }
 		
 		inline vector<Camera*> const&	GetCameras(CAMERA_TYPE cameraType)							{ return currentScene->GetCameras(cameraType); }
 		inline Camera*					GetMainCamera()							 					{ return currentScene->GetMainCamera(); }
@@ -137,7 +142,7 @@ namespace BlazeEngine
 
 		int								AddTexture(Texture*& newTexture); // Returns index of inserted texture. Updates pointer if duplicate texture exists
 
-
+		vector<Light*> const&			GetDeferredLights()											{ return currentScene->GetDeferredLights(); }
 	protected:
 
 

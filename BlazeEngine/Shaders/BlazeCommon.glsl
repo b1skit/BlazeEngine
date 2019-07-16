@@ -53,9 +53,10 @@
 	} data;
 
 
-// Lighting:
-uniform vec3 ambient;
+// Forward Lighting:
+uniform vec3 ambientColor;		// Deprecated: Use deferred lightColor instead
 
+// Deferred lights:
 uniform vec3 lightWorldDir;		// Normalized, world space, points towards light source
 uniform vec3 lightColor;
 

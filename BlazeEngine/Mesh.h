@@ -200,7 +200,7 @@ namespace BlazeEngine
 	public:
 		Mesh(string name, Vertex* vertices, unsigned int numVerts, GLuint* indices, unsigned int numIndices, int materialIndex = -1);
 		
-		/*~Mesh(); // Cleanup should be handled by whatever owns the mesh, by calling DestroyMesh() */
+		/*~Mesh(); // Cleanup should be handled by whatever owns the mesh, by calling Destroy() */
 
 		// Default copy constructor and assignment operator:
 		Mesh(const Mesh& mesh)				= default;
@@ -224,7 +224,7 @@ namespace BlazeEngine
 		inline GLuint const&	VBO(VERTEX_BUFFER_OBJECT index)	{ return meshVBOs[index]; }
 		
 		// Deallocate and unbind this mesh object
-		void DestroyMesh();
+		void Destroy();
 
 		// Mesh localBounds, in local space
 		Bounds localBounds; // TODO: Should this use a Bounds& getter/setter?

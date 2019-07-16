@@ -6,6 +6,7 @@
 #include "Transform.h"
 #include "Material.h"
 #include "Texture.h"
+#include "RenderTexture.h"
 #include "BuildConfiguration.h"
 
 
@@ -225,12 +226,65 @@ namespace BlazeEngine
 		glClearDepth((GLdouble)1.0);		// Set the default depth buffer clear value
 
 		ClearWindow(vec4(0.79f, 0.32f, 0.0f, 1.0f));
+
+
+		// Configure deferred output:
+		outputMaterial = new Material("RenderManager_OutputMaterial", CoreEngine::GetCoreEngine()->GetConfig()->shader.blitShader, (TEXTURE_TYPE)1, true);
+
+		RenderTexture* outputTexture = new RenderTexture
+		(
+			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes,
+			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
+			"RenderManagerFrameOutput",
+			false
+		);
+		
+		outputTexture->Format()				= GL_RGBA;		// Note: Using 4 channels for future flexibility
+		outputTexture->InternalFormat()		= GL_RGBA32F;		
+
+		outputTexture->TextureMinFilter()	= GL_LINEAR;	// Note: Output is black if this is GL_NEAREST_MIPMAP_LINEAR
+		outputTexture->TextureMaxFilter()	= GL_LINEAR;
+
+		outputTexture->AttachmentPoint()	= GL_COLOR_ATTACHMENT0 + 0;
+
+		outputTexture->ReadBuffer()			= GL_COLOR_ATTACHMENT0 + 0;
+		outputTexture->DrawBuffer()			= GL_COLOR_ATTACHMENT0 + 0;
+
+		outputTexture->Buffer();
+		outputTexture->BindSampler(TEXTURE_ALBEDO, true);
+
+		outputMaterial->AccessTexture(TEXTURE_ALBEDO) = outputTexture;
+
+		screenAlignedQuad = new Mesh
+		(
+			Mesh::CreateQuad
+			(
+				vec3(-1.0f,	1.0f,	0.0f),	// TL
+				vec3(1.0f,	1.0f,	0.0f),	// TR
+				vec3(-1.0f,	-1.0f,	0.0f),	// BL
+				vec3(1.0f,	-1.0f,	0.0f)	// BR
+			)
+		);
 	}
 
 
 	void RenderManager::Shutdown()
 	{
 		LOG("Render manager shutting down...");
+
+		if (outputMaterial != nullptr)
+		{
+			outputMaterial->Destroy();
+			delete outputMaterial;
+			outputMaterial = nullptr;
+		}
+
+		if (screenAlignedQuad != nullptr)
+		{
+			screenAlignedQuad->Destroy();
+			delete screenAlignedQuad;
+			screenAlignedQuad = nullptr;
+		}
 	}
 
 
@@ -240,7 +294,7 @@ namespace BlazeEngine
 
 
 		// Temporary hack: Render the keylight directly, since that's all we support at the moment... TODO: Loop through multiple lights
-		RenderLightShadowMap(&CoreEngine::GetSceneManager()->GetKeyLight());
+		RenderLightShadowMap(CoreEngine::GetSceneManager()->GetKeyLight());
 
 
 		// TODO: Render reflection probes
@@ -253,8 +307,26 @@ namespace BlazeEngine
 		// //Forward render: Leaving this around for a while for debug purposes
 		//RenderForward(mainCam);
 
-		// Temp hack: Render the keylight directly:
-		RenderDeferredLight(&CoreEngine::GetSceneManager()->GetKeyLight());
+
+		// Render deferred lights:		
+		// Bind outputMaterial's FrameBuffer for writing:
+		glBindFramebuffer(GL_FRAMEBUFFER, ((RenderTexture*)outputMaterial->AccessTexture((TEXTURE_TYPE)0))->FBO());
+		glViewport(0, 0, this->xRes, this->yRes);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
+
+
+		// Render the ambient lighting:
+		RenderDeferredLight(CoreEngine::GetSceneManager()->GetAmbient()); // TODO: Rename as GetAmbientLight() !!!!!!!!!!!!!!
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE); // TODO: Can we just set this once somewhere, instead of calling each frame?
+
+		RenderDeferredLight(CoreEngine::GetSceneManager()->GetKeyLight());
+
+		glDisable(GL_BLEND);
+
+		// Blit results to screen:
+		BlitToScreen();
 
 		// Display the final frame:
 		SDL_GL_SwapWindow(glWindow);
@@ -422,10 +494,10 @@ namespace BlazeEngine
 
 		// Assemble common (model independent) matrices:
 		mat4 view			= renderCam->View();
-		mat4 shadowCam_vp	= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight().ActiveShadowMap()->ShadowCamera()->ViewProjection();
+		mat4 shadowCam_vp	= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight()->ActiveShadowMap()->ShadowCamera()->ViewProjection();
 
 		// Cache required values once outside of the loop:
-		Light* keyLight						= &CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight();
+		Light* keyLight						= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight();
 		Material* shadowCamRenderMaterial	= keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial();
 
 		// Loop by material (+shader), mesh:
@@ -506,36 +578,28 @@ namespace BlazeEngine
 	void BlazeEngine::RenderManager::RenderDeferredLight(Light* deferredLight)
 	{
 		Camera* renderCam = CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera();
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, this->xRes, this->yRes);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
-
+		
 		// Assemble common (model independent) matrices:
 		mat4 view			= renderCam->View();
-		mat4 shadowCam_vp	= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight().ActiveShadowMap()->ShadowCamera()->ViewProjection();
+		mat4 shadowCam_vp	= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight()->ActiveShadowMap()->ShadowCamera()->ViewProjection();
 
 		Shader* currentShader			= deferredLight->DeferredMaterial()->GetShader();
 		GLuint shaderReference			= currentShader->ShaderReference();
 
 		// Bind:
 		BindShader(shaderReference);
-
 		BindTextures(renderCam->RenderMaterial(), shaderReference);
-		BindTextures(deferredLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial(), shaderReference);
 
-		BindMeshBuffers(deferredLight->DeferredMesh());
-
-		// Upload common shader matrices:
-		currentShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
-		currentShader->UploadUniform("shadowCam_vp", &shadowCam_vp[0][0], UNIFORM_Matrix4fv);
-
-		if (deferredLight->ActiveShadowMap() != nullptr)
+		ShadowMap* activeShadowMap = deferredLight->ActiveShadowMap();
+		if (activeShadowMap != nullptr)
 		{
+			BindTextures(activeShadowMap->ShadowCamera()->RenderMaterial(), shaderReference);
+
 			currentShader->UploadUniform("maxShadowBias", &deferredLight->ActiveShadowMap()->MaxShadowBias(), UNIFORM_Float);
 			currentShader->UploadUniform("minShadowBias", &deferredLight->ActiveShadowMap()->MinShadowBias(), UNIFORM_Float);
 
 			vec4 shadowDepth_TexelSize(0, 0, 0, 0);
-			RenderTexture* depthTexture = (RenderTexture*)deferredLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
+			RenderTexture* depthTexture = (RenderTexture*)activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
 			if (depthTexture)
 			{
 				shadowDepth_TexelSize = vec4(1.0f / depthTexture->Width(), 1.0f / depthTexture->Height(), depthTexture->Width(), depthTexture->Height());
@@ -545,13 +609,42 @@ namespace BlazeEngine
 
 			// TODO: Only upload this if it changes
 		}
+
+		// Upload common shader matrices:
+		currentShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
+		currentShader->UploadUniform("shadowCam_vp", &shadowCam_vp[0][0], UNIFORM_Matrix4fv);
+
+		BindMeshBuffers(deferredLight->DeferredMesh());
 	
+		// Upload current light's parameters:
+		currentShader->UploadUniform("lightColor", &deferredLight->Color().r, UNIFORM_Vec3fv);
+		currentShader->UploadUniform("lightWorldDir", &deferredLight->GetTransform().Forward().x, UNIFORM_Vec3fv); // TODO: Move these to the main render loop once we've switched to deferred rendering w/multiple lights
+		
 
 		// Draw!
 		glDrawElements(GL_TRIANGLES, deferredLight->DeferredMesh()->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
 		BindTextures(renderCam->RenderMaterial(), 0);
-		BindTextures(deferredLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial(), 0);
+		if (activeShadowMap != nullptr)
+		{
+			BindTextures(activeShadowMap->ShadowCamera()->RenderMaterial(), 0);
+		}		
+		BindShader(0);
+		BindMeshBuffers();
+	}
+
+	void BlazeEngine::RenderManager::BlitToScreen()
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		BindShader(outputMaterial->GetShader()->ShaderReference());
+		BindTextures(outputMaterial, outputMaterial->GetShader()->ShaderReference());
+		BindMeshBuffers(screenAlignedQuad);
+
+		glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
+
+		BindTextures(outputMaterial, 0);
 		BindShader(0);
 		BindMeshBuffers();
 	}
@@ -580,12 +673,10 @@ namespace BlazeEngine
 	// TODO: Should this be a per-texture member function ????
 	void BlazeEngine::RenderManager::BindTextures(Material* currentMaterial, GLuint const& shaderReference /* = 0 */) // If shaderReference == 0, unbinds textures
 	{
-		// Temp hack: We'll need to replace this with some sort of isRenderMaterial flag in material if ever TEXTURE_COUNT == RENDER_TEXTURE_COUNT
-		bool isRenderTexture = currentMaterial->NumTextureSlots() == RENDER_TEXTURE_COUNT;
 		int textureOffset = 0;
-		if (isRenderTexture)
+		if(currentMaterial->IsRenderMaterial())
 		{
-			textureOffset = RENDER_TEXTURE_0;
+			textureOffset = (int)RENDER_TEXTURE_0;
 		}
 
 		// Handle unbinding:
@@ -611,7 +702,6 @@ namespace BlazeEngine
 				{
 					glActiveTexture(GL_TEXTURE0 + textureOffset + i);
 					glBindTexture(currentTexture->TextureTarget(), currentTexture->TextureID());
-					//glBindSampler(i, currentMaterial->Samplers(i));
 					glBindSampler(i, currentTexture->Sampler()); // TODO: MOVE THIS WHOLE FUNCTION INTO THE TEXTURE!!!!!!!!!!!!!!!!!!!!!!!!!
 				}
 			}
@@ -641,13 +731,14 @@ namespace BlazeEngine
 		SceneManager* sceneManager = CoreEngine::GetSceneManager();
 		unsigned int numMaterials = sceneManager->NumMaterials();
 
-		vec3 const* ambient = &CoreEngine::GetSceneManager()->GetAmbient();
-		vec3 const* keyDir = &CoreEngine::GetSceneManager()->GetKeyLight().GetTransform().Forward();
-		vec3 const* keyCol = &CoreEngine::GetSceneManager()->GetKeyLight().Color();
+		// SOON TO BE DEPREACTED:
+		vec3 const* ambientColor = &CoreEngine::GetSceneManager()->GetAmbient()->Color();
+		vec3 const* keyDir = &CoreEngine::GetSceneManager()->GetKeyLight()->GetTransform().Forward();
+		vec3 const* keyCol = &CoreEngine::GetSceneManager()->GetKeyLight()->Color();
 
 		LOG("Uploading light and matrix data to shaders");
 		#if defined(DEBUG_RENDERMANAGER_SHADER_LOGGING)
-			LOG("Ambient: " + to_string(ambient->r) + ", " + to_string(ambient->g) + ", " + to_string(ambient->b));
+			LOG("Ambient: " + to_string(ambientColor->r) + ", " + to_string(ambientColor->g) + ", " + to_string(ambientColor->b));
 			LOG("Key Dir: " + to_string(keyDir->x) + ", " + to_string(keyDir->y) + ", " + to_string(keyDir->z));
 			LOG("Key Col: " + to_string(keyCol->r) + ", " + to_string(keyCol->g) + ", " + to_string(keyCol->b));
 		#endif
@@ -675,17 +766,15 @@ namespace BlazeEngine
 			}
 		}
 			
-		// TODO Add shader attached to lights
-		// Add all light shaders:
-		//for (int currentType = 0; currentType < LIGHT_TYPE_COUNT; currentType)
-		//{
-		//	for(int currentLight = 0; currentLight < )
-		//}
-
-		LOG_WARNING("Adding keylight directly to render manager's shader init");
-		shaders.push_back(CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight().DeferredMaterial()->GetShader());
+		// Add light shaders
+		vector<Light*> const* deferredLights = &CoreEngine::GetCoreEngine()->GetSceneManager()->GetDeferredLights();
+		for (int currentLight = 0; currentLight < (int)deferredLights->size(); currentLight++)
+		{
+			shaders.push_back(deferredLights->at(currentLight)->DeferredMaterial()->GetShader());
+		}
 		
-
+		// Add RenderManager shaders:
+		shaders.push_back(outputMaterial->GetShader());
 
 		// Configure all of the shaders:
 		for (unsigned int i = 0; i < (int)shaders.size(); i++)
@@ -712,7 +801,7 @@ namespace BlazeEngine
 			}
 
 			// Upload light direction (world space) and color, and ambient light color:
-			shaders.at(i)->UploadUniform("ambient", &(ambient->r), UNIFORM_Vec3fv);
+			shaders.at(i)->UploadUniform("ambientColor", &(ambientColor->r), UNIFORM_Vec3fv);
 
 			shaders.at(i)->UploadUniform("lightWorldDir", &(keyDir->x), UNIFORM_Vec3fv); // TODO: Move these to the main render loop once we've switched to deferred rendering w/multiple lights
 			shaders.at(i)->UploadUniform("lightColor", &(keyCol->r), UNIFORM_Vec3fv);

@@ -94,7 +94,7 @@ namespace BlazeEngine
 
 	void Camera::AttachGBuffer()
 	{
-		Material* gBufferMaterial	= new Material(this->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->shader.gBufferFillShaderName, RENDER_TEXTURE_COUNT);
+		Material* gBufferMaterial	= new Material(this->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->shader.gBufferFillShaderName, RENDER_TEXTURE_COUNT, true);
 		this->RenderMaterial()		= gBufferMaterial;
 
 		// We use the albedo texture as a basis for the others

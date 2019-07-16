@@ -14,10 +14,6 @@ using std::string;
 
 namespace BlazeEngine
 {
-	//// Pre-declarations:
-	//enum TEXTURE_TYPE;
-
-
 	class Texture
 	{
 	public:

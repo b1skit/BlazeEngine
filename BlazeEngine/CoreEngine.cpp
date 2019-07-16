@@ -11,10 +11,10 @@ namespace BlazeEngine
 	// Static members:
 	CoreEngine* CoreEngine::coreEngine; // Assigned in constructor
 
-	EventManager* CoreEngine::BlazeEventManager = &EventManager::Instance();
-	InputManager* CoreEngine::BlazeInputManager = &InputManager::Instance();
-	SceneManager* CoreEngine::BlazeSceneManager = &SceneManager::Instance();
-	RenderManager* CoreEngine::BlazeRenderManager = &RenderManager::Instance();
+	EventManager* CoreEngine::BlazeEventManager		= &EventManager::Instance();
+	InputManager* CoreEngine::BlazeInputManager		= &InputManager::Instance();
+	SceneManager* CoreEngine::BlazeSceneManager		= &SceneManager::Instance();
+	RenderManager* CoreEngine::BlazeRenderManager	= &RenderManager::Instance();
 
 
 	CoreEngine::CoreEngine(int argc, char** argv) : BlazeObject("CoreEngine")

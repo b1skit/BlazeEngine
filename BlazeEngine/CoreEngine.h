@@ -57,15 +57,18 @@ namespace BlazeEngine
 
 		struct
 		{
-			const string shaderDirectory		= ".\\Shaders\\";
-			const string errorShaderName		= "errorShader";
-			const string defaultShaderName		= "lambertShader";
-			const string depthShaderName		= "depthShader";
+			const string shaderDirectory					= ".\\Shaders\\";
+			const string errorShaderName					= "errorShader";
+			const string defaultShaderName					= "lambertShader";
+			const string depthShaderName					= "depthShader";
 
 			// Deferred rendering:
-			const string gBufferFillShaderName	= "gBufferFillShader";
+			const string gBufferFillShaderName				= "gBufferFillShader";
 
-			const string deferredKeylightShaderName = "deferredKeyLightShader";
+			const string deferredKeylightShaderName			= "deferredKeyLightShader";
+			const string deferredAmbientLightShaderName		= "deferredAmbientLightShader";
+
+			const string blitShader							= "blitShader";
 		} shader;
 
 		struct

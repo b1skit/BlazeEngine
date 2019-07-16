@@ -59,7 +59,7 @@ namespace BlazeEngine
 	class Material
 	{
 	public:
-		Material(string materialName, string shaderName, TEXTURE_TYPE textureCount = TEXTURE_COUNT);
+		Material(string materialName, string shaderName, TEXTURE_TYPE textureCount = TEXTURE_COUNT, bool isRenderMaterial = false);
 
 		void Destroy()
 		{
@@ -85,9 +85,12 @@ namespace BlazeEngine
 			shaderKeywords.emplace_back(newKeyword);
 		}
 
-		vector<string> const& ShaderKeywords() const					{ return shaderKeywords; }
+		vector<string> const&	ShaderKeywords() const					{ return shaderKeywords; }
+
+		inline bool&			IsRenderMaterial()						{ return isRenderMaterial; }
 
 		// RenderTexture sampler names:
+		//-----------------------------
 		const static string RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_COUNT];
 		const static string TEXTURE_SAMPLER_NAMES[TEXTURE_COUNT];
 		const static string MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_COUNT];
@@ -105,6 +108,8 @@ namespace BlazeEngine
 		vec4		properties[MATERIAL_PROPERTY_COUNT];	// Generic material properties
 
 		vector<string> shaderKeywords;
+
+		bool isRenderMaterial	= false;
 	};
 }
 

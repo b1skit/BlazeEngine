@@ -70,19 +70,23 @@ namespace BlazeEngine
 
 		void RenderForward(Camera* renderCam);
 
-		void RenderDeferredLight(Light* deferredLight);
+		void RenderDeferredLight(Light* deferredLight); // Note: FBO, viewport
+
+		void BlitToScreen();
 
 
 		// Configuration:
 		//---------------
-		int xRes				= -1;
-		int yRes				= -1;
-		string windowTitle		= "Default BlazeEngine window title";
+		int xRes					= -1;
+		int yRes					= -1;
+		string windowTitle			= "Default BlazeEngine window title";
 		
 		// OpenGL components and settings:
-		SDL_Window* glWindow	= 0;
-		SDL_GLContext glContext = 0;
+		SDL_Window* glWindow		= 0;
+		SDL_GLContext glContext		= 0;
 
+		Material* outputMaterial	= nullptr;
+		Mesh* screenAlignedQuad		= nullptr;
 		
 		// Private member functions:
 		//--------------------------

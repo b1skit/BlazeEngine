@@ -6,13 +6,52 @@
 
 namespace BlazeEngine
 {
-	BlazeEngine::Light::Light(string lightName, LIGHT_TYPE type, vec3 color, ShadowMap* shadowMap /*= nullptr*/)
+	BlazeEngine::Light::Light(string lightName, LIGHT_TYPE lightType, vec3 color, ShadowMap* shadowMap /*= nullptr*/)
 	{
 		this->lightName		= lightName;
-		this->type			= type;
+		this->type			= lightType;
 		this->color			= color;
 
 		this->shadowMap		= shadowMap;
+
+		// Set up deferred light mesh:
+		string shaderName;
+		switch (lightType)
+		{
+		case LIGHT_AMBIENT:
+		case LIGHT_DIRECTIONAL:
+		{
+			// Attach a deferred Material:
+			this->deferredMaterial = new Material
+			(
+				lightName + "_deferredMaterial",
+				lightType == LIGHT_AMBIENT ? CoreEngine::GetCoreEngine()->GetConfig()->shader.deferredAmbientLightShaderName : CoreEngine::GetCoreEngine()->GetConfig()->shader.deferredKeylightShaderName,
+				(TEXTURE_TYPE)0, // No textures
+				true
+			);
+
+			// Attach a screen aligned quad:
+			this->deferredMesh = new Mesh
+			(
+				Mesh::CreateQuad
+				(
+					vec3(-1.0f,	1.0f,	0.0f),	// TL
+					vec3(1.0f,	1.0f,	0.0f),	// TR
+					vec3(-1.0f,	-1.0f,	0.0f),	// BL
+					vec3(1.0f,	-1.0f,	0.0f)	// BR
+				)
+			);
+			break;
+		}
+
+		case LIGHT_POINT:
+		case LIGHT_SPOT:
+		case LIGHT_AREA:
+		case LIGHT_TUBE:
+		default:
+			// TODO: Implement light meshes for additional light types
+			break;
+		}
 	}
 
 

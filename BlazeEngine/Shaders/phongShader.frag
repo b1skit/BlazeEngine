@@ -20,7 +20,7 @@ void main()
 	texNormal		= (in_modelRotation * vec4(texNormal, 0)).xyz;		// Object -> world space
 
 	// Ambient:
-	vec4 ambientContribution	= FragColor * vec4(ambient, 1);
+	vec4 ambientContribution	= FragColor * vec4(ambientColor, 1);
 
 	// Diffuse:
 	float nDotL					= max(0, dot(texNormal, lightWorldDir));

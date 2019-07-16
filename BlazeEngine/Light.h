@@ -24,6 +24,7 @@ namespace BlazeEngine
 
 	enum LIGHT_TYPE
 	{
+		LIGHT_AMBIENT,
 		LIGHT_DIRECTIONAL,
 		LIGHT_POINT,
 		LIGHT_SPOT,
@@ -37,7 +38,7 @@ namespace BlazeEngine
 	{
 	public:
 		Light() {}; // Default constructor
-		Light(string lightName, LIGHT_TYPE type, vec3 color, ShadowMap* shadowMap = nullptr);
+		Light(string lightName, LIGHT_TYPE lightType, vec3 color, ShadowMap* shadowMap = nullptr);
 
 		void Destroy();
 
@@ -59,8 +60,8 @@ namespace BlazeEngine
 		
 		ShadowMap*&					ActiveShadowMap(ShadowMap* newShadowMap = nullptr);				// Get/set the current shadow map
 
-		inline Mesh*& DeferredMesh()							{ return deferredMesh; }
-		inline Material*& DeferredMaterial()					{ return deferredMaterial; }
+		inline Mesh*&		DeferredMesh()									{ return deferredMesh; }
+		inline Material*&	DeferredMaterial()								{ return deferredMaterial; }
 
 
 	protected:

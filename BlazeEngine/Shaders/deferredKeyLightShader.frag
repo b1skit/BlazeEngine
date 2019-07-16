@@ -13,15 +13,11 @@
 
 void main()
 {	
-	// TODO: Break this out into a function
-
-	// Phong shading:
+	// Phong diffuse and specular contributions:
 	FragColor					= texture(GBuffer_Albedo, data.uv0.xy);
 
 	vec3 worldNormal			= texture(GBuffer_WorldNormal, data.uv0.xy).xyz;
 
-	// Ambient:
-	vec4 ambientContribution	= FragColor * vec4(ambient, 1);
 
 	// Diffuse:
 	float nDotL					= max(0, dot(worldNormal, lightWorldDir));
@@ -52,5 +48,5 @@ void main()
 	float shadowFactor			= GetShadowFactor(shadowPos, shadowDepth, worldNormal, lightWorldDir);
 
 	// Final result:
-	FragColor = ambientContribution + ((diffuseContribution + specContribution) * shadowFactor);
+	FragColor = ((diffuseContribution + specContribution) * shadowFactor);
 } 

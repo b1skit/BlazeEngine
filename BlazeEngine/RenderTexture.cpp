@@ -26,7 +26,6 @@ namespace BlazeEngine
 		this->texels				= nullptr;
 		this->resolutionHasChanged	= true;
 
-
 		// Override default values:
 		//-------------------------
 		this->internalFormat		= GL_DEPTH_COMPONENT32F;

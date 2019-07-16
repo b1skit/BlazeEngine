@@ -17,5 +17,5 @@ void main()
 
 	float shadowFactor	= GetShadowFactor(data.shadowPos, shadowDepth, data.vertexWorldNormal, lightWorldDir);
 	
-	FragColor			= (FragColor * vec4(ambient, 1) ) + (FragColor * vec4(nDotL * lightColor, 1) * shadowFactor );
+	FragColor			= (FragColor * vec4(ambientColor, 1) ) + (FragColor * vec4(nDotL * lightColor, 1) * shadowFactor );
 } 

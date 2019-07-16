@@ -45,13 +45,15 @@ namespace BlazeEngine
 		//"matProperty7"
 	};
 
-	Material::Material(string materialName, string shaderName, TEXTURE_TYPE textureCount /*= TEXTURE_COUNT*/)
+	Material::Material(string materialName, string shaderName, TEXTURE_TYPE textureCount /*= TEXTURE_COUNT*/, bool isRenderMaterial /*= false*/)
 	{
-		this->name			= materialName;
+		this->name				= materialName;
 
-		this->shader		= Shader::CreateShader(shaderName, &shaderKeywords);
+		this->shader			= Shader::CreateShader(shaderName, &shaderKeywords);
 
-		this->numTextures	= (int)textureCount;
+		this->numTextures		= (int)textureCount;
+
+		this->isRenderMaterial	= isRenderMaterial;
 
 		textures = new Texture*[this->numTextures];
 		for (int i = 0; i < this->numTextures; i++)
