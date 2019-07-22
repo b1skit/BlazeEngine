@@ -59,6 +59,10 @@ uniform vec3 ambientColor;		// Deprecated: Use deferred lightColor instead
 // Deferred lights:
 uniform vec3 lightWorldDir;		// Normalized, world space, points towards light source
 uniform vec3 lightColor;
+uniform vec3 lightWorldPos;		// Light position in world space
+//uniform float attenuationDist = 5.0;	// Distance to max attenuation
+// ^^^^ TODO: Store this value in the light and upload it when rendering!!!!!
+
 
 // Matrices:
 uniform mat4 in_model;			// Local -> World

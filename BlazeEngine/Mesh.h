@@ -238,7 +238,8 @@ namespace BlazeEngine
 
 		static Mesh CreateQuad(vec3 tl = vec3(-0.5f, 0.5f, 0.0f), vec3 tr = vec3(0.5f, 0.5f, 0.0f), vec3 bl = vec3(-0.5f, -0.5f, 0.0f), vec3 br = vec3(0.5f, -0.5f, 0.0f));
 
-
+		static Mesh CreateSphere(float radius = 0.5f, int numLatSlices = 16, int numLongSlices = 16);
+	
 	protected:
 
 

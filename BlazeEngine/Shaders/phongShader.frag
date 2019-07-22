@@ -14,8 +14,6 @@ void main()
 {	
 	FragColor		= texture(albedo, data.uv0.xy);
 
-	
-
 	vec3 texNormal	= ObjectNormalFromTexture(data.TBN, texture(normal, data.uv0.xy).rgb);
 	texNormal		= (in_modelRotation * vec4(texNormal, 0)).xyz;		// Object -> world space
 

@@ -2,6 +2,11 @@
 
 #include "BuildConfiguration.h"
 
+#include "glm.hpp"
+#include "gtc/constants.hpp"
+using glm::pi;
+
+
 namespace BlazeEngine
 {
 	// Vertex functions:
@@ -269,6 +274,158 @@ namespace BlazeEngine
 		}; // Note: CCW winding
 
 		return Mesh("quad", quadVerts, numVerts, quadIndices, numIndices);
+	}
+
+	Mesh Mesh::CreateSphere(float radius /*= 0.5f*/, int numLatSlices /*= 16*/, int numLongSlices /*= 16*/)
+	{
+		// NOTE: Currently, this function does not generate valid tangents for any verts. Some UV's are distorted, as we're using merged vertices. TODO: Fix this
+
+		// Note: Latitude = horizontal lines about Y
+		//		Longitude = vertical lines about sphere
+		//		numLatSlices = horizontal segments
+		//		numLongSlices = vertical segments
+
+		int numVerts		= numLatSlices * numLongSlices + 2; // + 2 for end caps
+		Vertex* vertices	= new Vertex[numVerts];
+		vec3* normals		= new vec3[numVerts];
+		vec4* uvs			= new vec4[numVerts];
+
+		vec4 vertColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+		int numIndices		= 3 * numLatSlices * numLongSlices * 2;
+		GLuint* indices		= new GLuint[numIndices];
+
+		// Generate a sphere about the Y axis:
+		vec3 firstPosition	= vec3(0.0f, radius, 0.0f);
+		vec3 firstNormal	= vec3(0, 1.0f, 0);
+		vec3 firstTangent	= vec3(0, 0, 0); //
+		vec3 firstBitangent	= vec3(0, 0, 0); //
+		vec4 firstUv0		= vec4(0.5f, 1.0f, 0, 0);
+
+		int currentIndex = 0;
+		vertices[currentIndex++] = Vertex(firstPosition, firstNormal, firstTangent, firstBitangent, vertColor, firstUv0);
+
+		// Rotate about Z: Arc down the side profile of our sphere
+		// cos theta = adj/hyp -> hyp * cos theta = adj -> radius * cos theta = Y
+		float zRadianStep	= glm::pi<float>() / (float)(numLongSlices + 1);
+		float zRadians		= zRadianStep; // Already added cap vertex, so start on the next step
+		
+		// Rotate about Y: Horizontal edges
+		// sin theta = opp/hyp -> hyp * sin theta = opp -> radius * sin theta = X
+		// cos theta = adj/hyp -> hyp * cos theta = adj -> radius * cos theta = Z
+		float yRadianStep	= (2.0f * glm::pi<float>()) / (float)numLatSlices; // +No need to add 1 to longitude slices
+		float yRadians		= 0.0f;
+
+		// Build UV's, from top left (0,1) to bottom right (1.0, 0)
+		float uvXStep = 1.0f / numLatSlices;
+		float uvYStep = 1.0f / (numLongSlices + 1);
+		float uvX = 0;
+		float uvY = 1.0f - uvYStep;
+
+		// Outer loop: Rotate about Z, tracing the arc of the side silhouette down the Y axis
+		for (int curLongSlices = 0; curLongSlices < numLongSlices; curLongSlices++)
+		{
+			float y = radius * cos(zRadians);
+			
+			// Inner loop: Rotate about Y
+			for (int curLatSlices = 0; curLatSlices < numLatSlices; curLatSlices++)
+			{
+				float x = radius * sin(yRadians) * sin(zRadians);
+				float z = radius * cos(yRadians) * sin(zRadians);
+				yRadians += yRadianStep;
+
+				vec3 position	= vec3(x, y, z);
+				vec3 normal		= normalize(position);
+
+				vec3 tangent	= vec3(1, 0, 0); // TODO
+				vec3 bitangent	= vec3(0, 1, 0); // TODO
+				vec4 uv0		= vec4(uvX, uvY, 0, 0);
+
+				vertices[currentIndex++] = Vertex(position, normal, tangent, bitangent, vertColor, uv0);
+
+				uvX += uvXStep;
+			}
+			yRadians = 0.0f;
+			zRadians += zRadianStep;
+
+			uvX = 0;
+			uvY -= uvYStep;
+		}
+
+		// Final endcap:
+		vec3 finalPosition	= vec3(0.0f, -radius, 0.0f);
+		vec3 finalNormal	= vec3(0, -1, 0);
+
+		vec3 finalTangent	= vec3(0, 0, 0);
+		vec3 finalBitangent	= vec3(0, 0, 0);
+		vec4 finalUv0		= vec4(0.5f, 0.0f, 0, 0);
+
+		vertices[currentIndex] = Vertex(finalPosition, finalNormal, finalTangent, finalBitangent, vertColor, finalUv0);
+
+		// Indices: (Note: We use counter-clockwise vertex winding)
+		currentIndex = 0;
+
+		// Top cap:
+		for (int i = 1; i <= numLatSlices; i++)
+		{
+			indices[currentIndex++] = (GLuint)0;
+			indices[currentIndex++] = (GLuint)i;
+			indices[currentIndex++] = (GLuint)(i + 1);
+		}
+		indices[currentIndex - 1] = 1; // Wrap the last edge back to the start
+
+		// Mid section:
+		int topLeft = 1;
+		int topRight = topLeft + 1;
+		int botLeft = 1 + numLatSlices;
+		int botRight = botLeft + 1;
+		for (unsigned int i = 0; i < numLongSlices - 1; i++)
+		{
+			for (int j = 0; j < numLatSlices - 1; j++)
+			{
+				// Top left triangle:
+				indices[currentIndex++] = (GLuint)topLeft;
+				indices[currentIndex++] = (GLuint)botLeft;
+				indices[currentIndex++] = (GLuint)topRight;
+
+				// Bot right triangle
+				indices[currentIndex++] = (GLuint)topRight;
+				indices[currentIndex++] = (GLuint)botLeft;
+				indices[currentIndex++] = (GLuint)botRight;
+
+				topLeft++;
+				topRight++;
+				botLeft++;
+				botRight++;
+			}
+			// Wrap the edge around:
+			// Top left triangle:
+			indices[currentIndex++] = (GLuint)topLeft;
+			indices[currentIndex++] = (GLuint)botLeft;
+			indices[currentIndex++] = (GLuint)(topRight - numLatSlices);
+
+			// Bot right triangle
+			indices[currentIndex++] = (GLuint)(topRight - numLatSlices);
+			indices[currentIndex++] = (GLuint)botLeft;
+			indices[currentIndex++] = (GLuint)(botRight - numLatSlices);
+
+			// Advance to the next row:
+			topLeft++;
+			botLeft++;
+			topRight++;
+			botRight++;
+		}
+
+		// Bottom cap:
+		for (int i = numVerts - numLatSlices - 1; i < numVerts - 1; i++)
+		{
+			indices[currentIndex++] = (GLuint)i;
+			indices[currentIndex++] = (GLuint)(numVerts - 1);
+			indices[currentIndex++] = (GLuint)(i + 1);
+		}
+		indices[currentIndex - 1] = numVerts - numLatSlices - 1; // Wrap the last edge back to the start		
+
+		return Mesh("sphere", vertices, numVerts, indices, numIndices);
 	}
 
 	void Mesh::ComputeBounds()

@@ -189,6 +189,8 @@
     <None Include="Shaders\deferredAmbientLightShader.vert" />
     <None Include="Shaders\deferredKeyLightShader.frag" />
     <None Include="Shaders\deferredKeyLightShader.vert" />
+    <None Include="Shaders\deferredPointLightShader.frag" />
+    <None Include="Shaders\deferredPointLightShader.vert" />
     <None Include="Shaders\depthShader.vert" />
     <None Include="Shaders\gBufferFillShader.frag" />
     <None Include="Shaders\gBufferFillShader.vert" />

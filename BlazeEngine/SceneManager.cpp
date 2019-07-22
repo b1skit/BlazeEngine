@@ -419,10 +419,37 @@ namespace BlazeEngine
 			LOG_ERROR("Scene has no meshes");
 		}
 
-
 		// Assemble material mesh lists:
 		// -----------------------------
 		AssembleMaterialMeshLists();
+
+
+		//// DEBUG: Add a test mesh:
+		//Mesh* sphere = new Mesh(Mesh::CreateSphere(5.0));
+		//GameObject* sphereGameObject = new GameObject("sphereTest");
+
+		//AddGameObject(sphereGameObject);
+		//sphereGameObject->GetRenderable()->AddViewMeshAsChild(sphere);
+		//currentScene->AddMesh(sphere);
+
+
+		//Material* sphereMaterial = GetMaterial("brick_phongShader");
+		////^^ Need a GetLoadMaterial() function?
+		//int materialIndex = AddMaterial(sphereMaterial);
+
+		//materialMeshLists.at(materialIndex).emplace_back(sphere);
+
+
+		////Material* sphereMaterial = new Material("sphereMat", "lambertShader");
+		//////^^ Need a GetLoadMaterial() function?
+		////int materialIndex = AddMaterial(sphereMaterial);
+		////
+		////materialMeshLists.emplace_back(vector<Mesh*>());
+		////materialMeshLists.at(materialIndex).emplace_back(sphere);
+
+
+		//// TODO: Revise GameObject/Mesh creation... Simplify!!!!
+
 
 
 		// Extract lights:
@@ -435,6 +462,15 @@ namespace BlazeEngine
 		{
 			LOG_ERROR("Scene has no lights");
 		}
+
+
+		//// DEBUG: Add a test light:
+		//vec3 lightColor(1.0f, 0.0f, 0.0f);
+		//Light* pointLight = new Light("pointLight", LIGHT_POINT, lightColor, nullptr); // TODO: Implement point light shadow maps
+
+		//currentScene->AddLight(pointLight);
+		//// NOTE: Currently, the light has a hard-coded radius of 5
+
 
 
 		// Extract cameras:
@@ -562,6 +598,36 @@ namespace BlazeEngine
 	}
 
 
+	void BlazeEngine::SceneManager::InitializeLightTransformValues(aiScene const* scene, string lightName, Transform* targetLightTransform)
+	{
+		aiMatrix4x4 lightTransform;
+		aiNode* current = nullptr;
+		if (current = scene->mRootNode->FindNode(lightName.c_str()))
+		{
+			#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
+				LOG("Found a corresponding light node in the scene graph...");
+			#endif
+
+			lightTransform = GetCombinedTransformFromHierarchy(scene, current->mParent);
+			lightTransform = lightTransform * current->mTransformation;	
+
+			#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
+				LOG("-> " + string(current->mName.C_Str()) + " (Light's first transformation node)");
+				LOG(to_string(current->mTransformation.a1) + " " + to_string(current->mTransformation.a2) + " " + to_string(current->mTransformation.a3) + " " + to_string(current->mTransformation.a4) );
+				LOG(to_string(current->mTransformation.b1) + " " + to_string(current->mTransformation.b2) + " " + to_string(current->mTransformation.b3) + " " + to_string(current->mTransformation.b4));
+				LOG(to_string(current->mTransformation.c1) + " " + to_string(current->mTransformation.c2) + " " + to_string(current->mTransformation.c3) + " " + to_string(current->mTransformation.c4));
+				LOG(to_string(current->mTransformation.d1) + " " + to_string(current->mTransformation.d2) + " " + to_string(current->mTransformation.d3) + " " + to_string(current->mTransformation.d4));
+			#endif
+		}
+		else
+		{
+			LOG_ERROR("Could not find a node matching light name \"" + lightName + "\" in the scene!");
+		}
+
+		InitializeTransformValues(lightTransform, targetLightTransform);
+	}
+
+
 	int SceneManager::GetMaterialIndex(string materialName)
 	{
 		// Check if a material with the same name exists, and return it if it does:
@@ -580,7 +646,7 @@ namespace BlazeEngine
 	}
 
 
-	unsigned int SceneManager::AddMaterial(Material* newMaterial, bool checkForExisting) // checkForExisting = true by default
+	unsigned int SceneManager::AddMaterial(Material* newMaterial, bool checkForExisting /*= true*/)
 	{
 		if (checkForExisting) // Check if a material with the same name exists, and return it if it does
 		{
@@ -695,7 +761,7 @@ namespace BlazeEngine
 			if (AI_SUCCESS == scene->mMaterials[currentMaterial]->Get(AI_MATKEY_NAME, name))
 			{
 				string matName = string(name.C_Str());
-				LOG("Loading scene material \"" + matName + "\"...");
+				LOG("Loading scene material " + to_string(currentMaterial) + ": \"" + matName + "\"...");
 
 				#if defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
 					LOG("Printing received material property keys:");
@@ -1432,25 +1498,6 @@ namespace BlazeEngine
 						LOG("\nFound a directional light \"" + lightName + "\"");
 					#endif
 
-					aiMatrix4x4 lightTransform;
-					aiNode* current = nullptr;
-					if (current = scene->mRootNode->FindNode(scene->mLights[i]->mName))
-					{
-						#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
-							LOG("Found a corresponding light node in the scene graph...");
-						#endif
-						lightTransform = GetCombinedTransformFromHierarchy(scene, current->mParent);
-						lightTransform = lightTransform * current->mTransformation;	
-
-						#if defined(DEBUG_SCENEMANAGER_TRANSFORM_LOGGING)
-							LOG("-> " + string(current->mName.C_Str()) + " (Light's first transformation node)");
-							LOG(to_string(current->mTransformation.a1) + " " + to_string(current->mTransformation.a2) + " " + to_string(current->mTransformation.a3) + " " + to_string(current->mTransformation.a4) );
-							LOG(to_string(current->mTransformation.b1) + " " + to_string(current->mTransformation.b2) + " " + to_string(current->mTransformation.b3) + " " + to_string(current->mTransformation.b4));
-							LOG(to_string(current->mTransformation.c1) + " " + to_string(current->mTransformation.c2) + " " + to_string(current->mTransformation.c3) + " " + to_string(current->mTransformation.c4));
-							LOG(to_string(current->mTransformation.d1) + " " + to_string(current->mTransformation.d2) + " " + to_string(current->mTransformation.d3) + " " + to_string(current->mTransformation.d4));
-						#endif
-					}
-					
 					vec3 lightColor(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b);
 
 					Light* keyLight = new Light
@@ -1460,12 +1507,13 @@ namespace BlazeEngine
 						lightColor,
 						nullptr
 					);
+
+					InitializeLightTransformValues(scene, lightName, &keyLight->GetTransform());
+
 					currentScene->AddLight(keyLight);
 
-					InitializeTransformValues(lightTransform, &currentScene->keyLight->GetTransform());
-
-					Bounds sceneWorldBounds = currentScene->WorldSpaceSceneBounds();
-					Bounds transformedBounds = sceneWorldBounds.GetTransformedBounds(glm::inverse(currentScene->keyLight->GetTransform().Model()));
+					Bounds sceneWorldBounds		= currentScene->WorldSpaceSceneBounds();
+					Bounds transformedBounds	= sceneWorldBounds.GetTransformedBounds(glm::inverse(currentScene->keyLight->GetTransform().Model()));
 
 					CameraConfig shadowCamConfig;
 					shadowCamConfig.near			= -transformedBounds.zMax;
@@ -1494,7 +1542,7 @@ namespace BlazeEngine
 						LOG("Directional light color: " + to_string(lightColor.r) + ", " + to_string(lightColor.g) + ", " + to_string(lightColor.b));
 						LOG("Directional light position = " + to_string(currentScene->keyLight.GetTransform().Position().x) + ", " + to_string(currentScene->keyLight.GetTransform().Position().y) + ", " + to_string(currentScene->keyLight.GetTransform().Position().z));
 						LOG("Directional light rotation = " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().x) + ", " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().y) + ", " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().z) + " (radians)");
-						LOG("Directional light rotation = " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().x * (180.0f / glm::pi<float>()) ) + ", " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().y * (180.0f / glm::pi<float>())) + ", " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().z * (180.0f / glm::pi<float>())) + " (degrees)");
+						LOG("Directional light rotation = " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().x * (180.0f / A) ) + ", " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().y * (180.0f / glm::pi<float>())) + ", " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().z * (180.0f / glm::pi<float>())) + " (degrees)");
 						LOG("Directional light forward = " + to_string(currentScene->keyLight.GetTransform().Forward().x) + ", " + to_string(currentScene->keyLight.GetTransform().Forward().y) + ", " + to_string(currentScene->keyLight.GetTransform().Forward().z));
 					#endif
 				}
@@ -1523,7 +1571,28 @@ namespace BlazeEngine
 				}
 				else
 				{
-					LOG_ERROR("Found a point light. Point lights are not yet supported!");
+					#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
+						LOG("\nFound a point light \"" + lightName + "\"");
+					#endif
+
+					// TODO: Replace this TEMP DEBUG:
+					LOG_WARNING("\nDEBUG!!!!!!!!!!!!!!!!!!!!Found a point light \"" + lightName + "\". Hard-coding color to red!!!!!!");
+					
+
+					//vec3 lightColor(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b);
+					vec3 lightColor(1, 0, 0);
+
+					Light* pointLight = new Light
+					(
+						lightName, 
+						LIGHT_POINT, 
+						lightColor,
+						nullptr
+					);
+
+					InitializeLightTransformValues(scene, lightName, &pointLight->GetTransform());
+
+					currentScene->AddLight(pointLight);
 				}
 			}				
 				break;

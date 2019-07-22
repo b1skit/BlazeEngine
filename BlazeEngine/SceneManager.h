@@ -133,7 +133,7 @@ namespace BlazeEngine
 		vector<Mesh*> const*			GetRenderMeshes(int materialIndex = -1);					// If materialIndex is out of bounds, returns ALL meshes
 		inline vector<Renderable*>*		GetRenderables()											{ return &currentScene->renderables;	}
 
-		inline Light* const&			GetAmbient()												{ return currentScene->ambientLight; }
+		inline Light* const&			GetAmbientLight()												{ return currentScene->ambientLight; }
 		inline Light*					GetKeyLight()												{ return currentScene->keyLight; }
 		
 		inline vector<Camera*> const&	GetCameras(CAMERA_TYPE cameraType)							{ return currentScene->GetCameras(cameraType); }
@@ -210,6 +210,9 @@ namespace BlazeEngine
 		// Finds and combines the FIRST instance of Translation, Scaling, Rotation matrices in the parenting hierarchy
 		aiMatrix4x4		GetCombinedTransformFromHierarchy(aiScene const* scene, aiNode* parent, bool skipPostRotations = true);
 		void			InitializeTransformValues(aiMatrix4x4 const& source, Transform* dest);	// Helper function: Copy transformation values from Assimp scene to BlazeEngine transform
+
+		// Light import helper: Initializes a BlazeEngine Light's transform from an assimp scene. Calls InitializeTransformValues()
+		void			InitializeLightTransformValues(aiScene const* scene, string lightName, Transform* targetLightTransform);
 		
 		// Find a node with a name matching or containing name
 		aiNode*			FindNodeContainingName(aiScene const* scene, string name);

@@ -220,13 +220,14 @@ namespace BlazeEngine
 		// Configure other OpenGL settings:
 		glFrontFace(GL_CCW);				// Counter-clockwise vertex winding (OpenGL default)
 		glEnable(GL_DEPTH_TEST);			// Enable Z depth testing
+		glDepthFunc(GL_LESS);				// How to sort Z
 		glEnable(GL_CULL_FACE);				// Enable face culling
 		glCullFace(GL_BACK);				// Cull back faces
-		glDepthFunc(GL_LESS);				// How to sort Z
-		glClearDepth((GLdouble)1.0);		// Set the default depth buffer clear value
-
-		ClearWindow(vec4(0.79f, 0.32f, 0.0f, 1.0f));
-
+		
+		// Set the default buffer clear values:
+		glClearColor(GLclampf(windowClearColor.r), GLclampf(windowClearColor.g), GLclampf(windowClearColor.b), GLclampf(windowClearColor.a));
+		glClearDepth((GLdouble)depthClearColor);
+		ClearWindow(windowClearColor);
 
 		// Configure deferred output:
 		outputMaterial = new Material("RenderManager_OutputMaterial", CoreEngine::GetCoreEngine()->GetConfig()->shader.blitShader, (TEXTURE_TYPE)1, true);
@@ -304,26 +305,57 @@ namespace BlazeEngine
 		Camera* mainCam = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN).at(0);
 		RenderToGBuffer(mainCam);
 
-		// //Forward render: Leaving this around for a while for debug purposes
+		//// //Forward render: Leaving this around for a while for debug purposes
 		//RenderForward(mainCam);
 
 
-		// Render deferred lights:		
-		// Bind outputMaterial's FrameBuffer for writing:
-		glBindFramebuffer(GL_FRAMEBUFFER, ((RenderTexture*)outputMaterial->AccessTexture((TEXTURE_TYPE)0))->FBO());
+		// Render deferred lights:
+
+		// Bind RenderManager's outputMaterial's FrameBuffer for writing:
+		//glBindFramebuffer(GL_FRAMEBUFFER, ((RenderTexture*)outputMaterial->AccessTexture((TEXTURE_TYPE)0))->FBO());
+		//glViewport(0, 0, this->xRes, this->yRes);
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
+
+
+		// Bind the main camera's depth buffer:
+		RenderTexture* renderTexture = (RenderTexture*)CoreEngine::GetSceneManager()->GetMainCamera()->RenderMaterial()->AccessTexture((TEXTURE_TYPE)0);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, renderTexture->FBO());
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, ((RenderTexture*)outputMaterial->AccessTexture((TEXTURE_TYPE)0))->FBO());
 		glViewport(0, 0, this->xRes, this->yRes);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
 
+		vector<Light*>const* deferredLights = &CoreEngine::GetSceneManager()->GetDeferredLights();
 
-		// Render the ambient lighting:
-		RenderDeferredLight(CoreEngine::GetSceneManager()->GetAmbient()); // TODO: Rename as GetAmbientLight() !!!!!!!!!!!!!!
-
+		// Render the first light
+		RenderDeferredLight(deferredLights->at(0));
+		
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE, GL_ONE); // TODO: Can we just set this once somewhere, instead of calling each frame?
 
-		RenderDeferredLight(CoreEngine::GetSceneManager()->GetKeyLight());
+		for (int i = 1; i < deferredLights->size(); i++)
+		{
+			// Setup for screen aligned quads:
+			if (deferredLights->at(i)->Type() == LIGHT_AMBIENT || deferredLights->at(i)->Type() == LIGHT_DIRECTIONAL)
+			{
+				glDisable(GL_DEPTH_TEST);
+				glCullFace(GL_BACK);
+			}
+			else
+			{
+				glEnable(GL_DEPTH_TEST);
+				glCullFace(GL_FRONT);
+				glDepthFunc(GL_GREATER);				
+			}
 
+			RenderDeferredLight(deferredLights->at(i));
+		}
+
+		// Deferred lights cleanup:
 		glDisable(GL_BLEND);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+		glCullFace(GL_BACK);
+
 
 		// Blit results to screen:
 		BlitToScreen();
@@ -404,16 +436,26 @@ namespace BlazeEngine
 		renderTexture = nullptr;
 		for (int currentTexture = 0; currentTexture < renderCam->RenderMaterial()->NumTextureSlots(); currentTexture++)
 		{
-			// Temp hack: No need to manually clear the depth texture
-			if ((TEXTURE_TYPE)currentTexture == RENDER_TEXTURE_DEPTH)
-			{
-				continue;
-			}
+			//// Temp hack: No need to manually clear the depth texture
+			//if ((TEXTURE_TYPE)currentTexture == RENDER_TEXTURE_DEPTH)
+			//{
+			//	continue;
+			//}
 
 			renderTexture = (RenderTexture*)renderCam->RenderMaterial()->AccessTexture((TEXTURE_TYPE)currentTexture);
 			if (renderTexture != nullptr)
 			{
-				glClearBufferfv(GL_COLOR, currentTexture, &renderTexture->ClearColor().r);
+				//glClearBufferfv(GL_COLOR, currentTexture, &renderTexture->ClearColor().r);
+				//renderTexture = nullptr;
+
+				if ((TEXTURE_TYPE)currentTexture == RENDER_TEXTURE_DEPTH)
+				{
+					glClearBufferfv(GL_DEPTH, currentTexture, (GLfloat*)&this->depthClearColor); // TODO: Store depthClearColor as a float????
+				}
+				else
+				{
+					glClearBufferfv(GL_COLOR, currentTexture, &renderTexture->ClearColor().r);
+				}
 				renderTexture = nullptr;
 			}			
 		}
@@ -583,6 +625,11 @@ namespace BlazeEngine
 		mat4 view			= renderCam->View();
 		mat4 shadowCam_vp	= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight()->ActiveShadowMap()->ShadowCamera()->ViewProjection();
 
+		// Light properties
+		mat4 mvp			= renderCam->ViewProjection() * deferredLight->GetTransform().Model();
+		
+		vec3 lightWorldPos	= deferredLight->GetTransform().Position();
+
 		Shader* currentShader			= deferredLight->DeferredMaterial()->GetShader();
 		GLuint shaderReference			= currentShader->ShaderReference();
 
@@ -611,15 +658,16 @@ namespace BlazeEngine
 		}
 
 		// Upload common shader matrices:
-		currentShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
-		currentShader->UploadUniform("shadowCam_vp", &shadowCam_vp[0][0], UNIFORM_Matrix4fv);
+		currentShader->UploadUniform("in_view",			&view[0][0],			UNIFORM_Matrix4fv);
+		currentShader->UploadUniform("shadowCam_vp",	&shadowCam_vp[0][0],	UNIFORM_Matrix4fv);
+		currentShader->UploadUniform("in_mvp",			&mvp[0][0],				UNIFORM_Matrix4fv);
 
 		BindMeshBuffers(deferredLight->DeferredMesh());
 	
 		// Upload current light's parameters:
-		currentShader->UploadUniform("lightColor", &deferredLight->Color().r, UNIFORM_Vec3fv);
-		currentShader->UploadUniform("lightWorldDir", &deferredLight->GetTransform().Forward().x, UNIFORM_Vec3fv); // TODO: Move these to the main render loop once we've switched to deferred rendering w/multiple lights
-		
+		currentShader->UploadUniform("lightWorldDir",	&deferredLight->GetTransform().Forward().x, UNIFORM_Vec3fv);
+		currentShader->UploadUniform("lightColor",		&deferredLight->Color().r,					UNIFORM_Vec3fv);
+		currentShader->UploadUniform("lightWorldPos",	&lightWorldPos.x,							UNIFORM_Vec3fv);
 
 		// Draw!
 		glDrawElements(GL_TRIANGLES, deferredLight->DeferredMesh()->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
@@ -732,7 +780,7 @@ namespace BlazeEngine
 		unsigned int numMaterials = sceneManager->NumMaterials();
 
 		// SOON TO BE DEPREACTED:
-		vec3 const* ambientColor = &CoreEngine::GetSceneManager()->GetAmbient()->Color();
+		vec3 const* ambientColor = &CoreEngine::GetSceneManager()->GetAmbientLight()->Color();
 		vec3 const* keyDir = &CoreEngine::GetSceneManager()->GetKeyLight()->GetTransform().Forward();
 		vec3 const* keyCol = &CoreEngine::GetSceneManager()->GetKeyLight()->Color();
 

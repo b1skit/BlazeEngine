@@ -13,7 +13,15 @@ void main()
 {	
 	FragColor			= texture(albedo, data.uv0.xy);
 
-	float nDotL			= max(0, dot(data.vertexWorldNormal, lightWorldDir));
+	#if defined(NO_NORMAL_TEXTURE)
+		float nDotL			= max(0, dot(data.vertexWorldNormal, lightWorldDir));
+	#else
+		vec3 texNormal	= ObjectNormalFromTexture(data.TBN, texture(normal, data.uv0.xy).rgb);
+		texNormal		= (in_modelRotation * vec4(texNormal, 0)).xyz;		// Object -> world space
+		// TODO: Use the function that gets the world normal right away??????
+
+		float nDotL					= max(0, dot(texNormal, lightWorldDir));
+	#endif
 
 	float shadowFactor	= GetShadowFactor(data.shadowPos, shadowDepth, data.vertexWorldNormal, lightWorldDir);
 	

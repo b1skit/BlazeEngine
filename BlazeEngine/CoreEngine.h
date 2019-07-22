@@ -65,8 +65,9 @@ namespace BlazeEngine
 			// Deferred rendering:
 			const string gBufferFillShaderName				= "gBufferFillShader";
 
-			const string deferredKeylightShaderName			= "deferredKeyLightShader";
 			const string deferredAmbientLightShaderName		= "deferredAmbientLightShader";
+			const string deferredKeylightShaderName			= "deferredKeyLightShader";
+			const string deferredPointLightShaderName		= "deferredPointLightShader";
 
 			const string blitShader							= "blitShader";
 		} shader;

@@ -45,6 +45,25 @@ namespace BlazeEngine
 		}
 
 		case LIGHT_POINT:
+			this->deferredMaterial = new Material
+			(
+				lightName + "_deferredMaterial",
+				CoreEngine::GetCoreEngine()->GetConfig()->shader.deferredPointLightShaderName,
+				(TEXTURE_TYPE)0, // No textures
+				true
+			);
+
+			this->deferredMesh = new Mesh
+			(
+				Mesh::CreateSphere
+				(
+					5.0f // TODO: Use the ACTUAL light size!!!
+					// Will need to break out buffering into a Mesh function
+					// Maybe have the RenderManager call buffer on ALL meshes before rendering the first frame??
+				)
+			);
+			break;
+
 		case LIGHT_SPOT:
 		case LIGHT_AREA:
 		case LIGHT_TUBE:

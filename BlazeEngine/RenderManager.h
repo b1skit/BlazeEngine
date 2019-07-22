@@ -80,6 +80,9 @@ namespace BlazeEngine
 		int xRes					= -1;
 		int yRes					= -1;
 		string windowTitle			= "Default BlazeEngine window title";
+
+		vec4 windowClearColor		= vec4(0.0f, 0.0f, 0.0f, 0.0f);
+		float depthClearColor		= 1.0f;
 		
 		// OpenGL components and settings:
 		SDL_Window* glWindow		= 0;
