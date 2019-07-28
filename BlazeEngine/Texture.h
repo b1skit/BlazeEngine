@@ -18,7 +18,7 @@ namespace BlazeEngine
 	{
 	public:
 		Texture();
-		Texture(int width, int height, string texturePath, bool doFill = true, vec4 fillColor = TEXTURE_ERROR_COLOR_VEC4, bool doBuffer = false);
+		Texture(int width, int height, string texturePath, bool doFill = true, vec4 fillColor = TEXTURE_ERROR_COLOR_VEC4, bool doBuffer = false, int textureUnit = -1);
 
 		Texture(Texture const& rhs);
 
@@ -44,10 +44,10 @@ namespace BlazeEngine
 		inline GLenum&				TextureMinFilter()	{ return textureMinFilter; }
 		inline GLenum&				TextureMaxFilter()	{ return textureMaxFilter; }
 
-		inline GLuint&				Sampler()			{ return sampler; }
+		inline GLuint&				Sampler()			{ return samplerID; }
 
 		inline string&				TexturePath()		{ return texturePath; }
-
+		inline int&					TextureUnit()		{ return textureUnit; }
 
 		// Get/set a texel value:
 		// Returns texels[0] if u = [0, width - 1], v = [0, height - 1] are out of localBounds.
@@ -59,17 +59,19 @@ namespace BlazeEngine
 		// Fill texture with a color gradient
 		void Fill(vec4 tl, vec4 bl, vec4 tr, vec4 br, bool doBuffer = false); 
 
-		// Upload a texture to the GPU. Returns true if successful, false otherwise
-		bool Buffer();
+		// Initialization:
+		bool Buffer();	// Upload a texture to the GPU. Returns true if successful, false otherwise
 
-		//void BindSampler(TEXTURE_TYPE textureType, bool isRenderTexture);
-		void BindSampler(int textureType, bool isRenderTexture);
+		// Bind the texture to its sampler for Shader sampling
+		void Bind(GLuint const& shaderReference = 0, int textureUnitOverride = -1); // NOTE: GL_TEXTURE0 + textureUnit is what is bound when calling glActiveTexture()
+
 
 		// Public static functions:
 		//-------------------------
 		
 		// Load a texture object from a (relative) path. Note: Returns nullptr if OpenGL binding fails
-		static Texture* LoadTextureFromPath(string texturePath, bool doBuffer = false);
+		static Texture* LoadTextureFileFromPath(string texturePath, bool doBuffer = false);
+		
 
 
 	protected:
@@ -86,7 +88,8 @@ namespace BlazeEngine
 		GLenum textureMinFilter		= GL_NEAREST_MIPMAP_LINEAR;
 		GLenum textureMaxFilter		= GL_LINEAR;
 
-		GLuint sampler				= 0;
+		GLuint samplerID			= 0;		// Name of a sampler
+		int textureUnit				= -1;		// Index to which the texture unit is bound. Must be set before Buffer() is called (ie. via constructor, or manually)
 
 		unsigned int	width		= 1;		// # Cols
 		unsigned int	height		= 1;		// # Rows

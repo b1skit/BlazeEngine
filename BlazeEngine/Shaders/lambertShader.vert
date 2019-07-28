@@ -1,6 +1,8 @@
 #version 430 core
 #define BLAZE_VERTEX_SHADER
 #include "BlazeCommon.glsl"
+#include "BlazeGlobals.glsl"
+
 
 // Lambert vertex shader
 void main()
@@ -16,4 +18,6 @@ void main()
 	data.shadowPos	= (shadowCam_vp * vec4(data.worldPos, 1)).xyz;
 
 	data.uv0 = in_uv0;
+
+	data.TBN		= AssembleTBN(in_tangent, in_bitangent, in_modelRotation);
 }

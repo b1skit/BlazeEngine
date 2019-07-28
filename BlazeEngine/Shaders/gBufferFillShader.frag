@@ -27,9 +27,7 @@ void main()
 	gBuffer_out_albedo		= texture(albedo, data.uv0.xy);
 
 	// Normal:
-	vec3 texNormal			= texture(normal, data.uv0.xy).xyz;
-	texNormal				= texNormal * 2.0 - 1.0;	 // [0,1] -> [-1,1]
-	gBuffer_out_worldNormal = vec4( normalize(data.TBN * texNormal), 0);
+	gBuffer_out_worldNormal = vec4( WorldNormalFromTexture(normal, data.uv0.xy, data.TBN), 0);
 
 	// RMAO:
 	gBuffer_out_RMAO		= texture(RMAO, data.uv0.xy);

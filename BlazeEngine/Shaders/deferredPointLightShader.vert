@@ -9,6 +9,8 @@
 // Phong vertex shader
 void main()
 {
-	gl_Position		= in_mvp * vec4(in_position.xyz, 1.0);
-//	data.uv0		= in_uv0; // TODO: Write a screen position to (GBuffer) UV function
+	gl_Position = in_mvp * vec4(in_position.xyz, 1.0);
+
+	data.worldPos	= (in_model * vec4(in_position.xyz, 1.0f)).xyz;
+	data.viewPos	= -(in_mv * vec4(in_position.xyz, 1.0f)).xyz;	// Negate, because camera is looking down Z-
 }

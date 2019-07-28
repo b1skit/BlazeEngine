@@ -28,9 +28,11 @@ namespace BlazeEngine
 		"GBuffer_Emissive",		// RENDER_TEXTURE_EMISSIVE
 
 		"GBuffer_WorldPos",		// RENDER_TEXTURE_WORLD_POSITION
-		"GBuffer_MatProp0"		// RENDER_TEXTURE_MATERIAL_PROPERTY_0
+		"GBuffer_MatProp0",		// RENDER_TEXTURE_MATERIAL_PROPERTY_0
 
-		"shadowDepth",			// RENDER_TEXTURE_DEPTH
+		"GBuffer_Depth",		// RENDER_TEXTURE_DEPTH
+
+		// TODO: We don't have a string for TEXTURE_UNIT_SHADOW_DEPTH
 	};
 
 	const string Material::MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_COUNT] =
@@ -71,6 +73,24 @@ namespace BlazeEngine
 	Texture*& Material::AccessTexture(TEXTURE_TYPE textureType)
 	{
 		return textures[textureType];
+	}
+
+
+	void Material::AddShaderKeyword(string const& newKeyword)
+	{
+		shaderKeywords.emplace_back(newKeyword);
+	}
+
+
+	void Material::BindAllTextures(GLuint const& shaderReference /*= 0*/)
+	{
+		for (int i = 0; i < numTextures; i++)
+		{
+			if (this->textures[i] != nullptr)
+			{
+				this->textures[i]->Bind(shaderReference);
+			}
+		}
 	}
 }
 

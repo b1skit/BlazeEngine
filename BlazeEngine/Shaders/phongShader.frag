@@ -3,6 +3,7 @@
 
 #include "BlazeCommon.glsl"
 #include "BlazeGlobals.glsl"
+#include "BlazeLighting.glsl"
 
 // Built-in input variables:
 //layout(pixel_center_integer) in vec4 gl_FragCoord; //  Location of the fragment in window space. (x,y,z,w) = window-relative (x,y,z,1/w)
@@ -12,28 +13,23 @@
 
 void main()
 {	
-	FragColor		= texture(albedo, data.uv0.xy);
+	FragColor			= texture(albedo, data.uv0.xy);
+	
+	vec3 worldNormal	= WorldNormalFromTexture(normal, data.uv0.xy, data.TBN);
 
-	vec3 texNormal	= ObjectNormalFromTexture(data.TBN, texture(normal, data.uv0.xy).rgb);
-	texNormal		= (in_modelRotation * vec4(texNormal, 0)).xyz;		// Object -> world space
+	vec4 RMAO			= texture(RMAO, data.uv0.xy);
 
 	// Ambient:
 	vec4 ambientContribution	= FragColor * vec4(ambientColor, 1);
 
 	// Diffuse:
-	float nDotL					= max(0, dot(texNormal, lightWorldDir));
-	vec4 diffuseContribution	= FragColor * vec4(nDotL * lightColor, 1);
+	vec4 diffuseContribution	= vec4( LambertianDiffuse(FragColor.xyz, worldNormal, lightColor, lightWorldDir) , 1);
 
-	// Specular:
-	vec3 specColor	= lightColor * texture(RMAO, data.uv0.xy).r;			// Light color * roughness
-	vec3 reflectDir = normalize(reflect(-lightWorldDir, texNormal));		// World-space reflection dir
-	reflectDir		= normalize((in_view * vec4(reflectDir, 0))).xyz;		// World -> view space
-	
-	vec3 viewDir			= normalize(data.viewPos.xyz);					// view-space fragment view dir
-	float vDotR				= max(0, dot(viewDir, reflectDir));
-	vec4 specContribution	= vec4(specColor, 1) * pow(vDotR, matProperty0.x);
+	// Specular:	
+	vec4 specContribution		= vec4( PhongSpecular(data.worldPos, worldNormal, lightWorldDir, lightColor, in_view, RMAO.r, matProperty0.x) * FragColor.xyz, 1);
 
-	float shadowFactor		= GetShadowFactor(data.shadowPos, shadowDepth, data.vertexWorldNormal, lightWorldDir);
+	// Shadows:
+	float shadowFactor		= GetShadowFactor(data.shadowPos, shadowDepth, worldNormal, lightWorldDir);
 	
 	// Final result:
 	FragColor = ambientContribution + ((diffuseContribution + specContribution) * shadowFactor);

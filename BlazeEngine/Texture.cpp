@@ -27,21 +27,38 @@ namespace BlazeEngine
 	}
 
 	// Constructor:
-	Texture::Texture(int width, int height, string texturePath, bool doFill /* = true */, vec4 fillColor /* = (1.0, 0.0, 0.0, 1.0) */, bool doBuffer /*= false*/)
+	Texture::Texture(int width, int height, string texturePath, bool doFill /* = true */, vec4 fillColor /* = (1.0, 0.0, 0.0, 1.0) */, bool doBuffer /*= false*/, int textureUnit /*= -1*/)
 	{
 		this->width				= width;
 		this->height			= height;
 		this->numTexels			= width * height;
 
-		this->texturePath = texturePath;
+		this->texturePath		= texturePath;
 
 		// Initialize the texture:
 		texels					= new vec4[numTexels];
 		resolutionHasChanged	= true;
 		if (doFill)
 		{
-			Fill(fillColor, doBuffer);
-		}		
+			Fill(fillColor);
+		}
+
+		if (textureUnit != -1)
+		{
+			this->textureUnit = textureUnit;
+		}
+
+		if (doBuffer)
+		{
+			if (textureUnit == -1)
+			{
+				LOG_ERROR("Cannot buffer texture \"" + texturePath + "\" before the textureUnit has been set");
+			}
+			else
+			{
+				this->Buffer();
+			}
+		}
 	}
 
 	Texture::Texture(Texture const& rhs)
@@ -69,6 +86,8 @@ namespace BlazeEngine
 		this->textureMinFilter		= rhs.textureMinFilter;
 		this->textureMaxFilter		= rhs.textureMaxFilter;
 
+		this->samplerID				= rhs.samplerID;
+		this->textureUnit			= rhs.textureUnit;
 
 		this->width					= rhs.width;
 		this->height				= rhs.height;
@@ -105,7 +124,7 @@ namespace BlazeEngine
 			resolutionHasChanged = true;
 		}
 
-		glDeleteSamplers(1, &this->sampler);
+		glDeleteSamplers(1, &this->samplerID);
 	}
 
 
@@ -217,7 +236,7 @@ namespace BlazeEngine
 	// Static functions:
 	//------------------
 
-	Texture* Texture::LoadTextureFromPath(string texturePath, bool doBuffer /*= false*/)
+	Texture* Texture::LoadTextureFileFromPath(string texturePath, bool doBuffer /*= false*/)
 	{
 		LOG("Loading texture at " + texturePath);
 
@@ -357,36 +376,53 @@ namespace BlazeEngine
 			// Note: We don't unbind the texture here so RenderTexture::Buffer() doesn't have to rebind it
 		}
 
+		// Configure the Texture sampler:
+		if (this->textureUnit < 0)
+		{
+			LOG_ERROR("Cannot bind Texture sampler as textureUnit has not been set");
+			return false;
+		}
+		glBindSampler(this->textureUnit, this->samplerID);
+		if (!glIsSampler(this->samplerID))
+		{
+			glGenSamplers(1, &this->samplerID);
+			glBindSampler(this->textureUnit, this->samplerID);
+		}
+
+		glSamplerParameteri(this->samplerID, GL_TEXTURE_WRAP_S, this->textureWrapS);
+		glSamplerParameteri(this->samplerID, GL_TEXTURE_WRAP_T, this->textureWrapT);				
+
+		glSamplerParameteri(this->samplerID, GL_TEXTURE_MIN_FILTER, this->textureMinFilter);
+		glSamplerParameteri(this->samplerID, GL_TEXTURE_MAG_FILTER, this->textureMaxFilter);
+
+		glBindSampler(this->textureUnit, 0);
+
 		return true;
 	}
 
-	
-	void Texture::BindSampler(int textureType, bool isRenderTexture)
+
+	void Texture::Bind(GLuint const& shaderReference /*= 0*/, int textureUnitOverride /*= -1*/)
 	{
-		int textureUnit = (int)textureType;
-		if (isRenderTexture)
+		int targetTextureUnit = this->textureUnit;
+		if (textureUnitOverride != -1)
 		{
-			textureUnit += RENDER_TEXTURE_0;
+			targetTextureUnit = textureUnitOverride;
 		}
 
-		// Generate/bind the sampler:
-		glGenSamplers(1, &this->sampler);
-
-		glBindSampler(textureUnit, this->sampler);
-		if (!glIsSampler(this->sampler))
+		// Handle unbinding:
+		if (shaderReference == 0)
 		{
-			LOG_ERROR("Texture could not create sampler");
+			glActiveTexture(GL_TEXTURE0 + targetTextureUnit);
+			glBindTexture(this->texTarget, 0);
+			glBindSampler(targetTextureUnit, 0); // Assign to index/unit 0
+
 		}
-		else
+		else // Handle binding:
 		{
-			glSamplerParameteri(this->sampler, GL_TEXTURE_WRAP_S, this->textureWrapS);
-			glSamplerParameteri(this->sampler, GL_TEXTURE_WRAP_T, this->textureWrapT);				
-
-			glSamplerParameteri(this->sampler, GL_TEXTURE_MIN_FILTER, this->textureMinFilter);
-			glSamplerParameteri(this->sampler, GL_TEXTURE_MAG_FILTER, this->textureMaxFilter);
+			glActiveTexture(GL_TEXTURE0 + targetTextureUnit);
+			glBindTexture(this->texTarget, this->textureID);
+			glBindSampler(targetTextureUnit, this->samplerID); // Assign our named sampler to the texture
 		}
-
-		glBindSampler(textureUnit, 0);
 	}
 }
 

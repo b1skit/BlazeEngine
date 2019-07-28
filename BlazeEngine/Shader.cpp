@@ -104,8 +104,8 @@ namespace BlazeEngine
 		shaderReference = glCreateProgram();
 
 		// Load the shader files:
-		string vertexShader = LoadShaderFile(shaderName + ".vert");
-		string fragmentShader = LoadShaderFile(shaderName + ".frag");
+		string vertexShader		= LoadShaderFile(shaderName + ".vert");
+		string fragmentShader	= LoadShaderFile(shaderName + ".frag");
 		if (vertexShader == "" || fragmentShader == "")
 		{
 			glDeleteProgram(shaderReference);

@@ -93,10 +93,13 @@ layout(binding = 6) uniform sampler2D GBuffer_RMAO;
 layout(binding = 7) uniform sampler2D GBuffer_Emissive;
 layout(binding = 8) uniform sampler2D GBuffer_WorldPos;
 layout(binding = 9) uniform sampler2D GBuffer_MatProp0;
-layout(binding = 10) uniform sampler2D shadowDepth;			// GBuffer depth or the currently bound shadow depth map
+
+layout(binding = 10) uniform sampler2D GBuffer_Depth;
+
+layout(binding = 11) uniform sampler2D shadowDepth;			// Currently bound shadow depth map
 
 // Shadow map parameters:
-uniform vec4		shadowDepth_TexelSize;	// .xyzw = (1/width, 1/height, width, height)
+uniform vec4		GBuffer_Depth_TexelSize;	// .xyzw = (1/width, 1/height, width, height)
 uniform mat4		shadowCam_vp;			// Shadow map: [Projection * View]
 
 uniform float		maxShadowBias;			// Offsets for preventing shadow acne
@@ -114,8 +117,9 @@ uniform vec4 matProperty0;		// .x == Phong cosine exponent
 //uniform vec4 matProperty7;
 
 
-//// Camera variables:
+// System variables:
+uniform vec4 screenParams;		// .x = xRes, .y = yRes, .z = 1/xRes, .w = 1/yRes
 //uniform vec4 zBufferParams;
-//uniform vec4 screenParams;
+
 //uniform vec3 cameraPosition;	// World-space camera position
 //// TODO: ^^^Implement these

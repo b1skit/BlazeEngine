@@ -6,7 +6,7 @@
 
 namespace BlazeEngine
 {
-	BlazeEngine::Light::Light(string lightName, LIGHT_TYPE lightType, vec3 color, ShadowMap* shadowMap /*= nullptr*/)
+	BlazeEngine::Light::Light(string lightName, LIGHT_TYPE lightType, vec3 color, ShadowMap* shadowMap /*= nullptr*/, float radius /*= 1.0f*/)
 	{
 		this->lightName		= lightName;
 		this->type			= lightType;
@@ -57,9 +57,7 @@ namespace BlazeEngine
 			(
 				Mesh::CreateSphere
 				(
-					5.0f // TODO: Use the ACTUAL light size!!!
-					// Will need to break out buffering into a Mesh function
-					// Maybe have the RenderManager call buffer on ALL meshes before rendering the first frame??
+					radius
 				)
 			);
 			break;

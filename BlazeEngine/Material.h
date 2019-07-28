@@ -18,26 +18,32 @@ namespace BlazeEngine
 {
 	enum TEXTURE_TYPE
 	{
+		TEXTURE_0				= 0,				// RESERVED: Starting offset for binding Textures
+		// TODO: Find all refs to TEXTURE_?? and ensure we're doing TEXTURE_0 + <wahtever>
+
 		TEXTURE_ALBEDO			= 0,				// Contains transparency in the alpha channel
 		TEXTURE_NORMAL			= 1,
 		TEXTURE_RMAO			= 2,				// Packed Roughness, Metalic, AmbientOcclusion (RGB) + unused A
 		TEXTURE_EMISSIVE		= 3,
 
 		TEXTURE_COUNT			= 4,				// RESERVED: Number of Texture slots a material has
-		RENDER_TEXTURE_0		= 4,				// RESERVED: Starting offset for binding RenderTextures (eg. In RenderManager::BindTextures())
+		RENDER_TEXTURE_0		= 4,				// RESERVED: Starting offset for binding RenderTextures
 
 		// Alternative RenderTexture names:
-		RENDER_TEXTURE_ALBEDO			= 0,
-		RENDER_TEXTURE_WORLD_NORMAL		= 1,
-		RENDER_TEXTURE_RMAO				= 2,
-		RENDER_TEXTURE_EMISSIVE			= 3,
-
+		RENDER_TEXTURE_ALBEDO				= 0,
+		RENDER_TEXTURE_WORLD_NORMAL			= 1,
+		RENDER_TEXTURE_RMAO					= 2,
+		RENDER_TEXTURE_EMISSIVE				= 3,
 		RENDER_TEXTURE_WORLD_POSITION		= 4,
 		RENDER_TEXTURE_MATERIAL_PROPERTY_0	= 5,	// MATERIAL_PROPERTY_0
 
 		RENDER_TEXTURE_DEPTH				= 6,	// Make this the last element
 
-		RENDER_TEXTURE_COUNT				= 7
+		RENDER_TEXTURE_COUNT				= 7,
+
+		// Additional texture units:
+		TEXTURE_UNIT_SHADOW_DEPTH			= 11,	// First unit must equal TEXTURE_COUNT + RENDER_TEXTURE_COUNT
+
 	}; // Note: If new enums are added, don't forget to update Material::RENDER_TEXTURE_SAMPLER_NAMES[] as well!
 
 
@@ -77,17 +83,18 @@ namespace BlazeEngine
 		inline Shader*&			GetShader()								{ return shader; }
 		inline vec4&			Property(MATERIAL_PROPERTY_INDEX index) { return properties[index]; }
 
-		Texture*&				AccessTexture(TEXTURE_TYPE textureType);// { return textures[textureType]; }
+		Texture*&				AccessTexture(TEXTURE_TYPE textureType);
 		inline int const&		NumTextureSlots()						{ return numTextures; }
 
-		void AddShaderKeyword(string const& newKeyword)
-		{
-			shaderKeywords.emplace_back(newKeyword);
-		}
-
 		vector<string> const&	ShaderKeywords() const					{ return shaderKeywords; }
+		void					AddShaderKeyword(string const& newKeyword);
+		
 
 		inline bool&			IsRenderMaterial()						{ return isRenderMaterial; }
+
+
+		void BindAllTextures(GLuint const& shaderReference = 0);
+
 
 		// RenderTexture sampler names:
 		//-----------------------------

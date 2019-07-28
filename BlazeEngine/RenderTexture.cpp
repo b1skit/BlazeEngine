@@ -15,7 +15,7 @@ namespace BlazeEngine
 	{}	// Do nothing else
 
 
-	RenderTexture::RenderTexture(int width, int height, string name /*= DEFAULT_RENDERTEXTURE_NAME*/, bool doBuffer /*= false*/)
+	RenderTexture::RenderTexture(int width, int height, string name /*= DEFAULT_RENDERTEXTURE_NAME*/, bool doBuffer /*= false*/, int textureUnit /*= -1*/)
 	{
 		this->width					= width;
 		this->height				= height;
@@ -38,9 +38,21 @@ namespace BlazeEngine
 		this->textureMinFilter		= GL_LINEAR;
 		this->textureMaxFilter		= GL_LINEAR;
 
+		if (textureUnit != -1)
+		{
+			this->textureUnit = textureUnit;
+		}
+
 		if (doBuffer)
 		{
-			Buffer();
+			if (textureUnit == -1)
+			{
+				LOG_ERROR("Cannot buffer RenderTexture \"" + name + "\" before the textureUnit has been set");
+			}
+			else
+			{
+				this->Buffer();
+			}
 		}
 	}
 
@@ -97,7 +109,8 @@ namespace BlazeEngine
 
 		if (isDepth)
 		{
-			glFramebufferTexture2D(GL_FRAMEBUFFER, additionalRTs[0]->AttachmentPoint(), additionalRTs[0]->TextureTarget(), additionalRTs[0]->TextureID(), 0);
+			/*glFramebufferTexture2D(GL_FRAMEBUFFER, additionalRTs[0]->AttachmentPoint(), additionalRTs[0]->TextureTarget(), additionalRTs[0]->TextureID(), 0);*/
+			glFramebufferTexture2D(GL_FRAMEBUFFER, (*additionalRTs)->AttachmentPoint(), (*additionalRTs)->TextureTarget(), (*additionalRTs)->TextureID(), 0);
 		}
 		else
 		{

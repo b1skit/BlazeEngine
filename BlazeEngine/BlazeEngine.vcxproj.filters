@@ -214,5 +214,8 @@
     <None Include="Shaders\deferredPointLightShader.vert">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="Shaders\BlazeLighting.glsl">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

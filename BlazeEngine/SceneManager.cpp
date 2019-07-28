@@ -734,7 +734,7 @@ namespace BlazeEngine
 		// If we've made it this far, load the texture
 		if (loadIfNotFound)
 		{
-			Texture* result = Texture::LoadTextureFromPath(texturePath);
+			Texture* result = Texture::LoadTextureFileFromPath(texturePath);
 			if (result != nullptr)
 			{
 				AddTexture(result);
@@ -819,6 +819,7 @@ namespace BlazeEngine
 				}
 				else
 				{
+					// NOTE: This NEVER gets hit, since ExtractLoadTextureFromAiMaterial() will always assign a default 1x1 normal texture.... TODO: handle this more elegantly
 					newMaterial->AddShaderKeyword(Shader::SHADER_KEYWORDS[NO_NORMAL_TEXTURE]);
 				}
 				
@@ -909,12 +910,10 @@ namespace BlazeEngine
 					newMaterial->AccessTexture(TEXTURE_ALBEDO) = FindLoadTextureByPath(errorTextureName, false);
 					if (newMaterial->AccessTexture(TEXTURE_ALBEDO) == nullptr)
 					{
-						newMaterial->AccessTexture(TEXTURE_ALBEDO) = new Texture(1, 1, errorTextureName, true, vec4(1.0f, 0.0f, 1.0f, 1.0f));
+						newMaterial->AccessTexture(TEXTURE_ALBEDO) = new Texture(1, 1, errorTextureName, true, vec4(1.0f, 0.0f, 1.0f, 1.0f), false, TEXTURE_0 + TEXTURE_ALBEDO);
 
 						if (newMaterial->AccessTexture(TEXTURE_ALBEDO)->Buffer())
 						{
-							newMaterial->AccessTexture(TEXTURE_ALBEDO)->BindSampler(TEXTURE_ALBEDO, false); // TODO: Can this be part of calling Buffer() ???
-							
 							AddTexture(newMaterial->AccessTexture(TEXTURE_ALBEDO));
 						}
 					}
@@ -922,12 +921,13 @@ namespace BlazeEngine
 				else
 				{
 					// Buffer all of the textures:
-					for (int currentTexture = 0; currentTexture < newMaterial->NumTextureSlots(); currentTexture++)
+					for (int currentTextureIndex = 0; currentTextureIndex < newMaterial->NumTextureSlots(); currentTextureIndex++)
 					{
-						if (newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture) != nullptr)
+						Texture* currentTexture = newMaterial->AccessTexture((TEXTURE_TYPE)currentTextureIndex);
+						if (currentTexture != nullptr)
 						{
-							newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture)->Buffer();
-							newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture)->BindSampler((TEXTURE_TYPE)currentTexture, false);
+							currentTexture->TextureUnit() = currentTextureIndex;	// Have to set this here, since we didn't set it above
+							currentTexture->Buffer();
 						}
 					}
 
@@ -966,7 +966,7 @@ namespace BlazeEngine
 					// Create it if it wasn't already loaded:
 					if (newTexture == nullptr)
 					{
-						newTexture = new Texture(1, 1, matTextureName, true, vec4(color.r, color.g, color.b, color.a));
+						newTexture = new Texture(1, 1, matTextureName, true, vec4(color.r, color.g, color.b, color.a), false, TEXTURE_0 + TEXTURE_ALBEDO);
 					}
 				}
 			}
@@ -987,7 +987,7 @@ namespace BlazeEngine
 					// Create it if it wasn't already loaded:
 					if (newTexture == nullptr)
 					{
-						newTexture = new Texture(1, 1, flatNormalName, true, vec4(0.5f, 0.5f, 1.0f, 0.0f)); // <--- IS THIS MY BUG!??!?!!?!?!?!?!?!? 0 * 2 - 1 = -1...
+						newTexture = new Texture(1, 1, flatNormalName, true, vec4(0.5f, 0.5f, 1.0f, 0.0f), false, TEXTURE_0 + TEXTURE_NORMAL);
 					}
 				}				
 			}
@@ -1556,44 +1556,57 @@ namespace BlazeEngine
 			case aiLightSource_POINT: // Can be either a point or ambient light
 			{
 				string lightName = string(scene->mLights[i]->mName.C_Str());
+
+				LIGHT_TYPE pointType = LIGHT_POINT;
+
 				if (!foundAmbient && lightName.find("ambient") != string::npos)	// NOTE: The word "ambient" must appear in the ambient light's name
 				{
-					foundAmbient = true;
-
-					vec3 ambientColor(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b);
-					Light* ambientLight = new Light("ambientLight", LIGHT_AMBIENT, ambientColor, nullptr);
-					
-					currentScene->AddLight(ambientLight);
-
 					#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
 						LOG("Created ambient light from \"" + lightName +"\"");
 					#endif
+
+					foundAmbient = true;
+
+					pointType = LIGHT_AMBIENT;
 				}
 				else
 				{
 					#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
 						LOG("\nFound a point light \"" + lightName + "\"");
 					#endif
-
-					// TODO: Replace this TEMP DEBUG:
-					LOG_WARNING("\nDEBUG!!!!!!!!!!!!!!!!!!!!Found a point light \"" + lightName + "\". Hard-coding color to red!!!!!!");
-					
-
-					//vec3 lightColor(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b);
-					vec3 lightColor(1, 0, 0);
-
-					Light* pointLight = new Light
-					(
-						lightName, 
-						LIGHT_POINT, 
-						lightColor,
-						nullptr
-					);
-
-					InitializeLightTransformValues(scene, lightName, &pointLight->GetTransform());
-
-					currentScene->AddLight(pointLight);
 				}
+
+				vec3 lightColor(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b); // == color * intensity. Both ambient and point types use the mColorDiffuse
+
+				// Compute point light radius, if required:
+				float radius = 1.0f;
+				if (pointType == LIGHT_POINT)
+				{
+					// Want the sphere mesh radius where light intensity will be close to zero
+					float cutoffValue = 0.05f;	// How close to zero we are: Want to maximize this, with as little visual discontinuity as possible
+					float maxColor = glm::max(glm::max(lightColor.r, lightColor.g), lightColor.b);			
+					radius = glm::sqrt((maxColor / cutoffValue) - 1.0f);
+				}
+
+				Light* pointLight = new Light
+				(
+					lightName, 
+					pointType, 
+					lightColor,
+					nullptr,
+					radius		// Only used if we're actually creating a point light
+				);
+
+				if (pointType == LIGHT_POINT)
+				{
+					InitializeLightTransformValues(scene, lightName, &pointLight->GetTransform());
+					
+					#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
+						LOG("Calculated point light radius of " + to_string(radius));
+					#endif
+				}
+
+				currentScene->AddLight(pointLight);
 			}				
 				break;
 

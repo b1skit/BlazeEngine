@@ -14,6 +14,8 @@ namespace BlazeEngine
 			CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapHeight
 		);
 
+		depthRenderTexture->TextureUnit() = RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH;
+
 		InitializeShadowCam(depthRenderTexture);
 	}
 
@@ -28,7 +30,8 @@ namespace BlazeEngine
 			xRes,
 			yRes,
 			lightName + "_RenderTexture",
-			true
+			true,
+			RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH
 		);
 
 		InitializeShadowCam(depthRenderTexture);

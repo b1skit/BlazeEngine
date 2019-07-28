@@ -38,7 +38,7 @@ namespace BlazeEngine
 	{
 	public:
 		Light() {}; // Default constructor
-		Light(string lightName, LIGHT_TYPE lightType, vec3 color, ShadowMap* shadowMap = nullptr);
+		Light(string lightName, LIGHT_TYPE lightType, vec3 color, ShadowMap* shadowMap = nullptr, float radius = 1.0f);
 
 		void Destroy();
 

@@ -100,8 +100,6 @@ namespace BlazeEngine
 		// Sets the active shader
 		void BindShader(GLuint const& shaderReference);
 
-		// Bind a material's Textures/RenderTextures and samplers to the currently bound shader
-		void BindTextures(Material* currentMaterial, GLuint const& shaderReference = 0);	// If shaderReference == 0, unbinds textures
 
 		// Bind the mesh VAO, position, and index buffers. If mesh == nullptr, binds all elements to index 0 (ie. for cleanup)
 		void BindMeshBuffers(Mesh* const mesh = nullptr);

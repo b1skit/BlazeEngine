@@ -276,6 +276,7 @@ namespace BlazeEngine
 		return Mesh("quad", quadVerts, numVerts, quadIndices, numIndices);
 	}
 
+
 	Mesh Mesh::CreateSphere(float radius /*= 0.5f*/, int numLatSlices /*= 16*/, int numLongSlices /*= 16*/)
 	{
 		// NOTE: Currently, this function does not generate valid tangents for any verts. Some UV's are distorted, as we're using merged vertices. TODO: Fix this
@@ -307,20 +308,20 @@ namespace BlazeEngine
 
 		// Rotate about Z: Arc down the side profile of our sphere
 		// cos theta = adj/hyp -> hyp * cos theta = adj -> radius * cos theta = Y
-		float zRadianStep	= glm::pi<float>() / (float)(numLongSlices + 1);
+		float zRadianStep	= glm::pi<float>() / (float)(numLongSlices + 1); // +1 to get the number of rows
 		float zRadians		= zRadianStep; // Already added cap vertex, so start on the next step
 		
 		// Rotate about Y: Horizontal edges
 		// sin theta = opp/hyp -> hyp * sin theta = opp -> radius * sin theta = X
 		// cos theta = adj/hyp -> hyp * cos theta = adj -> radius * cos theta = Z
-		float yRadianStep	= (2.0f * glm::pi<float>()) / (float)numLatSlices; // +No need to add 1 to longitude slices
+		float yRadianStep	= (2.0f * glm::pi<float>()) / (float)numLatSlices; //
 		float yRadians		= 0.0f;
 
 		// Build UV's, from top left (0,1) to bottom right (1.0, 0)
-		float uvXStep = 1.0f / numLatSlices;
-		float uvYStep = 1.0f / (numLongSlices + 1);
-		float uvX = 0;
-		float uvY = 1.0f - uvYStep;
+		float uvXStep	= 1.0f / (float)numLatSlices;
+		float uvYStep	= 1.0f / (float)(numLongSlices + 1);
+		float uvX		= 0;
+		float uvY		= 1.0f - uvYStep;
 
 		// Outer loop: Rotate about Z, tracing the arc of the side silhouette down the Y axis
 		for (int curLongSlices = 0; curLongSlices < numLongSlices; curLongSlices++)
@@ -379,7 +380,7 @@ namespace BlazeEngine
 		int topRight = topLeft + 1;
 		int botLeft = 1 + numLatSlices;
 		int botRight = botLeft + 1;
-		for (unsigned int i = 0; i < numLongSlices - 1; i++)
+		for (unsigned int i = 0; i < (unsigned int)(numLongSlices - 1); i++)
 		{
 			for (int j = 0; j < numLatSlices - 1; j++)
 			{

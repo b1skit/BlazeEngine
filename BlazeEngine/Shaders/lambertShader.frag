@@ -2,6 +2,7 @@
 #define BLAZE_FRAGMENT_SHADER
 #include "BlazeCommon.glsl"
 #include "BlazeGlobals.glsl"
+#include "BlazeLighting.glsl"
 
 // Built-in input variables:
 // in vec4 gl_FragCoord; //  location of the fragment in window space. 
@@ -11,19 +12,18 @@
 
 void main()
 {	
-	FragColor			= texture(albedo, data.uv0.xy);
+	FragColor					= texture(albedo, data.uv0.xy);
+	vec3 worldNormal			= WorldNormalFromTexture(normal, data.uv0.xy, data.TBN);
 
-	#if defined(NO_NORMAL_TEXTURE)
-		float nDotL			= max(0, dot(data.vertexWorldNormal, lightWorldDir));
-	#else
-		vec3 texNormal	= ObjectNormalFromTexture(data.TBN, texture(normal, data.uv0.xy).rgb);
-		texNormal		= (in_modelRotation * vec4(texNormal, 0)).xyz;		// Object -> world space
-		// TODO: Use the function that gets the world normal right away??????
+	// Ambient:
+	vec4 ambientContribution	= FragColor * vec4(ambientColor, 1);
 
-		float nDotL					= max(0, dot(texNormal, lightWorldDir));
-	#endif
+	// Diffuse:
+	vec4 diffuseContribution	= vec4( LambertianDiffuse(FragColor.xyz, worldNormal, lightColor, lightWorldDir) , 1);
 
-	float shadowFactor	= GetShadowFactor(data.shadowPos, shadowDepth, data.vertexWorldNormal, lightWorldDir);
-	
-	FragColor			= (FragColor * vec4(ambientColor, 1) ) + (FragColor * vec4(nDotL * lightColor, 1) * shadowFactor );
+	// Shadow:
+	float shadowFactor			= GetShadowFactor(data.shadowPos, shadowDepth, data.vertexWorldNormal, lightWorldDir);
+
+	// Final result:
+	FragColor = ambientContribution + (diffuseContribution * shadowFactor);
 } 

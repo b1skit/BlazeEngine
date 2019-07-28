@@ -14,7 +14,7 @@ namespace BlazeEngine
 	{
 	public:
 		RenderTexture();
-		RenderTexture(int width, int height, string name = DEFAULT_RENDERTEXTURE_NAME, bool doBuffer = false);
+		RenderTexture(int width, int height, string name = DEFAULT_RENDERTEXTURE_NAME, bool doBuffer = false, int textureUnit = -1);
 
 		RenderTexture(RenderTexture const& rhs, bool doBuffer);
 

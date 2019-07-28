@@ -103,7 +103,8 @@ namespace BlazeEngine
 			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes,
 			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
 			this->GetName() + "_" + Material::RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_ALBEDO],
-			false
+			false,
+			RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO
 		);
 		gBuffer_albedo->Format()			= GL_RGBA;		// Note: Using 4 channels for future flexibility
 		gBuffer_albedo->InternalFormat()	= GL_RGBA32F;		
@@ -117,15 +118,14 @@ namespace BlazeEngine
 		gBuffer_albedo->DrawBuffer()		= GL_COLOR_ATTACHMENT0 + 0;
 
 		gBuffer_albedo->Buffer();
-		gBuffer_albedo->BindSampler(TEXTURE_ALBEDO, true);
 
 		GLuint gBufferFBO = gBuffer_albedo->FBO(); // Cache off the FBO for the other GBuffer textures
 
 		gBufferMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO) = gBuffer_albedo;
 
 		// Store references to our additonal RenderTextures:
-		int numAdditionalRTs = (int)RENDER_TEXTURE_COUNT - 2; // -2 b/c we already have 1, and we'll add the depth texture last
-		RenderTexture** additionalRTs = new RenderTexture*[numAdditionalRTs];
+		int numAdditionalRTs			= (int)RENDER_TEXTURE_COUNT - 2; // -2 b/c we already have 1, and we'll add the depth texture last
+		RenderTexture** additionalRTs	= new RenderTexture*[numAdditionalRTs];
 
 		int insertIndex = 0;
 		int attachmentIndexOffset = 1;
@@ -143,9 +143,10 @@ namespace BlazeEngine
 			currentRT->AttachmentPoint()	= GL_COLOR_ATTACHMENT0 + attachmentIndexOffset;
 			currentRT->ReadBuffer()			= GL_COLOR_ATTACHMENT0 + attachmentIndexOffset;
 			currentRT->DrawBuffer()			= GL_COLOR_ATTACHMENT0 + attachmentIndexOffset;
+			
+			currentRT->TextureUnit()		= RENDER_TEXTURE_0 + currentType;
 
 			currentRT->Texture::Buffer();	// Generate a texture without bothering to attempt to bind a framebuffer
-			currentRT->BindSampler((TEXTURE_TYPE)currentType, true);
 
 			glBindTexture(currentRT->TextureTarget(), 0); // Cleanup: Texture was never unbound in Texture::Buffer, so we must unbind it here
 
@@ -166,14 +167,18 @@ namespace BlazeEngine
 			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes,
 			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
 			this->GetName() + "_" + Material::RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_DEPTH],
-			false
+			false,
+			RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH
 		);
+
+		// Add the new texture to our material:
+		gBufferMaterial->AccessTexture(RENDER_TEXTURE_DEPTH) = depth;
 
 		depth->TexturePath()	= this->GetName() + "_" + Material::RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_DEPTH];
 		depth->FBO()			= gBufferFBO;
 
 		depth->Texture::Buffer();
-		depth->BindSampler(RENDER_TEXTURE_DEPTH, true);
+
 		glBindTexture(depth->TextureTarget(), 0); // Cleanup: Texture was never unbound in Texture::Buffer, so we must unbind it here
 
 		gBuffer_albedo->AttachAdditionalRenderTexturesToFramebuffer(&depth, 1, true);
