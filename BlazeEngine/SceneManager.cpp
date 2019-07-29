@@ -382,7 +382,7 @@ namespace BlazeEngine
 		{
 			LOG("Successfully loaded scene file " + fbxPath);
 		}
-
+		
 
 		// Extract materials and textures:
 		//--------------------------------
@@ -1535,6 +1535,36 @@ namespace BlazeEngine
 					);
 
 					currentScene->keyLight->ActiveShadowMap(keyLightShadowMap);
+
+					// Extract light metadata:
+					aiNode* lightNode = scene->mRootNode->FindNode(scene->mLights[i]->mName.C_Str());
+					if (lightNode)
+					{
+						float minShadowBias = 0.0f;
+						if (lightNode->mMetaData->Get("minShadowBias", minShadowBias))
+						{
+							#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
+								LOG("\nImporting directional light minimum shadow bias value: " + to_string(minShadowBias));
+							#endif
+
+							keyLightShadowMap->MinShadowBias() = minShadowBias;
+						}
+
+						float maxShadowBias = 0.0f;
+						if (lightNode->mMetaData->Get("maxShadowBias", maxShadowBias))
+						{
+							#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
+								LOG("\nImporting directional light maximum shadow bias value: " + to_string(maxShadowBias));
+							#endif
+
+							keyLightShadowMap->MaxShadowBias() = maxShadowBias;
+						}
+					}
+					else
+					{
+						LOG_ERROR("Could not find light node in scene hierarchy");
+					}
+
 
 					// Note: Assimp seems to import directional lights with their "forward" vector pointing in the opposite direction.
 					// This is ok, since we use "forward" as "vector pointing towards the light" when uploading to our shaders...

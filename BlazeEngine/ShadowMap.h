@@ -29,8 +29,8 @@ namespace BlazeEngine
 		// Get the current shadow camera
 		inline Camera* ShadowCamera()		{ return shadowCam; }
 
-		inline float const& MaxShadowBias()	{ return maxShadowBias; }
-		inline float const& MinShadowBias() { return minShadowBias; }
+		inline float& MaxShadowBias()		{ return maxShadowBias; }
+		inline float& MinShadowBias()		{ return minShadowBias; }
 
 	protected:
 

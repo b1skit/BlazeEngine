@@ -161,17 +161,17 @@ namespace BlazeEngine
 		unsigned int		currentMaterialCount	= 0;
 		
 		// Finds an existing material, or creates one using the default shader if none exists
-		int GetMaterialIndex(string materialName);
+		int					GetMaterialIndex(string materialName);
 
 		// Add a material to the material array
 		// Warning: Material name MUST be unique if checkForExisting == false
-		unsigned int AddMaterial(Material* newMaterial, bool checkForExisting = true);
+		unsigned int		AddMaterial(Material* newMaterial, bool checkForExisting = true);
 		
 		// Returns index of material with matching name, or -1 otherwise
-		int GetMaterialIndexIfExists(string materialName); 
+		int					GetMaterialIndexIfExists(string materialName); 
 
 		// Helper function: Compiles vectors filled with meshes that use each material. Must be called once after all meshes have finished loading
-		void AssembleMaterialMeshLists(); 
+		void				AssembleMaterialMeshLists(); 
 		vector<vector<Mesh*>> materialMeshLists;
 
 

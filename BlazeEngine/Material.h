@@ -19,7 +19,6 @@ namespace BlazeEngine
 	enum TEXTURE_TYPE
 	{
 		TEXTURE_0				= 0,				// RESERVED: Starting offset for binding Textures
-		// TODO: Find all refs to TEXTURE_?? and ensure we're doing TEXTURE_0 + <wahtever>
 
 		TEXTURE_ALBEDO			= 0,				// Contains transparency in the alpha channel
 		TEXTURE_NORMAL			= 1,
