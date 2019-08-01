@@ -90,6 +90,7 @@ namespace BlazeEngine
 
 		GLuint samplerID			= 0;		// Name of a sampler
 		int textureUnit				= -1;		// Index to which the texture unit is bound. Must be set before Buffer() is called (ie. via constructor, or manually)
+		// TODO: Move textureUnit to material level to allow textures to be shared among different slots?
 
 		unsigned int	width		= 1;		// # Cols
 		unsigned int	height		= 1;		// # Rows

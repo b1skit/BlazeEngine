@@ -13,7 +13,7 @@
 
 
 void main()
-{	
+{
 	// Sample textures once inside the main shader flow, and pass the values as required:
 	FragColor					= texture(GBuffer_Albedo, data.uv0.xy);
 	vec3 worldNormal			= texture(GBuffer_WorldNormal, data.uv0.xy).xyz;

@@ -193,7 +193,7 @@ namespace BlazeEngine
 			LOG("Far: " + to_string(far));
 			LOG("Aspect ratio: " + to_string(aspectRatio));
 
-			LOG("Position: " + to_string(transform.Position().x) + " " + to_string(transform.Position().y) + " " + to_string(transform.Position().z));
+			LOG("Position: " + to_string(transform.WorldPosition().x) + " " + to_string(transform.WorldPosition().y) + " " + to_string(transform.WorldPosition().z));
 			LOG("Euler Rotation: " + to_string(transform.GetEulerRotation().x) + " " + to_string(transform.GetEulerRotation().y) + " " + to_string(transform.GetEulerRotation().z));
 			
 			// NOTE: OpenGL matrics are stored in column-major order

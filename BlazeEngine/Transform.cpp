@@ -93,7 +93,7 @@ namespace BlazeEngine
 	}
 
 
-	void Transform::SetPosition(vec3 position)
+	void Transform::SetWorldPosition(vec3 position)
 	{
 		this->translation	= glm::translate(mat4(1.0f), position);
 		this->worldPosition = position;
@@ -131,6 +131,17 @@ namespace BlazeEngine
 	//}
 
 
+	vec3 const& Transform::WorldPosition()
+	{
+		if (isDirty)
+		{
+			Recompute();
+		}
+
+		return worldPosition;
+	}
+
+
 	void Transform::Rotate(vec3 eulerXYZ) // Note: eulerXYZ is in RADIANS
 	{
 		// Concatenate rotations as quaternions:
@@ -149,7 +160,18 @@ namespace BlazeEngine
 	}
 
 
-	void Transform::SetRotation(vec3 eulerXYZ)
+	vec3 const&	Transform::GetEulerRotation()
+	{ 
+		if (isDirty)
+		{
+			Recompute(); // TODO: Must actually compute the eulerRotation in here!!!
+		}
+
+		return eulerWorldRotation; // Currently, this will be incorrect if you call GetEulerRotation() before SetWorldRotation() or Rotate()!!!!
+	} 
+
+
+	void Transform::SetWorldRotation(vec3 eulerXYZ)
 	{
 		// Update Quaternion:
 		this->worldRotation = glm::quat(eulerXYZ);
@@ -165,7 +187,7 @@ namespace BlazeEngine
 	}
 
 
-	void Transform::SetRotation(quat newRotation)
+	void Transform::SetWorldRotation(quat newRotation)
 	{
 		this->worldRotation = newRotation;
 
@@ -181,13 +203,14 @@ namespace BlazeEngine
 	}
 
 
-	void Transform::SetScale(vec3 scale)
+	void Transform::SetWorldScale(vec3 scale)
 	{
 		this->worldScale = scale;
 		this->scale = glm::scale(mat4(1.0f), scale);
 
 		MarkDirty();
 	}
+
 
 	void Transform::MarkDirty()
 	{
@@ -272,6 +295,13 @@ namespace BlazeEngine
 			this->combinedRotation		= this->parent->Model(WORLD_ROTATION) * combinedRotation;
 			this->combinedTranslation	= this->parent->Model(WORLD_TRANSLATION) * combinedTranslation;
 		}
+
+		this->worldPosition = combinedModel * vec4(0, 0, 0, 1);
+		
+		// TODO: Recompute eulerWorldRotation
+		//this->eulerWorldRotation = ???
+
+		this->worldScale = this->combinedScale * vec4(1, 1, 1, 1);
 
 		for (int i = 0; i < (int)children.size(); i++)
 		{

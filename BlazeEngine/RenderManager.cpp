@@ -300,56 +300,65 @@ namespace BlazeEngine
 		RenderLightShadowMap(CoreEngine::GetSceneManager()->GetKeyLight());
 		glEnable(GL_CULL_FACE);
 
+
 		// TODO: Render reflection probes
 
 
-		//// //Forward render: Leaving this around for a while for debug purposes
-		//RenderForward(mainCam);
-
-
-		// Fill GBuffer:
-		RenderToGBuffer(mainCam);
-
-		// Render deferred lights:
-		glBindFramebuffer(GL_FRAMEBUFFER, ((RenderTexture*)outputMaterial->AccessTexture((TEXTURE_TYPE)0))->FBO());
-		glViewport(0, 0, this->xRes, this->yRes);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
-
-		vector<Light*>const* deferredLights = &CoreEngine::GetSceneManager()->GetDeferredLights();
-
-		// Render the first light
-		RenderDeferredLight(deferredLights->at(0));
-		
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_ONE, GL_ONE); // TODO: Can we just set this once somewhere, instead of calling each frame?
-
-		for (int i = 1; i < deferredLights->size(); i++)
+		// Forward rendering:
+		if (CoreEngine::GetCoreEngine()->GetConfig()->renderer.useForwardRendering)
 		{
-			// Setup for screen aligned quads:
-			if (deferredLights->at(i)->Type() == LIGHT_AMBIENT || deferredLights->at(i)->Type() == LIGHT_DIRECTIONAL)
-			{
-				glDisable(GL_DEPTH_TEST);
-				glCullFace(GL_BACK);
-			}
-			else
-			{
-				glEnable(GL_DEPTH_TEST);
-				glCullFace(GL_FRONT);
-				glDepthFunc(GL_GREATER);				
-			}
-
-			RenderDeferredLight(deferredLights->at(i));
+			RenderForward(mainCam);
 		}
+		// Deferred rendering:
+		else 
+		{
+			// Fill GBuffer:
+			RenderToGBuffer(mainCam);
 
-		// Deferred lights cleanup:
-		glDisable(GL_BLEND);
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
-		glCullFace(GL_BACK);
+			// Render deferred lights:
+			glBindFramebuffer(GL_FRAMEBUFFER, ((RenderTexture*)outputMaterial->AccessTexture((TEXTURE_TYPE)0))->FBO());
+			glViewport(0, 0, this->xRes, this->yRes);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
+
+			vector<Light*>const* deferredLights = &CoreEngine::GetSceneManager()->GetDeferredLights();
+
+			// Render the first light
+			RenderDeferredLight(deferredLights->at(0));
+
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_ONE, GL_ONE); // TODO: Can we just set this once somewhere, instead of calling each frame?
+
+			for (int i = 1; i < deferredLights->size(); i++)
+			{
+				// Setup for screen aligned quads:
+				if (deferredLights->at(i)->Type() == LIGHT_AMBIENT || deferredLights->at(i)->Type() == LIGHT_DIRECTIONAL)
+				{
+					glDisable(GL_DEPTH_TEST);
+					glCullFace(GL_BACK);
+				}
+				else
+				{
+					glEnable(GL_DEPTH_TEST);
+					glCullFace(GL_FRONT);
+					glDepthFunc(GL_GREATER);				
+				}
+
+				RenderDeferredLight(deferredLights->at(i));
+			}
+
+			// TODO: Blit emissive GBuffer texture to screen additively
+
+			// Deferred lights cleanup:
+			glDisable(GL_BLEND);
+			glEnable(GL_DEPTH_TEST);
+			glDepthFunc(GL_LESS);
+			glCullFace(GL_BACK);
 
 
-		// Blit results to screen:
-		BlitToScreen();
+			// Blit results to screen:
+			BlitToScreen();
+		}
+		
 
 		// Display the final frame:
 		SDL_GL_SwapWindow(glWindow);
@@ -517,20 +526,18 @@ namespace BlazeEngine
 			currentMaterial->BindAllTextures(shaderReference);
 
 			// Bind the key light depth buffer and related data:
-			shadowCamRenderMaterial->BindAllTextures(shaderReference);
-
-			currentShader->UploadUniform("maxShadowBias", &keyLight->ActiveShadowMap()->MaxShadowBias(), UNIFORM_Float);
-			currentShader->UploadUniform("minShadowBias", &keyLight->ActiveShadowMap()->MinShadowBias(), UNIFORM_Float);
-
-			// Shadow texture 
 			vec4 GBuffer_Depth_TexelSize(0, 0, 0, 0);
 			RenderTexture* depthTexture = (RenderTexture*)keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
 			if (depthTexture)
 			{
+				depthTexture->Bind(shaderReference, TEXTURE_UNIT_SHADOW_DEPTH);
+
 				GBuffer_Depth_TexelSize = vec4(1.0f / depthTexture->Width(), 1.0f / depthTexture->Height(), depthTexture->Width(), depthTexture->Height());
 				// ^^ TODO: Compute this once and cache it for uploading
 			}
-			currentShader->UploadUniform("GBuffer_Depth_TexelSize", &GBuffer_Depth_TexelSize.x, UNIFORM_Vec4fv);
+			currentShader->UploadUniform("maxShadowBias",			&keyLight->ActiveShadowMap()->MaxShadowBias(),	UNIFORM_Float);
+			currentShader->UploadUniform("minShadowBias",			&keyLight->ActiveShadowMap()->MinShadowBias(),	UNIFORM_Float);
+			currentShader->UploadUniform("GBuffer_Depth_TexelSize", &GBuffer_Depth_TexelSize.x,						UNIFORM_Vec4fv);
 
 			// Get all meshes that use the current material
 			vector<Mesh*> const* meshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
@@ -569,7 +576,10 @@ namespace BlazeEngine
 
 			// Cleanup current material and shader:
 			currentMaterial->BindAllTextures();
-			shadowCamRenderMaterial->BindAllTextures();
+			if (depthTexture)
+			{
+				depthTexture->Bind(0, TEXTURE_UNIT_SHADOW_DEPTH);
+			}
 			BindShader(0);
 
 		} // End Material loop
@@ -590,7 +600,7 @@ namespace BlazeEngine
 		mat4 mvp			= renderCam->ViewProjection() * deferredLight->GetTransform().Model();
 
 		// Light properties:
-		vec3 lightWorldPos	= deferredLight->GetTransform().Position();
+		vec3 lightWorldPos	= deferredLight->GetTransform().WorldPosition();
 
 		Shader* currentShader	= deferredLight->DeferredMaterial()->GetShader();
 		GLuint shaderReference	= currentShader->ShaderReference();

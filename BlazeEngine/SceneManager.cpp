@@ -592,9 +592,9 @@ namespace BlazeEngine
 		glm::quat sourceRotationAsGLMQuat(sourceRotation.w, sourceRotation.x, sourceRotation.y, sourceRotation.z);
 		vec3 eulerRotation = glm::eulerAngles(sourceRotationAsGLMQuat);
 
-		dest->SetPosition(vec3(sourcePosition.x, sourcePosition.y, sourcePosition.z));
-		dest->SetRotation(sourceRotationAsGLMQuat);
-		dest->SetScale(vec3(sourceScale.x, sourceScale.y, sourceScale.z));
+		dest->SetWorldPosition(vec3(sourcePosition.x, sourcePosition.y, sourcePosition.z));
+		dest->SetWorldRotation(sourceRotationAsGLMQuat);
+		dest->SetWorldScale(vec3(sourceScale.x, sourceScale.y, sourceScale.z));
 	}
 
 
@@ -722,6 +722,8 @@ namespace BlazeEngine
 
 	Texture* BlazeEngine::SceneManager::FindLoadTextureByPath(string texturePath, bool loadIfNotFound /*= true*/)
 	{
+		// NOTE: Potential bug here: Since we store textureUnit per-texture, we can only share textures that live in the same slot. TODO: Move texture units into the Material?
+
 		for (unsigned int i = 0; i < currentTextureCount; i++)
 		{
 			if (textures[i] != nullptr && textures[i]->TexturePath() == texturePath)
@@ -892,8 +894,8 @@ namespace BlazeEngine
 				}
 
 
-				// If we didn't load a valid shader, delete any textures we might have loaded:
-				if (!loadedValidShader)
+				// If we're in forward mode, and didn't load a valid shader, delete any textures we might have loaded and replace them with error textures:
+				if (!loadedValidShader && CoreEngine::GetCoreEngine()->GetConfig()->renderer.useForwardRendering)
 				{
 					for (int currentTexture = 0; currentTexture < newMaterial->NumTextureSlots(); currentTexture++)
 					{
@@ -918,22 +920,21 @@ namespace BlazeEngine
 						}
 					}
 				}
-				else
-				{
-					// Buffer all of the textures:
-					for (int currentTextureIndex = 0; currentTextureIndex < newMaterial->NumTextureSlots(); currentTextureIndex++)
-					{
-						Texture* currentTexture = newMaterial->AccessTexture((TEXTURE_TYPE)currentTextureIndex);
-						if (currentTexture != nullptr)
-						{
-							currentTexture->TextureUnit() = currentTextureIndex;	// Have to set this here, since we didn't set it above
-							currentTexture->Buffer();
-						}
-					}
 
-					// Buffer uniforms:
-					newMaterial->GetShader()->UploadUniform(Material::MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_0].c_str(), &newMaterial->Property(MATERIAL_PROPERTY_0).x, UNIFORM_Vec4fv);
+
+				// Buffer all of the textures:
+				for (int currentTextureIndex = 0; currentTextureIndex < newMaterial->NumTextureSlots(); currentTextureIndex++)
+				{
+					Texture* currentTexture = newMaterial->AccessTexture((TEXTURE_TYPE)currentTextureIndex);
+					if (currentTexture != nullptr)
+					{
+						currentTexture->TextureUnit() = currentTextureIndex;	// Have to set this here, since we didn't set it above
+						currentTexture->Buffer();
+					}
 				}
+
+				// Buffer uniforms:
+				newMaterial->GetShader()->UploadUniform(Material::MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_0].c_str(), &newMaterial->Property(MATERIAL_PROPERTY_0).x, UNIFORM_Vec4fv);
 
 				// Add the material to our material list:
 				AddMaterial(newMaterial, false);
@@ -943,76 +944,117 @@ namespace BlazeEngine
 		LOG("Loaded a total of " + to_string(currentTextureCount) + " textures (including error textures)");
 	}
 
+
 	Texture* BlazeEngine::SceneManager::ExtractLoadTextureFromAiMaterial(aiTextureType textureType, aiMaterial* material, string sceneName)
 	{
 		Texture* newTexture = nullptr;
-
-		// Handle special case texture fallbacks:
+	
+		// Create 1x1 texture fallbacks:
 		int textureCount = material->GetTextureCount(textureType);
 		if (textureCount <= 0)
 		{
+			string newName = "NO_NAME_FOUND";
+			vec4 newColor(0, 0, 0, 0);
+			int texUnit = -1;
+
 			if (textureType == aiTextureType_DIFFUSE)
 			{
+				//newTexture = FindTextureByNameInAiMaterial("diffuse", material, sceneName); // Try and find any likely texture in the material
+				// TODO: Enable this if there is a reason...
+
 				aiColor4D color;
 				if (AI_SUCCESS == material->Get("$clr.diffuse", 0, 0, color))
 				{
-					string matTextureName = "DiffuseColor_" + to_string(color.r) + "_" + to_string(color.g) + "_" + to_string(color.b) + "_" + to_string(color.a);
+					newName = "Color_" + to_string(color.r) + "_" + to_string(color.g) + "_" + to_string(color.b) + "_" + to_string(color.a);
+					newColor = vec4(color.r, color.g, color.b, color.a);
+					texUnit = TEXTURE_0 + TEXTURE_ALBEDO;
 
-					LOG_WARNING("Material has no diffuse texture. Creating a 1x1 texture using the diffuse color with a path " + matTextureName);
-
-					// Find an already loaded version
-					newTexture = FindLoadTextureByPath(matTextureName, false);
-
-					// Create it if it wasn't already loaded:
-					if (newTexture == nullptr)
-					{
-						newTexture = new Texture(1, 1, matTextureName, true, vec4(color.r, color.g, color.b, color.a), false, TEXTURE_0 + TEXTURE_ALBEDO);
-					}
+					LOG_WARNING("Material has no diffuse texture. Creating a 1x1 texture using the diffuse color with a path " + newName);
 				}
 			}
 			else if (textureType == aiTextureType_NORMALS)
 			{
 				newTexture = FindTextureByNameInAiMaterial("normal", material, sceneName); // Try and find any likely texture in the material
-				
+
 				if (newTexture == nullptr)
 				{
-					string flatNormalName = "DefaultFlatNormal"; // Use a generic name, so this texture will be shared
+					// TODO: Replace this with shader multi-compiles. If no normal texture is found, use vertex normals instead (for forward rendering)
 
-					LOG_WARNING("Material has no normal texture. Creating a 1x1 texture for a [0,0,1] normal with a path " + flatNormalName);
-					// TODO: Replace this with shader multi-compiles. If no normal texture is found, use vertex normals instead
+					newName = "DefaultFlatNormal"; // Use a generic name, so this texture will be shared
+					newColor = vec4(0.5f, 0.5f, 1.0f, 0.0f);
+					texUnit = TEXTURE_0 + TEXTURE_NORMAL;
 
-					// Find an already loaded version
-					newTexture = FindLoadTextureByPath(flatNormalName, false);
-
-					// Create it if it wasn't already loaded:
-					if (newTexture == nullptr)
-					{
-						newTexture = new Texture(1, 1, flatNormalName, true, vec4(0.5f, 0.5f, 1.0f, 0.0f), false, TEXTURE_0 + TEXTURE_NORMAL);
-					}
+					LOG_WARNING("Material has no normal texture. Creating a 1x1 texture for a [0,0,1] normal with a path " + newName);
 				}				
 			}
 			else if (aiTextureType_EMISSIVE)
 			{
 				newTexture = FindTextureByNameInAiMaterial("emissive", material, sceneName);
+				if (newTexture == nullptr)
+				{
+					aiColor4D color;
+					if (AI_SUCCESS == material->Get("$clr.emissive", 0, 0, color))
+					{
+						newName = "Color_" + to_string(color.r) + "_" + to_string(color.g) + "_" + to_string(color.b) + "_" + to_string(color.a);
+						newColor = vec4(color.r, color.g, color.b, color.a);
+						texUnit = TEXTURE_0 + TEXTURE_EMISSIVE;
+
+						//newTexture = FindLoadTextureByPath(newName, false); // Currently, Texture objects contain their textureUnit, so we can't share them between slots
+
+						LOG_WARNING("Material has no emissive texture. Creating a 1x1 texture using the emissive (/incandesence) color with a path " + newName);				
+					}
+					else
+					{
+						newName = "Color_" + to_string(newColor.r) + "_" + to_string(newColor.g) + "_" + to_string(newColor.b) + "_" + to_string(newColor.a);
+						LOG_ERROR("Material has no emissive texture, and no emissive color property. Creating a 1x1 black texture with a path " + newName);				
+					}
+				}
 			}
 			else if (textureType == aiTextureType_SPECULAR) // RGB = RMAO
 			{
-				newTexture = FindTextureByNameInAiMaterial("roughness", material, sceneName);
+				const int NUM_NAMES = 3;
+				string possibleNames[NUM_NAMES] = 
+				{
+					"roughness",
+					"metallic",
+					"rmao",
+				};
+
+				int currentName = 0;
+				while (currentName < NUM_NAMES && newTexture == nullptr)
+				{
+					newTexture = FindTextureByNameInAiMaterial(possibleNames[currentName], material, sceneName);
+
+					currentName++;
+				}
+
 				if (newTexture == nullptr)
 				{
-					newTexture = FindTextureByNameInAiMaterial("metallic", material, sceneName);
-					if (newTexture == nullptr)
-					{
-						newTexture = FindTextureByNameInAiMaterial("rmao", material, sceneName);
-					}
+					newName = "Color_" + to_string(newColor.r) + "_" + to_string(newColor.g) + "_" + to_string(newColor.b) + "_" + to_string(newColor.a);
+					LOG_WARNING("Material has no RMAO texture. Creating a 1x1 black texture with a path " + newName);				
 				}
+
+				texUnit = TEXTURE_0 + TEXTURE_RMAO;
 			}
 			else
 			{
 				LOG_WARNING("Received material does not have the requested texture. Returning nullptr!");
 				return nullptr;
 			}
-			
+
+			// Create the dummy texture:
+			if (newTexture == nullptr)
+			{
+				// Try and find an already loaded version of our fallback texture
+				newTexture = FindLoadTextureByPath(newName, false);
+
+				// None exists, so create one:
+				if (newTexture == nullptr)
+				{
+					newTexture = new Texture(1, 1, newName, true, newColor, false, texUnit); // NOTE: Since we're storing the texUnit per-texture, we need unique textures incase they're in different slots...
+				}
+			}
+
 			return newTexture;
 		}
 
@@ -1045,7 +1087,7 @@ namespace BlazeEngine
 		{
 			newTexture = FindLoadTextureByPath(INVALID_TEXTURE_PATH);
 		}
-		
+
 		return newTexture;
 	}
 
@@ -1242,11 +1284,11 @@ namespace BlazeEngine
 					}
 				}
 
-				Mesh* newMesh = new Mesh(meshName, vertices, numVerts, indices, numIndices, materialIndex);
+				Mesh* newMesh				= new Mesh(meshName, vertices, numVerts, indices, numIndices, materialIndex);
 
-				GameObject* gameObject = FindCreateGameObjectParents(scene, currentNode->mParent);
+				GameObject* gameObject		= FindCreateGameObjectParents(scene, currentNode->mParent);
 
-				Transform* targetTransform = nullptr;
+				Transform* targetTransform	= nullptr;
 
 				// If the mesh doesn't belong to a group, create a GameObject to contain it:
 				if (gameObject == nullptr)
@@ -1570,7 +1612,7 @@ namespace BlazeEngine
 					// This is ok, since we use "forward" as "vector pointing towards the light" when uploading to our shaders...
 					#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
 						LOG("Directional light color: " + to_string(lightColor.r) + ", " + to_string(lightColor.g) + ", " + to_string(lightColor.b));
-						LOG("Directional light position = " + to_string(currentScene->keyLight.GetTransform().Position().x) + ", " + to_string(currentScene->keyLight.GetTransform().Position().y) + ", " + to_string(currentScene->keyLight.GetTransform().Position().z));
+						LOG("Directional light position = " + to_string(currentScene->keyLight.GetTransform().WorldPosition().x) + ", " + to_string(currentScene->keyLight.GetTransform().WorldPosition().y) + ", " + to_string(currentScene->keyLight.GetTransform().WorldPosition().z));
 						LOG("Directional light rotation = " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().x) + ", " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().y) + ", " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().z) + " (radians)");
 						LOG("Directional light rotation = " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().x * (180.0f / A) ) + ", " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().y * (180.0f / glm::pi<float>())) + ", " + to_string(currentScene->keyLight.GetTransform().GetEulerRotation().z * (180.0f / glm::pi<float>())) + " (degrees)");
 						LOG("Directional light forward = " + to_string(currentScene->keyLight.GetTransform().Forward().x) + ", " + to_string(currentScene->keyLight.GetTransform().Forward().y) + ", " + to_string(currentScene->keyLight.GetTransform().Forward().z));
@@ -1610,14 +1652,25 @@ namespace BlazeEngine
 
 				// Compute point light radius, if required:
 				float radius = 1.0f;
-				if (pointType == LIGHT_POINT)
+				
+				aiNode* lightNode = scene->mRootNode->FindNode(scene->mLights[i]->mName.C_Str());
+				if (pointType == LIGHT_POINT && lightNode)
 				{
+					// Extract metadata:
+					float cutoff = 0.05f;	// How close to zero we are: Want to maximize this, with as little visual discontinuity as possible
+					if (lightNode->mMetaData->Get("cutoff", cutoff))
+					{
+						#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
+							LOG("\nImporting point light cutoff value: " + to_string(cutoff));
+						#endif
+					}
+					
 					// Want the sphere mesh radius where light intensity will be close to zero
-					float cutoffValue = 0.05f;	// How close to zero we are: Want to maximize this, with as little visual discontinuity as possible
-					float maxColor = glm::max(glm::max(lightColor.r, lightColor.g), lightColor.b);			
-					radius = glm::sqrt((maxColor / cutoffValue) - 1.0f);
+					float maxColor = glm::max( glm::max(lightColor.r, lightColor.g), lightColor.b);			
+					radius = glm::sqrt((maxColor / cutoff) - 1.0f);
 				}
 
+				// Create the light:
 				Light* pointLight = new Light
 				(
 					lightName, 
@@ -1627,9 +1680,42 @@ namespace BlazeEngine
 					radius		// Only used if we're actually creating a point light
 				);
 
-				if (pointType == LIGHT_POINT)
+				// Setup the transformation hierarchy:
+				if (pointType == LIGHT_POINT && lightNode)
 				{
-					InitializeLightTransformValues(scene, lightName, &pointLight->GetTransform());
+					aiMatrix4x4 combinedTransform	= GetCombinedTransformFromHierarchy(scene, lightNode->mParent);
+					combinedTransform				= combinedTransform * lightNode->mTransformation;					// Combine the parent and child transforms	
+
+					GameObject* gameObject			= FindCreateGameObjectParents(scene, lightNode->mParent);
+
+					Transform* targetTransform		= nullptr;
+
+					// If the mesh doesn't belong to a group, create a GameObject to contain it:
+					if (gameObject == nullptr)
+					{
+						#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
+							LOG_WARNING("Creating a GameObject for light \"" + lightName + "\" that did not belong to a group! GameObjects should belong to groups in the source .FBX!");
+						#endif
+					
+						gameObject = new GameObject(lightName);
+						AddGameObject(gameObject);				// Add the new game object
+
+						targetTransform = gameObject->GetTransform(); // We'll use the gameobject in our transform heirarchy
+
+						InitializeLightTransformValues(scene, lightName, &pointLight->GetTransform());
+					}
+					else // We have a GameObject:
+					{
+						#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
+							LOG("Found existing parent GameObject \"" + gameObject->GetName() + "\" for light \"" + lightName + "\"");
+						#endif
+
+						targetTransform = &pointLight->GetTransform();	// We'll use the mesh in our transform heirarchy
+
+						InitializeTransformValues(combinedTransform, targetTransform);
+					}
+
+					pointLight->GetTransform().Parent(gameObject->GetTransform());					
 					
 					#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
 						LOG("Calculated point light radius of " + to_string(radius));

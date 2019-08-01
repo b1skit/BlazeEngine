@@ -14,5 +14,9 @@
 void main()
 {	
 	// Phong ambient contribution:
-	FragColor					= texture(GBuffer_Albedo, data.uv0.xy) * vec4(lightColor, 1);
+	FragColor	= texture(GBuffer_Albedo, data.uv0.xy) * vec4(lightColor, 1);
+
+	
+	// DEBUG: Add the emissive contribution here. TODO: Split this out into another shader pass?
+	FragColor	+= texture(GBuffer_Emissive, data.uv0.xy);
 } 

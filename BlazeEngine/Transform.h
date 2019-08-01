@@ -47,23 +47,23 @@ namespace BlazeEngine
 		void Translate(vec3 amount);
 
 		// Set the position, in (relative) world space
-		void SetPosition(vec3 position);
+		void SetWorldPosition(vec3 position);
 
 		//void LookAt(vec3 camForward, vec3 camUp);
 
 		// Get the position, in (relative) world space
-		inline vec3 const& Position() { return worldPosition; }
+		vec3 const&		WorldPosition();
 
 		// Rotate about the world X, Y, Z axis, in that order
 		// eulerXYZ = Rotation angles about each axis, in RADIANS
-		void Rotate(vec3 eulerXYZ);
+		void			Rotate(vec3 eulerXYZ);
 
-		inline vec3 const&	GetEulerRotation() { return eulerWorldRotation; }
-		void				SetRotation(vec3 eulerXYZ);
-		void				SetRotation(quat newRotation);
+		vec3 const&		GetEulerRotation();
+		void			SetWorldRotation(vec3 eulerXYZ);
+		void			SetWorldRotation(quat newRotation);
 		
 		// Scaling:
-		void SetScale(vec3 scale);
+		void SetWorldScale(vec3 scale);
 
 
 		// Mark this transform as dirty, requiring a recomputation of it's local matrices

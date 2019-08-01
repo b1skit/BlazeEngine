@@ -197,6 +197,12 @@ namespace BlazeEngine
 				
 				i++; // Eat the extra command parameter
 			}
+			else if (currentArg.find("-forward") != string::npos)
+			{
+				LOG("\tReceived scene command: \"" + currentArg + "\"");
+
+				this->config.renderer.useForwardRendering = true;
+			}
 			else
 			{
 				LOG_ERROR("\"" + currentArg + "\" is not a recognized command!");

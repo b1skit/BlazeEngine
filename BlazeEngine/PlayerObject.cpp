@@ -17,13 +17,13 @@ namespace BlazeEngine
 
 		Transform* playerCamTransform = this->playerCam->GetTransform();
 		vec3 camRotation = playerCamTransform->GetEulerRotation();
-		vec3 camPosition = playerCamTransform->Position();
+		vec3 camPosition = playerCamTransform->WorldPosition();
 
-		playerCamTransform->SetRotation(vec3(camRotation.x, 0.0f, 0.0f));	// Set pitch
-		playerCamTransform->SetPosition(vec3(0.0f, 0.0f, 0.0f));			// Relative to PlayerObject parent
+		playerCamTransform->SetWorldRotation(vec3(camRotation.x, 0.0f, 0.0f));	// Set pitch
+		playerCamTransform->SetWorldPosition(vec3(0.0f, 0.0f, 0.0f));			// Relative to PlayerObject parent
 		
-		this->transform.SetRotation(vec3(0.0f, camRotation.y, 0.0f));		// Set yaw
-		this->transform.SetPosition(camPosition);
+		this->transform.SetWorldRotation(vec3(0.0f, camRotation.y, 0.0f));		// Set yaw
+		this->transform.SetWorldPosition(camPosition);
 	}
 
 
@@ -91,15 +91,15 @@ namespace BlazeEngine
 		// Reset the cam back to the saved position
 		if (InputManager::GetInputState(INPUT_MOUSE_LEFT))
 		{
-			this->transform.SetPosition(savedPosition);
-			this->transform.SetRotation(vec3(0, savedEulerRotation.y, 0));
-			this->playerCam->GetTransform()->SetRotation(vec3(savedEulerRotation.x, 0, 0));
+			this->transform.SetWorldPosition(savedPosition);
+			this->transform.SetWorldRotation(vec3(0, savedEulerRotation.y, 0));
+			this->playerCam->GetTransform()->SetWorldRotation(vec3(savedEulerRotation.x, 0, 0));
 		}
 
 		// Save the current position/rotation:
 		if (InputManager::GetInputState(INPUT_MOUSE_RIGHT))
 		{
-			this->savedPosition = transform.Position();
+			this->savedPosition = transform.WorldPosition();
 			this->savedEulerRotation = vec3(this->playerCam->GetTransform()->GetEulerRotation().x, this->transform.GetEulerRotation().y, 0 );
 		}
 	}

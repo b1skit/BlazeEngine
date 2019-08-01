@@ -23,7 +23,7 @@ namespace BlazeEngine
 	ShadowMap::ShadowMap(string lightName, int xRes, int yRes, CameraConfig shadowCamConfig, Transform* shadowCamParent /*= nullptr*/, vec3 shadowCamPosition /* = vec3(0.0f, 0.0f, 0.0f)*/)
 	{
 		this->shadowCam = new Camera(lightName + "_ShadowMapCam", shadowCamConfig, shadowCamParent);
-		this->shadowCam->GetTransform()->SetPosition(shadowCamPosition);
+		this->shadowCam->GetTransform()->SetWorldPosition(shadowCamPosition);
 
 		RenderTexture* depthRenderTexture = new RenderTexture // Deallocated by Camera.Destroy()
 		(

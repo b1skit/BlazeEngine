@@ -3,6 +3,10 @@
   "Id": "80c62e80-7437-4bb9-b7e0-693fa4c402a1",
   "Items": [
     {
+      "Id": "b995cacc-3d56-44b2-9fdd-ea21b7f3a0d9",
+      "Command": "-scene simpleCube"
+    },
+    {
       "Id": "d744714d-2f7a-47c8-9089-80766a25a3d7",
       "Command": "-scene Sponza"
     },
@@ -12,7 +16,7 @@
     },
     {
       "Id": "515f2a03-f457-49de-bcca-92ca3853827e",
-      "Command": "-scene simpleCube"
+      "Command": "-forward"
     }
   ]
 }

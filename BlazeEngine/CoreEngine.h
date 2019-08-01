@@ -23,9 +23,11 @@ namespace BlazeEngine
 		// Renderer config:
 		struct
 		{
-			string windowTitle	= "Blaze Engine";
-			int windowXRes		= 1024;
-			int windowYRes		= 768;
+			string windowTitle			= "Blaze Engine";
+			int windowXRes				= 1024;
+			int windowYRes				= 768;
+
+			bool useForwardRendering	= false;
 
 		} renderer;
 
@@ -153,8 +155,8 @@ namespace BlazeEngine
 
 		// Engine configuration:
 		EngineConfig config;
-		string configPath = ".\\config.cfg";
-		bool configDirty = false; // Marks whether we need to save the config file or not
+		string configPath	= ".\\config.cfg";
+		bool configDirty	= false; // Marks whether we need to save the config file or not
 
 		void ProcessCommandLineArgs(int argc, char** argv);
 	};

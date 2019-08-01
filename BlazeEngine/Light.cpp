@@ -60,6 +60,8 @@ namespace BlazeEngine
 					radius
 				)
 			);
+			this->deferredMesh->GetTransform().Parent(&this->transform);
+
 			break;
 
 		case LIGHT_SPOT:
