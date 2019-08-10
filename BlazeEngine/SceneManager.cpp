@@ -763,7 +763,7 @@ namespace BlazeEngine
 			if (AI_SUCCESS == scene->mMaterials[currentMaterial]->Get(AI_MATKEY_NAME, name))
 			{
 				string matName = string(name.C_Str());
-				LOG("Loading scene material " + to_string(currentMaterial) + ": \"" + matName + "\"...");
+				LOG("\nLoading scene material " + to_string(currentMaterial) + ": \"" + matName + "\"...");
 
 				#if defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
 					LOG("Printing received material property keys:");
@@ -987,7 +987,7 @@ namespace BlazeEngine
 					LOG_WARNING("Material has no normal texture. Creating a 1x1 texture for a [0,0,1] normal with a path " + newName);
 				}				
 			}
-			else if (aiTextureType_EMISSIVE)
+			else if (textureType == aiTextureType_EMISSIVE)
 			{
 				newTexture = FindTextureByNameInAiMaterial("emissive", material, sceneName);
 				if (newTexture == nullptr)
@@ -1018,7 +1018,7 @@ namespace BlazeEngine
 					"roughness",
 					"metallic",
 					"rmao",
-				};
+				};	// Add names here as necessary to increase flexibility...
 
 				int currentName = 0;
 				while (currentName < NUM_NAMES && newTexture == nullptr)

@@ -346,7 +346,11 @@ namespace BlazeEngine
 				RenderDeferredLight(deferredLights->at(i));
 			}
 
-			// TODO: Blit emissive GBuffer texture to screen additively
+			// Additively blit the emissive GBuffer texture to screen additively:
+			glDisable(GL_DEPTH_TEST);
+			glCullFace(GL_BACK);
+			Blit(mainCam->RenderMaterial(), TEXTURE_EMISSIVE, outputMaterial, TEXTURE_ALBEDO);
+
 
 			// Deferred lights cleanup:
 			glDisable(GL_BLEND);
@@ -591,7 +595,6 @@ namespace BlazeEngine
 		Camera* renderCam = CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera();
 		
 		// Assemble common (model independent) matrices:
-		
 		mat4 shadowCam_vp	= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight()->ActiveShadowMap()->ShadowCamera()->ViewProjection();
 
 		mat4 model			= deferredLight->GetTransform().Model();
@@ -602,10 +605,10 @@ namespace BlazeEngine
 		// Light properties:
 		vec3 lightWorldPos	= deferredLight->GetTransform().WorldPosition();
 
+		// Bind:
 		Shader* currentShader	= deferredLight->DeferredMaterial()->GetShader();
 		GLuint shaderReference	= currentShader->ShaderReference();
 
-		// Bind:
 		BindShader(shaderReference);
 		renderCam->RenderMaterial()->BindAllTextures(shaderReference);	// Bind GBuffer textures
 
@@ -670,6 +673,28 @@ namespace BlazeEngine
 		glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
 		outputMaterial->BindAllTextures();
+		BindShader(0);
+		BindMeshBuffers();
+	}
+
+	void BlazeEngine::RenderManager::Blit(Material* srcMat, int srcTex, Material* dstMat, int dstTex)
+	{
+		// Bind the output FBO: (Textures MUST already be attached...)
+		glBindFramebuffer(GL_FRAMEBUFFER, ((RenderTexture*)dstMat->AccessTexture((TEXTURE_TYPE)dstTex))->FBO());
+		glViewport(0, 0, dstMat->AccessTexture((TEXTURE_TYPE)dstTex)->Width(), dstMat->AccessTexture((TEXTURE_TYPE)dstTex)->Height());
+
+		// Bind the blit shader and screen aligned quad:
+		GLuint shaderReference = outputMaterial->GetShader()->ShaderReference();
+		BindShader(shaderReference);
+		BindMeshBuffers(screenAlignedQuad);
+
+		// Bind the source texture into the slot specified in the blit shader:
+		srcMat->AccessTexture((TEXTURE_TYPE)srcTex)->Bind(shaderReference, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO); // Bind to what the blitShader is expecting
+		
+		glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
+
+		// Cleanup:
+		srcMat->AccessTexture((TEXTURE_TYPE)dstTex)->Bind(0, TEXTURE_ALBEDO);
 		BindShader(0);
 		BindMeshBuffers();
 	}

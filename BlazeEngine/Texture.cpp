@@ -45,7 +45,7 @@ namespace BlazeEngine
 
 		if (textureUnit != -1)
 		{
-			this->textureUnit = textureUnit;
+			this->textureUnit	= textureUnit;
 		}
 
 		if (doBuffer)

@@ -74,6 +74,8 @@ namespace BlazeEngine
 
 		void BlitToScreen();
 
+		void Blit(Material* srcMat, int srcTex, Material* dstMat, int dstTex);
+
 
 		// Configuration:
 		//---------------
