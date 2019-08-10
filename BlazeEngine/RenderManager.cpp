@@ -297,7 +297,11 @@ namespace BlazeEngine
 
 		// Temporary hack: Render the keylight directly, since that's all we support at the moment... TODO: Loop through multiple lights
 		glDisable(GL_CULL_FACE);
-		RenderLightShadowMap(CoreEngine::GetSceneManager()->GetKeyLight());
+		if (CoreEngine::GetSceneManager()->GetKeyLight() != nullptr)
+		{
+			RenderLightShadowMap(CoreEngine::GetSceneManager()->GetKeyLight());
+		}
+		
 		glEnable(GL_CULL_FACE);
 
 
@@ -595,7 +599,12 @@ namespace BlazeEngine
 		Camera* renderCam = CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera();
 		
 		// Assemble common (model independent) matrices:
-		mat4 shadowCam_vp	= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight()->ActiveShadowMap()->ShadowCamera()->ViewProjection();
+		bool hasShadowMap = deferredLight->ActiveShadowMap() != nullptr;
+		mat4 shadowCam_vp(1.0);
+		if (hasShadowMap)
+		{
+			shadowCam_vp = deferredLight->ActiveShadowMap()->ShadowCamera()->ViewProjection();
+		}		
 
 		mat4 model			= deferredLight->GetTransform().Model();
 		mat4 view			= renderCam->View();
@@ -631,7 +640,10 @@ namespace BlazeEngine
 		}
 
 		// Upload common shader matrices:
-		currentShader->UploadUniform("shadowCam_vp",	&shadowCam_vp[0][0],	UNIFORM_Matrix4fv);
+		if (hasShadowMap)
+		{
+			currentShader->UploadUniform("shadowCam_vp",	&shadowCam_vp[0][0],	UNIFORM_Matrix4fv);
+		}		
 
 		currentShader->UploadUniform("in_model",		&model[0][0],			UNIFORM_Matrix4fv);
 		currentShader->UploadUniform("in_view",			&view[0][0],			UNIFORM_Matrix4fv);
@@ -744,8 +756,15 @@ namespace BlazeEngine
 
 		// Legacy forward rendering parms:
 		vec3 const* ambientColor	= &CoreEngine::GetSceneManager()->GetAmbientLight()->Color();
-		vec3 const* keyDir			= &CoreEngine::GetSceneManager()->GetKeyLight()->GetTransform().Forward();
-		vec3 const* keyCol			= &CoreEngine::GetSceneManager()->GetKeyLight()->Color();
+
+		vec3 const* keyDir			= nullptr;
+		vec3 const* keyCol			= nullptr;
+		Light const* keyLight		= nullptr;
+		if ((keyLight = CoreEngine::GetSceneManager()->GetKeyLight()) != nullptr)
+		{
+			keyDir = &CoreEngine::GetSceneManager()->GetKeyLight()->GetTransform().Forward();
+			keyCol = &CoreEngine::GetSceneManager()->GetKeyLight()->Color();
+		}
 
 		LOG("Uploading light and matrix data to shaders");
 		#if defined(DEBUG_RENDERMANAGER_SHADER_LOGGING)
@@ -822,8 +841,12 @@ namespace BlazeEngine
 			shaders.at(i)->UploadUniform("ambientColor", &(ambientColor->r), UNIFORM_Vec3fv);
 
 			// NOTE: These values are overridden every frame for deferred light Shaders:
-			shaders.at(i)->UploadUniform("lightWorldDir", &(keyDir->x), UNIFORM_Vec3fv);
-			shaders.at(i)->UploadUniform("lightColor", &(keyCol->r), UNIFORM_Vec3fv);
+			if (keyLight != nullptr)
+			{
+				shaders.at(i)->UploadUniform("lightWorldDir", &(keyDir->x), UNIFORM_Vec3fv);
+				shaders.at(i)->UploadUniform("lightColor", &(keyCol->r), UNIFORM_Vec3fv);
+			}
+			
 
 			// Other params:
 			shaders.at(i)->UploadUniform("screenParams", &(screenParams.x), UNIFORM_Vec4fv);

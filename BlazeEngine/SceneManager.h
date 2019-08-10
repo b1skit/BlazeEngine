@@ -133,7 +133,7 @@ namespace BlazeEngine
 		vector<Mesh*> const*			GetRenderMeshes(int materialIndex = -1);					// If materialIndex is out of bounds, returns ALL meshes
 		inline vector<Renderable*>*		GetRenderables()											{ return &currentScene->renderables;	}
 
-		inline Light* const&			GetAmbientLight()												{ return currentScene->ambientLight; }
+		inline Light* const&			GetAmbientLight()											{ return currentScene->ambientLight; }
 		inline Light*					GetKeyLight()												{ return currentScene->keyLight; }
 		
 		inline vector<Camera*> const&	GetCameras(CAMERA_TYPE cameraType)							{ return currentScene->GetCameras(cameraType); }
