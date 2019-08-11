@@ -194,7 +194,11 @@
     <None Include="Shaders\deferredPointLightShader.vert" />
     <None Include="Shaders\depthShader.vert" />
     <None Include="Shaders\gBufferFillShader.frag" />
+    <None Include="Shaders\gBufferFillShader.geom" />
     <None Include="Shaders\gBufferFillShader.vert" />
+    <None Include="Shaders\geometryDemoShader.frag" />
+    <None Include="Shaders\geometryDemoShader.geom" />
+    <None Include="Shaders\geometryDemoShader.vert" />
     <None Include="Shaders\lambertShader.frag" />
     <None Include="Shaders\lambertShader.vert" />
     <None Include="Shaders\errorShader.frag" />

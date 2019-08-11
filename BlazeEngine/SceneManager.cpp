@@ -481,7 +481,7 @@ namespace BlazeEngine
 		}
 		else
 		{
-			LOG_ERROR("Scene has no camera");
+			LOG_WARNING("Scene has no camera");
 			ImportCamerasFromScene();
 		}
 			   
@@ -1803,7 +1803,7 @@ namespace BlazeEngine
 
 		if (numCameras > 1)
 		{
-			LOG_ERROR("Found " + to_string(numCameras) + " cameras in the scene. Currently, only 1 camera is supported. Setting the FIRST camera received camera as the main camera.");
+			LOG_ERROR("Found " + to_string(numCameras) + " cameras in the scene. Currently, only 1 camera is supported. Setting the FIRST received camera as the main camera.");
 		}
 		else
 		{

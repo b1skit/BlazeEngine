@@ -217,5 +217,17 @@
     <None Include="Shaders\BlazeLighting.glsl">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="Shaders\gBufferFillShader.geom">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\geometryDemoShader.frag">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\geometryDemoShader.vert">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\geometryDemoShader.geom">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

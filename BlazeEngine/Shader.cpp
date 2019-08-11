@@ -94,17 +94,15 @@ namespace BlazeEngine
 
 	Shader* Shader::CreateShader(string shaderName, vector<string> const*  shaderKeywords /*= nullptr*/)
 	{
-		LOG("Creating shader \"" + shaderName + "\"");
-
-		GLuint shaderReference;
-		unsigned int numShaders = 2; // TODO : Allow loading of geometry shaders?
-		GLuint* shaders = new GLuint[numShaders];
+		LOG("\nCreating shader \"" + shaderName + "\"");
 
 		// Create an empty shader program object, and get its reference:
-		shaderReference = glCreateProgram();
+		GLuint shaderReference = glCreateProgram();
 
 		// Load the shader files:
+
 		string vertexShader		= LoadShaderFile(shaderName + ".vert");
+		string geometryShader	= LoadShaderFile(shaderName + ".geom");
 		string fragmentShader	= LoadShaderFile(shaderName + ".frag");
 		if (vertexShader == "" || fragmentShader == "")
 		{
@@ -112,12 +110,43 @@ namespace BlazeEngine
 			ReturnErrorShader(shaderName);
 		}
 
+		// Check if we're also loading a geometry shader:
+		unsigned int numShaders = 3;
+		bool hasGeometryShader	= true;
+
+		int vertexShaderIndex	= 0;
+		int geometryShaderIndex = 1;
+		int fragmentShaderIndex = 2;
+
+		if (geometryShader == "")
+		{
+			numShaders			= 2;
+			hasGeometryShader	= false;
+
+			geometryShaderIndex = -1;	// No geometry shader
+			fragmentShaderIndex = 1;
+
+			#if defined(DEBUG_SHADER_SETUP_LOGGING)
+				LOG("No geometry shader found")
+			#endif
+		}
+		GLuint* shaders			= new GLuint[numShaders];
+
+		// Insert #defines:
 		if (shaderKeywords != nullptr)
 		{
 			#if defined(DEBUG_SHADER_SETUP_LOGGING)
 				LOG("Inserting defines into loaded vertex shader text")
 			#endif
 			InsertDefines(vertexShader, shaderKeywords);
+
+			if (hasGeometryShader)
+			{
+				#if defined(DEBUG_SHADER_SETUP_LOGGING)
+					LOG("Inserting defines into loaded vertex shader text")
+				#endif
+				InsertDefines(geometryShader, shaderKeywords);
+			}
 
 			#if defined(DEBUG_SHADER_SETUP_LOGGING)
 				LOG("Inserting defines into loaded vertex shader text")
@@ -131,43 +160,68 @@ namespace BlazeEngine
 		#endif
 		LoadIncludes(vertexShader);
 
+		if (hasGeometryShader)
+		{
+			#if defined(DEBUG_SHADER_SETUP_LOGGING)
+				LOG("Inserting includes into loaded Fragment shader")
+			#endif
+			LoadIncludes(geometryShader);
+		}		
+
 		#if defined(DEBUG_SHADER_SETUP_LOGGING)
 			LOG("Inserting includes into loaded Fragment shader")
 		#endif
 		LoadIncludes(fragmentShader);
 
+
 		// Create shader objects and attach them to the program objects:
-		shaders[0] = CreateGLShaderObject(vertexShader, GL_VERTEX_SHADER);
-		shaders[1] = CreateGLShaderObject(fragmentShader, GL_FRAGMENT_SHADER);
+		shaders[vertexShaderIndex]			= CreateGLShaderObject(vertexShader, GL_VERTEX_SHADER);
+
+		if (hasGeometryShader)
+		{
+			shaders[geometryShaderIndex]	= CreateGLShaderObject(geometryShader, GL_GEOMETRY_SHADER);
+		}
+
+		shaders[fragmentShaderIndex]		= CreateGLShaderObject(fragmentShader, GL_FRAGMENT_SHADER);
+
 		for (unsigned int i = 0; i < numShaders; i++)
 		{
 			glAttachShader(shaderReference, shaders[i]); // Attach our shaders to the shader program
 		}
+
+		Shader* newShader	= nullptr;
+		bool shaderSuccess	= true;
 
 		// Link our program object:
 		glLinkProgram(shaderReference);
 		if (!CheckShaderError(shaderReference, GL_LINK_STATUS, true))
 		{
 			glDeleteProgram(shaderReference);
-			ReturnErrorShader(shaderName);
+			newShader		= ReturnErrorShader(shaderName);
+			shaderSuccess	= false;
 		}
 
 		// Validate our program objects can execute with our current OpenGL state:
 		glValidateProgram(shaderReference);
-		if (!CheckShaderError(shaderReference, GL_VALIDATE_STATUS, true))
+		if (shaderSuccess && !CheckShaderError(shaderReference, GL_VALIDATE_STATUS, true))
 		{
 			glDeleteProgram(shaderReference);
-			ReturnErrorShader(shaderName);
+			newShader		= ReturnErrorShader(shaderName);
+			shaderSuccess	= false;
 		}
 
 		// Delete the shader objects now that they've been linked into the program object:
-		glDeleteShader(shaders[0]);
-		glDeleteShader(shaders[1]);
+		for (unsigned int i = 0; i < numShaders; i++)
+		{
+			glDeleteShader(shaders[i]);
+		}
 		delete[] shaders;
 		shaders = nullptr;
 
-
-		Shader* newShader = new Shader(shaderName, shaderReference);
+		if (shaderSuccess)
+		{
+			newShader = new Shader(shaderName, shaderReference);
+		}		
 
 		#if defined (DEBUG_SCENEMANAGER_SHADER_LOGGING)
 			LOG("Finished creating shader \"" + shaderName + "\"");
@@ -176,7 +230,7 @@ namespace BlazeEngine
 		return newShader;
 	}
 
-	Shader * BlazeEngine::Shader::ReturnErrorShader(string shaderName)
+	Shader* BlazeEngine::Shader::ReturnErrorShader(string shaderName)
 	{
 		if (shaderName != CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName)
 		{
@@ -211,7 +265,9 @@ namespace BlazeEngine
 		}
 		else
 		{
-			LOG_ERROR("LoadShaderFile failed: Could not open shader " + filepath);
+			#if defined(DEBUG_SHADER_SETUP_LOGGING)
+				LOG_WARNING("LoadShaderFile failed: Could not open shader " + filepath);
+			#endif
 
 			return "";
 		}
@@ -356,8 +412,8 @@ namespace BlazeEngine
 		const GLchar* shaderSourceStrings[1];
 		GLint shaderSourceStringLengths[1];
 
-		shaderSourceStrings[0] = shaderCode.c_str();
-		shaderSourceStringLengths[0] = (GLint)shaderCode.length();
+		shaderSourceStrings[0]			= shaderCode.c_str();
+		shaderSourceStringLengths[0]	= (GLint)shaderCode.length();
 
 		glShaderSource(shader, 1, shaderSourceStrings, shaderSourceStringLengths);
 		glCompileShader(shader);
@@ -394,7 +450,7 @@ namespace BlazeEngine
 
 			string errorAsString(error);
 
-			LOG_ERROR("CheckShaderError failed: " + errorAsString);
+			LOG_ERROR("CheckShaderError() failed: " + errorAsString);
 
 			return false;
 		}

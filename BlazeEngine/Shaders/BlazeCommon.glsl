@@ -32,6 +32,8 @@
 
 #if defined(BLAZE_VERTEX_SHADER)
 	layout(location = 9) out struct VtoF	// Vertex output
+#elif defined(BLAZE_GEOMETRY_SHADER)
+	struct VtoF								// Geometry in/out: Must be bound to the same location as both an in and out in the geometry shader
 #elif defined(BLAZE_FRAGMENT_SHADER)
 	layout(location = 9) in struct VtoF		// Fragment input
 #endif
@@ -50,7 +52,11 @@
 		vec3 shadowPos;			// Shadowmap projection-space position
 
 		mat3 TBN;				// Normal map change-of-basis matrix
+#if defined(BLAZE_VERTEX_SHADER) || defined(BLAZE_FRAGMENT_SHADER)
 	} data;
+#elif defined(BLAZE_GEOMETRY_SHADER)
+	};
+#endif
 
 
 // Forward Lighting:
@@ -60,8 +66,6 @@ uniform vec3 ambientColor;		// Deprecated: Use deferred lightColor instead
 uniform vec3 lightWorldDir;		// Normalized, world space, points towards light source
 uniform vec3 lightColor;
 uniform vec3 lightWorldPos;		// Light position in world space
-//uniform float attenuationDist = 5.0;	// Distance to max attenuation
-// ^^^^ TODO: Store this value in the light and upload it when rendering!!!!!
 
 
 // Matrices:
@@ -76,7 +80,7 @@ uniform mat4 in_mvp;			// [Projection * View * Model]
 
 
 // Texture samplers:
-// NOTE: Binding locations must match the definitions in material.h
+// NOTE: Binding locations must match the definitions in Material.h
 												// TEXTURE:								FBX MATERIAL SOURCE SLOT:
 												//---------								-------------------------
 layout(binding = 0) uniform sampler2D albedo;	// Albedo (RGB) + transparency (A)		Diffuse/color
