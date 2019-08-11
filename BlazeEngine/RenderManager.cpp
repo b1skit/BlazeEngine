@@ -541,7 +541,7 @@ namespace BlazeEngine
 			RenderTexture* depthTexture = (RenderTexture*)keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
 			if (depthTexture)
 			{
-				depthTexture->Bind(shaderReference, TEXTURE_UNIT_SHADOW_DEPTH);
+				depthTexture->Bind(shaderReference, DEPTH_TEXTURE_0 + TEXTURE_UNIT_SHADOW_DEPTH);
 
 				GBuffer_Depth_TexelSize = vec4(1.0f / depthTexture->Width(), 1.0f / depthTexture->Height(), depthTexture->Width(), depthTexture->Height());
 				// ^^ TODO: Compute this once and cache it for uploading
@@ -589,7 +589,7 @@ namespace BlazeEngine
 			currentMaterial->BindAllTextures();
 			if (depthTexture)
 			{
-				depthTexture->Bind(0, TEXTURE_UNIT_SHADOW_DEPTH);
+				depthTexture->Bind(0, DEPTH_TEXTURE_0 + TEXTURE_UNIT_SHADOW_DEPTH);
 			}
 			BindShader(0);
 
@@ -631,7 +631,7 @@ namespace BlazeEngine
 			RenderTexture* depthTexture = (RenderTexture*)activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
 			if (depthTexture)
 			{
-				depthTexture->Bind(shaderReference, TEXTURE_UNIT_SHADOW_DEPTH);
+				depthTexture->Bind(shaderReference, DEPTH_TEXTURE_0 + TEXTURE_UNIT_SHADOW_DEPTH);
 
 				GBuffer_Depth_TexelSize = vec4(1.0f / depthTexture->Width(), 1.0f / depthTexture->Height(), depthTexture->Width(), depthTexture->Height());
 				// ^^ TODO: Compute this once and cache it for uploading each frame
@@ -669,7 +669,7 @@ namespace BlazeEngine
 		renderCam->RenderMaterial()->BindAllTextures();
 		if (activeShadowMap != nullptr)
 		{
-			activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH)->Bind(0, TEXTURE_UNIT_SHADOW_DEPTH);
+			activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH)->Bind(0, DEPTH_TEXTURE_0 + TEXTURE_UNIT_SHADOW_DEPTH);
 		}
 		BindShader(0);
 		BindMeshBuffers();
@@ -839,12 +839,15 @@ namespace BlazeEngine
 			}
 
 			// Upload sampler location for shadow map textures
-			GLint samplerLocation = glGetUniformLocation(shaders.at(i)->ShaderReference(), "shadowDepth");
-			if (samplerLocation >= 0)
+			for (int currentTexture = 0; currentTexture < DEPTH_TEXTURE_COUNT; currentTexture++)
 			{
-				glUniform1i(samplerLocation, TEXTURE_UNIT_SHADOW_DEPTH);
+				GLint samplerLocation = glGetUniformLocation(shaders.at(i)->ShaderReference(), Material::DEPTH_TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
+				if (samplerLocation >= 0)
+				{
+					glUniform1i(samplerLocation, DEPTH_TEXTURE_0 + (TEXTURE_TYPE)currentTexture);
+				}
 			}
-
+			
 			// Upload light direction (world space) and color, and ambient light color:
 			if (ambientLight != nullptr)
 			{

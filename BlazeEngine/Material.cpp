@@ -35,6 +35,11 @@ namespace BlazeEngine
 		// TODO: We don't have a string for TEXTURE_UNIT_SHADOW_DEPTH
 	};
 
+	const string Material::DEPTH_TEXTURE_SAMPLER_NAMES[DEPTH_TEXTURE_COUNT] = 
+	{
+		"shadowDepth",		// TEXTURE_UNIT_SHADOW_DEPTH
+	};
+
 	const string Material::MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_COUNT] =
 	{
 		"matProperty0",

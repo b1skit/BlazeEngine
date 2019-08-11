@@ -18,7 +18,7 @@ namespace BlazeEngine
 {
 	enum TEXTURE_TYPE
 	{
-		TEXTURE_0				= 0,				// RESERVED: Starting offset for binding Textures
+		TEXTURE_0				= 0,				// RESERVED: Starting offset for *binding* Textures to a texture unit: TEXTURE_0 + TEXTURE_<texture type>
 
 		TEXTURE_ALBEDO			= 0,				// Contains transparency in the alpha channel
 		TEXTURE_NORMAL			= 1,
@@ -26,9 +26,10 @@ namespace BlazeEngine
 		TEXTURE_EMISSIVE		= 3,
 
 		TEXTURE_COUNT			= 4,				// RESERVED: Number of Texture slots a material has
-		RENDER_TEXTURE_0		= 4,				// RESERVED: Starting offset for binding RenderTextures
 
-		// Alternative RenderTexture names:
+		// GBuffer RenderTexture names:
+		RENDER_TEXTURE_0					= 4,	// RESERVED: Starting offset for *binding* RenderTextures to a texture unit: RENDER_TEXTURE_0 + RENDER_TEXTURE_<texture type>
+
 		RENDER_TEXTURE_ALBEDO				= 0,
 		RENDER_TEXTURE_WORLD_NORMAL			= 1,
 		RENDER_TEXTURE_RMAO					= 2,
@@ -38,10 +39,15 @@ namespace BlazeEngine
 
 		RENDER_TEXTURE_DEPTH				= 6,	// Make this the last element
 
-		RENDER_TEXTURE_COUNT				= 7,
+		RENDER_TEXTURE_COUNT				= 7,	// RESERVED: Number of RenderTexture slots a material has
 
-		// Additional texture units:
-		TEXTURE_UNIT_SHADOW_DEPTH			= 11,	// First unit must equal TEXTURE_COUNT + RENDER_TEXTURE_COUNT
+		// Depth map texture units:
+		DEPTH_TEXTURE_0						= 11,	// RESERVED: Starting offset for *binding* depth RenderTextures to a texture unit: DEPTH_TEXTURE_0 + DEPTH_TEXTURE_<texture tyep>. First unit must equal TEXTURE_COUNT + RENDER_TEXTURE_COUNT
+
+		TEXTURE_UNIT_SHADOW_DEPTH			= 0,
+
+
+		DEPTH_TEXTURE_COUNT					= 1,	// RESERVED: Number of DEPTH RenderTexture slots a material has
 
 	}; // Note: If new enums are added, don't forget to update Material::RENDER_TEXTURE_SAMPLER_NAMES[] as well!
 
@@ -97,8 +103,9 @@ namespace BlazeEngine
 
 		// RenderTexture sampler names:
 		//-----------------------------
-		const static string RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_COUNT];
 		const static string TEXTURE_SAMPLER_NAMES[TEXTURE_COUNT];
+		const static string RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_COUNT];
+		const static string DEPTH_TEXTURE_SAMPLER_NAMES[DEPTH_TEXTURE_COUNT];
 		const static string MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_COUNT];
 		
 	protected:
