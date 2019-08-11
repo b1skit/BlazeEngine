@@ -3,6 +3,10 @@
   "Id": "80c62e80-7437-4bb9-b7e0-693fa4c402a1",
   "Items": [
     {
+      "Id": "8de33137-7cbf-483c-b1bd-4055d088b853",
+      "Command": "-scene holodeck"
+    },
+    {
       "Id": "b995cacc-3d56-44b2-9fdd-ea21b7f3a0d9",
       "Command": "-scene simpleCube"
     },

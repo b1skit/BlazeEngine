@@ -326,28 +326,31 @@ namespace BlazeEngine
 
 			vector<Light*>const* deferredLights = &CoreEngine::GetSceneManager()->GetDeferredLights();
 
-			// Render the first light
-			RenderDeferredLight(deferredLights->at(0));
-
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_ONE, GL_ONE); // TODO: Can we just set this once somewhere, instead of calling each frame?
-
-			for (int i = 1; i < deferredLights->size(); i++)
+			if (deferredLights->size() > 0)
 			{
-				// Setup for screen aligned quads:
-				if (deferredLights->at(i)->Type() == LIGHT_AMBIENT || deferredLights->at(i)->Type() == LIGHT_DIRECTIONAL)
-				{
-					glDisable(GL_DEPTH_TEST);
-					glCullFace(GL_BACK);
-				}
-				else
-				{
-					glEnable(GL_DEPTH_TEST);
-					glCullFace(GL_FRONT);
-					glDepthFunc(GL_GREATER);				
-				}
+				// Render the first light
+				RenderDeferredLight(deferredLights->at(0));
 
-				RenderDeferredLight(deferredLights->at(i));
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_ONE, GL_ONE); // TODO: Can we just set this once somewhere, instead of calling each frame?
+
+				for (int i = 1; i < deferredLights->size(); i++)
+				{
+					// Setup for screen aligned quads:
+					if (deferredLights->at(i)->Type() == LIGHT_AMBIENT || deferredLights->at(i)->Type() == LIGHT_DIRECTIONAL)
+					{
+						glDisable(GL_DEPTH_TEST);
+						glCullFace(GL_BACK);
+					}
+					else
+					{
+						glEnable(GL_DEPTH_TEST);
+						glCullFace(GL_FRONT);
+						glDepthFunc(GL_GREATER);				
+					}
+
+					RenderDeferredLight(deferredLights->at(i));
+				}
 			}
 
 			// Additively blit the emissive GBuffer texture to screen additively:
@@ -755,7 +758,12 @@ namespace BlazeEngine
 		unsigned int numMaterials = sceneManager->NumMaterials();
 
 		// Legacy forward rendering parms:
-		vec3 const* ambientColor	= &CoreEngine::GetSceneManager()->GetAmbientLight()->Color();
+		Light const* ambientLight	= nullptr;
+		vec3 const* ambientColor	= nullptr;
+		if ((ambientLight = CoreEngine::GetSceneManager()->GetAmbientLight()) != nullptr)
+		{
+			ambientColor = &CoreEngine::GetSceneManager()->GetAmbientLight()->Color();
+		}
 
 		vec3 const* keyDir			= nullptr;
 		vec3 const* keyCol			= nullptr;
@@ -838,7 +846,10 @@ namespace BlazeEngine
 			}
 
 			// Upload light direction (world space) and color, and ambient light color:
-			shaders.at(i)->UploadUniform("ambientColor", &(ambientColor->r), UNIFORM_Vec3fv);
+			if (ambientLight != nullptr)
+			{
+				shaders.at(i)->UploadUniform("ambientColor", &(ambientColor->r), UNIFORM_Vec3fv);
+			}			
 
 			// NOTE: These values are overridden every frame for deferred light Shaders:
 			if (keyLight != nullptr)
