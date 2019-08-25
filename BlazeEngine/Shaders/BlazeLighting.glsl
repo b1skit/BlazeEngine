@@ -44,34 +44,72 @@ float LightAttenuation(vec3 fragWorldPosition, vec3 lightWorldPosition)
 }
 
 
+// Compute a depth map bias value based on surface orientation
+float GetSlopeScaleBias(vec3 worldNml, vec3 lightDir)
+{
+	return max( maxShadowBias * (1.0 - dot(worldNml, lightDir)), minShadowBias);
+}
+
+
 // Find out if a fragment (in world space) is in shadow
 float GetShadowFactor(vec3 shadowPos, sampler2D shadowMap, vec3 worldNml, vec3 lightDir)
 {
-	vec3 shadowScreen = (shadowPos.xyz + 1.0) / 2.0; // Projection -> Screen [0,1] space
+	vec3 shadowScreen = (shadowPos.xyz + 1.0) / 2.0; // Projection -> Screen/UV [0,1] space
 
-	// Compute a slope-scaled bias:
-	float biasAmount	= max( maxShadowBias * (1.0 - dot(worldNml, lightDir)), minShadowBias);
-	float biasedDepth	= shadowScreen.z - biasAmount;
+	// Compute a slope-scaled bias depth:
+	float biasedDepth	= shadowScreen.z - GetSlopeScaleBias(worldNml, lightDir);
 
-	// Compute a 4x4 block of samples around our fragment, starting at the top-left:
-	shadowScreen.x -= 1.5 * GBuffer_Depth_TexelSize.x;
-	shadowScreen.y += 1.5 * GBuffer_Depth_TexelSize.y;
+	// Compute a block of samples around our fragment, starting at the top-left:
+	const int gridSize = 4; // MUST be a power of two TODO: Compute this on C++ side and allow for uploading of arbitrary samples (eg. odd, even)
+
+	const float offsetMultiplier = (float(gridSize) / 2.0) - 0.5;
+
+	shadowScreen.x -= offsetMultiplier * GBuffer_Depth_TexelSize.x;
+	shadowScreen.y += offsetMultiplier * GBuffer_Depth_TexelSize.y;
 
 	float depthSum = 0;
-	for (int row = 0; row < 4; row++)
+	for (int row = 0; row < gridSize; row++)
 	{
-		for (int col = 0; col < 4; col++)
+		for (int col = 0; col < gridSize; col++)
 		{
 			depthSum += (biasedDepth < texture(shadowMap, shadowScreen.xy).r ? 1.0 : 0.0);
 			
 			shadowScreen.x += GBuffer_Depth_TexelSize.x;
 		}
 
-		shadowScreen.x -= 4.0 * GBuffer_Depth_TexelSize.x;
+		shadowScreen.x -= gridSize * GBuffer_Depth_TexelSize.x;
 		shadowScreen.y -= GBuffer_Depth_TexelSize.y;
 	}
 
-	depthSum /= 16.0;
+	depthSum /= (gridSize * gridSize);
 
 	return depthSum;
 }
+
+
+// Get shadow factor from a cube map:
+float GetShadowFactor(vec3 lightToFrag, samplerCube shadowMap, vec3 worldNml, vec3 lightDir)
+{
+	float cubemapShadowDepth = texture(shadowMap, lightToFrag).r;
+	cubemapShadowDepth *= shadowCam_far;	// [0,1] -> [0, far]
+
+	float fragDepth = length(lightToFrag); // We're using linear depth, for now...
+
+	// Compute a slope-scaled bias:
+	float biasedDepth = fragDepth - GetSlopeScaleBias(worldNml, lightDir);
+	
+//	float biasedDepth = fragDepth;
+
+	// TODO: PCF cube map: (jitter the ray)
+	// https://www.gamedev.net/forums/topic/674852-pcf-in-cubemap/
+
+	float shadowFactor = 1.0;
+	if (biasedDepth > cubemapShadowDepth)
+	{
+		shadowFactor = 0.0;
+	}
+
+	return shadowFactor;
+}
+
+	

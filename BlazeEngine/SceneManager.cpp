@@ -1006,7 +1006,7 @@ namespace BlazeEngine
 					else
 					{
 						newName = "Color_" + to_string(newColor.r) + "_" + to_string(newColor.g) + "_" + to_string(newColor.b) + "_" + to_string(newColor.a);
-						LOG_ERROR("Material has no emissive texture, and no emissive color property. Creating a 1x1 black texture with a path " + newName);				
+						LOG_WARNING("Material has no emissive texture, and no emissive color property. Creating a 1x1 black texture with a path " + newName);				
 					}
 				}
 			}
@@ -1582,25 +1582,18 @@ namespace BlazeEngine
 					aiNode* lightNode = scene->mRootNode->FindNode(scene->mLights[i]->mName.C_Str());
 					if (lightNode)
 					{
-						float minShadowBias = 0.0f;
-						if (lightNode->mMetaData->Get("minShadowBias", minShadowBias))
-						{
-							#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
-								LOG("\nImporting directional light minimum shadow bias value: " + to_string(minShadowBias));
-							#endif
+						float minShadowBias = CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultMinShadowBias;
+						lightNode->mMetaData->Get("minShadowBias", minShadowBias);
+						keyLightShadowMap->MinShadowBias() = minShadowBias;
 
-							keyLightShadowMap->MinShadowBias() = minShadowBias;
-						}
+						float maxShadowBias = CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultMaxShadowBias;
+						lightNode->mMetaData->Get("maxShadowBias", maxShadowBias);
+						keyLightShadowMap->MaxShadowBias() = maxShadowBias;					
 
-						float maxShadowBias = 0.0f;
-						if (lightNode->mMetaData->Get("maxShadowBias", maxShadowBias))
-						{
-							#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
-								LOG("\nImporting directional light maximum shadow bias value: " + to_string(maxShadowBias));
-							#endif
-
-							keyLightShadowMap->MaxShadowBias() = maxShadowBias;
-						}
+						#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
+							LOG("\nSetting directional light minimum shadow bias value: " + to_string(minShadowBias));
+							LOG("\nSetting directional light maximum shadow bias value: " + to_string(maxShadowBias));
+						#endif
 					}
 					else
 					{
@@ -1650,13 +1643,21 @@ namespace BlazeEngine
 
 				vec3 lightColor(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b); // == color * intensity. Both ambient and point types use the mColorDiffuse
 
-				// Compute point light radius, if required:
-				float radius = 1.0f;
-				
+				// Get ready for metadata extraction:
+				float minShadowBias		= CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultMinShadowBias;
+				float maxShadowBias		= CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultMaxShadowBias;
+				float shadowCamNear		= CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultNear;
+				int shadowCubeWidth		= CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowCubeMapthWidth;
+				int shadowCubeHeight	= CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowCubeMapthHeight;
+
+				// Get ready to compute point light radius, if required:
+				float radius				= 1.0f;
+				ShadowMap* cubeShadowMap	= nullptr;
+
+				// Extract metadata:
 				aiNode* lightNode = scene->mRootNode->FindNode(scene->mLights[i]->mName.C_Str());
 				if (pointType == LIGHT_POINT && lightNode)
 				{
-					// Extract metadata:
 					float cutoff = 0.05f;	// How close to zero we are: Want to maximize this, with as little visual discontinuity as possible
 					if (lightNode->mMetaData->Get("cutoff", cutoff))
 					{
@@ -1668,7 +1669,36 @@ namespace BlazeEngine
 					// Want the sphere mesh radius where light intensity will be close to zero
 					float maxColor = glm::max( glm::max(lightColor.r, lightColor.g), lightColor.b);			
 					radius = glm::sqrt((maxColor / cutoff) - 1.0f);
-				}
+
+					// Shadow metadata extraction:
+					lightNode->mMetaData->Get("minShadowBias",	minShadowBias);
+					lightNode->mMetaData->Get("maxShadowBias",	maxShadowBias);
+					lightNode->mMetaData->Get("near",			shadowCamNear);
+
+					bool gotWidth	= lightNode->mMetaData->Get("shadowWidth",	shadowCubeWidth);
+					bool gotHeight	= lightNode->mMetaData->Get("shadowHeight",	shadowCubeHeight);
+					if ((gotWidth || gotHeight) && shadowCubeWidth != shadowCubeHeight)
+					{
+						// Got width only:
+						if (gotWidth && !gotHeight)
+						{
+							shadowCubeWidth = shadowCubeHeight;
+						}
+						// Got height only:
+						else if (gotHeight && !gotWidth)
+						{
+							shadowCubeHeight = shadowCubeWidth;
+						}
+						// Got both: Use the smallest
+						else if (gotWidth && gotHeight)
+						{
+							int minRes = glm::min(shadowCubeWidth, shadowCubeHeight);
+							shadowCubeWidth = minRes;
+							shadowCubeHeight = minRes;
+						}
+						LOG_WARNING("Imported mismatched shadow cube map resolutions. Assigning width = " + to_string(shadowCubeWidth) + ", height = " + to_string(shadowCubeHeight));
+					}
+				}		
 
 				// Create the light:
 				Light* pointLight = new Light
@@ -1680,46 +1710,83 @@ namespace BlazeEngine
 					radius		// Only used if we're actually creating a point light
 				);
 
-				// Setup the transformation hierarchy:
-				if (pointType == LIGHT_POINT && lightNode)
+				if (pointType == LIGHT_POINT)
 				{
-					aiMatrix4x4 combinedTransform	= GetCombinedTransformFromHierarchy(scene, lightNode->mParent);
-					combinedTransform				= combinedTransform * lightNode->mTransformation;					// Combine the parent and child transforms	
+					// Create a cube shadow map:
+					CameraConfig shadowCamConfig;
+					shadowCamConfig.fieldOfView		= 90.0f;
 
-					GameObject* gameObject			= FindCreateGameObjectParents(scene, lightNode->mParent);
-
-					Transform* targetTransform		= nullptr;
-
-					// If the mesh doesn't belong to a group, create a GameObject to contain it:
-					if (gameObject == nullptr)
-					{
-						#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
-							LOG_WARNING("Creating a GameObject for light \"" + lightName + "\" that did not belong to a group! GameObjects should belong to groups in the source .FBX!");
-						#endif
+					shadowCamConfig.near			= shadowCamNear;
+					shadowCamConfig.far				= radius;
 					
-						gameObject = new GameObject(lightName);
-						AddGameObject(gameObject);				// Add the new game object
+					shadowCamConfig.aspectRatio		= 1.0f;
 
-						targetTransform = gameObject->GetTransform(); // We'll use the gameobject in our transform heirarchy
+					shadowCamConfig.isOrthographic	= false;
 
-						InitializeLightTransformValues(scene, lightName, &pointLight->GetTransform());
-					}
-					else // We have a GameObject:
-					{
-						#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
-							LOG("Found existing parent GameObject \"" + gameObject->GetName() + "\" for light \"" + lightName + "\"");
-						#endif
 
-						targetTransform = &pointLight->GetTransform();	// We'll use the mesh in our transform heirarchy
+					cubeShadowMap = new ShadowMap // TEMP: We assume point lights ALWAYS have a shadow. TODO: Control shadow maps via .FBX metadata
+					(
+						lightName,
+						shadowCubeWidth,
+						shadowCubeHeight,
+						shadowCamConfig,
+						&pointLight->GetTransform(),
+						vec3(0.0f, 0.0f, 0.0f),		// Default value
+						true
+					);
 
-						InitializeTransformValues(combinedTransform, targetTransform);
-					}
+					cubeShadowMap->MinShadowBias() = minShadowBias; // Extracted from the .FBX metadata above
+					cubeShadowMap->MaxShadowBias() = maxShadowBias;		
 
-					pointLight->GetTransform().Parent(gameObject->GetTransform());					
-					
 					#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
-						LOG("Calculated point light radius of " + to_string(radius));
+						LOG("\nSetting directional light minimum shadow bias value: " + to_string(minShadowBias));
+						LOG("\nSetting directional light maximum shadow bias value: " + to_string(maxShadowBias));
 					#endif
+
+					pointLight->ActiveShadowMap(cubeShadowMap);
+
+					// Setup the transformation hierarchy:
+					if (lightNode)
+					{
+						aiMatrix4x4 combinedTransform	= GetCombinedTransformFromHierarchy(scene, lightNode->mParent);
+						combinedTransform				= combinedTransform * lightNode->mTransformation;					// Combine the parent and child transforms	
+
+						GameObject* gameObject			= FindCreateGameObjectParents(scene, lightNode->mParent);
+
+						Transform* targetTransform		= nullptr;
+
+						// If the mesh doesn't belong to a group, create a GameObject to contain it:
+						if (gameObject == nullptr)
+						{
+							#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
+								LOG_WARNING("Creating a GameObject for light \"" + lightName + "\" that did not belong to a group! GameObjects should belong to groups in the source .FBX!");
+							#endif
+					
+							gameObject = new GameObject(lightName);
+							AddGameObject(gameObject);				// Add the new game object
+
+							targetTransform = gameObject->GetTransform(); // We'll use the gameobject in our transform heirarchy
+
+							InitializeLightTransformValues(scene, lightName, &pointLight->GetTransform());
+						}
+						else // We have a GameObject:
+						{
+							#if defined(DEBUG_SCENEMANAGER_GAMEOBJECT_LOGGING)
+								LOG("Found existing parent GameObject \"" + gameObject->GetName() + "\" for light \"" + lightName + "\"");
+							#endif
+
+							targetTransform = &pointLight->GetTransform();	// We'll use the mesh in our transform heirarchy
+
+							InitializeTransformValues(combinedTransform, targetTransform);
+						}
+
+						pointLight->GetTransform().Parent(gameObject->GetTransform());					
+					
+						#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
+							LOG("Calculated point light radius of " + to_string(radius));
+						#endif
+					}
+					
 				}
 
 				currentScene->AddLight(pointLight);

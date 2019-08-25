@@ -229,5 +229,14 @@
     <None Include="Shaders\geometryDemoShader.geom">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="Shaders\cubeDepthShader.frag">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\cubeDepthShader.geom">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\cubeDepthShader.vert">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

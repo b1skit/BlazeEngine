@@ -17,9 +17,9 @@ namespace BlazeEngine
 {
 	// Static members:
 	//----------------
-	const vec3 Transform::WORLD_X	= vec3(1, 0, 0);
-	const vec3 Transform::WORLD_Y	= vec3(0, 1, 0);
-	const vec3 Transform::WORLD_Z	= vec3(0, 0, 1); // Note: BlazeEngine always uses a RHCS
+	const vec3 Transform::WORLD_X	= vec3(1.0f,	0.0f,	0.0f);
+	const vec3 Transform::WORLD_Y	= vec3(0.0f,	1.0f,	0.0f);
+	const vec3 Transform::WORLD_Z	= vec3(0.0f,	0.0f,	1.0f); // Note: BlazeEngine always uses a RHCS
 
 
 	// Constructor:
@@ -100,35 +100,6 @@ namespace BlazeEngine
 
 		MarkDirty();
 	}
-
-
-	//void Transform::LookAt(vec3 camForward, vec3 camUp)
-	//{
-	//	LOG_ERROR("DEBUG: Transform.LookAt() is not correctly implemented yet!!!");
-
-	//	camUp			= normalize(camUp);
-	//	camForward		= normalize(camForward);
-	//	vec3 camRight	= glm::cross(camForward, camUp);
-
-	//	LOG_ERROR("DEBUG: LOOKAT CROSS RESULT = " + to_string(camRight.x) + " " + to_string(camRight.y) + " " + to_string(camRight.z));
-	//	
-	//	// Copy values into the rotation matrix:
-	//	for (int i = 0; i < 3; i++)
-	//	{
-	//		this->rotation[0][i] = camRight[i];
-	//		this->rotation[1][i] = camUp[i];
-	//		this->rotation[2][i] = camForward[i];
-	//	}
-
-	//	this->right		= camRight;
-	//	this->up		= camUp;
-	//	this->forward	= camForward;
-
-	//	// TODO: UPDATE EULER ROTATION!!!!
-	//	LOG_ERROR("DEBUG: EULER ROTATION IS NOT SET!!! GetEulerRotation() RESULTS FOR THIS TRANSFORM ARE NOW WRONG!!!!!!!!!");
-
-	//	MarkDirty();
-	//}
 
 
 	vec3 const& Transform::WorldPosition()

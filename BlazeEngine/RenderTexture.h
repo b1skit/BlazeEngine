@@ -37,6 +37,9 @@ namespace BlazeEngine
 		// Configure GPU framebuffer object. Returns true if successful, false otherwise. Also calls Texture.Buffer()
 		bool Buffer();
 
+		// Configure GPU frambuffer object for cube maps
+		bool BufferCubeMap(RenderTexture** cubeFaceRTs); // Note: There must be exactly 6 cubeFaceRTs
+
 
 	protected:
 

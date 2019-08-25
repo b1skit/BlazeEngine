@@ -18,14 +18,14 @@ namespace BlazeEngine
 {
 	enum TEXTURE_TYPE
 	{
-		TEXTURE_0				= 0,				// RESERVED: Starting offset for *binding* Textures to a texture unit: TEXTURE_0 + TEXTURE_<texture type>
+		TEXTURE_0							= 0,	// RESERVED: Starting offset for *binding* Textures to a texture unit: TEXTURE_0 + TEXTURE_<texture type>
 
-		TEXTURE_ALBEDO			= 0,				// Contains transparency in the alpha channel
-		TEXTURE_NORMAL			= 1,
-		TEXTURE_RMAO			= 2,				// Packed Roughness, Metalic, AmbientOcclusion (RGB) + unused A
-		TEXTURE_EMISSIVE		= 3,
+		TEXTURE_ALBEDO						= 0,	// Contains transparency in the alpha channel
+		TEXTURE_NORMAL						= 1,
+		TEXTURE_RMAO						= 2,	// Packed Roughness, Metalic, AmbientOcclusion (RGB) + unused A
+		TEXTURE_EMISSIVE					= 3,
 
-		TEXTURE_COUNT			= 4,				// RESERVED: Number of Texture slots a material has
+		TEXTURE_COUNT						= 4,	// RESERVED: Number of Texture slots a material has
 
 		// GBuffer RenderTexture names:
 		RENDER_TEXTURE_0					= 4,	// RESERVED: Starting offset for *binding* RenderTextures to a texture unit: RENDER_TEXTURE_0 + RENDER_TEXTURE_<texture type>
@@ -36,7 +36,6 @@ namespace BlazeEngine
 		RENDER_TEXTURE_EMISSIVE				= 3,
 		RENDER_TEXTURE_WORLD_POSITION		= 4,
 		RENDER_TEXTURE_MATERIAL_PROPERTY_0	= 5,	// MATERIAL_PROPERTY_0
-
 		RENDER_TEXTURE_DEPTH				= 6,	// Make this the last element
 
 		RENDER_TEXTURE_COUNT				= 7,	// RESERVED: Number of RenderTexture slots a material has
@@ -44,10 +43,21 @@ namespace BlazeEngine
 		// Depth map texture units:
 		DEPTH_TEXTURE_0						= 11,	// RESERVED: Starting offset for *binding* depth RenderTextures to a texture unit: DEPTH_TEXTURE_0 + DEPTH_TEXTURE_<texture tyep>. First unit must equal TEXTURE_COUNT + RENDER_TEXTURE_COUNT
 
-		TEXTURE_UNIT_SHADOW_DEPTH			= 0,
-
+		DEPTH_TEXTURE_SHADOW				= 0,
 
 		DEPTH_TEXTURE_COUNT					= 1,	// RESERVED: Number of DEPTH RenderTexture slots a material has
+
+		// Cube maps:
+		CUBE_MAP_0							= 12,	// RESERVED: Starting offset for *binding* cube RenderTextures to a texture unit: CUBE_MAP_0 + CUBE_MAP_TEXTURE_<texture tyep>. First unit must equal TEXTURE_COUNT + RENDER_TEXTURE_COUNT + DEPTH_TEXTURE_COUNT
+
+		CUBE_MAP_0_RIGHT					= 0,	// X+
+		CUBE_MAP_1_LEFT						= 1,	// X-
+		CUBE_MAP_2_TOP						= 2,	// Y+
+		CUBE_MAP_3_BOTTOM					= 3,	// Y-
+		CUBE_MAP_4_NEAR						= 4,	// Z+
+		CUBE_MAP_5_FAR						= 5,	// Z-
+
+		CUBE_MAP_COUNT						= 6,
 
 	}; // Note: If new enums are added, don't forget to update Material::RENDER_TEXTURE_SAMPLER_NAMES[] as well!
 
@@ -106,6 +116,7 @@ namespace BlazeEngine
 		const static string TEXTURE_SAMPLER_NAMES[TEXTURE_COUNT];
 		const static string RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_COUNT];
 		const static string DEPTH_TEXTURE_SAMPLER_NAMES[DEPTH_TEXTURE_COUNT];
+		const static string CUBE_MAP_TEXTURE_SAMPLER_NAMES[CUBE_MAP_COUNT];
 		const static string MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_COUNT];
 		
 	protected:

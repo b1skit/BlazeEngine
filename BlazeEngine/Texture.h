@@ -39,7 +39,8 @@ namespace BlazeEngine
 		inline GLenum&				Type()				{ return type; }
 
 		inline GLenum&				TextureWrap_S()		{ return textureWrapS; }
-		inline GLenum&				TextureWrap_T()		{ return textureWrapS; }
+		inline GLenum&				TextureWrap_T()		{ return textureWrapT; }
+		inline GLenum&				TextureWrap_R()		{ return textureWrapR; }
 
 		inline GLenum&				TextureMinFilter()	{ return textureMinFilter; }
 		inline GLenum&				TextureMaxFilter()	{ return textureMaxFilter; }
@@ -84,6 +85,7 @@ namespace BlazeEngine
 
 		GLenum textureWrapS			= GL_REPEAT;
 		GLenum textureWrapT			= GL_REPEAT;
+		GLenum textureWrapR			= GL_REPEAT;
 
 		GLenum textureMinFilter		= GL_NEAREST_MIPMAP_LINEAR;
 		GLenum textureMaxFilter		= GL_LINEAR;

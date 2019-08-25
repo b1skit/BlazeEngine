@@ -31,20 +31,18 @@ void main()
 	vec4 worldPosition			= texture(GBuffer_WorldPos, uvs);
 	vec4 matProp0				= texture(GBuffer_MatProp0, uvs); // .r = Phong exponent
 
-	vec3 fragToLight = normalize(lightWorldPos - data.worldPos);
-
+	vec3 fragToLight			= normalize(lightWorldPos - worldPosition.xyz);
+	
 	// Diffuse:
 	vec4 diffuseContribution	= vec4( LambertianDiffuse(FragColor.xyz, worldNormal, lightColor, fragToLight) , 1);
 
 	// Specular:
 	vec4 specContribution		= vec4( PhongSpecular(worldPosition.xyz, worldNormal, fragToLight, lightColor, in_view, RMAO.r, matProp0.r).xyz * FragColor.xyz, 1);
 	
-	// TODO: Point light shadows
-//	// Shadow:
-//	vec3 shadowPos				= (shadowCam_vp * worldPosition).xyz;
-//	float shadowFactor			= GetShadowFactor(shadowPos, GBuffer_Depth, worldNormal, lightWorldDir);
-
+	// Shadows:
+	vec3 lightToFrag			= worldPosition.xyz - lightWorldPos; // Cubemap sampler direction length matters, so we can't use -fragToLight
+	float shadowFactor			= GetShadowFactor(lightToFrag, CubeMap_0_Right, worldNormal, fragToLight);
 
 	// Final result:
-	FragColor = ((diffuseContribution + specContribution)) * LightAttenuation(worldPosition.xyz, lightWorldPos);
+	FragColor = ((diffuseContribution + specContribution)) * LightAttenuation(worldPosition.xyz, lightWorldPos) * shadowFactor;	
 } 

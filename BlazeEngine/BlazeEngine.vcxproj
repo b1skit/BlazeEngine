@@ -186,6 +186,9 @@
     <None Include="Shaders\BlazeLighting.glsl" />
     <None Include="Shaders\blitShader.frag" />
     <None Include="Shaders\blitShader.vert" />
+    <None Include="Shaders\cubeDepthShader.frag" />
+    <None Include="Shaders\cubeDepthShader.geom" />
+    <None Include="Shaders\cubeDepthShader.vert" />
     <None Include="Shaders\deferredAmbientLightShader.frag" />
     <None Include="Shaders\deferredAmbientLightShader.vert" />
     <None Include="Shaders\deferredKeyLightShader.frag" />

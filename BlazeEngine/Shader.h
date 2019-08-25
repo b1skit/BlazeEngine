@@ -49,7 +49,7 @@ namespace BlazeEngine
 		inline string const& Name()						{ return shaderName; }
 		inline GLuint const& ShaderReference() const	{ return shaderReference; }
 
-		void UploadUniform(GLchar const* uniformName, GLfloat const* value, UNIFORM_TYPE const& type);
+		void UploadUniform(GLchar const* uniformName, GLfloat const* value, UNIFORM_TYPE const& type, int count = 1);
 
 
 		// Static functions:

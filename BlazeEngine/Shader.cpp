@@ -42,7 +42,7 @@ namespace BlazeEngine
 	}
 
 
-	void Shader::UploadUniform(GLchar const* uniformName, GLfloat const* value, UNIFORM_TYPE const& type)
+	void Shader::UploadUniform(GLchar const* uniformName, GLfloat const* value, UNIFORM_TYPE const& type, int count /*= 1*/)
 	{
 		GLint currentProgram;
 		bool isBound = true;
@@ -59,19 +59,19 @@ namespace BlazeEngine
 			switch (type)
 			{
 			case UNIFORM_Matrix4fv:
-				glUniformMatrix4fv(uniformID, 1, GL_FALSE, value);
+				glUniformMatrix4fv(uniformID, count, GL_FALSE, value);
 				break;
 
 			case UNIFORM_Matrix3fv:
-				glUniformMatrix3fv(uniformID, 1, GL_FALSE, value);
+				glUniformMatrix3fv(uniformID, count, GL_FALSE, value);
 				break;
 
 			case UNIFORM_Vec3fv:
-				glUniform3fv(uniformID, 1, value);
+				glUniform3fv(uniformID, count, value);
 				break;
 
 			case UNIFORM_Vec4fv:
-				glUniform4fv(uniformID, 1, value);
+				glUniform4fv(uniformID, count, value);
 				break;
 			
 			case UNIFORM_Float:
@@ -100,7 +100,6 @@ namespace BlazeEngine
 		GLuint shaderReference = glCreateProgram();
 
 		// Load the shader files:
-
 		string vertexShader		= LoadShaderFile(shaderName + ".vert");
 		string geometryShader	= LoadShaderFile(shaderName + ".geom");
 		string fragmentShader	= LoadShaderFile(shaderName + ".frag");
@@ -143,13 +142,13 @@ namespace BlazeEngine
 			if (hasGeometryShader)
 			{
 				#if defined(DEBUG_SHADER_SETUP_LOGGING)
-					LOG("Inserting defines into loaded vertex shader text")
+					LOG("Inserting defines into loaded geometry shader text")
 				#endif
 				InsertDefines(geometryShader, shaderKeywords);
 			}
 
 			#if defined(DEBUG_SHADER_SETUP_LOGGING)
-				LOG("Inserting defines into loaded vertex shader text")
+				LOG("Inserting defines into loaded fragment shader text")
 			#endif
 			InsertDefines(fragmentShader, shaderKeywords);
 		}

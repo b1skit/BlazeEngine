@@ -82,6 +82,18 @@ namespace BlazeEngine
 			delete renderMaterial;
 			renderMaterial = nullptr;
 		}
+
+		if (this->cubeView != nullptr)
+		{
+			delete[] cubeView;
+			cubeView = nullptr;
+		}
+
+		if (this->cubeViewProjection != nullptr)
+		{
+			delete[] cubeViewProjection;
+			cubeViewProjection = nullptr;
+		}
 	}
 
 
@@ -89,6 +101,48 @@ namespace BlazeEngine
 	{
 		view = inverse(transform.Model());
 		return view;
+	}
+
+	mat4 const* Camera::CubeView()
+	{
+		// If we've never allocated cubeView, do it now:
+		if (cubeView == nullptr)
+		{
+			cubeView = new mat4[6];
+			
+			cubeView[0] = glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() + Transform::WORLD_X, -Transform::WORLD_Y);
+			cubeView[1] = glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() - Transform::WORLD_X, -Transform::WORLD_Y);
+
+			cubeView[2] = glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() + Transform::WORLD_Y, Transform::WORLD_Z);
+			cubeView[3] = glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() - Transform::WORLD_Y, -Transform::WORLD_Z);
+
+			cubeView[4] = glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() + Transform::WORLD_Z, -Transform::WORLD_Y);
+			cubeView[5] = glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() - Transform::WORLD_Z, -Transform::WORLD_Y);
+		}
+
+		// TODO: Recalculate this if the camera has moved
+
+		return cubeView;
+	}
+
+	mat4 const* Camera::CubeViewProjection()
+	{
+		// If we've never allocated cubeViewProjection, do it now:
+		if (cubeViewProjection == nullptr)
+		{
+			cubeViewProjection = new mat4[6];
+
+			mat4 const* ourCubeViews = this->CubeView(); // Call this to ensure cubeView has been initialized
+
+			cubeViewProjection[0] = this->projection * ourCubeViews[0];
+			cubeViewProjection[1] = this->projection * ourCubeViews[1];
+			cubeViewProjection[2] = this->projection * ourCubeViews[2];
+			cubeViewProjection[3] = this->projection * ourCubeViews[3];
+			cubeViewProjection[4] = this->projection * ourCubeViews[4];
+			cubeViewProjection[5] = this->projection * ourCubeViews[5];
+		}
+
+		return cubeViewProjection;
 	}
 
 

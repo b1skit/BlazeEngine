@@ -49,8 +49,6 @@ namespace BlazeEngine
 		// Set the position, in (relative) world space
 		void SetWorldPosition(vec3 position);
 
-		//void LookAt(vec3 camForward, vec3 camUp);
-
 		// Get the position, in (relative) world space
 		vec3 const&		WorldPosition();
 

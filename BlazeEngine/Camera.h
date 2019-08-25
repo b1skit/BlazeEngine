@@ -55,10 +55,13 @@ namespace BlazeEngine
 		inline float const& Far() const				{ return cameraConfig.far; }
 
 		mat4 const&			View();
+		mat4 const*			CubeView(); // TODO: Recompute this if the camera has moved
+
 
 		inline mat4 const&	Projection() const		{ return projection; }
-
+		
 		inline mat4 const&	ViewProjection()		{ return viewProjection = projection * View(); } // TODO: ONLY COMPUTE THIS MATRIX IF SOMETHING HAS CHANGED!!!
+		mat4 const*			CubeViewProjection();
 
 		Material*&			RenderMaterial()		{ return renderMaterial; }
 
@@ -79,8 +82,11 @@ namespace BlazeEngine
 		mat4 view					= mat4();
 		mat4 projection				= mat4();
 		mat4 viewProjection			= mat4();
+
+		mat4* cubeView				= nullptr;	// Only initialized if we actually need it. Deallocated by Destroy()
+		mat4* cubeViewProjection	= nullptr;
 		
-		Material* renderMaterial	= nullptr;	// Deallocated when Destroy() is called
+		Material* renderMaterial	= nullptr;	// Deallocated by Destroy()
 
 		/*bool isDirty = false;*/
 	};

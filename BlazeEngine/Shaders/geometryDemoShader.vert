@@ -8,7 +8,7 @@
 void main()
 {
 	// Assign position to the predefined gl_Position clip-space output:
-    gl_Position = in_mvp * vec4(in_position.x, in_position.y, in_position.z, 1.0);
+    gl_Position				= in_mvp * vec4(in_position.x, in_position.y, in_position.z, 1.0);
 
 	data.vertexColor		= in_color * vec4(ambientColor, 1);
 

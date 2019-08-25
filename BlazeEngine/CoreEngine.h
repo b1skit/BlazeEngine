@@ -43,18 +43,22 @@ namespace BlazeEngine
 
 		struct
 		{
-			// Orthographic camera defaults:
-			float defaultNear				= 1.0f;
-			float defaultFar				= 100.0f;
+			// Camera defaults:
+			float defaultNear					= 1.0f;
+			float defaultFar					= 100.0f;
 
-			float defaultOrthoHalfWidth		= 5.0f;		// TODO: Choose appropriate values??
-			float defaultOrthoHalfHeight	= 5.0f;		// -> Function of resolution and scene width
+			float defaultOrthoHalfWidth			= 5.0f;		// TODO: Choose appropriate values??
+			float defaultOrthoHalfHeight		= 5.0f;		// -> Function of resolution and scene width
 
-			float defaultZBias				= 0.01f;
+			float defaultMinShadowBias			= 0.01f;
+			float defaultMaxShadowBias			= 0.05f;
 
 			// Texture dimensions:
-			int defaultShadowMapWidth		= 2048;
-			int defaultShadowMapHeight		= 2048;
+			int defaultShadowMapWidth			= 2048;
+			int defaultShadowMapHeight			= 2048;
+
+			int defaultShadowCubeMapthWidth		= 512;
+			int defaultShadowCubeMapthHeight	= 512;
 		} shadows;
 
 		struct
@@ -62,7 +66,10 @@ namespace BlazeEngine
 			const string shaderDirectory					= ".\\Shaders\\";
 			const string errorShaderName					= "errorShader";
 			const string defaultShaderName					= "lambertShader";
+			
+			// Depth map rendering:
 			const string depthShaderName					= "depthShader";
+			const string cubeDepthShaderName				= "cubeDepthShader";
 
 			// Deferred rendering:
 			const string gBufferFillShaderName				= "gBufferFillShader";

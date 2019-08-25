@@ -5,4 +5,6 @@
 void main()
 {
     gl_FragDepth = gl_FragCoord.z; // Not actually needed, but this is what's happening
+
+	// TODO: Store this as logarithmic depth
 } 

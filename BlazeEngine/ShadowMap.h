@@ -24,7 +24,7 @@ namespace BlazeEngine
 		// Default constructor (perspective shadowcam):
 		ShadowMap();
 
-		ShadowMap(string lightName, int xRes, int yRes, CameraConfig shadowCamConfig, Transform* shadowCamParent = nullptr, vec3 shadowCamPosition = vec3(0.0f, 0.0f, 0.0f));
+		ShadowMap(string lightName, int xRes, int yRes, CameraConfig shadowCamConfig, Transform* shadowCamParent = nullptr, vec3 shadowCamPosition = vec3(0.0f, 0.0f, 0.0f), bool useCubeMap = false);
 
 		// Get the current shadow camera
 		inline Camera* ShadowCamera()		{ return shadowCam; }

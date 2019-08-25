@@ -20,6 +20,7 @@ namespace BlazeEngine
 		"emissive",			// TEXTURE_RMAO
 	};
 
+
 	const string Material::RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_COUNT] = 
 	{
 		"GBuffer_Albedo",		// RENDER_TEXTURE_ALBEDO
@@ -31,14 +32,25 @@ namespace BlazeEngine
 		"GBuffer_MatProp0",		// RENDER_TEXTURE_MATERIAL_PROPERTY_0
 
 		"GBuffer_Depth",		// RENDER_TEXTURE_DEPTH
-
-		// TODO: We don't have a string for TEXTURE_UNIT_SHADOW_DEPTH
 	};
+
 
 	const string Material::DEPTH_TEXTURE_SAMPLER_NAMES[DEPTH_TEXTURE_COUNT] = 
 	{
-		"shadowDepth",		// TEXTURE_UNIT_SHADOW_DEPTH
+		"shadowDepth",			// DEPTH_TEXTURE_SHADOW
 	};
+
+
+	const string Material::CUBE_MAP_TEXTURE_SAMPLER_NAMES[CUBE_MAP_COUNT] = 
+	{
+		"CubeMap_0_Right",			// CUBE_MAP_0_RIGHT
+		"CubeMap_1_Left",			// CUBE_MAP_1_LEFT
+		"CubeMap_2_Top",			// CUBE_MAP_2_TOP
+		"CubeMap_3_Bottom",			// CUBE_MAP_3_BOTTOM
+		"CubeMap_4_Near",			// CUBE_MAP_4_NEAR
+		"CubeMap_5_Far",			// CUBE_MAP_5_FAR
+	};
+
 
 	const string Material::MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_COUNT] =
 	{

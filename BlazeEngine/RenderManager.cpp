@@ -11,6 +11,7 @@
 
 
 #include <string>
+#include <iomanip> //?????????????????????????????????
 
 #include "SDL.h"
 #include "GL/glew.h"
@@ -47,6 +48,9 @@ namespace BlazeEngine
 
 			switch (source)
 			{
+			case GL_DEBUG_SOURCE_API:
+				output += "GL_DEBUG_SOURCE_API\n";
+				break;
 			case GL_DEBUG_SOURCE_APPLICATION: 
 				output += "GL_DEBUG_SOURCE_APPLICATION\n";
 					break;
@@ -55,7 +59,7 @@ namespace BlazeEngine
 				output += "GL_DEBUG_SOURCE_THIRD_PARTY\n";
 					break;
 			default:
-				output += "\n";
+				output += "CURRENTLY UNRECOGNIZED ENUM VALUE: " + to_string(source) + " (Todo: Convert to hex!)\n"; // If we ever hit this, we should add the enum as a new string
 			}
 
 			output += "Type: ";
@@ -63,22 +67,22 @@ namespace BlazeEngine
 			switch (type)
 			{
 			case GL_DEBUG_TYPE_ERROR:
-				output += "ERROR\n";
+				output += "GL_DEBUG_TYPE_ERROR\n";
 				break;
 			case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-				output += "DEPRECATED_BEHAVIOR\n";
+				output += "GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR\n";
 				break;
 			case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-				output += "UNDEFINED_BEHAVIOR\n";
+				output += "GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR\n";
 				break;
 			case GL_DEBUG_TYPE_PORTABILITY:
-				output += "PORTABILITY\n";
+				output += "GL_DEBUG_TYPE_PORTABILITY\n";
 				break;
 			case GL_DEBUG_TYPE_PERFORMANCE:
-				output += "PERFORMANCE\n";
+				output += "GL_DEBUG_TYPE_PERFORMANCE\n";
 				break;
 			case GL_DEBUG_TYPE_OTHER:
-				output += "OTHER\n";
+				output += "GL_DEBUG_TYPE_OTHER\n";
 				break;
 			default:
 				output += "\n";
@@ -98,13 +102,13 @@ namespace BlazeEngine
 				return; // DO NOTHING
 			#endif
 			case GL_DEBUG_SEVERITY_LOW :
-					output += "LOW\n";
+					output += "GL_DEBUG_SEVERITY_LOW\n";
 				break;
 			case GL_DEBUG_SEVERITY_MEDIUM:
-				output += "MEDIUM\n";
+				output += "GL_DEBUG_SEVERITY_MEDIUM\n";
 				break;
 			case GL_DEBUG_SEVERITY_HIGH:
-				output += "HIGH\n";
+				output += "GL_DEBUG_SEVERITY_HIGH\n";
 				break;
 			default:
 				output += "\n";
@@ -295,13 +299,19 @@ namespace BlazeEngine
 
 		Camera* mainCam = CoreEngine::GetSceneManager()->GetCameras(CAMERA_TYPE_MAIN).at(0);
 
-		// Temporary hack: Render the keylight directly, since that's all we support at the moment... TODO: Loop through multiple lights
+		// Fill shadow maps:
 		glDisable(GL_CULL_FACE);
-		if (CoreEngine::GetSceneManager()->GetKeyLight() != nullptr)
+		vector<Light*>const* deferredLights = &CoreEngine::GetSceneManager()->GetDeferredLights();
+		if (deferredLights)
 		{
-			RenderLightShadowMap(CoreEngine::GetSceneManager()->GetKeyLight());
+			for (int i = 0; i < (int)deferredLights->size(); i++)
+			{
+				if (deferredLights->at(i)->ActiveShadowMap() != nullptr)
+				{
+					RenderLightShadowMap(deferredLights->at(i));
+				}
+			}
 		}
-		
 		glEnable(GL_CULL_FACE);
 
 
@@ -380,15 +390,54 @@ namespace BlazeEngine
 	{
 		Camera* shadowCam = currentLight->ActiveShadowMap()->ShadowCamera();
 
-		// Configure the FrameBuffer:
-		RenderTexture* lightDepthTexture = (RenderTexture*)shadowCam->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
-		glViewport(0, 0, lightDepthTexture->Width(), lightDepthTexture->Height());
-		glBindFramebuffer(GL_FRAMEBUFFER, lightDepthTexture->FBO());
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
-
 		// Bind:
 		Shader* lightShader = shadowCam->RenderMaterial()->GetShader();
 		BindShader(lightShader->ShaderReference());
+		
+		// Configure the FrameBuffer:
+		RenderTexture* lightDepthTexture = nullptr;
+
+		switch (currentLight->Type())
+		{
+		case LIGHT_DIRECTIONAL:
+		{
+			lightDepthTexture = (RenderTexture*)shadowCam->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
+		}
+		break;
+
+		case LIGHT_POINT:
+		{
+			lightDepthTexture = (RenderTexture*)shadowCam->RenderMaterial()->AccessTexture(CUBE_MAP_0_RIGHT);
+
+			mat4 shadowCamProjection	= shadowCam->Projection();
+			vec3 lightWorldPos			= currentLight->GetTransform().WorldPosition();
+
+			mat4 const* cubeMap_vps = shadowCam->CubeViewProjection();
+
+			lightShader->UploadUniform("shadowCamCubeMap_vp",	&cubeMap_vps[0][0][0],	UNIFORM_Matrix4fv, 6);
+			lightShader->UploadUniform("lightWorldPos",			&lightWorldPos.x,		UNIFORM_Vec3fv);
+			lightShader->UploadUniform("shadowCam_near",		&shadowCam->Near(),		UNIFORM_Float);
+			lightShader->UploadUniform("shadowCam_far",			&shadowCam->Far(),		UNIFORM_Float);
+			
+		}
+		break;
+
+		case LIGHT_AMBIENT:
+		case LIGHT_AREA:
+		case LIGHT_SPOT:
+		case LIGHT_TUBE:
+		default:
+			return; // This should never happen...
+		}
+
+		if (lightDepthTexture == nullptr)
+		{
+			return;
+		}
+
+		glViewport(0, 0, lightDepthTexture->Width(), lightDepthTexture->Height());
+		glBindFramebuffer(GL_FRAMEBUFFER, lightDepthTexture->FBO());
+		glClear(GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO	
 
 		// Loop through each mesh:			
 		vector<Mesh*> const* meshes = CoreEngine::GetSceneManager()->GetRenderMeshes();
@@ -399,17 +448,34 @@ namespace BlazeEngine
 
 			BindMeshBuffers(currentMesh);
 
-			// Assemble model-specific matrices:
-			mat4 mvp			= shadowCam->ViewProjection() * currentMesh->GetTransform().Model();
+			switch (currentLight->Type())
+			{
+			case LIGHT_DIRECTIONAL:
+			{
+				mat4 mvp			= shadowCam->ViewProjection() * currentMesh->GetTransform().Model();
+				lightShader->UploadUniform("in_mvp",	&mvp[0][0],		UNIFORM_Matrix4fv);
+			}
+			break;
 
-			// Upload mesh-specific matrices:
-			lightShader->UploadUniform("in_mvp",				&mvp[0][0],				UNIFORM_Matrix4fv);
+			case LIGHT_POINT:
+			{
+				mat4 model = currentMesh->GetTransform().Model();
+				lightShader->UploadUniform("in_model",	&model[0][0],	UNIFORM_Matrix4fv);
+			}
+			break;
 
-			// TODO: Only upload these matrices if they've changed ^^^^
+			case LIGHT_AMBIENT:
+			case LIGHT_AREA:
+			case LIGHT_SPOT:
+			case LIGHT_TUBE:
+			default:
+				return; // This should never happen...
+			}
+			// TODO: ^^^^ Only upload these matrices if they've changed			
 
 			// Draw!
 			glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
-			
+						
 			// Cleanup current mesh:
 			BindMeshBuffers();
 		}
@@ -541,7 +607,7 @@ namespace BlazeEngine
 			RenderTexture* depthTexture = (RenderTexture*)keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
 			if (depthTexture)
 			{
-				depthTexture->Bind(shaderReference, DEPTH_TEXTURE_0 + TEXTURE_UNIT_SHADOW_DEPTH);
+				depthTexture->Bind(shaderReference, DEPTH_TEXTURE_0 + DEPTH_TEXTURE_SHADOW);
 
 				GBuffer_Depth_TexelSize = vec4(1.0f / depthTexture->Width(), 1.0f / depthTexture->Height(), depthTexture->Width(), depthTexture->Height());
 				// ^^ TODO: Compute this once and cache it for uploading
@@ -589,7 +655,7 @@ namespace BlazeEngine
 			currentMaterial->BindAllTextures();
 			if (depthTexture)
 			{
-				depthTexture->Bind(0, DEPTH_TEXTURE_0 + TEXTURE_UNIT_SHADOW_DEPTH);
+				depthTexture->Bind(0, DEPTH_TEXTURE_0 + DEPTH_TEXTURE_SHADOW);
 			}
 			BindShader(0);
 
@@ -600,22 +666,6 @@ namespace BlazeEngine
 	void BlazeEngine::RenderManager::RenderDeferredLight(Light* deferredLight)
 	{
 		Camera* renderCam = CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera();
-		
-		// Assemble common (model independent) matrices:
-		bool hasShadowMap = deferredLight->ActiveShadowMap() != nullptr;
-		mat4 shadowCam_vp(1.0);
-		if (hasShadowMap)
-		{
-			shadowCam_vp = deferredLight->ActiveShadowMap()->ShadowCamera()->ViewProjection();
-		}		
-
-		mat4 model			= deferredLight->GetTransform().Model();
-		mat4 view			= renderCam->View();
-		mat4 mv				= view * model;
-		mat4 mvp			= renderCam->ViewProjection() * deferredLight->GetTransform().Model();
-
-		// Light properties:
-		vec3 lightWorldPos	= deferredLight->GetTransform().WorldPosition();
 
 		// Bind:
 		Shader* currentShader	= deferredLight->DeferredMaterial()->GetShader();
@@ -623,54 +673,125 @@ namespace BlazeEngine
 
 		BindShader(shaderReference);
 		renderCam->RenderMaterial()->BindAllTextures(shaderReference);	// Bind GBuffer textures
-
-		ShadowMap* activeShadowMap = deferredLight->ActiveShadowMap();
-		if (activeShadowMap != nullptr)
-		{
-			vec4 GBuffer_Depth_TexelSize(0, 0, 0, 0);
-			RenderTexture* depthTexture = (RenderTexture*)activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
-			if (depthTexture)
-			{
-				depthTexture->Bind(shaderReference, DEPTH_TEXTURE_0 + TEXTURE_UNIT_SHADOW_DEPTH);
-
-				GBuffer_Depth_TexelSize = vec4(1.0f / depthTexture->Width(), 1.0f / depthTexture->Height(), depthTexture->Width(), depthTexture->Height());
-				// ^^ TODO: Compute this once and cache it for uploading each frame
-			}
-			currentShader->UploadUniform("GBuffer_Depth_TexelSize", &GBuffer_Depth_TexelSize.x, UNIFORM_Vec4fv);
-
-			currentShader->UploadUniform("maxShadowBias", &deferredLight->ActiveShadowMap()->MaxShadowBias(), UNIFORM_Float);
-			currentShader->UploadUniform("minShadowBias", &deferredLight->ActiveShadowMap()->MinShadowBias(), UNIFORM_Float);
-		}
-
-		// Upload common shader matrices:
-		if (hasShadowMap)
-		{
-			currentShader->UploadUniform("shadowCam_vp",	&shadowCam_vp[0][0],	UNIFORM_Matrix4fv);
-		}		
+		
+		// Assemble common (model independent) matrices:
+		bool hasShadowMap = deferredLight->ActiveShadowMap() != nullptr;
+			
+		mat4 model			= deferredLight->GetTransform().Model();
+		mat4 view			= renderCam->View();
+		mat4 mv				= view * model;
+		mat4 mvp			= renderCam->ViewProjection() * deferredLight->GetTransform().Model();
 
 		currentShader->UploadUniform("in_model",		&model[0][0],			UNIFORM_Matrix4fv);
 		currentShader->UploadUniform("in_view",			&view[0][0],			UNIFORM_Matrix4fv);
 		currentShader->UploadUniform("in_mv",			&mv[0][0],				UNIFORM_Matrix4fv);
 		currentShader->UploadUniform("in_mvp",			&mvp[0][0],				UNIFORM_Matrix4fv);
 		// TODO: Only upload these matrices if they've changed ^^^^
-		// TODO: Break this out into a function: ALL of our render functions have a similar setup...
-		
-		// Upload current light's parameters:
+		// TODO: Break this out into a function: ALL of our render functions have a similar setup		
+
+		// Light properties:
+		vec3 lightWorldPos	= deferredLight->GetTransform().WorldPosition();
+
 		currentShader->UploadUniform("lightWorldDir",	&deferredLight->GetTransform().Forward().x, UNIFORM_Vec3fv); // Note: This only makes sense w.r.t KEYLIGHT's world direction...
 		currentShader->UploadUniform("lightColor",		&deferredLight->Color().r,					UNIFORM_Vec3fv);
 		currentShader->UploadUniform("lightWorldPos",	&lightWorldPos.x,							UNIFORM_Vec3fv);
 
+		// Shadow properties:
+		ShadowMap* activeShadowMap = deferredLight->ActiveShadowMap();
+
+		mat4 shadowCam_vp(1.0);
+		if (activeShadowMap != nullptr)
+		{
+			Camera* shadowCam = activeShadowMap->ShadowCamera();
+
+			if (shadowCam != nullptr)
+			{
+				// Upload common shadow properties:
+				currentShader->UploadUniform("shadowCam_vp",	&shadowCam->ViewProjection()[0][0],	UNIFORM_Matrix4fv);
+				
+				currentShader->UploadUniform("maxShadowBias",	&activeShadowMap->MaxShadowBias(),	UNIFORM_Float);
+				currentShader->UploadUniform("minShadowBias",	&activeShadowMap->MinShadowBias(),	UNIFORM_Float);
+
+				currentShader->UploadUniform("shadowCam_near",	&shadowCam->Near(),					UNIFORM_Float);
+				currentShader->UploadUniform("shadowCam_far",	&shadowCam->Far(),					UNIFORM_Float);
+
+				// Bind shadow depth textures:
+				RenderTexture* depthTexture = nullptr;
+				switch (deferredLight->Type())
+				{
+				case LIGHT_DIRECTIONAL:
+				{
+					depthTexture = (RenderTexture*)activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
+					if (depthTexture)
+					{
+						depthTexture->Bind(shaderReference, DEPTH_TEXTURE_0 + DEPTH_TEXTURE_SHADOW);
+					}
+				}
+				break;
+
+				case LIGHT_POINT:
+				{
+					depthTexture = (RenderTexture*)activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(CUBE_MAP_0_RIGHT);
+					if (depthTexture)
+					{
+						depthTexture->Bind(shaderReference); // No need for a texture unit override
+					}
+				}
+				break;
+
+				// Other light types don't support shadows, yet:
+				case LIGHT_AMBIENT:
+				case LIGHT_AREA:
+				case LIGHT_SPOT:
+				case LIGHT_TUBE:
+				default:
+					break;
+				}
+
+				vec4 GBuffer_Depth_TexelSize(0, 0, 0, 0);	// TODO: Compute this once and cache it for uploading each frame
+				if (depthTexture != nullptr)
+				{
+					GBuffer_Depth_TexelSize = vec4(1.0f / depthTexture->Width(), 1.0f / depthTexture->Height(), depthTexture->Width(), depthTexture->Height());
+				}
+				currentShader->UploadUniform("GBuffer_Depth_TexelSize", &GBuffer_Depth_TexelSize.x, UNIFORM_Vec4fv);
+			}
+		}
+		
 		BindMeshBuffers(deferredLight->DeferredMesh());
 
 		// Draw!
 		glDrawElements(GL_TRIANGLES, deferredLight->DeferredMesh()->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
+
 		// Cleanup:
 		renderCam->RenderMaterial()->BindAllTextures();
+
 		if (activeShadowMap != nullptr)
 		{
-			activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH)->Bind(0, DEPTH_TEXTURE_0 + TEXTURE_UNIT_SHADOW_DEPTH);
+			switch (deferredLight->Type())
+			{
+			case LIGHT_DIRECTIONAL:
+			{
+				activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH)->Bind(0, DEPTH_TEXTURE_0 + DEPTH_TEXTURE_SHADOW);
+			}			
+			break;
+
+			case LIGHT_POINT:
+			{
+				activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(CUBE_MAP_0_RIGHT)->Bind(0);
+			}
+			break;
+
+			// Other light types don't support shadows, yet:
+			case LIGHT_AMBIENT:
+			case LIGHT_AREA:
+			case LIGHT_SPOT:
+			case LIGHT_TUBE:
+			default:
+				break;
+			}
 		}
+		
 		BindShader(0);
 		BindMeshBuffers();
 	}
@@ -691,6 +812,7 @@ namespace BlazeEngine
 		BindShader(0);
 		BindMeshBuffers();
 	}
+
 
 	void BlazeEngine::RenderManager::Blit(Material* srcMat, int srcTex, Material* dstMat, int dstTex)
 	{
@@ -819,7 +941,7 @@ namespace BlazeEngine
 		{
 			BindShader(shaders.at(i)->ShaderReference());
 
-			// Upload Texture sampler locations. Note: These must align with the locations defined in Material.h
+			// Texture sampler locations. Note: These must align with the locations defined in Material.h
 			for (int currentTexture = 0; currentTexture < TEXTURE_COUNT; currentTexture++)
 			{
 				GLint samplerLocation = glGetUniformLocation(shaders.at(i)->ShaderReference(), Material::TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
@@ -828,7 +950,7 @@ namespace BlazeEngine
 					glUniform1i(samplerLocation, (TEXTURE_TYPE)currentTexture);
 				}
 			}
-			// Upload RenderTexture sampler locations:
+			// RenderTexture sampler locations:
 			for (int currentTexture = 0; currentTexture < RENDER_TEXTURE_COUNT; currentTexture++)
 			{
 				GLint samplerLocation = glGetUniformLocation(shaders.at(i)->ShaderReference(), Material::RENDER_TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
@@ -838,7 +960,7 @@ namespace BlazeEngine
 				}
 			}
 
-			// Upload sampler location for shadow map textures
+			// 2D shadow map textures sampler locations:
 			for (int currentTexture = 0; currentTexture < DEPTH_TEXTURE_COUNT; currentTexture++)
 			{
 				GLint samplerLocation = glGetUniformLocation(shaders.at(i)->ShaderReference(), Material::DEPTH_TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
@@ -846,6 +968,13 @@ namespace BlazeEngine
 				{
 					glUniform1i(samplerLocation, DEPTH_TEXTURE_0 + (TEXTURE_TYPE)currentTexture);
 				}
+			}
+
+			// Cube map depth texture sampler locations: We just need to add a single cube map sampler
+			GLint samplerLocation = glGetUniformLocation(shaders.at(i)->ShaderReference(), Material::CUBE_MAP_TEXTURE_SAMPLER_NAMES[CUBE_MAP_0_RIGHT].c_str());
+			if (samplerLocation >= 0)
+			{
+				glUniform1i(samplerLocation, CUBE_MAP_0 + (TEXTURE_TYPE)0);
 			}
 			
 			// Upload light direction (world space) and color, and ambient light color:
