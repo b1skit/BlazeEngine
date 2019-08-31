@@ -103,8 +103,9 @@ layout(binding = 10) uniform sampler2D	GBuffer_Depth;
 layout(binding = 11) uniform sampler2D		shadowDepth;		// Currently bound 2D shadow depth map
 layout(binding = 12) uniform samplerCube	CubeMap_0_Right;	// Currently bound cube map depth
 
+uniform vec4		texelSize;				// Depth map/GBuffer texel size: .xyzw = (1/width, 1/height, width, height)
+
 // Shadow map parameters:
-uniform vec4		GBuffer_Depth_TexelSize;	// .xyzw = (1/width, 1/height, width, height)
 uniform mat4		shadowCam_vp;			// Shadow map: [Projection * View]
 
 uniform float		maxShadowBias;			// Offsets for preventing shadow acne

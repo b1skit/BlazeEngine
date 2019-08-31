@@ -64,8 +64,8 @@ float GetShadowFactor(vec3 shadowPos, sampler2D shadowMap, vec3 worldNml, vec3 l
 
 	const float offsetMultiplier = (float(gridSize) / 2.0) - 0.5;
 
-	shadowScreen.x -= offsetMultiplier * GBuffer_Depth_TexelSize.x;
-	shadowScreen.y += offsetMultiplier * GBuffer_Depth_TexelSize.y;
+	shadowScreen.x -= offsetMultiplier * texelSize.x;
+	shadowScreen.y += offsetMultiplier * texelSize.y;
 
 	float depthSum = 0;
 	for (int row = 0; row < gridSize; row++)
@@ -74,11 +74,11 @@ float GetShadowFactor(vec3 shadowPos, sampler2D shadowMap, vec3 worldNml, vec3 l
 		{
 			depthSum += (biasedDepth < texture(shadowMap, shadowScreen.xy).r ? 1.0 : 0.0);
 			
-			shadowScreen.x += GBuffer_Depth_TexelSize.x;
+			shadowScreen.x += texelSize.x;
 		}
 
-		shadowScreen.x -= gridSize * GBuffer_Depth_TexelSize.x;
-		shadowScreen.y -= GBuffer_Depth_TexelSize.y;
+		shadowScreen.x -= gridSize * texelSize.x;
+		shadowScreen.y -= texelSize.y;
 	}
 
 	depthSum /= (gridSize * gridSize);

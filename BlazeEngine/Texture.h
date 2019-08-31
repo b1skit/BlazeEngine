@@ -66,6 +66,7 @@ namespace BlazeEngine
 		// Bind the texture to its sampler for Shader sampling
 		void Bind(GLuint const& shaderReference = 0, int textureUnitOverride = -1); // NOTE: GL_TEXTURE0 + textureUnit is what is bound when calling glActiveTexture()
 
+		vec4 TexelSize();
 
 		// Public static functions:
 		//-------------------------
@@ -99,6 +100,8 @@ namespace BlazeEngine
 
 		vec4*			texels		= nullptr;
 		unsigned int	numTexels	= 0;
+
+		vec4 texelSize				= vec4(-1, -1, -1, -1);
 
 		string texturePath			= "Uninitialized_Texture";
 

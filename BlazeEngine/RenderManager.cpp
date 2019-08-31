@@ -9,9 +9,7 @@
 #include "RenderTexture.h"
 #include "BuildConfiguration.h"
 
-
 #include <string>
-#include <iomanip> //?????????????????????????????????
 
 #include "SDL.h"
 #include "GL/glew.h"
@@ -260,6 +258,9 @@ namespace BlazeEngine
 
 		outputMaterial->AccessTexture(TEXTURE_ALBEDO) = outputTexture;
 
+		// PostFX Manager:
+		postFXManager = new PostFXManager(); // Initialized when RenderManager.Initialize() is called
+
 		screenAlignedQuad = new Mesh
 		(
 			Mesh::CreateQuad
@@ -289,6 +290,12 @@ namespace BlazeEngine
 			screenAlignedQuad->Destroy();
 			delete screenAlignedQuad;
 			screenAlignedQuad = nullptr;
+		}
+
+		if (postFXManager != nullptr)
+		{
+			delete postFXManager;
+			postFXManager = nullptr;
 		}
 	}
 
@@ -363,14 +370,20 @@ namespace BlazeEngine
 				}
 			}
 
-			// Additively blit the emissive GBuffer texture to screen additively:
+			// Additively blit the emissive GBuffer texture to screen:
 			glDisable(GL_DEPTH_TEST);
 			glCullFace(GL_BACK);
+
 			Blit(mainCam->RenderMaterial(), TEXTURE_EMISSIVE, outputMaterial, TEXTURE_ALBEDO);
 
-
-			// Deferred lights cleanup:
 			glDisable(GL_BLEND);
+
+			// Post process finished frame:
+			postFXManager->ApplyPostFX();
+
+
+			// Cleanup:
+			
 			glEnable(GL_DEPTH_TEST);
 			glDepthFunc(GL_LESS);
 			glCullFace(GL_BACK);
@@ -392,7 +405,7 @@ namespace BlazeEngine
 
 		// Bind:
 		Shader* lightShader = shadowCam->RenderMaterial()->GetShader();
-		BindShader(lightShader->ShaderReference());
+		lightShader->Bind(true);
 		
 		// Configure the FrameBuffer:
 		RenderTexture* lightDepthTexture = nullptr;
@@ -446,7 +459,7 @@ namespace BlazeEngine
 		{
 			Mesh* currentMesh = meshes->at(j);
 
-			BindMeshBuffers(currentMesh);
+			currentMesh->Bind(true);
 
 			switch (currentLight->Type())
 			{
@@ -477,11 +490,11 @@ namespace BlazeEngine
 			glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 						
 			// Cleanup current mesh:
-			BindMeshBuffers();
+			currentMesh->Bind(false);
 		}
 
 		// Cleanup:
-		BindShader(0);
+		lightShader->Bind(false);
 	}
 
 
@@ -529,7 +542,7 @@ namespace BlazeEngine
 			vector<Mesh*> const* meshes;
 
 			// Bind:
-			BindShader(shaderReference);
+			currentShader->Bind(true);
 			currentMaterial->BindAllTextures(shaderReference);
 
 			// Upload material properties:
@@ -544,7 +557,7 @@ namespace BlazeEngine
 			{
 				Mesh* currentMesh = meshes->at(j);
 
-				BindMeshBuffers(currentMesh);
+				currentMesh->Bind(true);
 
 				// Assemble model-specific matrices:
 				mat4 model			= currentMesh->GetTransform().Model();
@@ -562,12 +575,12 @@ namespace BlazeEngine
 				glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
 				// Cleanup current mesh: 
-				BindMeshBuffers();
+				currentMesh->Bind(false);
 			}
 
 			// Cleanup:
 			currentMaterial->BindAllTextures();
-			BindShader(0);
+			currentShader->Bind(false);
 
 		} // End Material loop
 
@@ -599,22 +612,21 @@ namespace BlazeEngine
 			GLuint shaderReference		= currentShader->ShaderReference();
 
 			// Bind:
-			BindShader(shaderReference);
+			currentShader->Bind(true);
 			currentMaterial->BindAllTextures(shaderReference);
 
 			// Bind the key light depth buffer and related data:
-			vec4 GBuffer_Depth_TexelSize(0, 0, 0, 0);
+			vec4 texelSize(0, 0, 0, 0);
 			RenderTexture* depthTexture = (RenderTexture*)keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
 			if (depthTexture)
 			{
 				depthTexture->Bind(shaderReference, DEPTH_TEXTURE_0 + DEPTH_TEXTURE_SHADOW);
 
-				GBuffer_Depth_TexelSize = vec4(1.0f / depthTexture->Width(), 1.0f / depthTexture->Height(), depthTexture->Width(), depthTexture->Height());
-				// ^^ TODO: Compute this once and cache it for uploading
+				texelSize = depthTexture->TexelSize();
 			}
 			currentShader->UploadUniform("maxShadowBias",			&keyLight->ActiveShadowMap()->MaxShadowBias(),	UNIFORM_Float);
 			currentShader->UploadUniform("minShadowBias",			&keyLight->ActiveShadowMap()->MinShadowBias(),	UNIFORM_Float);
-			currentShader->UploadUniform("GBuffer_Depth_TexelSize", &GBuffer_Depth_TexelSize.x,						UNIFORM_Vec4fv);
+			currentShader->UploadUniform("texelSize",				&texelSize.x,									UNIFORM_Vec4fv);
 
 			// Get all meshes that use the current material
 			vector<Mesh*> const* meshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
@@ -628,7 +640,7 @@ namespace BlazeEngine
 			for (unsigned int j = 0; j < numMeshes; j++)
 			{
 				Mesh* currentMesh = meshes->at(j);
-				BindMeshBuffers(currentMesh);
+				currentMesh->Bind(true);
 
 				// Assemble model-specific matrices:
 				mat4 model			= currentMesh->GetTransform().Model();
@@ -648,7 +660,7 @@ namespace BlazeEngine
 				glDrawElements(GL_TRIANGLES, currentMesh->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
 				// Cleanup current mesh: 
-				BindMeshBuffers();
+				currentMesh->Bind(false);
 			}
 
 			// Cleanup current material and shader:
@@ -657,7 +669,7 @@ namespace BlazeEngine
 			{
 				depthTexture->Bind(0, DEPTH_TEXTURE_0 + DEPTH_TEXTURE_SHADOW);
 			}
-			BindShader(0);
+			currentShader->Bind(false);
 
 		} // End Material loop
 	}
@@ -671,7 +683,7 @@ namespace BlazeEngine
 		Shader* currentShader	= deferredLight->DeferredMaterial()->GetShader();
 		GLuint shaderReference	= currentShader->ShaderReference();
 
-		BindShader(shaderReference);
+		currentShader->Bind(true);
 		renderCam->RenderMaterial()->BindAllTextures(shaderReference);	// Bind GBuffer textures
 		
 		// Assemble common (model independent) matrices:
@@ -748,16 +760,16 @@ namespace BlazeEngine
 					break;
 				}
 
-				vec4 GBuffer_Depth_TexelSize(0, 0, 0, 0);	// TODO: Compute this once and cache it for uploading each frame
+				vec4 texelSize(0, 0, 0, 0);	// TODO: Compute this once and cache it for uploading each frame
 				if (depthTexture != nullptr)
 				{
-					GBuffer_Depth_TexelSize = vec4(1.0f / depthTexture->Width(), 1.0f / depthTexture->Height(), depthTexture->Width(), depthTexture->Height());
+					texelSize = depthTexture->TexelSize();
 				}
-				currentShader->UploadUniform("GBuffer_Depth_TexelSize", &GBuffer_Depth_TexelSize.x, UNIFORM_Vec4fv);
+				currentShader->UploadUniform("texelSize", &texelSize.x, UNIFORM_Vec4fv);
 			}
 		}
 		
-		BindMeshBuffers(deferredLight->DeferredMesh());
+		deferredLight->DeferredMesh()->Bind(true);
 
 		// Draw!
 		glDrawElements(GL_TRIANGLES, deferredLight->DeferredMesh()->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
@@ -792,8 +804,8 @@ namespace BlazeEngine
 			}
 		}
 		
-		BindShader(0);
-		BindMeshBuffers();
+		currentShader->Bind(false);
+		deferredLight->DeferredMesh()->Bind(false);
 	}
 
 
@@ -802,38 +814,43 @@ namespace BlazeEngine
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		BindShader(outputMaterial->GetShader()->ShaderReference());
+		outputMaterial->GetShader()->Bind(true);
 		outputMaterial->BindAllTextures(outputMaterial->GetShader()->ShaderReference());
-		BindMeshBuffers(screenAlignedQuad);
+		screenAlignedQuad->Bind(true);
 
 		glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
 		outputMaterial->BindAllTextures();
-		BindShader(0);
-		BindMeshBuffers();
+		outputMaterial->GetShader()->Bind(false);
+		screenAlignedQuad->Bind(false);
 	}
 
 
-	void BlazeEngine::RenderManager::Blit(Material* srcMat, int srcTex, Material* dstMat, int dstTex)
+	void BlazeEngine::RenderManager::Blit(Material* srcMat, int srcTex, Material* dstMat, int dstTex, Shader* shaderOverride /*= nullptr*/)
 	{
+		Shader* currentShader = shaderOverride;
+		if (currentShader == nullptr)
+		{
+			currentShader = outputMaterial->GetShader(); // Output material has the blit shader attached to it
+		}
+
 		// Bind the output FBO: (Textures MUST already be attached...)
 		glBindFramebuffer(GL_FRAMEBUFFER, ((RenderTexture*)dstMat->AccessTexture((TEXTURE_TYPE)dstTex))->FBO());
 		glViewport(0, 0, dstMat->AccessTexture((TEXTURE_TYPE)dstTex)->Width(), dstMat->AccessTexture((TEXTURE_TYPE)dstTex)->Height());
 
 		// Bind the blit shader and screen aligned quad:
-		GLuint shaderReference = outputMaterial->GetShader()->ShaderReference();
-		BindShader(shaderReference);
-		BindMeshBuffers(screenAlignedQuad);
+		currentShader->Bind(true);
+		screenAlignedQuad->Bind(true);
 
 		// Bind the source texture into the slot specified in the blit shader:
-		srcMat->AccessTexture((TEXTURE_TYPE)srcTex)->Bind(shaderReference, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO); // Bind to what the blitShader is expecting
+		srcMat->AccessTexture((TEXTURE_TYPE)srcTex)->Bind(currentShader->ShaderReference(), RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO); // Note: Blit shader reads from this texture unit (for now)
 		
 		glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
 		// Cleanup:
 		srcMat->AccessTexture((TEXTURE_TYPE)dstTex)->Bind(0, TEXTURE_ALBEDO);
-		BindShader(0);
-		BindMeshBuffers();
+		currentShader->Bind(false);
+		screenAlignedQuad->Bind(false);
 	}
 
 	
@@ -851,30 +868,7 @@ namespace BlazeEngine
 	}
 
 
-	void BlazeEngine::RenderManager::BindShader(GLuint const& shaderReference)
-	{
-		glUseProgram(shaderReference);
-	}
-
-
-	void BlazeEngine::RenderManager::BindMeshBuffers(Mesh* const mesh /*= nullptr*/) // If mesh == nullptr, binds to element 0
-	{
-		if (mesh)
-		{
-			glBindVertexArray(mesh->VAO());
-			glBindBuffer(GL_ARRAY_BUFFER, mesh->VBO(BUFFER_VERTICES));
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->VBO(BUFFER_INDEXES));
-		}
-		else
-		{
-			glBindVertexArray(0);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-		}
-	}
-
-
-	void BlazeEngine::RenderManager::InitializeShaders()
+	void BlazeEngine::RenderManager::Initialize()
 	{
 		SceneManager* sceneManager = CoreEngine::GetSceneManager();
 		unsigned int numMaterials = sceneManager->NumMaterials();
@@ -939,7 +933,7 @@ namespace BlazeEngine
 		// Configure all of the shaders:
 		for (unsigned int i = 0; i < (int)shaders.size(); i++)
 		{
-			BindShader(shaders.at(i)->ShaderReference());
+			shaders.at(i)->Bind(true);
 
 			// Texture sampler locations. Note: These must align with the locations defined in Material.h
 			for (int currentTexture = 0; currentTexture < TEXTURE_COUNT; currentTexture++)
@@ -998,8 +992,11 @@ namespace BlazeEngine
 			mat4 projection = sceneManager->GetMainCamera()->Projection();
 			shaders.at(i)->UploadUniform("in_projection", &projection[0][0], UNIFORM_Matrix4fv);
 
-			BindShader(0);
+			shaders.at(i)->Bind(false);
 		}
+
+		// Initialize PostFX:
+		postFXManager->Initialize(outputMaterial);
 	}
 
 

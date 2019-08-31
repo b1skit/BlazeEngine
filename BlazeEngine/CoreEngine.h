@@ -79,6 +79,8 @@ namespace BlazeEngine
 			const string deferredPointLightShaderName		= "deferredPointLightShader";
 
 			const string blitShader							= "blitShader";
+			const string blurShader							= "blurShader";
+
 		} shader;
 
 		struct

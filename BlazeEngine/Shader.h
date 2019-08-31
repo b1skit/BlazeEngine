@@ -51,6 +51,7 @@ namespace BlazeEngine
 
 		void UploadUniform(GLchar const* uniformName, GLfloat const* value, UNIFORM_TYPE const& type, int count = 1);
 
+		void Bind(bool doBind);
 
 		// Static functions:
 		//------------------

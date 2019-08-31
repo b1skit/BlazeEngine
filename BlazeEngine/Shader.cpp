@@ -88,6 +88,18 @@ namespace BlazeEngine
 		}
 	}
 
+	void Shader::Bind(bool doBind)
+	{
+		if (doBind)
+		{
+			glUseProgram(this->shaderReference);
+		}
+		else
+		{
+			glUseProgram(0);
+		}
+	}
+
 
 	// Static functions:
 	//*******************

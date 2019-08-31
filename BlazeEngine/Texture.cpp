@@ -424,6 +424,18 @@ namespace BlazeEngine
 			glBindSampler(targetTextureUnit, this->samplerID); // Assign our named sampler to the texture
 		}
 	}
+
+
+	vec4 Texture::TexelSize()
+	{
+		// Check: Have the dimensions changed vs what we have cached?
+		if (this->texelSize.z != this->width || this->texelSize.w != this->height)
+		{
+			this->texelSize = vec4(1.0f / this->width, 1.0f / this->height, this->width, this->height);
+		}
+
+		return this->texelSize;
+	}
 }
 
 

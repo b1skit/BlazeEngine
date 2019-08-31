@@ -223,6 +223,8 @@ namespace BlazeEngine
 		inline GLuint const&	VAO() { return meshVAO; }
 		inline GLuint const&	VBO(VERTEX_BUFFER_OBJECT index)	{ return meshVBOs[index]; }
 		
+		void Bind(bool doBind);
+
 		// Deallocate and unbind this mesh object
 		void Destroy();
 

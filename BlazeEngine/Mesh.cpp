@@ -87,6 +87,23 @@ namespace BlazeEngine
 	}
 
 
+	void Mesh::Bind(bool doBind)
+	{
+		if (doBind)
+		{
+			glBindVertexArray(this->VAO());
+			glBindBuffer(GL_ARRAY_BUFFER, this->VBO(BUFFER_VERTICES));
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->VBO(BUFFER_INDEXES));
+		}
+		else
+		{
+			glBindVertexArray(0);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		}
+	}
+
+
 	void Mesh::Destroy()
 	{
 		#if defined(DEBUG_LOG_OUTPUT)

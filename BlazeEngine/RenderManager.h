@@ -4,6 +4,7 @@
 
 #include "EngineComponent.h"
 #include "EventManager.h"
+#include "PostFXManager.h"
 
 #include <string>
 
@@ -58,8 +59,8 @@ namespace BlazeEngine
 		// Member functions:
 		//------------------
 
-		// Upload static properties to shaders
-		void InitializeShaders();
+		// Perform post scene load initialization (eg. Upload static properties to shaders, initialize PostFX):
+		void Initialize();
 
 
 	private:
@@ -74,7 +75,7 @@ namespace BlazeEngine
 
 		void BlitToScreen();
 
-		void Blit(Material* srcMat, int srcTex, Material* dstMat, int dstTex);
+		void Blit(Material* srcMat, int srcTex, Material* dstMat, int dstTex, Shader* shaderOverride = nullptr);
 
 
 		// Configuration:
@@ -90,8 +91,12 @@ namespace BlazeEngine
 		SDL_Window* glWindow		= 0;
 		SDL_GLContext glContext		= 0;
 
-		Material* outputMaterial	= nullptr;
-		Mesh* screenAlignedQuad		= nullptr;
+		Material* outputMaterial	= nullptr;	// Deallocated in Shutdown()
+		Mesh* screenAlignedQuad		= nullptr;	// Deallocated in Shutdown()
+
+		// PostFX:
+		PostFXManager* postFXManager = nullptr;	// Deallocated in Shutdown()
+
 		
 		// Private member functions:
 		//--------------------------
@@ -99,12 +104,6 @@ namespace BlazeEngine
 		// Clear the window and fill it with a color
 		void ClearWindow(vec4 clearColor);
 
-		// Sets the active shader
-		void BindShader(GLuint const& shaderReference);
-
-
-		// Bind the mesh VAO, position, and index buffers. If mesh == nullptr, binds all elements to index 0 (ie. for cleanup)
-		void BindMeshBuffers(Mesh* const mesh = nullptr);
 	};
 }
 

@@ -81,6 +81,7 @@ namespace BlazeEngine
 	{
 	public:
 		Material(string materialName, string shaderName, TEXTURE_TYPE textureCount = TEXTURE_COUNT, bool isRenderMaterial = false);
+		Material(string materialName, Shader* shader, TEXTURE_TYPE textureCount = TEXTURE_COUNT, bool isRenderMaterial = false);
 
 		void Destroy()
 		{
@@ -134,6 +135,12 @@ namespace BlazeEngine
 		vector<string> shaderKeywords;
 
 		bool isRenderMaterial	= false;
+
+		// Private member functions:
+		//--------------------------
+
+		// Helper function: Initialize arrays
+		void Init();
 	};
 }
 

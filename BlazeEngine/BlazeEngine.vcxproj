@@ -141,6 +141,7 @@
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="PlayerObject.cpp" />
+    <ClCompile Include="PostFXManager.cpp" />
     <ClCompile Include="Renderable.cpp" />
     <ClCompile Include="RenderManager.cpp" />
     <ClCompile Include="RenderTexture.cpp" />
@@ -166,6 +167,7 @@
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="PlayerObject.h" />
+    <ClInclude Include="PostFXManager.h" />
     <ClInclude Include="Renderable.h" />
     <ClInclude Include="RenderManager.h" />
     <ClInclude Include="RenderTexture.h" />
@@ -186,6 +188,8 @@
     <None Include="Shaders\BlazeLighting.glsl" />
     <None Include="Shaders\blitShader.frag" />
     <None Include="Shaders\blitShader.vert" />
+    <None Include="Shaders\blurShader.frag" />
+    <None Include="Shaders\blurShader.vert" />
     <None Include="Shaders\cubeDepthShader.frag" />
     <None Include="Shaders\cubeDepthShader.geom" />
     <None Include="Shaders\cubeDepthShader.vert" />

@@ -74,16 +74,21 @@ namespace BlazeEngine
 
 		this->isRenderMaterial	= isRenderMaterial;
 
-		textures = new Texture*[this->numTextures];
-		for (int i = 0; i < this->numTextures; i++)
-		{
-			textures[i] = nullptr;
-		}
+		Init();	// Initialize textures and properties arrays
+	}
 
-		for (int i = 0; i < MATERIAL_PROPERTY_COUNT; i++)
-		{
-			properties[i] = vec4(0.0f, 0.0f, 0.0f, 0.0f);
-		}
+
+	Material::Material(string materialName, Shader* shader, TEXTURE_TYPE textureCount /*= TEXTURE_COUNT*/, bool isRenderMaterial /*= false*/)
+	{
+		this->name = materialName;
+
+		this->shader = shader;
+
+		this->numTextures = (int)textureCount;
+
+		this->isRenderMaterial = isRenderMaterial;
+
+		Init();	// Initialize textures and properties arrays
 	}
 
 
@@ -107,6 +112,27 @@ namespace BlazeEngine
 			{
 				this->textures[i]->Bind(shaderReference);
 			}
+		}
+	}
+
+
+	void Material::Init()
+	{
+		if (textures != nullptr)
+		{
+			delete textures;
+			textures = nullptr;
+		}
+
+		textures = new Texture * [this->numTextures];
+		for (int i = 0; i < this->numTextures; i++)
+		{
+			textures[i] = nullptr;
+		}
+
+		for (int i = 0; i < MATERIAL_PROPERTY_COUNT; i++)
+		{
+			properties[i] = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		}
 	}
 }
