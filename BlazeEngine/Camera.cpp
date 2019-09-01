@@ -238,6 +238,7 @@ namespace BlazeEngine
 		gBuffer_albedo->AttachAdditionalRenderTexturesToFramebuffer(&depth, 1, true);
 	}
 
+
 	void Camera::DebugPrint()
 	{
 		#if defined(DEBUG_TRANSFORMS)

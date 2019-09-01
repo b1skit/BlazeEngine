@@ -35,6 +35,13 @@ namespace BlazeEngine
 			blitShader = nullptr;
 		}
 
+		if (toneMapShader != nullptr)
+		{
+			toneMapShader->Destroy();
+			delete toneMapShader;
+			toneMapShader = nullptr;
+		}
+
 		if (blurShaders != nullptr)
 		{
 			for (int i = 0; i < BLUR_SHADER_COUNT; i++)
@@ -62,10 +69,12 @@ namespace BlazeEngine
 		pingPongMaterial0 = new Material("PostFX_PingPongMaterial_0", nullptr, (TEXTURE_TYPE)1, true);
 		pingPongMaterial1 = new Material("PostFX_PingPongMaterial_1", nullptr, (TEXTURE_TYPE)1, true);
 
+		#define RESOLUTION_SCALE 1
+
 		RenderTexture* bloomOutputTexture0 = new RenderTexture
 		(
-			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes,
-			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
+			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / RESOLUTION_SCALE,
+			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes / RESOLUTION_SCALE,
 			"PostFX_PingPongTexture_0",
 			false,
 			RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO
@@ -95,17 +104,16 @@ namespace BlazeEngine
 
 		// Configure shaders:
 
-		vector<string> blurLuminanceThresholdKeywords(1, "BLUR_SHADER_LUMINANCE_THRESHOLD");
-		blurShaders[BLUR_SHADER_LUMINANCE_THRESHOLD] = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.blurShader, &blurLuminanceThresholdKeywords);
+		vector<string> luminanceThresholdKeywords(1,	"BLUR_SHADER_LUMINANCE_THRESHOLD");
+		vector<string> horizontalBlurKeywords(1,		"BLUR_SHADER_HORIZONTAL");
+		vector<string> verticalBlurKeywords(1,			"BLUR_SHADER_VERTICAL");
 		
-		vector<string> horizontalBlurKeywords(1, "BLUR_SHADER_HORIZONTAL");
-		blurShaders[BLUR_SHADER_HORIZONTAL] = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.blurShader, &horizontalBlurKeywords);
+		blurShaders[BLUR_SHADER_LUMINANCE_THRESHOLD]	= Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.blurShader, &luminanceThresholdKeywords);
+		blurShaders[BLUR_SHADER_HORIZONTAL]				= Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.blurShader, &horizontalBlurKeywords);		
+		blurShaders[BLUR_SHADER_VERTICAL]				= Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.blurShader, &verticalBlurKeywords);
 
-		vector<string> verticalBlurKeywords(1, "BLUR_SHADER_VERTICAL");
-		blurShaders[BLUR_SHADER_VERTICAL] = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.blurShader, &verticalBlurKeywords);
-
-
-		blitShader = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.blitShader);
+		blitShader										= Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.blitShader);
+		toneMapShader									= Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.toneMapShader);
 
 
 		// Upload Shader parameters:
@@ -114,6 +122,8 @@ namespace BlazeEngine
 		{
 			blurShaders[i]->UploadUniform("texelSize", &texelSize.x, UNIFORM_Vec4fv);
 		}
+
+		toneMapShader->UploadUniform("exposure", &CoreEngine::GetSceneManager()->GetMainCamera()->Exposure(), UNIFORM_Float);
 
 
 		screenAlignedQuad = new Mesh
@@ -129,7 +139,7 @@ namespace BlazeEngine
 	}
 
 
-	void PostFXManager::ApplyPostFX()
+	void PostFXManager::ApplyPostFX(Material*& finalFrameMaterial, Shader*& finalFrameShader)
 	{
 		screenAlignedQuad->Bind(true);
 		glViewport(0, 0, pingPongMaterial0->AccessTexture(RENDER_TEXTURE_ALBEDO)->Width(), pingPongMaterial0->AccessTexture(RENDER_TEXTURE_ALBEDO)->Height());
@@ -152,7 +162,7 @@ namespace BlazeEngine
 		blurShaders[BLUR_SHADER_LUMINANCE_THRESHOLD]->Bind(false);
 		outputMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO)->Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
 
-		const int NUM_BLUR_PASSES = 2; // How many pairs of horizontal + vertical blur passes to perform
+		const int NUM_BLUR_PASSES = 12; // How many pairs of horizontal + vertical blur passes to perform
 
 		for (int i = 0; i < NUM_BLUR_PASSES; i++)
 		{
@@ -166,8 +176,8 @@ namespace BlazeEngine
 
 			glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0));
 			
-			blurShaders[BLUR_SHADER_HORIZONTAL]->Bind(false);
 			pingPongMaterial0->AccessTexture(RENDER_TEXTURE_ALBEDO)->Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
+			blurShaders[BLUR_SHADER_HORIZONTAL]->Bind(false);
 
 
 			// Vertical pass: pingPong1 -> pingPong0
@@ -179,13 +189,15 @@ namespace BlazeEngine
 
 			glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0));
 
-			blurShaders[BLUR_SHADER_VERTICAL]->Bind(false);
+			
 			pingPongMaterial1->AccessTexture(RENDER_TEXTURE_ALBEDO)->Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
+			blurShaders[BLUR_SHADER_VERTICAL]->Bind(false);
 		}
 
 
-		// Add the blurred result to the original image: pingPong0 -> outputMaterial
+		// Add blurred result to the original image: pingPong0 -> output material
 		glBindFramebuffer(GL_FRAMEBUFFER, (((RenderTexture*)outputMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO))->FBO()));
+		glViewport(0, 0, outputMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO)->Width(), outputMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO)->Height());
 
 		blitShader->Bind(true);
 
@@ -195,16 +207,16 @@ namespace BlazeEngine
 		glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 		glDisable(GL_BLEND);
 
+		// Set the final frame material and shader to apply tone mapping:
+		finalFrameMaterial	= outputMaterial;
+		finalFrameShader	= toneMapShader;
+
 		// Cleanup:
 		blitShader->Bind(false);
 		pingPongMaterial0->AccessTexture(RENDER_TEXTURE_ALBEDO)->Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
 		screenAlignedQuad->Bind(false);
-	}
 
-
-	Material* PostFXManager::BloomMaterial()
-	{
-		return pingPongMaterial0;
+		
 	}
 }
 

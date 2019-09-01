@@ -74,6 +74,7 @@ namespace BlazeEngine
 		void RenderDeferredLight(Light* deferredLight); // Note: FBO, viewport
 
 		void BlitToScreen();
+		void BlitToScreen(Material* srcMaterial, Shader* blitShader);
 
 		void Blit(Material* srcMat, int srcTex, Material* dstMat, int dstTex, Shader* shaderOverride = nullptr);
 

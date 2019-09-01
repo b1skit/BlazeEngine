@@ -30,10 +30,11 @@ namespace BlazeEngine
 		// Initialize PostFX. Must be called after the scene has been loaded and the RenderManager has finished initializing OpenGL
 		void Initialize(Material* outputMaterial);
 
-		void ApplyPostFX();
+		// Apply post processing. Modifies finalFrameMaterial and finalFrameShader to contain the material & shader required to blit the final image to screen
+		void ApplyPostFX(Material*& finalFrameMaterial, Shader*& finalFrameShader);
 
 		// Getters/Setters:
-		Material* BloomMaterial();
+
 
 
 	private:
@@ -44,7 +45,7 @@ namespace BlazeEngine
 		Material* pingPongMaterial1		= nullptr;	// Deallocated in destructor
 
 		Shader* blitShader				= nullptr;	// Deallocated in destructor
-		
+		Shader* toneMapShader			= nullptr;	// Deallocated in destructor
 		Shader* blurShaders[BLUR_SHADER_COUNT];		// Deallocated in destructor
 		
 		

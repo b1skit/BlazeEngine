@@ -39,6 +39,8 @@ namespace BlazeEngine
 			float defaultFieldOfView	= 60.0f;
 			float defaultNear			= 1.0f;
 			float defaultFar			= 100.0f;
+
+			float defaultExposure		= 1.0f;
 		} mainCam;
 
 		struct
@@ -80,7 +82,9 @@ namespace BlazeEngine
 
 			const string blitShader							= "blitShader";
 			const string blurShader							= "blurShader";
+			const string toneMapShader						= "toneMapShader";
 
+			const float	defaultSceneEmissiveIntensity		= 2.0f;
 		} shader;
 
 		struct

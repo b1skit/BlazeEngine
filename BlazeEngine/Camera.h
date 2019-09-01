@@ -29,6 +29,9 @@ namespace BlazeEngine
 		float orthoRight		= 5;
 		float orthoBottom		= -5;
 		float orthoTop			= 5;
+
+		// Render properties:
+		float exposure			= 1.0f;
 	};
 
 
@@ -64,6 +67,8 @@ namespace BlazeEngine
 		mat4 const*			CubeViewProjection();
 
 		Material*&			RenderMaterial()		{ return renderMaterial; }
+
+		float& Exposure()							{ return cameraConfig.exposure; }
 
 
 		// Configure this camera for deferred rendering

@@ -11,12 +11,19 @@
 // in vec2 gl_PointCoord;
 
 #define RGB_TO_LUMINANCE vec3(0.2126, 0.7152, 0.0722)
-#define NUM_TAPS 5
-
 #if !defined(BLUR_SHADER_LUMINANCE_THRESHOLD)
 	
-	// 5-tap Gaussian filter weights:
-	uniform float weights[NUM_TAPS] = float[] (0.06136, 0.24477, 0.38774, 0.24477, 0.06136);
+	// 5-tap Gaussian filter:
+//	#define NUM_TAPS 5
+//	#define TEXEL_OFFSET 2
+//	uniform float weights[NUM_TAPS] = float[] (0.06136, 0.24477, 0.38774, 0.24477, 0.06136);		// 5 tap filter
+//	uniform float weights[NUM_TAPS] = float[] (0.060626, 0.241843, 0.383103, 0.241843, 0.060626);	// Note: This is a 7 tap filter, but we ignore the outer 2 samples as they're only 0.00598
+
+	// 9-tap Gaussian filter:
+	#define NUM_TAPS 7
+	#define TEXEL_OFFSET 3
+	uniform float weights[NUM_TAPS] = float[] (0.005977, 0.060598, 0.241732, 0.382928, 0.241732, 0.060598, 0.005977);	// Note: This is a 9 tap filter, but we ignore the outer 2 samples as they're only 0.000229
+
 #endif
 
 // Pass 0: Blur luminance threshold:
@@ -39,7 +46,7 @@
 	{
 		vec3 total = vec3(0,0,0);
 		vec2 uvs = data.uv0.xy;
-		uvs.x -= texelSize.x * 2.0;	// Offset to the left by 2 pixels
+		uvs.x -= texelSize.x * TEXEL_OFFSET;	// Offset to the left
 
 		for (int i = 0; i < NUM_TAPS; i++)
 		{
@@ -59,7 +66,7 @@
 	{	
 		vec3 total = vec3(0,0,0);
 		vec2 uvs = data.uv0.xy;
-		uvs.y += texelSize.y * 2.0;	// Offset up by 2 pixels
+		uvs.y += texelSize.y * TEXEL_OFFSET;	// Offset up by 2 pixels
 
 		for (int i = 0; i < NUM_TAPS; i++)
 		{

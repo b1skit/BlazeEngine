@@ -212,6 +212,8 @@
     <None Include="Shaders\errorShader.vert" />
     <None Include="Shaders\phongShader.frag" />
     <None Include="Shaders\phongShader.vert" />
+    <None Include="Shaders\toneMapShader.frag" />
+    <None Include="Shaders\toneMapShader.vert" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\BlazeGlobals.glsl">

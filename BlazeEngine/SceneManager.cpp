@@ -807,6 +807,9 @@ namespace BlazeEngine
 				if (diffuseTexture)
 				{
 					newMaterial->AccessTexture(TEXTURE_ALBEDO) = diffuseTexture;
+
+					// Set the diffuse texture's internal format to be encoded in sRGB color space, so OpenGL will apply gamma correction: (ie. color = pow(color, 2.2) )
+					diffuseTexture->InternalFormat()	= GL_SRGB8_ALPHA8;
 				}
 				else
 				{
@@ -1837,6 +1840,7 @@ namespace BlazeEngine
 		Camera* newCamera = nullptr;
 		int numCameras = 0;
 
+
 		if (scene == nullptr) // Signal to create a default camera at the origin
 		{
 			LOG("Creating a default camera");
@@ -1845,6 +1849,8 @@ namespace BlazeEngine
 			newCamConfig.fieldOfView	= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView;
 			newCamConfig.near			= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultNear;
 			newCamConfig.far			= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFar;
+
+			newCamConfig.exposure		= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultExposure;
 
 			cameraName					= "defaultCamera";
 		}
@@ -1863,9 +1869,23 @@ namespace BlazeEngine
 			newCamConfig.far				= scene->mCameras[0]->mClipPlaneFar;
 			newCamConfig.isOrthographic		= false;	// This is the default, but set it here anyway for clarity
 
+			newCamConfig.exposure			= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultExposure;
+
 			cameraName						= string(scene->mCameras[0]->mName.C_Str());
 
 			numCameras						= scene->mNumCameras;
+
+			// Extract metadata:
+			aiNode* camNode = scene->mRootNode->FindNode(scene->mCameras[0]->mName);
+			if (camNode != nullptr)
+			{
+				if (camNode->mMetaData->Get("exposure", newCamConfig.exposure))
+				{
+					#if defined(DEBUG_SCENEMANAGER_CAMERA_LOGGING)
+						LOG("Importing camera exposure " + to_string(newCamConfig.exposure));
+					#endif
+				}
+			}
 		}
 
 		if (numCameras > 1)

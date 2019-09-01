@@ -97,8 +97,6 @@ float GetShadowFactor(vec3 lightToFrag, samplerCube shadowMap, vec3 worldNml, ve
 
 	// Compute a slope-scaled bias:
 	float biasedDepth = fragDepth - GetSlopeScaleBias(worldNml, lightDir);
-	
-//	float biasedDepth = fragDepth;
 
 	// TODO: PCF cube map: (jitter the ray)
 	// https://www.gamedev.net/forums/topic/674852-pcf-in-cubemap/

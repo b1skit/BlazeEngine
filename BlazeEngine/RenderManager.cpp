@@ -379,18 +379,19 @@ namespace BlazeEngine
 			glDisable(GL_BLEND);
 
 			// Post process finished frame:
-			postFXManager->ApplyPostFX();
+			Material* finalFrameMaterial	= outputMaterial;	// Init as something valid
+			Shader* finalFrameShader		= outputMaterial->GetShader();
+			postFXManager->ApplyPostFX(finalFrameMaterial, finalFrameShader);
 
 
 			// Cleanup:
-			
 			glEnable(GL_DEPTH_TEST);
 			glDepthFunc(GL_LESS);
 			glCullFace(GL_BACK);
 
 
 			// Blit results to screen:
-			BlitToScreen();
+			BlitToScreen(finalFrameMaterial, finalFrameShader);
 		}
 		
 
@@ -820,8 +821,30 @@ namespace BlazeEngine
 
 		glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
+		// Cleanup:
 		outputMaterial->BindAllTextures();
 		outputMaterial->GetShader()->Bind(false);
+		screenAlignedQuad->Bind(false);
+	}
+
+
+	void BlazeEngine::RenderManager::BlitToScreen(Material* srcMaterial, Shader* blitShader)
+	{
+		glViewport(0, 0, CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes, CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes);
+			
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+		blitShader->Bind(true);
+		srcMaterial->BindAllTextures(blitShader->ShaderReference());
+		screenAlignedQuad->Bind(true);
+
+		glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
+
+		// Cleanup:
+		srcMaterial->BindAllTextures();
+		blitShader->Bind(false);
 		screenAlignedQuad->Bind(false);
 	}
 
@@ -987,6 +1010,8 @@ namespace BlazeEngine
 
 			// Other params:
 			shaders.at(i)->UploadUniform("screenParams", &(screenParams.x), UNIFORM_Vec4fv);
+
+			shaders.at(i)->UploadUniform("emissiveIntensity", &CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultSceneEmissiveIntensity, UNIFORM_Float);
 
 			// Upload matrices:
 			mat4 projection = sceneManager->GetMainCamera()->Projection();

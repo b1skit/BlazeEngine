@@ -20,6 +20,8 @@ layout (location = 4) out vec4 gBuffer_out_position;
 layout (location = 5) out vec4 gBuffer_out_matProp0;
 layout (location = 6) out vec4 gBuffer_out_depth;
 
+uniform float emissiveIntensity = 2.0;	// Uploaded during RenderManager.Initialize()
+
 
 void main()
 {
@@ -33,10 +35,10 @@ void main()
 	gBuffer_out_RMAO		= texture(RMAO, data.uv0.xy);
 
 	// Emissive:
-	gBuffer_out_emissive	= texture(emissive, data.uv0.xy);
+	gBuffer_out_emissive	= texture(emissive, data.uv0.xy) * emissiveIntensity;
 
 	// Position:
-	gBuffer_out_position	= vec4(data.worldPos.xyz, 1); // Homogenize ????
+	gBuffer_out_position	= vec4(data.worldPos.xyz, 1);
 
 	// Material properties:
 	gBuffer_out_matProp0	= matProperty0;

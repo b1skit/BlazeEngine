@@ -255,22 +255,25 @@ namespace BlazeEngine
 			{
 				for (int col = 0; col < width; col++)
 				{
-					vec4 currentPixel(0, 0, 0, 1);
+					vec4 currentPixel(0.0f, 0.0f, 0.0f, 1.0f);
+					
 					currentPixel.r = (float)((float)((unsigned int)*currentElement) / 255.0f);
 					currentElement++;
-					currentPixel.g = (float)((float)((unsigned int)*currentElement) / 255.0f);
-					currentElement++;
-					currentPixel.b = (float)((float)((unsigned int)*currentElement) / 255.0f);
-					currentElement++;
-					if (numChannels == 4)
+
+					if (numChannels > 1)
 					{
-						currentPixel.a = (float)((float)((unsigned int)*currentElement) / 255.0f);
+						currentPixel.g = (float)((float)((unsigned int)* currentElement) / 255.0f);
 						currentElement++;
+						currentPixel.b = (float)((float)((unsigned int)* currentElement) / 255.0f);
+						currentElement++;
+						
+						if (numChannels == 4)
+						{
+							currentPixel.a = (float)((float)((unsigned int)* currentElement) / 255.0f);
+							currentElement++;
+						}
 					}
-					else
-					{
-						currentPixel.a = 1.0f;
-					}
+					
 		
 					texture->Texel(col, row) = currentPixel;
 				}
