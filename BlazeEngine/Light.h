@@ -5,7 +5,6 @@
 
 #include "SceneObject.h"
 #include "ShadowMap.h"
-//#include "Mesh.h"
 
 #include "glm.hpp"
 
@@ -50,7 +49,7 @@ namespace BlazeEngine
 
 		// Getters/Setters:
 		inline vec3 const&			Color() const							{ return color; }
-		inline void					SetColor(vec4 color)					{ this->color = color; }
+		inline void					SetColor(vec3 color)					{ this->color = color; }
 
 		inline LIGHT_TYPE const&	Type() const							{ return type; }
 

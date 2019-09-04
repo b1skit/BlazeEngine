@@ -63,7 +63,7 @@ namespace BlazeEngine
 
 		inline mat4 const&	Projection() const		{ return projection; }
 		
-		inline mat4 const&	ViewProjection()		{ return viewProjection = projection * View(); } // TODO: ONLY COMPUTE THIS MATRIX IF SOMETHING HAS CHANGED!!!
+		inline mat4 const&	ViewProjection()		{ return viewProjection = projection * View(); } // TODO: Only compute this if something has changed
 		mat4 const*			CubeViewProjection();
 
 		Material*&			RenderMaterial()		{ return renderMaterial; }

@@ -23,7 +23,10 @@ namespace BlazeEngine
 
 		EngineConfig config = EngineConfig();
 
-		ProcessCommandLineArgs(argc, argv);
+		if (!ProcessCommandLineArgs(argc, argv))
+		{
+			exit(-1);
+		}
 
 		//this->configPath = configPath;
 		//config.LoadConfig(this->configPath);
@@ -179,8 +182,14 @@ namespace BlazeEngine
 		LOG_WARNING("DEBUG: EngineConfig.SaveConfig() is not implemented. No data is being saved!\n");
 	}
 
-	void CoreEngine::ProcessCommandLineArgs(int argc, char** argv)
+
+	bool CoreEngine::ProcessCommandLineArgs(int argc, char** argv)
 	{
+		if (argc <= 1)
+		{
+			LOG_ERROR("No command line arguments received! Use \"-scene <scene name>\" to launch a scene from the .\\Scenes directory.\n\n\t\tEg. \tBlazeEngine.exe -scene Sponza\n\nNote: The scene directory name and scene .FBX file must be the same");
+			return false;
+		}
 		LOG("Processing " + to_string(argc - 1) + " command line arguments:");
 		for (int i = 1; i < argc; i++) // Start at index 1 to skip the executable path
 		{			
@@ -209,5 +218,6 @@ namespace BlazeEngine
 			}
 
 		}
+		return true;
 	}
 }

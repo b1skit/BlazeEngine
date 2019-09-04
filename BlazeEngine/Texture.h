@@ -63,6 +63,9 @@ namespace BlazeEngine
 		// Initialization:
 		bool Buffer();	// Upload a texture to the GPU. Returns true if successful, false otherwise
 
+		// Configure GPU frambuffer object for cube maps
+		bool BufferCubeMap(Texture** cubeFaceRTs); // Note: There must be exactly 6 cubeFaceRTs
+
 		// Bind the texture to its sampler for Shader sampling
 		void Bind(GLuint const& shaderReference = 0, int textureUnitOverride = -1); // NOTE: GL_TEXTURE0 + textureUnit is what is bound when calling glActiveTexture()
 
@@ -72,7 +75,7 @@ namespace BlazeEngine
 		//-------------------------
 		
 		// Load a texture object from a (relative) path. Note: Returns nullptr if OpenGL binding fails
-		static Texture* LoadTextureFileFromPath(string texturePath, bool doBuffer = false);
+		static Texture* LoadTextureFileFromPath(string texturePath, bool doBuffer = false, bool returnErrorTexIfNotFound = true, bool flipY = true);
 		
 
 

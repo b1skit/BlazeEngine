@@ -80,6 +80,8 @@ namespace BlazeEngine
 			const string deferredKeylightShaderName			= "deferredKeyLightShader";
 			const string deferredPointLightShaderName		= "deferredPointLightShader";
 
+			const string skyboxShaderName					= "skyboxShader";
+
 			const string blitShader							= "blitShader";
 			const string blurShader							= "blurShader";
 			const string toneMapShader						= "toneMapShader";
@@ -96,9 +98,9 @@ namespace BlazeEngine
 		// Scene config:
 		struct
 		{
-			const string sceneRoot			= ".\\Scenes\\";	// Root path: All assets stored here
+			const string sceneRoot		= ".\\Scenes\\";	// Root path: All assets stored here
 			
-			string currentScene = "";			// The currently loaded scene
+			string currentScene			= "";			// The currently loaded scene
 		} scene;
 		
 		// TODO: Add button config for inputmanager
@@ -171,6 +173,6 @@ namespace BlazeEngine
 		string configPath	= ".\\config.cfg";
 		bool configDirty	= false; // Marks whether we need to save the config file or not
 
-		void ProcessCommandLineArgs(int argc, char** argv);
+		bool ProcessCommandLineArgs(int argc, char** argv);
 	};
 }

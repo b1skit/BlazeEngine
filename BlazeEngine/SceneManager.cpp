@@ -77,6 +77,12 @@ namespace BlazeEngine
 		deferredLights.clear();
 
 		ClearCameras();
+
+		if (skybox != nullptr)
+		{
+			delete skybox;
+			skybox = nullptr;
+		}
 	}
 
 
@@ -249,7 +255,7 @@ namespace BlazeEngine
 
 	SceneManager::SceneManager() : EngineComponent("SceneManager")
 	{
-		stbi_set_flip_vertically_on_load(true);	// Set stb_image to flip the y-axis on loading to match OpenGL's style (So pixel (0,0) is in the bottom-left of the image)
+		
 	}
 
 
@@ -418,6 +424,10 @@ namespace BlazeEngine
 		{
 			LOG_ERROR("Scene has no meshes");
 		}
+
+		// Setup skybox:
+		//--------------
+		ImportSky(sceneName);
 
 		// Assemble material mesh lists:
 		// -----------------------------
@@ -688,13 +698,15 @@ namespace BlazeEngine
 
 	void SceneManager::AssembleMaterialMeshLists()
 	{
+		const unsigned int ESTIMATED_MESHES_PER_MATERIAL = 25;	// TODO: Tune this value based on the actual number of meshes loaded?
+
 		// Pre-allocate our vector of vectors:
 		materialMeshLists.clear();
 		materialMeshLists.reserve(currentMaterialCount);
 		for (unsigned int i = 0; i < currentMaterialCount; i++)
 		{
 			materialMeshLists.emplace_back(vector<Mesh*>());
-			materialMeshLists.at(i).reserve(25);			// TODO: Tune this value based on the actual number of meshes loaded?
+			materialMeshLists.at(i).reserve(ESTIMATED_MESHES_PER_MATERIAL);
 		}
 
 		unsigned int numMeshes = 0;
@@ -716,7 +728,7 @@ namespace BlazeEngine
 			}
 		}
 
-		LOG("Assembled material mesh list of " + to_string(numMeshes) + " meshes and " + to_string(materialMeshLists.size()) + " materials");
+		LOG("\nAssembled material mesh list of " + to_string(numMeshes) + " meshes and " + to_string(materialMeshLists.size()) + " materials");
 	}
 
 
@@ -784,7 +796,7 @@ namespace BlazeEngine
 				}
 
 				// Create a material using the error shader, for now:
-				Material* newMaterial = new Material(matName, CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName);
+				Material* newMaterial = new Material(matName, nullptr);
 				
 				// Extract textures, and add them to the material:
 
@@ -809,7 +821,10 @@ namespace BlazeEngine
 					newMaterial->AccessTexture(TEXTURE_ALBEDO) = diffuseTexture;
 
 					// Set the diffuse texture's internal format to be encoded in sRGB color space, so OpenGL will apply gamma correction: (ie. color = pow(color, 2.2) )
-					diffuseTexture->InternalFormat()	= GL_SRGB8_ALPHA8;
+					if (CoreEngine::GetCoreEngine()->GetConfig()->renderer.useForwardRendering == false) // We don't do this in forward rendering, since we don't currently support tone mapping
+					{
+						diffuseTexture->InternalFormat() = GL_SRGB8_ALPHA8;
+					}
 				}
 				else
 				{
@@ -879,6 +894,9 @@ namespace BlazeEngine
 				if (shaderNameIndex == string::npos)
 				{
 					LOG_ERROR("Could not find a shader name prefixed with an underscore in the material name. Destroying loaded textures and assigning error shader - GBuffer data will be garbage!!!");
+
+					Shader* newShader = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName);
+					newMaterial->GetShader() = newShader;
 				}
 				else
 				{
@@ -945,6 +963,126 @@ namespace BlazeEngine
 		}
 
 		LOG("Loaded a total of " + to_string(currentTextureCount) + " textures (including error textures)");
+	}
+
+	void BlazeEngine::SceneManager::ImportSky(string sceneName)
+	{
+		// TODO: MOVE THIS INTO THE CONSTRUCTOR OF THE SKYBOX OBJECT?!!?!?!?!?!?!?!?
+
+		LOG("\nLoading skybox cubemap:");
+
+		// Create a cube map material
+		Material* skyMaterial = new Material("SkyboxMaterial", nullptr, CUBE_MAP_COUNT, false);
+
+		// Create/import cube map face textures:
+		string skyboxTextureNames[CUBE_MAP_COUNT] =
+		{
+			"posx",
+			"negx",
+			"posy",
+			"negy",
+			"posz",
+			"negz",
+		};
+
+		const int numFileExtensions = 4;
+		string fileExtensions[numFileExtensions] =	// Add any desired skybox texture filetype extensions here
+		{
+			".jpg",
+			".jpeg",
+			".png",
+			".tga",
+		};
+
+		string skyboxTextureRoot = CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + sceneName + "\\Skybox\\";
+
+		// Track the textures as we load them:
+		Texture* cubeMapTextures[CUBE_MAP_COUNT];
+		for (int i = 0; i < CUBE_MAP_COUNT; i++)
+		{
+			cubeMapTextures[i] = nullptr;
+		}
+
+		for (int i = 0; i < CUBE_MAP_COUNT; i++)
+		{
+			string currentSkyCubeFaceName = skyboxTextureRoot + skyboxTextureNames[i];
+
+			bool foundCurrentFace = false;
+			for (int j = 0; j < numFileExtensions; j++)
+			{
+				string finalName = currentSkyCubeFaceName + fileExtensions[j];
+				
+				Texture* currentFaceTexture = Texture::LoadTextureFileFromPath(finalName, false, false, false);
+				if (currentFaceTexture != nullptr)
+				{
+					skyMaterial->AccessTexture((TEXTURE_TYPE)i) = currentFaceTexture;
+					cubeMapTextures[i]							= currentFaceTexture;	// Track the face
+
+					foundCurrentFace = true;
+
+					// Configure the texture:
+					currentFaceTexture->TextureTarget()		= GL_TEXTURE_CUBE_MAP;
+
+					currentFaceTexture->TextureWrap_S()		= GL_CLAMP_TO_EDGE;
+					currentFaceTexture->TextureWrap_T()		= GL_CLAMP_TO_EDGE;
+					currentFaceTexture->TextureWrap_R()		= GL_CLAMP_TO_EDGE;
+
+					currentFaceTexture->TextureMinFilter()	= GL_LINEAR;
+					currentFaceTexture->TextureMaxFilter()	= GL_LINEAR;
+
+					currentFaceTexture->InternalFormat()	= GL_SRGB8_ALPHA8;						// Set the diffuse texture's internal format to be encoded in sRGB color space, so OpenGL will apply gamma correction: (ie. color = pow(color, 2.2) )
+
+					currentFaceTexture->TextureUnit()		= CUBE_MAP_0 + CUBE_MAP_0_RIGHT;	// We always use the same sampler for all cube map faces;
+
+					break;
+				}
+			}
+
+			if (!foundCurrentFace)
+			{
+				LOG_ERROR("Could not find skybox cubemap face texture #" + to_string(i) + ": " + skyboxTextureNames[i] + " with any supported extension. Aborting skybox loading");
+
+				skyMaterial->Destroy();
+				delete skyMaterial;
+
+				return;
+			}
+		}
+
+		// Create a skybox shader:
+		Shader* skyboxShader = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.skyboxShaderName);
+		skyMaterial->GetShader() = skyboxShader;
+
+		// Configure and buffer textures:
+		if (!skyMaterial->AccessTexture(CUBE_MAP_0_RIGHT)->BufferCubeMap(cubeMapTextures))
+		{
+			LOG_ERROR("Skybox cube map buffering failed");
+
+			skyboxShader->Destroy();
+			delete skyboxShader;
+			skyboxShader = nullptr;
+
+			skyMaterial->Destroy();
+			delete skyMaterial;
+			skyMaterial = nullptr;
+
+			return;
+		}
+
+		Mesh* skyQuad = new Mesh
+		(
+			Mesh::CreateQuad
+			(
+				vec3(-1.0f, 1.0f,	1.0f), // z == 1.0f, since we're in clip space (and camera's negative Z has been reversed)
+				vec3(1.0f, 1.0f,	1.0f),
+				vec3(-1.0f, -1.0f,	1.0f),
+				vec3(1.0f, -1.0f,	1.0f)
+			)
+		);
+
+		skyQuad->Name()				= "SkyboxQuad";
+		
+		currentScene->skybox		= new Skybox(skyMaterial, skyQuad);
 	}
 
 
@@ -1517,12 +1655,12 @@ namespace BlazeEngine
 		int numLights = scene->mNumLights;
 		if (numLights <= 0)
 		{
-			LOG_ERROR("Scene has no lights to import!");
+			LOG_ERROR("\nScene has no lights to import!");
 			return;
 		}
 		else
 		{
-			LOG("Found " + to_string(numLights) + " scene lights");
+			LOG("\nFound " + to_string(numLights) + " scene lights");
 		}		
 		
 		bool foundDirectional	= false;	// TEMP: Only find the first directional light
@@ -1810,6 +1948,24 @@ namespace BlazeEngine
 
 			}
 
+			// Normalize the lighting if we're in forward mode
+			if (CoreEngine::GetCoreEngine()->GetConfig()->renderer.useForwardRendering)
+			{
+				vector<Light*>const* allLights = &currentScene->GetDeferredLights();
+
+				for (int i = 0; i < (int)allLights->size(); i++)
+				{
+					vec3 lightColor = allLights->at(i)->Color();
+					float maxChannel = glm::max(glm::max(lightColor.x, lightColor.y), lightColor.z);
+
+					if (maxChannel > 1.0f)
+					{
+						lightColor /= maxChannel;
+						allLights->at(i)->SetColor(lightColor);
+					}
+				}
+			}
+
 			#if defined(DEBUG_SCENEMANAGER_LIGHT_LOGGING)
 				LOG("mAngleInnerCone = " + to_string(scene->mLights[i]->mAngleInnerCone) + " radians");
 				LOG("mAngleOuterCone = " + to_string(scene->mLights[i]->mAngleOuterCone) + " radians");
@@ -1843,7 +1999,7 @@ namespace BlazeEngine
 
 		if (scene == nullptr) // Signal to create a default camera at the origin
 		{
-			LOG("Creating a default camera");
+			LOG("\nCreating a default camera");
 
 			newCamConfig.aspectRatio	= CoreEngine::GetCoreEngine()->GetConfig()->GetWindowAspectRatio();
 			newCamConfig.fieldOfView	= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView;
@@ -1890,7 +2046,7 @@ namespace BlazeEngine
 
 		if (numCameras > 1)
 		{
-			LOG_ERROR("Found " + to_string(numCameras) + " cameras in the scene. Currently, only 1 camera is supported. Setting the FIRST received camera as the main camera.");
+			LOG_ERROR("\nFound " + to_string(numCameras) + " cameras in the scene. Currently, only 1 camera is supported. Setting the FIRST received camera as the main camera.");
 		}
 		else
 		{

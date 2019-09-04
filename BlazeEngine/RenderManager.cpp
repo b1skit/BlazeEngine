@@ -8,6 +8,7 @@
 #include "Texture.h"
 #include "RenderTexture.h"
 #include "BuildConfiguration.h"
+#include "Skybox.h"
 
 #include <string>
 
@@ -225,6 +226,8 @@ namespace BlazeEngine
 		glDepthFunc(GL_LESS);				// How to sort Z
 		glEnable(GL_CULL_FACE);				// Enable face culling
 		glCullFace(GL_BACK);				// Cull back faces
+
+		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 		
 		// Set the default buffer clear values:
 		glClearColor(GLclampf(windowClearColor.r), GLclampf(windowClearColor.g), GLclampf(windowClearColor.b), GLclampf(windowClearColor.a));
@@ -343,39 +346,41 @@ namespace BlazeEngine
 
 			vector<Light*>const* deferredLights = &CoreEngine::GetSceneManager()->GetDeferredLights();
 
+			// Render additive contributions:
+			glEnable(GL_BLEND);
+
 			if (deferredLights->size() > 0)
 			{
 				// Render the first light
 				RenderDeferredLight(deferredLights->at(0));
-
-				glEnable(GL_BLEND);
+				
 				glBlendFunc(GL_ONE, GL_ONE); // TODO: Can we just set this once somewhere, instead of calling each frame?
+				glDepthFunc(GL_GEQUAL);
 
 				for (int i = 1; i < deferredLights->size(); i++)
 				{
-					// Setup for screen aligned quads:
+					// Select face culling:
 					if (deferredLights->at(i)->Type() == LIGHT_AMBIENT || deferredLights->at(i)->Type() == LIGHT_DIRECTIONAL)
 					{
-						glDisable(GL_DEPTH_TEST);
 						glCullFace(GL_BACK);
 					}
 					else
 					{
-						glEnable(GL_DEPTH_TEST);
-						glCullFace(GL_FRONT);
-						glDepthFunc(GL_GREATER);				
+						glCullFace(GL_FRONT);	// For 3D deferred light meshes, we render back faces so something is visible even while we're inside the mesh		
 					}
 
 					RenderDeferredLight(deferredLights->at(i));
 				}
 			}
-
-			// Additively blit the emissive GBuffer texture to screen:
-			glDisable(GL_DEPTH_TEST);
 			glCullFace(GL_BACK);
 
-			Blit(mainCam->RenderMaterial(), TEXTURE_EMISSIVE, outputMaterial, TEXTURE_ALBEDO);
+			// Render the skybox on top of the frame:
+			glDisable(GL_BLEND);
+			RenderSkybox(CoreEngine::GetSceneManager()->GetSkybox());
 
+			// Additively blit the emissive GBuffer texture to screen:
+			glEnable(GL_BLEND);
+			Blit(mainCam->RenderMaterial(), TEXTURE_EMISSIVE, outputMaterial, TEXTURE_ALBEDO);
 			glDisable(GL_BLEND);
 
 			// Post process finished frame:
@@ -388,7 +393,6 @@ namespace BlazeEngine
 			glEnable(GL_DEPTH_TEST);
 			glDepthFunc(GL_LESS);
 			glCullFace(GL_BACK);
-
 
 			// Blit results to screen:
 			BlitToScreen(finalFrameMaterial, finalFrameShader);
@@ -432,7 +436,6 @@ namespace BlazeEngine
 			lightShader->UploadUniform("lightWorldPos",			&lightWorldPos.x,		UNIFORM_Vec3fv);
 			lightShader->UploadUniform("shadowCam_near",		&shadowCam->Near(),		UNIFORM_Float);
 			lightShader->UploadUniform("shadowCam_far",			&shadowCam->Far(),		UNIFORM_Float);
-			
 		}
 		break;
 
@@ -446,6 +449,8 @@ namespace BlazeEngine
 
 		if (lightDepthTexture == nullptr)
 		{
+			lightShader->Bind(false);
+
 			return;
 		}
 
@@ -520,7 +525,7 @@ namespace BlazeEngine
 		glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
 		glViewport(0, 0, renderTexture->Width(), renderTexture->Height());
 		
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO		
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
 
 		// Assemble common (model independent) matrices:
 		mat4 view			= renderCam->View();
@@ -548,6 +553,7 @@ namespace BlazeEngine
 
 			// Upload material properties:
 			currentShader->UploadUniform(Material::MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_0].c_str(), &currentMaterial->Property(MATERIAL_PROPERTY_0).x, UNIFORM_Vec4fv);
+			currentShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
 
 			// Get all meshes that use the current material
 			meshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
@@ -569,7 +575,6 @@ namespace BlazeEngine
 				currentShader->UploadUniform("in_model",			&model[0][0],			UNIFORM_Matrix4fv);
 				currentShader->UploadUniform("in_modelRotation",	&modelRotation[0][0],	UNIFORM_Matrix4fv);
 				currentShader->UploadUniform("in_mvp",				&mvp[0][0],				UNIFORM_Matrix4fv);
-
 				// TODO: Only upload these matrices if they've changed ^^^^
 
 				// Draw!
@@ -761,7 +766,7 @@ namespace BlazeEngine
 					break;
 				}
 
-				vec4 texelSize(0, 0, 0, 0);	// TODO: Compute this once and cache it for uploading each frame
+				vec4 texelSize(0, 0, 0, 0);
 				if (depthTexture != nullptr)
 				{
 					texelSize = depthTexture->TexelSize();
@@ -807,6 +812,48 @@ namespace BlazeEngine
 		
 		currentShader->Bind(false);
 		deferredLight->DeferredMesh()->Bind(false);
+	}
+
+
+	void BlazeEngine::RenderManager::RenderSkybox(Skybox* skybox)
+	{
+		if (skybox == nullptr)
+		{
+			return;
+		}
+
+		Camera* renderCam = CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera();
+
+		// Bind:
+		Shader* currentShader = skybox->GetSkyMaterial()->GetShader();
+		GLuint shaderReference = currentShader->ShaderReference();
+
+		currentShader->Bind(true);
+
+		Texture* skyboxCubeMap = skybox->GetSkyMaterial()->AccessTexture(CUBE_MAP_0_RIGHT);
+
+		skyboxCubeMap->Bind(shaderReference);
+
+		Texture* depthTexture = (RenderTexture*)renderCam->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
+		if (depthTexture)
+		{
+			depthTexture->Bind(shaderReference, RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH);
+		}
+
+		// Assemble common (model independent) matrices:
+		mat4 inverseViewProjection = glm::inverse(renderCam->ViewProjection()); // TODO: Only compute this if something has changed
+		currentShader->UploadUniform("in_inverse_vp", &inverseViewProjection[0][0], UNIFORM_Matrix4fv);
+				
+		skybox->GetSkyMesh()->Bind(true);		
+
+		// Draw!
+		glDrawElements(GL_TRIANGLES, skybox->GetSkyMesh()->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
+
+		// Cleanup:
+		skyboxCubeMap->Bind(0);
+		depthTexture->Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH);
+		currentShader->Bind(false);
+		skybox->GetSkyMesh()->Bind(false);
 	}
 
 
@@ -893,8 +940,8 @@ namespace BlazeEngine
 
 	void BlazeEngine::RenderManager::Initialize()
 	{
-		SceneManager* sceneManager = CoreEngine::GetSceneManager();
-		unsigned int numMaterials = sceneManager->NumMaterials();
+		SceneManager* sceneManager	= CoreEngine::GetSceneManager();
+		unsigned int numMaterials	= sceneManager->NumMaterials();
 
 		// Legacy forward rendering parms:
 		Light const* ambientLight	= nullptr;
@@ -921,6 +968,7 @@ namespace BlazeEngine
 		#endif
 
 		vec4 screenParams = vec4(this->xRes, this->yRes, 1.0f / this->xRes, 1.0f / this->yRes);
+		vec4 projectionParams = vec4(1.0f, CoreEngine::GetSceneManager()->GetMainCamera()->Near(), CoreEngine::GetSceneManager()->GetMainCamera()->Far(), 1.0f / CoreEngine::GetSceneManager()->GetMainCamera()->Far());
 
 		// Add all Material Shaders to a list:
 		vector<Shader*> shaders;
@@ -948,6 +996,13 @@ namespace BlazeEngine
 		{
 			shaders.push_back(deferredLights->at(currentLight)->DeferredMaterial()->GetShader());
 		}
+
+		// Add skybox shader:
+		Skybox* skybox = CoreEngine::GetSceneManager()->GetSkybox();
+		if (skybox && skybox->GetSkyMaterial() && skybox->GetSkyMaterial()->GetShader())
+		{
+			shaders.push_back(skybox->GetSkyMaterial()->GetShader());
+		}		
 		
 		// Add RenderManager shaders:
 		shaders.push_back(outputMaterial->GetShader());
@@ -1007,11 +1062,14 @@ namespace BlazeEngine
 				shaders.at(i)->UploadUniform("lightColor", &(keyCol->r), UNIFORM_Vec3fv);
 			}
 			
-
+			
 			// Other params:
 			shaders.at(i)->UploadUniform("screenParams", &(screenParams.x), UNIFORM_Vec4fv);
+			shaders.at(i)->UploadUniform("projectionParams", &(projectionParams.x), UNIFORM_Vec4fv);
 
 			shaders.at(i)->UploadUniform("emissiveIntensity", &CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultSceneEmissiveIntensity, UNIFORM_Float);
+			// TODO: Load this from .FBX file, and set the cached value here
+
 
 			// Upload matrices:
 			mat4 projection = sceneManager->GetMainCamera()->Projection();

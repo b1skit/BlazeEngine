@@ -33,12 +33,12 @@ namespace BlazeEngine
 			// Attach a screen aligned quad:
 			this->deferredMesh = new Mesh
 			(
-				Mesh::CreateQuad
+				Mesh::CreateQuad	// Align along near plane
 				(
-					vec3(-1.0f,	1.0f,	0.0f),	// TL
-					vec3(1.0f,	1.0f,	0.0f),	// TR
-					vec3(-1.0f,	-1.0f,	0.0f),	// BL
-					vec3(1.0f,	-1.0f,	0.0f)	// BR
+					vec3(-1.0f,	1.0f,	-1.0f),	// TL
+					vec3(1.0f,	1.0f,	-1.0f),	// TR
+					vec3(-1.0f,	-1.0f,	-1.0f),	// BL
+					vec3(1.0f,	-1.0f,	-1.0f)	// BR
 				)
 			);
 			break;

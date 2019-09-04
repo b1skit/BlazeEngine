@@ -14,7 +14,7 @@ void main()
 	float lightDistance = length(FragPos.xyz - lightWorldPos);
     
     // Map to [0, 1]:
-	lightDistance = lightDistance / shadowCam_far;
+	lightDistance = lightDistance / shadowCam_far; // TODO: Correct for perspective and write a linear depth
     
     // write this as modified depth
     gl_FragDepth = lightDistance;

@@ -27,6 +27,7 @@ namespace BlazeEngine
 	class Camera;
 	class Shader;
 	class Light;
+	class Skybox;
 
 
 	enum SHADER // Guaranteed shaders
@@ -72,6 +73,8 @@ namespace BlazeEngine
 		void RenderForward(Camera* renderCam);
 
 		void RenderDeferredLight(Light* deferredLight); // Note: FBO, viewport
+
+		void RenderSkybox(Skybox* skybox);
 
 		void BlitToScreen();
 		void BlitToScreen(Material* srcMaterial, Shader* blitShader);

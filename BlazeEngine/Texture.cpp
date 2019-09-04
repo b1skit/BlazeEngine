@@ -236,8 +236,10 @@ namespace BlazeEngine
 	// Static functions:
 	//------------------
 
-	Texture* Texture::LoadTextureFileFromPath(string texturePath, bool doBuffer /*= false*/)
+	Texture* Texture::LoadTextureFileFromPath(string texturePath, bool doBuffer /*= false*/, bool returnErrorTexIfNotFound /*= false*/, bool flipY /*= true*/)
 	{
+		stbi_set_flip_vertically_on_load(flipY);	// Set stb_image to flip the y-axis on loading to match OpenGL's style (So pixel (0,0) is in the bottom-left of the image)
+
 		LOG("Loading texture at " + texturePath);
 
 		int width, height, numChannels;
@@ -292,6 +294,10 @@ namespace BlazeEngine
 			#endif
 
 			return texture;
+		}
+		else if (!returnErrorTexIfNotFound)
+		{
+			return nullptr;
 		}
 
 		// If we've made it this far, we couldn't load an image from a file:
@@ -399,6 +405,99 @@ namespace BlazeEngine
 		glSamplerParameteri(this->samplerID, GL_TEXTURE_MAG_FILTER, this->textureMaxFilter);
 
 		glBindSampler(this->textureUnit, 0);
+
+		return true;
+	}
+
+
+	bool Texture::BufferCubeMap(Texture** cubeFaceRTs)
+	{
+		// TODO: MERGE COMMON FUNCTIONALITY WITH RENDERTEXTURE!!!!!!!!!!!!!!!!!!
+
+		// TODO: Make this static?!?!?!!?!?
+
+
+		// NOTE: This function uses the paramters of the object its called from
+
+		LOG("Buffering cube map: \"" + this->TexturePath() + "\"");
+
+		// Bind Texture:
+		glBindTexture(this->texTarget, this->textureID);
+		if (!glIsTexture(this->textureID))
+		{
+			glGenTextures(1, &this->textureID);
+			glBindTexture(this->texTarget, this->textureID);
+
+			if (!glIsTexture(this->textureID))
+			{
+				LOG_ERROR("OpenGL failed to generate new cube map texture name. Texture buffering failed");
+				glBindTexture(this->texTarget, 0);
+				return false;
+			}
+		}
+
+		// Set texture params:
+		glTexParameteri(this->texTarget, GL_TEXTURE_WRAP_S, this->textureWrapS);
+		glTexParameteri(this->texTarget, GL_TEXTURE_WRAP_T, this->textureWrapT);
+		glTexParameteri(this->texTarget, GL_TEXTURE_WRAP_R, this->textureWrapR);
+
+		glTexParameteri(this->texTarget, GL_TEXTURE_MAG_FILTER, this->textureMaxFilter);
+		glTexParameteri(this->texTarget, GL_TEXTURE_MIN_FILTER, this->textureMinFilter);
+
+		// Bind sampler:
+		if (this->textureUnit < 0)
+		{
+			LOG_ERROR("Cannot bind Cube Map Texture sampler as textureUnit has not been set");
+			return false;
+		}
+
+		glBindSampler(this->textureUnit, this->samplerID);
+		if (!glIsSampler(this->samplerID))
+		{
+			glGenSamplers(1, &this->samplerID);
+			glBindSampler(this->textureUnit, this->samplerID);
+
+			if (!glIsSampler(this->samplerID))
+			{
+				LOG_ERROR("Could not create cube map sampler");
+				return false;
+			}
+		}
+
+		// Set sampler params:
+		glSamplerParameteri(this->samplerID, GL_TEXTURE_WRAP_S, this->textureWrapS);
+		glSamplerParameteri(this->samplerID, GL_TEXTURE_WRAP_T, this->textureWrapT);
+
+		glSamplerParameteri(this->samplerID, GL_TEXTURE_MIN_FILTER, this->textureMinFilter);
+		glSamplerParameteri(this->samplerID, GL_TEXTURE_MAG_FILTER, this->textureMaxFilter);
+
+		glBindSampler(this->textureUnit, 0);
+
+
+		// Texture cube map specific setup:
+		if (texels != nullptr)
+		{
+			// Generate faces:
+			for (int i = 0; i < CUBE_MAP_COUNT; i++)
+			{
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, &cubeFaceRTs[i]->Texel(0, 0).r);
+			}
+
+
+			// Ensure all of the textures have the correct information stored in them:
+			for (int i = 0; i < CUBE_MAP_COUNT; i++)
+			{
+				if (cubeFaceRTs[i] != this)
+				{
+					cubeFaceRTs[i]->textureID = this->textureID;
+					cubeFaceRTs[i]->samplerID = this->samplerID;
+				}
+			}
+
+			// Cleanup:
+			glBindTexture(this->texTarget, 0); // Otherwise, we leave the texture bound for the remaining RenderTexture BufferCubeMap()
+		}	
+		
 
 		return true;
 	}

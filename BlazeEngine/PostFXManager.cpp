@@ -144,6 +144,8 @@ namespace BlazeEngine
 		screenAlignedQuad->Bind(true);
 		glViewport(0, 0, pingPongMaterial0->AccessTexture(RENDER_TEXTURE_ALBEDO)->Width(), pingPongMaterial0->AccessTexture(RENDER_TEXTURE_ALBEDO)->Height());
 
+		// TODO: Blit down to a smaller resolution, THEN apply the luminance threshold
+
 		// Pass 1: Apply luminance threshold, finished frame -> pingPong0
 
 		// Bind the target FBO:

@@ -75,6 +75,7 @@ uniform mat4 in_view;			// World -> View
 uniform mat4 in_projection;		// View -> Projection
 uniform mat4 in_mv;				// [View * Model]
 uniform mat4 in_mvp;			// [Projection * View * Model]
+uniform mat4 in_inverse_vp;		// [Projection * View]^-1
 // TODO: Assign locations for these uniforms, and bind them to each shader in the RenderManager
 // Probably need to be offset somehow (b/c of size of VtoF struct?)???
 
@@ -100,8 +101,9 @@ layout(binding = 9) uniform sampler2D GBuffer_MatProp0;
 
 layout(binding = 10) uniform sampler2D	GBuffer_Depth;
 
-layout(binding = 11) uniform sampler2D		shadowDepth;		// Currently bound 2D shadow depth map
-layout(binding = 12) uniform samplerCube	CubeMap_0_Right;	// Currently bound cube map depth
+layout(binding = 11) uniform sampler2D	shadowDepth;		// Currently bound 2D shadow depth map
+
+layout(binding = 12) uniform samplerCube CubeMap_0_Right;	// Currently bound cube map sampler
 
 uniform vec4		texelSize;				// Depth map/GBuffer texel size: .xyzw = (1/width, 1/height, width, height)
 
@@ -113,6 +115,8 @@ uniform float		minShadowBias;
 
 uniform float		shadowCam_near;			// Near/Far planes of current shadow camera
 uniform float		shadowCam_far;
+
+uniform vec4		projectionParams;		// Main camera: .x = 1.0 (unused), y = near, z = far, w = 1/far
 
 
 // Generic material properties:

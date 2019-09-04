@@ -9,6 +9,7 @@
 #include "Shader.h"
 #include "Light.h"
 #include "PlayerObject.h"
+#include "Skybox.h"
 
 #include "assimp/scene.h"		// Output data structure
 
@@ -82,6 +83,9 @@ namespace BlazeEngine
 		
 		vector<Light*> const& GetDeferredLights() { return deferredLights; }
 
+		// Skybox object:
+		Skybox* skybox				= nullptr;
+
 		Bounds& WorldSpaceSceneBounds()
 		{
 			return sceneWorldBounds;
@@ -143,6 +147,10 @@ namespace BlazeEngine
 		int								AddTexture(Texture*& newTexture); // Returns index of inserted texture. Updates pointer if duplicate texture exists
 
 		vector<Light*> const&			GetDeferredLights()											{ return currentScene->GetDeferredLights(); }
+
+		Skybox*							GetSkybox()													{ return currentScene->skybox; }
+
+
 	protected:
 
 
@@ -190,6 +198,9 @@ namespace BlazeEngine
 
 		// Assimp scene material and texture import helper:
 		void		ImportMaterialsAndTexturesFromScene(aiScene const* scene, string sceneName);
+
+		// Import and configure scene skybox:
+		void		ImportSky(string sceneName);
 		
 		// Assimp scene texture import helper:
 		Texture*	ExtractLoadTextureFromAiMaterial(aiTextureType textureType, aiMaterial* material, string sceneName);

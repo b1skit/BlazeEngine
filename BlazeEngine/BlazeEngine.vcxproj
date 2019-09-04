@@ -148,6 +148,7 @@
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShadowMap.cpp" />
+    <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TimeManager.cpp" />
     <ClCompile Include="Transform.cpp" />
@@ -175,6 +176,7 @@
     <ClInclude Include="SceneObject.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShadowMap.h" />
+    <ClInclude Include="Skybox.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TimeManager.h" />
     <ClInclude Include="Transform.h" />
@@ -212,6 +214,8 @@
     <None Include="Shaders\errorShader.vert" />
     <None Include="Shaders\phongShader.frag" />
     <None Include="Shaders\phongShader.vert" />
+    <None Include="Shaders\skyboxShader.frag" />
+    <None Include="Shaders\skyboxShader.vert" />
     <None Include="Shaders\toneMapShader.frag" />
     <None Include="Shaders\toneMapShader.vert" />
   </ItemGroup>

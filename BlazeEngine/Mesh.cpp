@@ -15,13 +15,13 @@ namespace BlazeEngine
 	// Mesh functions:
 	Mesh::Mesh(string name, Vertex* vertices, unsigned int numVerts, GLuint* indices, unsigned int numIndices, int materialIndex /*= -1*/)
 	{
-		this->meshName = name;
+		this->meshName		= name;
 
-		this->vertices = vertices;
-		this->numVerts = numVerts;
+		this->vertices		= vertices;
+		this->numVerts		= numVerts;
 
-		this->indices = indices;
-		this->numIndices = numIndices;
+		this->indices		= indices;
+		this->numIndices	= numIndices;
 
 		this->materialIndex = materialIndex;
 
