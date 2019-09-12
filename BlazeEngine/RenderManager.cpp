@@ -602,11 +602,22 @@ namespace BlazeEngine
 
 		// Assemble common (model independent) matrices:
 		mat4 view			= renderCam->View();
-		mat4 shadowCam_vp	= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight()->ActiveShadowMap()->ShadowCamera()->ViewProjection();
+		mat4 shadowCam_vp = mat4(1.0f);
+		if (CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight() && CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight()->ActiveShadowMap() && CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight()->ActiveShadowMap()->ShadowCamera())
+		{
+			shadowCam_vp = CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight()->ActiveShadowMap()->ShadowCamera()->ViewProjection();
+		}
 
 		// Cache required values once outside of the loop:
 		Light* keyLight						= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight();
-		Material* shadowCamRenderMaterial	= keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial();
+
+		// Temp fix: If we don't have a keylight, abort. TODO: Implement forward rendering of all light types
+		if (keyLight == nullptr)
+		{
+			LOG_ERROR("\nNo keylight detected.A keylight is currently required for forward rendering mode. Quitting!\n");
+			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this });
+			return;
+		}
 
 		// Loop by material (+shader), mesh:
 		unsigned int numMaterials = CoreEngine::GetSceneManager()->NumMaterials();
