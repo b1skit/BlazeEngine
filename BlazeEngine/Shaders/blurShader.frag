@@ -10,7 +10,7 @@
 // in bool gl_FrontFacing;
 // in vec2 gl_PointCoord;
 
-#define RGB_TO_LUMINANCE vec3(0.2126, 0.7152, 0.0722)
+
 #if !defined(BLUR_SHADER_LUMINANCE_THRESHOLD)
 	
 	// 5-tap Gaussian filter:
@@ -29,14 +29,23 @@
 // Pass 0: Blur luminance threshold:
 #if defined(BLUR_SHADER_LUMINANCE_THRESHOLD)
 
+	#define THRESHOLD 0.75
+	#define SOFT_THRESHOLD 0.25
+
 	void main()
 	{	
-		vec4 fragRGB	= texture(GBuffer_Albedo, data.uv0.xy);
+		vec4 fragRGB		= texture(GBuffer_Albedo, data.uv0.xy);
 
-		float luminance	= dot(fragRGB.rgb, RGB_TO_LUMINANCE);
-
-		FragColor = luminance > 1.0 ? fragRGB : vec4(0.0, 0.0, 0.0, 1.0);
-	} 
+		float maxChannel	= max(fragRGB.x, max(fragRGB.y, fragRGB.z));
+		float knee			= THRESHOLD * SOFT_THRESHOLD;
+		float soft			= maxChannel - THRESHOLD + knee;
+		soft				= clamp(soft, 0, 2.0 * knee);
+		soft				= soft * soft / (4.0 * knee + 0.00001);
+		float contribution	= max(soft, maxChannel - THRESHOLD);
+		contribution		/= max(maxChannel, 0.00001);
+		
+		FragColor = fragRGB * contribution;
+	}
 
 
 // Pass 1: Horizontal blur:
