@@ -14,18 +14,14 @@ namespace BlazeEngine
 {
 	PostFXManager::~PostFXManager()
 	{
-		if (pingPongMaterial0 != nullptr)
+		if (pingPongTextures != nullptr)
 		{
-			pingPongMaterial0->Destroy();
-			delete pingPongMaterial0;
-			pingPongMaterial0 = nullptr;
-		}
-
-		if (pingPongMaterial1 != nullptr)
-		{
-			pingPongMaterial1->Destroy();
-			delete pingPongMaterial1;
-			pingPongMaterial1 = nullptr;
+			for (int i = 0; i < NUM_DOWN_SAMPLES; i++)
+			{
+				pingPongTextures[i].Destroy();
+			}
+			delete [] pingPongTextures;
+			pingPongTextures	= nullptr;
 		}
 
 		if (blitShader != nullptr)
@@ -65,45 +61,47 @@ namespace BlazeEngine
 		// Cache the output material
 		this->outputMaterial = outputMaterial;
 
-		// Configure deferred output:
-		pingPongMaterial0 = new Material("PostFX_PingPongMaterial_0", nullptr, (TEXTURE_TYPE)1, true);
-		pingPongMaterial1 = new Material("PostFX_PingPongMaterial_1", nullptr, (TEXTURE_TYPE)1, true);
+		// Configure render buffers:
+		this->pingPongTextures = new RenderTexture[NUM_DOWN_SAMPLES + 1]; // +1 so we have an extra RenderTexture to pingpong between at the lowest res
 
-		#define RESOLUTION_SCALE 1
+		int currentXRes = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / 2;
+		int currentYRes = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes / 2;
 
-		RenderTexture* bloomOutputTexture0 = new RenderTexture
-		(
-			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / RESOLUTION_SCALE,
-			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes / RESOLUTION_SCALE,
-			"PostFX_PingPongTexture_0",
-			false,
-			RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO
-		);
+		for (int i = 0; i <= NUM_DOWN_SAMPLES; i++)
+		{
+			pingPongTextures[i] = RenderTexture
+			(
+				currentXRes,
+				currentYRes,
+				"PostFX_PingPongTexture_" + to_string(currentXRes) + "x" + to_string(currentYRes),
+				false,
+				RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO
+			);
 
-		bloomOutputTexture0->Format()			= GL_RGBA;		// Note: Using 4 channels for future flexibility
-		bloomOutputTexture0->InternalFormat()	= GL_RGBA32F;
+			pingPongTextures[i].Format() = GL_RGBA;		// Note: Using 4 channels for future flexibility
+			pingPongTextures[i].InternalFormat() = GL_RGBA32F;
 
-		bloomOutputTexture0->TextureMinFilter()	= GL_LINEAR;
-		bloomOutputTexture0->TextureMaxFilter()	= GL_LINEAR;
+			pingPongTextures[i].TextureMinFilter() = GL_LINEAR;
+			pingPongTextures[i].TextureMaxFilter() = GL_LINEAR;
 
-		bloomOutputTexture0->AttachmentPoint()	= GL_COLOR_ATTACHMENT0 + 0;
+			pingPongTextures[i].AttachmentPoint() = GL_COLOR_ATTACHMENT0 + 0;
 
-		bloomOutputTexture0->ReadBuffer()		= GL_COLOR_ATTACHMENT0 + 0;
-		bloomOutputTexture0->DrawBuffer()		= GL_COLOR_ATTACHMENT0 + 0;
+			pingPongTextures[i].ReadBuffer() = GL_COLOR_ATTACHMENT0 + 0;
+			pingPongTextures[i].DrawBuffer() = GL_COLOR_ATTACHMENT0 + 0;
 
-		// Assign and buffer texture:
-		pingPongMaterial0->AccessTexture(RENDER_TEXTURE_ALBEDO) = bloomOutputTexture0;
-		bloomOutputTexture0->Buffer();
+			// Assign and buffer texture:
+			pingPongTextures[i].Buffer();
 
-		// Create a 2nd copy of the RenderTexture:
-		RenderTexture* bloomOutputTexture1 = new RenderTexture(*bloomOutputTexture0, false);
-		bloomOutputTexture1->TexturePath() = "PostFX_PingPongTexture_1"; // Update the name
-		bloomOutputTexture1->Buffer();
-		pingPongMaterial1->AccessTexture(RENDER_TEXTURE_ALBEDO) = bloomOutputTexture1;
+			// Don't halve the resolution for the last 2 iterations:
+			if (i < NUM_DOWN_SAMPLES - 1)
+			{
+				currentXRes /= 2;
+				currentYRes /= 2;
+			}
+		}
 
 
 		// Configure shaders:
-
 		vector<string> luminanceThresholdKeywords(1,	"BLUR_SHADER_LUMINANCE_THRESHOLD");
 		vector<string> horizontalBlurKeywords(1,		"BLUR_SHADER_HORIZONTAL");
 		vector<string> verticalBlurKeywords(1,			"BLUR_SHADER_VERTICAL");
@@ -117,16 +115,15 @@ namespace BlazeEngine
 
 
 		// Upload Shader parameters:
-		vec4 texelSize = CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera()->RenderMaterial()->AccessTexture(TEXTURE_ALBEDO)->TexelSize();
-		for (int i = 0; i < BLUR_SHADER_COUNT; i++)
-		{
-			blurShaders[i]->UploadUniform("texelSize", &texelSize.x, UNIFORM_Vec4fv);
-		}
-
 		toneMapShader->UploadUniform("exposure", &CoreEngine::GetSceneManager()->GetMainCamera()->Exposure(), UNIFORM_Float);
 
+		// Upload the texel size for the smallest pingpong textures:
+		vec4 texelSize = this->pingPongTextures[NUM_DOWN_SAMPLES].TexelSize();
+		blurShaders[BLUR_SHADER_HORIZONTAL]->UploadUniform("texelSize", &texelSize.x, UNIFORM_Vec4fv);
+		blurShaders[BLUR_SHADER_VERTICAL]->UploadUniform("texelSize", &texelSize.x, UNIFORM_Vec4fv);
 
-		screenAlignedQuad = new Mesh
+
+		screenAlignedQuad = new Mesh	// TODO: Use the RenderManager's instead of duplicating it here?
 		(
 			Mesh::CreateQuad
 			(
@@ -141,69 +138,110 @@ namespace BlazeEngine
 
 	void PostFXManager::ApplyPostFX(Material*& finalFrameMaterial, Shader*& finalFrameShader)
 	{
-		screenAlignedQuad->Bind(true);
-		glViewport(0, 0, pingPongMaterial0->AccessTexture(RENDER_TEXTURE_ALBEDO)->Width(), pingPongMaterial0->AccessTexture(RENDER_TEXTURE_ALBEDO)->Height());
-
-		// TODO: Blit down to a smaller resolution, THEN apply the luminance threshold
-
-		// Pass 1: Apply luminance threshold, finished frame -> pingPong0
+		// Pass 1: Apply luminance threshold: Finished frame -> 1/2 res
+		this->screenAlignedQuad->Bind(true);
+		glViewport(0, 0, this->pingPongTextures[0].Width(), this->pingPongTextures[0].Height());
 
 		// Bind the target FBO:
-		glBindFramebuffer(GL_FRAMEBUFFER, (((RenderTexture*)pingPongMaterial0->AccessTexture(RENDER_TEXTURE_ALBEDO))->FBO() ));
-		
-		// Bind the shader:
-		blurShaders[BLUR_SHADER_LUMINANCE_THRESHOLD]->Bind(true);
+		glBindFramebuffer(GL_FRAMEBUFFER, this->pingPongTextures[0].FBO());
+
+		// Bind the luminance threshold shader:
+		this->blurShaders[BLUR_SHADER_LUMINANCE_THRESHOLD]->Bind(true);
 
 		// Attach the source texture to the shader:
-		outputMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO)->Bind(blurShaders[BLUR_SHADER_LUMINANCE_THRESHOLD]->ShaderReference(), RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
+		this->outputMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO)->Bind(blurShaders[BLUR_SHADER_LUMINANCE_THRESHOLD]->ShaderReference(), RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
 
 		// Draw!
 		glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
 		// Cleanup:
-		blurShaders[BLUR_SHADER_LUMINANCE_THRESHOLD]->Bind(false);
-		outputMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO)->Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
+		this->blurShaders[BLUR_SHADER_LUMINANCE_THRESHOLD]->Bind(false);
+		this->outputMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO)->Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
 
-		const int NUM_BLUR_PASSES = 12; // How many pairs of horizontal + vertical blur passes to perform
-
-		for (int i = 0; i < NUM_BLUR_PASSES; i++)
+		// Continue downsampling: Blit to the remaining textures:
+		this->blitShader->Bind(true);
+		for (int i = 1; i < NUM_DOWN_SAMPLES; i++)
 		{
-			// Horizontal pass: pingPong0 -> pingPong1
+			// Configure the viewport:
+			glViewport(0, 0, this->pingPongTextures[i].Width(), this->pingPongTextures[i].Height());
 
-			glBindFramebuffer(GL_FRAMEBUFFER, (((RenderTexture*)pingPongMaterial1->AccessTexture(RENDER_TEXTURE_ALBEDO))->FBO()));
-			
+			// Bind the target FBO:
+			glBindFramebuffer(GL_FRAMEBUFFER, this->pingPongTextures[i].FBO());
+
+			// Attach the source texture to the shader:
+			this->pingPongTextures[i - 1].Bind(this->blitShader->ShaderReference(), RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
+
+			// Draw!
+			glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
+
+			// Cleanup:
+			this->pingPongTextures[i - 1].Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
+		}
+
+		// Cleanup:
+		this->blitShader->Bind(false);
+
+		// Blur the final low-res image:
+		glViewport(0, 0, this->pingPongTextures[NUM_DOWN_SAMPLES].Width(), this->pingPongTextures[NUM_DOWN_SAMPLES].Height());
+		for (int i = 0; i < this->NUM_BLUR_PASSES; i++)
+		{
+			// Horizontal pass: (NUM_DOWN_SAMPLES - 1) -> NUM_DOWN_SAMPLES
+
+			// Bind the target FBO:
+			glBindFramebuffer(GL_FRAMEBUFFER, this->pingPongTextures[NUM_DOWN_SAMPLES].FBO());
+
+			// Bind the shader:
 			blurShaders[BLUR_SHADER_HORIZONTAL]->Bind(true);
 
-			pingPongMaterial0->AccessTexture(RENDER_TEXTURE_ALBEDO)->Bind(blurShaders[BLUR_SHADER_HORIZONTAL]->ShaderReference(), RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
+			// Attach the source texture to the shader:
+			this->pingPongTextures[NUM_DOWN_SAMPLES - 1].Bind(blurShaders[BLUR_SHADER_HORIZONTAL]->ShaderReference(), RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
 
+			// Draw!
 			glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0));
-			
-			pingPongMaterial0->AccessTexture(RENDER_TEXTURE_ALBEDO)->Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
+
+			// Cleanup:
+			this->pingPongTextures[NUM_DOWN_SAMPLES - 1].Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
 			blurShaders[BLUR_SHADER_HORIZONTAL]->Bind(false);
 
-
-			// Vertical pass: pingPong1 -> pingPong0
-			glBindFramebuffer(GL_FRAMEBUFFER, (((RenderTexture*)pingPongMaterial0->AccessTexture(RENDER_TEXTURE_ALBEDO))->FBO()));
+			// Vertical pass: NUM_DOWN_SAMPLES -> (NUM_DOWN_SAMPLES - 1)
+			glBindFramebuffer(GL_FRAMEBUFFER, this->pingPongTextures[NUM_DOWN_SAMPLES - 1].FBO());
 
 			blurShaders[BLUR_SHADER_VERTICAL]->Bind(true);
 
-			pingPongMaterial1->AccessTexture(RENDER_TEXTURE_ALBEDO)->Bind(blurShaders[BLUR_SHADER_VERTICAL]->ShaderReference(), RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
+			this->pingPongTextures[NUM_DOWN_SAMPLES].Bind(blurShaders[BLUR_SHADER_VERTICAL]->ShaderReference(), RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
 
 			glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0));
 
-			
-			pingPongMaterial1->AccessTexture(RENDER_TEXTURE_ALBEDO)->Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
+			this->pingPongTextures[NUM_DOWN_SAMPLES].Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
 			blurShaders[BLUR_SHADER_VERTICAL]->Bind(false);
 		}
 
+		// Up-sample: Blit to successively larger textures:
+		this->blitShader->Bind(true);
+		for (int i = NUM_DOWN_SAMPLES - 1; i > 0; i--)
+		{
+			// Configure the viewport for the next, larger texture:
+			glViewport(0, 0, this->pingPongTextures[i - 1].Width(), this->pingPongTextures[i - 1].Height());
 
-		// Add blurred result to the original image: pingPong0 -> output material
+			// Bind the target FBO:
+			glBindFramebuffer(GL_FRAMEBUFFER, this->pingPongTextures[i - 1].FBO());
+
+			// Attach the source texture to the shader:
+			this->pingPongTextures[i].Bind(this->blitShader->ShaderReference(), RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
+
+			// Draw!
+			glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0));
+
+			// Cleanup:
+			if (i > 1) // Leave this bound if it's the last iteration
+			{
+				this->pingPongTextures[i].Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
+			}			
+		}
+
+		// Add blurred result to the original image: (NUM_DOWN_SAMPLES - 1) -> output material
 		glBindFramebuffer(GL_FRAMEBUFFER, (((RenderTexture*)outputMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO))->FBO()));
 		glViewport(0, 0, outputMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO)->Width(), outputMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO)->Height());
-
-		blitShader->Bind(true);
-
-		pingPongMaterial0->AccessTexture(RENDER_TEXTURE_ALBEDO)->Bind(blitShader->ShaderReference(), RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
 
 		glEnable(GL_BLEND);
 		glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
@@ -215,10 +253,9 @@ namespace BlazeEngine
 
 		// Cleanup:
 		blitShader->Bind(false);
-		pingPongMaterial0->AccessTexture(RENDER_TEXTURE_ALBEDO)->Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
-		screenAlignedQuad->Bind(false);
+		this->pingPongTextures[0].Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
 
-		
+		screenAlignedQuad->Bind(false);
 	}
 }
 

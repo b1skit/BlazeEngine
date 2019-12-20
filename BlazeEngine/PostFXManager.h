@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Material.h"
+#include "Material.h" // REMOVE THIS????
+#include "RenderTexture.h"
 
 #include <string>
 
@@ -41,8 +42,9 @@ namespace BlazeEngine
 
 		Material* outputMaterial		= nullptr;	// Recieved from RenderManager
 
-		Material* pingPongMaterial0		= nullptr;	// Deallocated in destructor
-		Material* pingPongMaterial1		= nullptr;	// Deallocated in destructor
+		RenderTexture* pingPongTextures = nullptr;	// Deallocated in destructor
+		const int NUM_DOWN_SAMPLES		= 2;		// Scaling factor: We half the frame size this many times
+		const int NUM_BLUR_PASSES		= 4;		// How many pairs of horizontal + vertical blur passes to perform
 
 		Shader* blitShader				= nullptr;	// Deallocated in destructor
 		Shader* toneMapShader			= nullptr;	// Deallocated in destructor

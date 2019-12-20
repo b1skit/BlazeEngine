@@ -395,3 +395,4 @@ healthchecksdb
 !./BlazeEngine/Dependencies/assimp/lib/assimp-vc140-mt.lib
 !./BlazeEngine/Dependencies/assimp/lib/assimp-vc140-mt.pdb
 /BlazeEngine/Dependencies/glm/out/build/x64-Debug
+/BlazeEngine/Dependencies/glm/CMakeSettings.json

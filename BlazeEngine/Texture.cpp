@@ -61,6 +61,8 @@ namespace BlazeEngine
 		}
 	}
 
+
+	// Copy constructor:
 	Texture::Texture(Texture const& rhs)
 	{
 		// Cleanup:
@@ -82,6 +84,7 @@ namespace BlazeEngine
 
 		this->textureWrapS			= rhs.textureWrapS;
 		this->textureWrapT			= rhs.textureWrapT;
+		this->textureWrapR			= rhs.textureWrapR;
 
 		this->textureMinFilter		= rhs.textureMinFilter;
 		this->textureMaxFilter		= rhs.textureMaxFilter;
@@ -152,10 +155,13 @@ namespace BlazeEngine
 
 		this->textureWrapS		= rhs.textureWrapS;
 		this->textureWrapT		= rhs.textureWrapT;
+		this->textureWrapR		= rhs.textureWrapR;
 
 		this->textureMinFilter	= rhs.textureMinFilter;
 		this->textureMaxFilter	= rhs.textureMaxFilter;
 
+		this->samplerID			= rhs.samplerID;
+		this->textureUnit		= rhs.textureUnit;
 
 		this->width				= rhs.width;
 		this->height			= rhs.height;
