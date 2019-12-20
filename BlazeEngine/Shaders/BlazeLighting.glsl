@@ -1,6 +1,63 @@
 // Blaze Engine Lighting Common
 // Defines lighting functions common to all shaders
 
+// PBR Lighting:
+//--------------
+
+#define PI 3.1415926535897932384626433832795
+
+// Normal Distribution Function: Approximate area of surface microfacets aligned with the halfway vector between the light and view dirs
+float NDF(vec3 normal, vec3 halfVector, float roughness)
+{
+	// Trowbridge-Reitz GGX NDF:
+	float roughness2	= roughness * roughness;
+
+	float nDotH			= max(0.0, dot(normal, halfVector));
+	float nDotH2		= nDotH * nDotH;
+
+	float denominator	= (nDotH2 * (roughness2 - 1.0)) + 1.0;
+	
+	return roughness2 / (PI * denominator * denominator);
+}
+
+
+float RemapRoughnessDirect(float roughness)
+{
+	float numerator = (roughness + 1.0);
+	numerator *= numerator;
+
+	return numerator / 8.0;
+}
+
+
+float RemapRoughnessIBL(float roughness)
+{
+	float roughness2	= roughness * roughness;
+
+	return roughness2 / 2.0;
+}
+
+
+float GeometrySchlickGGX(float NdotV, float k)
+{
+	float nom   = NdotV;
+	float denom = NdotV * (1.0 - k) + k;
+	
+	return nom / denom;
+}
+
+
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float k)
+{
+	float NdotV = max(dot(N, V), 0.0);
+	float NdotL = max(dot(N, L), 0.0);
+	float ggx1	= GeometrySchlickGGX(NdotV, k);
+	float ggx2	= GeometrySchlickGGX(NdotL, k);
+	
+	return ggx1 * ggx2;
+}
+
+
 
 // Phong Lighting
 //---------------

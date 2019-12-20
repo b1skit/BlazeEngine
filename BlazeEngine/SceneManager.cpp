@@ -588,7 +588,7 @@ namespace BlazeEngine
 
 	void BlazeEngine::SceneManager::InitializeTransformValues(aiMatrix4x4 const& source, Transform* dest)
 	{
-		aiVector3D sourceScale, sourcePosition; // sourceRotation, 
+		aiVector3D sourceScale, sourcePosition;
 		aiQuaternion sourceRotation;
 		source.Decompose(sourceScale, sourceRotation, sourcePosition); // Decompose the source matrix into its scale, rotation, position components
 
