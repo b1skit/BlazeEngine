@@ -34,13 +34,3 @@ vec3 WorldNormalFromTexture(sampler2D normal, vec2 uv, mat3 TBN)
 
 	return result;
 }
-
-
-// Compute the halfway vector between light and view dirs
-vec3 HalfVector(vec3 light, vec3 view)
-{
-	vec3 halfVector = light + view;
-	halfVector /= length(halfVector);
-
-	return halfVector;
-}

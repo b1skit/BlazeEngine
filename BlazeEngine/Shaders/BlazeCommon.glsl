@@ -62,8 +62,11 @@
 // Forward Lighting:
 uniform vec3 ambientColor;		// Deprecated: Use deferred lightColor instead
 
+// Deferred key light:
+uniform vec3 keylightWorldDir;	// Normalized, world-space, points towards keylight (ie. parallel)
+uniform vec3 keylightViewDir;	// Normalized, view-space, points towards keylight (ie. parallel). Note: Currently only uploaded for deferred lights
+
 // Deferred lights:
-uniform vec3 lightWorldDir;		// Normalized, world space, points towards light source
 uniform vec3 lightColor;
 uniform vec3 lightWorldPos;		// Light position in world space
 
@@ -120,7 +123,7 @@ uniform vec4		projectionParams;		// Main camera: .x = 1.0 (unused), y = near, z 
 
 
 // Generic material properties:
-uniform vec4 matProperty0;		// .x == Phong cosine exponent
+uniform vec4 matProperty0;		// .rgb == F0, .w == Phong cosine exponent
 //uniform vec4 matProperty1;
 //uniform vec4 matProperty2;
 //uniform vec4 matProperty3;

@@ -42,12 +42,12 @@ namespace BlazeEngine
 	{
 		// TODO: Break this out into an external file...
 
-		Sint32 Button_forward = SDLK_w;			// SDL_Keycodes, cast as signed 32 bit ints
-		Sint32 Button_backward = SDLK_s;
-		Sint32 Button_left = SDLK_a;
-		Sint32 Button_right = SDLK_d;
-		Sint32 Button_up = SDLK_SPACE;
-		Sint32 Button_down = SDLK_LSHIFT;
+		Sint32 Button_forward	= SDLK_w;			// SDL_Keycodes, cast as signed 32 bit ints
+		Sint32 Button_backward	= SDLK_s;
+		Sint32 Button_left		= SDLK_a;
+		Sint32 Button_right		= SDLK_d;
+		Sint32 Button_up		= SDLK_SPACE;
+		Sint32 Button_down		= SDLK_LSHIFT;
 
 		unsigned short Button_leftClick = SDL_BUTTON_LEFT;
 		unsigned short Button_rightClick = SDL_BUTTON_RIGHT;

@@ -13,6 +13,10 @@
 
 void main()
 {	
+	float AO = texture(GBuffer_RMAO, data.uv0.xy).b;
+
 	// Phong ambient contribution:
-	FragColor	= texture(GBuffer_Albedo, data.uv0.xy) * vec4(lightColor, 1);
+	FragColor	= texture(GBuffer_Albedo, data.uv0.xy) * vec4(lightColor, 1) * AO;
+
+	
 } 

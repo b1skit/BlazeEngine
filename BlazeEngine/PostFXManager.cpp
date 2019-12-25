@@ -117,7 +117,7 @@ namespace BlazeEngine
 		// Upload Shader parameters:
 		toneMapShader->UploadUniform("exposure", &CoreEngine::GetSceneManager()->GetMainCamera()->Exposure(), UNIFORM_Float);
 
-		// Upload the texel size for the smallest pingpong textures:
+		// Upload the texel size for the SMALLEST pingpong textures:
 		vec4 texelSize = this->pingPongTextures[NUM_DOWN_SAMPLES].TexelSize();
 		blurShaders[BLUR_SHADER_HORIZONTAL]->UploadUniform("texelSize", &texelSize.x, UNIFORM_Vec4fv);
 		blurShaders[BLUR_SHADER_VERTICAL]->UploadUniform("texelSize", &texelSize.x, UNIFORM_Vec4fv);
@@ -233,16 +233,16 @@ namespace BlazeEngine
 			glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0));
 
 			// Cleanup:
-			if (i > 1) // Leave this bound if it's the last iteration
-			{
-				this->pingPongTextures[i].Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
-			}			
+			this->pingPongTextures[i].Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
 		}
 
-		// Add blurred result to the original image: (NUM_DOWN_SAMPLES - 1) -> output material
-		glBindFramebuffer(GL_FRAMEBUFFER, (((RenderTexture*)outputMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO))->FBO()));
+		// Additively blit final blurred result (ie. half res) to the original, full-sized image: [0] -> output material
 		glViewport(0, 0, outputMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO)->Width(), outputMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO)->Height());
+		glBindFramebuffer(GL_FRAMEBUFFER, (((RenderTexture*)outputMaterial->AccessTexture(RENDER_TEXTURE_ALBEDO))->FBO()));
 
+		// Bind source:
+		this->pingPongTextures[0].Bind(this->blitShader->ShaderReference(), RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
+		
 		glEnable(GL_BLEND);
 		glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 		glDisable(GL_BLEND);

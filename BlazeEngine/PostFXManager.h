@@ -44,7 +44,7 @@ namespace BlazeEngine
 
 		RenderTexture* pingPongTextures = nullptr;	// Deallocated in destructor
 		const int NUM_DOWN_SAMPLES		= 2;		// Scaling factor: We half the frame size this many times
-		const int NUM_BLUR_PASSES		= 4;		// How many pairs of horizontal + vertical blur passes to perform
+		const int NUM_BLUR_PASSES		= 3;		// How many pairs of horizontal + vertical blur passes to perform
 
 		Shader* blitShader				= nullptr;	// Deallocated in destructor
 		Shader* toneMapShader			= nullptr;	// Deallocated in destructor

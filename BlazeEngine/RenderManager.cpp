@@ -394,7 +394,7 @@ namespace BlazeEngine
 			glDepthFunc(GL_LESS);
 			glCullFace(GL_BACK);
 
-			// Blit results to screen:
+			// Blit results to screen (Using the final post processing shader pass supplied by the PostProcessingManager):
 			BlitToScreen(finalFrameMaterial, finalFrameShader);
 		}
 		
@@ -719,11 +719,21 @@ namespace BlazeEngine
 		// TODO: Break this out into a function: ALL of our render functions have a similar setup		
 
 		// Light properties:
-		vec3 lightWorldPos	= deferredLight->GetTransform().WorldPosition();
+		currentShader->UploadUniform("lightColor", &deferredLight->Color().r, UNIFORM_Vec3fv);
 
-		currentShader->UploadUniform("lightWorldDir",	&deferredLight->GetTransform().Forward().x, UNIFORM_Vec3fv); // Note: This only makes sense w.r.t KEYLIGHT's world direction...
-		currentShader->UploadUniform("lightColor",		&deferredLight->Color().r,					UNIFORM_Vec3fv);
-		currentShader->UploadUniform("lightWorldPos",	&lightWorldPos.x,							UNIFORM_Vec3fv);
+		if (deferredLight->Type() == LIGHT_DIRECTIONAL)
+		{
+			currentShader->UploadUniform("keylightWorldDir", &deferredLight->GetTransform().Forward().x, UNIFORM_Vec3fv);
+
+			vec3 keylightViewDir = glm::normalize(view * vec4(deferredLight->GetTransform().Forward(), 0.0f) );
+			currentShader->UploadUniform("keylightViewDir", &keylightViewDir.x, UNIFORM_Vec3fv);
+		}
+		else
+		{
+			currentShader->UploadUniform("lightWorldPos", &deferredLight->GetTransform().WorldPosition().x, UNIFORM_Vec3fv);
+
+			// TODO: Can we just upload this once when the light is created (and its shader is created)?  (And also update it if the light is ever moved)
+		}		
 
 		// Shadow properties:
 		ShadowMap* activeShadowMap = deferredLight->ActiveShadowMap();
@@ -985,7 +995,10 @@ namespace BlazeEngine
 		vector<Shader*> shaders;
 		for (unsigned int i = 0; i < numMaterials; i++)
 		{
-			shaders.push_back(sceneManager->GetMaterial(i)->GetShader());
+			if (sceneManager->GetMaterial(i)->GetShader() != nullptr)
+			{
+				shaders.push_back(sceneManager->GetMaterial(i)->GetShader());
+			}			
 		}
 
 		// Add all Camera Shaders:	
@@ -1017,7 +1030,6 @@ namespace BlazeEngine
 		
 		// Add RenderManager shaders:
 		shaders.push_back(outputMaterial->GetShader());
-
 
 		// Configure all of the shaders:
 		for (unsigned int i = 0; i < (int)shaders.size(); i++)
@@ -1067,9 +1079,10 @@ namespace BlazeEngine
 			}			
 
 			// NOTE: These values are overridden every frame for deferred light Shaders:
-			if (keyLight != nullptr)
+			if (keyLight != nullptr && CoreEngine::GetCoreEngine()->GetConfig()->renderer.useForwardRendering == true)
 			{
-				shaders.at(i)->UploadUniform("lightWorldDir", &(keyDir->x), UNIFORM_Vec3fv);
+				shaders.at(i)->UploadUniform("keylightWorldDir", &(keyDir->x), UNIFORM_Vec3fv);
+
 				shaders.at(i)->UploadUniform("lightColor", &(keyCol->r), UNIFORM_Vec3fv);
 			}
 			

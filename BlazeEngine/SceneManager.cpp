@@ -811,6 +811,10 @@ namespace BlazeEngine
 						Roughness:		Phong's specular color (r)
 						Metalic:		Phong's specular color (g)
 						AO:				Phong's specular color (b)
+					
+					Packed material property 0 (RGBA):
+					Phong Exponent: Phong's "Cosine Power" slot
+					F0 Property:	Phong's "Reflected Color" slot
 				*/
 
 				// Extract material's textures:
@@ -866,83 +870,113 @@ namespace BlazeEngine
 					newMaterial->AddShaderKeyword(Shader::SHADER_KEYWORDS[NO_RMAO_TEXTURE]);
 				}
 
-				// Cache uniforms, so we can upload them once the shader is loaded:
-				LOG("Importing value from material's cosine power slot");
-				if (ExtractPropertyFromAiMaterial(scene->mMaterials[currentMaterial], newMaterial->Property(MATERIAL_PROPERTY_0), AI_MATKEY_SHININESS))
+
+				// Pack material properties:
+				// Extract F0 reflectivity from "Reflected Color":
+				LOG("Importing F0 value from material's \"Reflected Color\" slot");
+				if (ExtractPropertyFromAiMaterial(scene->mMaterials[currentMaterial], newMaterial->Property(MATERIAL_PROPERTY_0), AI_MATKEY_COLOR_REFLECTIVE))
 				{
+					if (newMaterial->Property(MATERIAL_PROPERTY_0) == vec4(0))
+					{
+						LOG_WARNING("Found F0 value of (0,0,0). Overriding with default of (0.04, 0.04, 0.04, 0.0)");
+
+						newMaterial->Property(MATERIAL_PROPERTY_0) = vec4(0.04f, 0.04f, 0.04f, 0.0f);
+					}
+
 					#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING)
-						LOG("Setting shader matProperty0 uniform: " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).x) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).y) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).z));
+						LOG("Inserted F0 into matProperty0 uniform: " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).x) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).y) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).z));
 					#endif
 				}
 				else
 				{
-					newMaterial->Property(MATERIAL_PROPERTY_0) = vec4(0, 0, 0, 0);
+					#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING)
+						LOG_WARNING("Could not find \"Reflected Color\" slot to extract F0 property from. Setting default of (0.04, 0.04, 0.04, 0.0)");
+					#endif
 
+					newMaterial->Property(MATERIAL_PROPERTY_0) = vec4(0.04f, 0.04f, 0.04f, 0.0f);
+				}
+
+				// Extract Phong exponent from "Cosine Power":
+				LOG("Importing value from material's \"Cosine Power\" slot");
+				vec4 extractedProperty(0.0f);
+				if (ExtractPropertyFromAiMaterial(scene->mMaterials[currentMaterial], extractedProperty, AI_MATKEY_SHININESS))
+				{
+					// Need to copy the property (single channel properties are stored in .x):
+					newMaterial->Property(MATERIAL_PROPERTY_0).w = extractedProperty.x;
+
+					#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING)
+						LOG("Added \"Cosine Power\" to uniform matProperty0.w: " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).x) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).y) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).z) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).w) );
+					#endif
+				}
+				else
+				{
 					newMaterial->AddShaderKeyword(Shader::SHADER_KEYWORDS[NO_COSINE_POWER]);
 
 					#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING)
-						LOG_WARNING("Could not find material cosine power slot");
+						LOG_WARNING("Could not find material \"Cosine Power\" slot");
 					#endif
+				}
+
+				// No need to load material shaders in deferred mode:
+				if (CoreEngine::GetCoreEngine()->GetConfig()->renderer.useForwardRendering == true)
+				{
+					// Create a shader, using the keywords we've built
+					bool loadedValidShader = false;
+					std::size_t shaderNameIndex = matName.find_last_of("_");
+					if (shaderNameIndex == string::npos)
+					{
+						LOG_ERROR("Could not find a shader name prefixed with an underscore in the material name. Destroying loaded textures and assigning error shader - GBuffer data will be garbage!!!");
+
+						Shader* newShader = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName);
+						newMaterial->GetShader() = newShader;
+					}
+					else
+					{
+						string shaderName = matName.substr(shaderNameIndex + 1, matName.length() - (shaderNameIndex + 1));
+
+						#if defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
+							LOG("Attempting to assign shader \"" + shaderName + "\" to material");
+						#endif
+
+						Shader* newShader = Shader::CreateShader(shaderName, &newMaterial->ShaderKeywords());
+						if (newShader->Name() != CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName)
+						{
+							newMaterial->GetShader() = newShader;
+							loadedValidShader = true;
+						}
+					}
+
+					// If we didn't load a valid shader, delete any textures we might have loaded and replace them with error textures:
+					if (!loadedValidShader)
+					{
+						for (int currentTexture = 0; currentTexture < newMaterial->NumTextureSlots(); currentTexture++)
+						{
+							if (newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture) != nullptr)
+							{
+								newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture)->Destroy();
+								delete newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture);
+								newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture) = nullptr;
+							}
+						}
+
+						// Assign a pink error albedo texture:
+						string errorTextureName = "errorTexture"; // TODO: Store this in a config?
+						newMaterial->AccessTexture(TEXTURE_ALBEDO) = FindLoadTextureByPath(errorTextureName, false);
+						if (newMaterial->AccessTexture(TEXTURE_ALBEDO) == nullptr)
+						{
+							newMaterial->AccessTexture(TEXTURE_ALBEDO) = new Texture(1, 1, errorTextureName, true, vec4(1.0f, 0.0f, 1.0f, 1.0f), false, TEXTURE_0 + TEXTURE_ALBEDO);
+
+							if (newMaterial->AccessTexture(TEXTURE_ALBEDO)->Buffer())
+							{
+								AddTexture(newMaterial->AccessTexture(TEXTURE_ALBEDO));
+							}
+						}
+					}
+
+					// Buffer uniforms:
+					newMaterial->GetShader()->UploadUniform(Material::MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_0].c_str(), &newMaterial->Property(MATERIAL_PROPERTY_0).x, UNIFORM_Vec4fv); // Upload matProperty0
 				}
 				
-				// TODO: Extract additional generic properties?
-
-
-				// Create a shader, using the keywords we've built
-				bool loadedValidShader = false;
-				std::size_t shaderNameIndex = matName.find_last_of("_");
-				if (shaderNameIndex == string::npos)
-				{
-					LOG_ERROR("Could not find a shader name prefixed with an underscore in the material name. Destroying loaded textures and assigning error shader - GBuffer data will be garbage!!!");
-
-					Shader* newShader = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName);
-					newMaterial->GetShader() = newShader;
-				}
-				else
-				{
-					string shaderName = matName.substr(shaderNameIndex + 1, matName.length() - (shaderNameIndex + 1));
-
-					#if defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
-						LOG("Attempting to assign shader \"" + shaderName + "\" to material");
-					#endif
-
-					Shader* newShader = Shader::CreateShader(shaderName, &newMaterial->ShaderKeywords());
-					if (newShader->Name() != CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName)
-					{
-						newMaterial->GetShader() = newShader;
-						loadedValidShader = true;
-					}
-				}
-
-
-				// If we're in forward mode, and didn't load a valid shader, delete any textures we might have loaded and replace them with error textures:
-				if (!loadedValidShader && CoreEngine::GetCoreEngine()->GetConfig()->renderer.useForwardRendering)
-				{
-					for (int currentTexture = 0; currentTexture < newMaterial->NumTextureSlots(); currentTexture++)
-					{
-						if (newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture) != nullptr)
-						{
-							newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture)->Destroy();
-							delete newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture);
-							newMaterial->AccessTexture((TEXTURE_TYPE)currentTexture) = nullptr;
-						}
-					}
-
-					// Assign a pink error albedo texture:
-					string errorTextureName = "errorTexture"; // TODO: Store this in a config?
-					newMaterial->AccessTexture(TEXTURE_ALBEDO) = FindLoadTextureByPath(errorTextureName, false);
-					if (newMaterial->AccessTexture(TEXTURE_ALBEDO) == nullptr)
-					{
-						newMaterial->AccessTexture(TEXTURE_ALBEDO) = new Texture(1, 1, errorTextureName, true, vec4(1.0f, 0.0f, 1.0f, 1.0f), false, TEXTURE_0 + TEXTURE_ALBEDO);
-
-						if (newMaterial->AccessTexture(TEXTURE_ALBEDO)->Buffer())
-						{
-							AddTexture(newMaterial->AccessTexture(TEXTURE_ALBEDO));
-						}
-					}
-				}
-
-
 				// Buffer all of the textures:
 				for (int currentTextureIndex = 0; currentTextureIndex < newMaterial->NumTextureSlots(); currentTextureIndex++)
 				{
@@ -953,9 +987,6 @@ namespace BlazeEngine
 						currentTexture->Buffer();
 					}
 				}
-
-				// Buffer uniforms:
-				newMaterial->GetShader()->UploadUniform(Material::MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_0].c_str(), &newMaterial->Property(MATERIAL_PROPERTY_0).x, UNIFORM_Vec4fv);
 
 				// Add the material to our material list:
 				AddMaterial(newMaterial, false);
@@ -1142,7 +1173,7 @@ namespace BlazeEngine
 
 						//newTexture = FindLoadTextureByPath(newName, false); // Currently, Texture objects contain their textureUnit, so we can't share them between slots
 
-						LOG_WARNING("Material has no emissive texture. Creating a 1x1 texture using the emissive (/incandesence) color with a path " + newName);				
+						LOG_WARNING("Material has no emissive texture. Creating a 1x1 texture using the emissive (/incandesence) color with a path " + newName);		
 					}
 					else
 					{
@@ -1171,8 +1202,22 @@ namespace BlazeEngine
 
 				if (newTexture == nullptr)
 				{
-					newName = "Color_" + to_string(newColor.r) + "_" + to_string(newColor.g) + "_" + to_string(newColor.b) + "_" + to_string(newColor.a);
-					LOG_WARNING("Material has no RMAO texture. Creating a 1x1 black texture with a path " + newName);				
+					// Try and use the specular color channel instead:
+					aiColor4D color;
+					if (AI_SUCCESS == material->Get("$clr.specular", 0, 0, color))
+					{
+						newName = "Color_" + to_string(color.r) + "_" + to_string(color.g) + "_" + to_string(color.b) + "_" + to_string(color.a);
+						newColor = vec4(color.r, color.g, color.b, color.a);
+
+						//newTexture = FindLoadTextureByPath(newName, false); // Currently, Texture objects contain their textureUnit, so we can't share them between slots
+
+						LOG_WARNING("Material has no RMAO texture in the specular slot. Creating a 1x1 texture using the specular color with a path " + newName);
+					}
+					else
+					{
+						newName = "Color_" + to_string(newColor.r) + "_" + to_string(newColor.g) + "_" + to_string(newColor.b) + "_" + to_string(newColor.a);	
+						LOG_WARNING("Material has no RMAO texture or specular color. Creating a 1x1 black texture with a path " + newName);
+					}
 				}
 
 				texUnit = TEXTURE_0 + TEXTURE_RMAO;
@@ -1232,6 +1277,7 @@ namespace BlazeEngine
 		return newTexture;
 	}
 
+
 	Texture* SceneManager::FindTextureByNameInAiMaterial(string nameSubstring, aiMaterial* material, string sceneName)
 	{
 		std::transform(nameSubstring.begin(), nameSubstring.end(), nameSubstring.begin(), ::tolower);
@@ -1260,26 +1306,20 @@ namespace BlazeEngine
 		return nullptr;
 	}
 
-	bool BlazeEngine::SceneManager::ExtractPropertyFromAiMaterial(aiMaterial* material, vec4& targetProperty, char const* AI_MATKEY_TYPE, int unused0 /*= 0*/, int unused1 /*= 0*/)
+
+	bool BlazeEngine::SceneManager::ExtractPropertyFromAiMaterial(aiMaterial* material, vec4& targetProperty, char const* AI_MATKEY_TYPE, int unused0 /*= 0*/, int unused1 /*= 0*/) // NOTE: unused0/unused1 are required to match #defined macros
 	{
-		aiColor3D color(0.f, 0.f, 0.f);
-		if (AI_SUCCESS == material->Get(AI_MATKEY_SHININESS, color))
+		// Note: vec4 targetProperty's .a channel will always be set to 0 here.
+
+		aiColor3D color(0.f, 0.f, 0.f); // Note: Single element properties (eg. Phong Cosine Power "Shininess") are inserted into the .x channel
+		if (AI_SUCCESS == material->Get(AI_MATKEY_TYPE, unused0, unused1, color))
 		{
 			#if defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
 				LOG("Successfully extracted material property from AI_MATKEY_SHININESS");
 			#endif
 
-			targetProperty = vec4(color.r, color.g, color.b, 0.0f);	// Note: We're Initializing the last property as 0...
+			targetProperty = vec4(color.r, color.g, color.b, 0.0f);	// Note: We always initializing the last property as 0...
 
-			return true;
-		}
-		else if (AI_SUCCESS == material->Get("$raw.Shininess", 0, 0, color))
-		{
-			#if defined(DEBUG_SCENEMANAGER_MATERIAL_LOGGING)
-				LOG("Successfully extracted material property from $raw.Shininess");
-			#endif
-
-			targetProperty = vec4(color.r, color.g, color.b, 0.0f);	// Note: We're Initializing the last property as 0...
 			return true;
 		}
 		else

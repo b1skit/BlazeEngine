@@ -24,25 +24,23 @@ void main()
 	}
 	
 	// Sample textures once inside the main shader flow, and pass the values as required:
-	FragColor					= texture(GBuffer_Albedo, uvs);
+	FragColor				= texture(GBuffer_Albedo, uvs);
+	vec3 worldNormal		= texture(GBuffer_WorldNormal, uvs).xyz;
+	vec4 RMAO				= texture(GBuffer_RMAO, uvs);
+	vec4 worldPosition		= texture(GBuffer_WorldPos, uvs);
+	vec4 matProp0			= texture(GBuffer_MatProp0, uvs); // .rgb = F0 (Surface response at 0 degrees), .a = Phong exponent
 
-	vec3 worldNormal			= texture(GBuffer_WorldNormal, uvs).xyz;
-	vec4 RMAO					= texture(GBuffer_RMAO, uvs);
-	vec4 worldPosition			= texture(GBuffer_WorldPos, uvs);
-	vec4 matProp0				= texture(GBuffer_MatProp0, uvs); // .r = Phong exponent
+	vec3 lightWorldDir	= normalize(lightWorldPos - worldPosition.xyz);
+	vec3 lightViewDir	= normalize((in_view * vec4(lightWorldDir, 0.0)).xyz);
 
-	vec3 fragToLight			= normalize(lightWorldPos - worldPosition.xyz);
-	
-	// Diffuse:
-	vec4 diffuseContribution	= vec4( LambertianDiffuse(FragColor.xyz, worldNormal, lightColor, fragToLight) , 1);
+	// Cube-map shadows:
+	float NoL				= max(0.0, dot(worldNormal, lightWorldDir));
+	vec3 lightToFrag		= worldPosition.xyz - lightWorldPos; // Cubemap sampler direction length matters, so we can't use -fragToLight
+	float shadowFactor		= GetShadowFactor(lightToFrag, CubeMap_0_Right, NoL);
 
-	// Specular:
-	vec4 specContribution		= vec4( PhongSpecular(worldPosition.xyz, worldNormal, fragToLight, lightColor, in_view, RMAO.r, matProp0.r).xyz * FragColor.xyz, 1);
-	
-	// Shadows:
-	vec3 lightToFrag			= worldPosition.xyz - lightWorldPos; // Cubemap sampler direction length matters, so we can't use -fragToLight
-	float shadowFactor			= GetShadowFactor(lightToFrag, CubeMap_0_Right, worldNormal, fragToLight);
+	// Factor in light attenuation:
+	float lightAtten	= LightAttenuation(worldPosition.xyz, lightWorldPos);
+	vec3 fragLight		= lightColor * lightAtten;
 
-	// Final result:
-	FragColor = ((diffuseContribution + specContribution)) * LightAttenuation(worldPosition.xyz, lightWorldPos) * shadowFactor;	
+	FragColor = ComputePBRLighting(FragColor, worldNormal, RMAO, worldPosition, matProp0.rgb, NoL, lightWorldDir, lightViewDir, fragLight, shadowFactor, in_view);
 } 

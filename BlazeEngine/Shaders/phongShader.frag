@@ -23,13 +23,16 @@ void main()
 	vec4 ambientContribution	= FragColor * vec4(ambientColor, 1);
 
 	// Diffuse:
-	vec4 diffuseContribution	= vec4( LambertianDiffuse(FragColor.xyz, worldNormal, lightColor, lightWorldDir) , 1);
+	vec4 diffuseContribution	= vec4( LambertianDiffuse(FragColor.xyz, worldNormal, lightColor, keylightWorldDir) , 1);
 
 	// Specular:	
-	vec4 specContribution		= vec4( PhongSpecular(data.worldPos, worldNormal, lightWorldDir, lightColor, in_view, RMAO.r, matProperty0.x) * FragColor.xyz, 1);
+	vec4 specContribution		= vec4( PhongSpecular(data.worldPos, worldNormal, keylightWorldDir, lightColor, in_view, RMAO.r, matProperty0.a) * FragColor.xyz, 1);
+
+	// NOTE: keylightWorldDir is Key light's -forward direction (This shader only supports the keylight)
 
 	// Shadows:
-	float shadowFactor		= GetShadowFactor(data.shadowPos, shadowDepth, worldNormal, lightWorldDir);
+	float NoL					= max(0.0, dot(worldNormal, keylightWorldDir));
+	float shadowFactor			= GetShadowFactor(data.shadowPos, shadowDepth, NoL);
 	
 	// Final result:
 	FragColor = ambientContribution + ((diffuseContribution + specContribution) * shadowFactor);

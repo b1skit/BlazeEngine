@@ -207,7 +207,7 @@ namespace BlazeEngine
 		Texture*	FindTextureByNameInAiMaterial(string nameSubstring, aiMaterial* material, string sceneName);
 
 		// Assimp scene material property helper:
-		bool		ExtractPropertyFromAiMaterial(aiMaterial* material, vec4& targetProperty, char const* AI_MATKEY_TYPE, int unused0 = 0, int unused1 = 0);
+		bool		ExtractPropertyFromAiMaterial(aiMaterial* material, vec4& targetProperty, char const* AI_MATKEY_TYPE, int unused0 = 0, int unused1 = 0); // NOTE: unused0/unused1 are required to match #defined macros
 
 
 		// Assimp scene geo import helper:

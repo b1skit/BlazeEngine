@@ -15,23 +15,17 @@
 void main()
 {
 	// Sample textures once inside the main shader flow, and pass the values as required:
-	FragColor					= texture(GBuffer_Albedo, data.uv0.xy);
-	vec3 worldNormal			= texture(GBuffer_WorldNormal, data.uv0.xy).xyz;
-	vec4 RMAO					= texture(GBuffer_RMAO, data.uv0.xy);
-	vec4 worldPosition			= texture(GBuffer_WorldPos, data.uv0.xy);
-	vec4 matProp0				= texture(GBuffer_MatProp0, data.uv0.xy); // .r = Phong exponent
+	FragColor				= texture(GBuffer_Albedo, data.uv0.xy); // Note: For PBR, we require all calculations to be performed in linear color
+	vec3 worldNormal		= texture(GBuffer_WorldNormal, data.uv0.xy).xyz;
+	vec4 RMAO				= texture(GBuffer_RMAO, data.uv0.xy);
+	vec4 worldPosition		= texture(GBuffer_WorldPos, data.uv0.xy);
+	vec4 matProp0			= texture(GBuffer_MatProp0, data.uv0.xy); // .rgb = F0, .a = Phong exponent
 
-	// Diffuse:
-	vec4 diffuseContribution	= vec4( LambertianDiffuse(FragColor.xyz, worldNormal, lightColor, lightWorldDir) , 1);
+	// Read from 2D shadow map:
+	float NoL				= max(0.0, dot(worldNormal, keylightWorldDir));
+	vec3 shadowPos			= (shadowCam_vp * worldPosition).xyz;
+	float shadowFactor		= GetShadowFactor(shadowPos, shadowDepth, NoL);
 
-	// Specular:
-	vec4 specContribution		= vec4( PhongSpecular(worldPosition.xyz, worldNormal, lightWorldDir, lightColor, in_view, RMAO.r, matProp0.r).xyz * FragColor.xyz, 1);
-	
-	// Shadow:
-	vec3 shadowPos				= (shadowCam_vp * worldPosition).xyz;
-	float shadowFactor			= GetShadowFactor(shadowPos, shadowDepth, worldNormal, lightWorldDir);
-
-
-	// Final result:
-	FragColor = ((diffuseContribution + specContribution) * shadowFactor);
+	// Note: Keylight lightColor doesn't need any attenuation to be factored in
+	FragColor = ComputePBRLighting(FragColor, worldNormal, RMAO, worldPosition, matProp0.rgb, NoL, keylightWorldDir, keylightViewDir, lightColor, shadowFactor, in_view);
 } 
