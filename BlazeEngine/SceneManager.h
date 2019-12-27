@@ -128,7 +128,7 @@ namespace BlazeEngine
 		//------------------
 		// Load a scene.
 		// sceneName == the root folder name within the ./Scenes/ directory. Must contain an .fbx file with the same name.
-		void LoadScene(string sceneName);
+		bool LoadScene(string sceneName);
 
 		inline unsigned int				NumMaterials()												{ return currentMaterialCount; }
 		inline Material*				GetMaterial(unsigned int materialIndex)						{ return materials[materialIndex]; }

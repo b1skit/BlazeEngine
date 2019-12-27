@@ -346,13 +346,13 @@ namespace BlazeEngine
 	}
 
 
-	void SceneManager::LoadScene(string sceneName)
+	bool SceneManager::LoadScene(string sceneName)
 	{
 		if (sceneName == "")
 		{
 			LOG_ERROR("Quitting! No scene name received. Did you forget to use the \"-scene theSceneName\" command line argument?");
 			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, nullptr });
-			return;
+			return false;
 		}
 
 		if (currentScene)
@@ -382,7 +382,7 @@ namespace BlazeEngine
 		if (!scene)
 		{
 			CoreEngine::GetEventManager()->Notify(new EventInfo{ EVENT_ENGINE_QUIT, nullptr, new string("Failed to load scene file: " + fbxPath + ": " + importer.GetErrorString() ) });
-			return;
+			return false;
 		}
 		else
 		{
@@ -501,6 +501,8 @@ namespace BlazeEngine
 		PlayerObject* player = new PlayerObject(currentScene->GetMainCamera());
 		currentScene->gameObjects.push_back(player);	
 		LOG("Created PlayerObject using mainCamera");
+
+		return true;
 	}
 
 
@@ -1368,8 +1370,8 @@ namespace BlazeEngine
 				if (!scene->mMeshes[currentMesh]->HasFaces())					LOG_WARNING("\t - faces");
 				if (!scene->mMeshes[currentMesh]->HasNormals())					LOG_WARNING("\t - normals");
 				if (!scene->mMeshes[currentMesh]->HasVertexColors(0))			LOG_WARNING("\t - vertex colors");
-				if (!scene->mMeshes[currentMesh]->HasTextureCoords(0))			LOG_WARNING("\t - texture coordinates");
-				if (!scene->mMeshes[currentMesh]->HasTangentsAndBitangents())	LOG_WARNING("\t - tangents & bitangents");
+				if (!scene->mMeshes[currentMesh]->HasTextureCoords(0))			LOG_ERROR("\t - texture coordinates: The object may not render correctly!");
+				if (!scene->mMeshes[currentMesh]->HasTangentsAndBitangents())	LOG_ERROR("\t - tangents & bitangents: The object may not render correctly!");
 			}
 
 			// Find the corresponding node in the scene graph:

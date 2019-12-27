@@ -7,8 +7,8 @@
       "Command": "-scene holodeck"
     },
     {
-      "Id": "b995cacc-3d56-44b2-9fdd-ea21b7f3a0d9",
-      "Command": "-scene simpleCube"
+      "Id": "fde1e1fd-107e-4d24-9692-823dd1d9b945",
+      "Command": "-scene testScene"
     },
     {
       "Id": "d744714d-2f7a-47c8-9089-80766a25a3d7",

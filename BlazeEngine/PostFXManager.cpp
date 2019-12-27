@@ -42,9 +42,12 @@ namespace BlazeEngine
 		{
 			for (int i = 0; i < BLUR_SHADER_COUNT; i++)
 			{
-				blurShaders[i]->Destroy();
-				delete blurShaders[i];
-				blurShaders[i] = nullptr;
+				if (blurShaders[i] != nullptr)
+				{
+					blurShaders[i]->Destroy();
+					delete blurShaders[i];
+					blurShaders[i] = nullptr;
+				}				
 			}
 		}
 
