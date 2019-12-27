@@ -5,8 +5,6 @@
 #include "SDL_keyboard.h"
 #include "SDL_keycode.h"
 
-//#include <string> // DEBUG
-
 
 namespace BlazeEngine
 {
@@ -25,7 +23,7 @@ namespace BlazeEngine
 
 		for (int i = 0; i < INPUT_NUM_INPUT_AXIS; i++)
 		{
-			mouseAxisStates[i] = 0;
+			mouseAxisStates[i] = 0.0f;
 		}
 	}
 
@@ -36,6 +34,7 @@ namespace BlazeEngine
 		return *instance;
 	}
 
+
 	bool const& InputManager::GetInputState(INPUT_STATE key)
 	{
 		return InputManager::buttonStates[key];
@@ -44,135 +43,83 @@ namespace BlazeEngine
 
 	float InputManager::GetMouseAxisInput(INPUT_AXIS axis)
 	{
+		float sensitivity;
 		if (axis == INPUT_MOUSE_X)
 		{
-			return InputManager::mouseAxisStates[INPUT_MOUSE_X] * CoreEngine::GetCoreEngine()->GetConfig()->input.mousePitchSensitivity;
+			sensitivity = CoreEngine::GetCoreEngine()->GetConfig()->input.mousePitchSensitivity;
 		}
 		else
 		{
-			return InputManager::mouseAxisStates[INPUT_MOUSE_Y] * CoreEngine::GetCoreEngine()->GetConfig()->input.mouseYawSensitivity;
+			sensitivity = CoreEngine::GetCoreEngine()->GetConfig()->input.mouseYawSensitivity;
 		}
+
+		return InputManager::mouseAxisStates[axis] * sensitivity;
 	}
 	
+
 	void InputManager::Startup()
 	{
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_BACKWARD, this);
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_DOWN, this);
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_FORWARD, this);
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_LEFT, this);
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_RIGHT, this);
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_UP, this);
-
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_BACKWARD, this);
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_DOWN, this);
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_FORWARD, this);
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_LEFT, this);
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_RIGHT, this);
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_UP_UP, this);
-
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_CLICK_LEFT, this);
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_CLICK_RIGHT, this);
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_MOVED, this);
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_RELEASE_LEFT, this);
-		CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_MOUSE_RELEASE_RIGHT, this);
+		this->LoadInputBindings();
 
 		LOG("Input manager started!");
 	}
+
 
 	void InputManager::Shutdown()
 	{
 		LOG("Input manager shutting down...");
 	}
 
+
 	void InputManager::Update()
 	{
-		buttonStates[INPUT_MOUSE_AXIS] = false;
-		for (int i = 0; i < INPUT_NUM_INPUT_AXIS; i++)
-		{
-			mouseAxisStates[i] = 0;
-		}
+		// Get the mouse deltas, once per frame:
+		int xRel, yRel = 0;
+		SDL_GetRelativeMouseState(&xRel, &yRel);
+		mouseAxisStates[INPUT_MOUSE_X] = (float)xRel;
+		mouseAxisStates[INPUT_MOUSE_Y] = (float)yRel;
+
+		// Mouse button states:
+		buttonStates[INPUT_MOUSE_LEFT] = (bool)(SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT));
+		buttonStates[INPUT_MOUSE_RIGHT] = (bool)(SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_RIGHT));
+
+		// Update keystates:
+		const Uint8* state = SDL_GetKeyboardState(NULL);
+
+		buttonStates[INPUT_BUTTON_FORWARD]	= (bool)state[this->inputBindings[INPUT_BUTTON_FORWARD]];
+		buttonStates[INPUT_BUTTON_BACKWARD] = (bool)state[this->inputBindings[INPUT_BUTTON_BACKWARD]];
+		buttonStates[INPUT_BUTTON_LEFT]		= (bool)state[this->inputBindings[INPUT_BUTTON_LEFT]];
+		buttonStates[INPUT_BUTTON_RIGHT]	= (bool)state[this->inputBindings[INPUT_BUTTON_RIGHT]];
+		buttonStates[INPUT_BUTTON_UP]		= (bool)state[this->inputBindings[INPUT_BUTTON_UP]];
+		buttonStates[INPUT_BUTTON_DOWN]		= (bool)state[this->inputBindings[INPUT_BUTTON_DOWN]];
+
+		buttonStates[INPUT_BUTTON_QUIT]		= (bool)state[this->inputBindings[INPUT_BUTTON_QUIT]];
 	}
+
 
 	void InputManager::HandleEvent(EventInfo const * eventInfo)
 	{
-		switch (eventInfo->type)
-		{
-		case EVENT_INPUT_BUTTON_DOWN_FORWARD:
-		case EVENT_INPUT_BUTTON_UP_FORWARD:
-		{
-			buttonStates[INPUT_BUTTON_FORWARD] = !buttonStates[INPUT_BUTTON_FORWARD];
-		}
-		break;
+		
+	}
 
-		case EVENT_INPUT_BUTTON_DOWN_BACKWARD:
-		case EVENT_INPUT_BUTTON_UP_BACKWARD:
-		{
-			buttonStates[INPUT_BUTTON_BACKWARD] = !buttonStates[INPUT_BUTTON_BACKWARD];
-		}
-		break;
 
-		case EVENT_INPUT_BUTTON_DOWN_LEFT:
-		case EVENT_INPUT_BUTTON_UP_LEFT:
-		{
-			buttonStates[INPUT_BUTTON_LEFT] = !buttonStates[INPUT_BUTTON_LEFT];
-		}
-		break;
+	void InputManager::LoadInputBindings()
+	{
+		// TODO: Load from a file. For now, we just hard code
 
-		case EVENT_INPUT_BUTTON_DOWN_RIGHT:
-		case EVENT_INPUT_BUTTON_UP_RIGHT: 
-		{
-			buttonStates[INPUT_BUTTON_RIGHT] = !buttonStates[INPUT_BUTTON_RIGHT];
-		}
-		break;
+		// Initialize key mappings:
+		this->inputBindings[INPUT_BUTTON_FORWARD]	= SDL_SCANCODE_W;
+		this->inputBindings[INPUT_BUTTON_BACKWARD]	= SDL_SCANCODE_S;
+		this->inputBindings[INPUT_BUTTON_LEFT]		= SDL_SCANCODE_A;
+		this->inputBindings[INPUT_BUTTON_RIGHT]		= SDL_SCANCODE_D;
+		this->inputBindings[INPUT_BUTTON_UP]		= SDL_SCANCODE_SPACE;
+		this->inputBindings[INPUT_BUTTON_DOWN]		= SDL_SCANCODE_LSHIFT;
+		
+		this->inputBindings[INPUT_BUTTON_QUIT]		= SDL_SCANCODE_ESCAPE;
 
-		case EVENT_INPUT_BUTTON_DOWN_UP:
-		case EVENT_INPUT_BUTTON_UP_UP:
-		{
-			buttonStates[INPUT_BUTTON_UP] = !buttonStates[INPUT_BUTTON_UP];
-		}
-		break;
-
-		case EVENT_INPUT_BUTTON_DOWN_DOWN:
-		case EVENT_INPUT_BUTTON_UP_DOWN:
-		{
-			buttonStates[INPUT_BUTTON_DOWN] = !buttonStates[INPUT_BUTTON_DOWN];
-		}
-		break;
-
-		case EVENT_INPUT_MOUSE_MOVED:
-		{
-			int xRel, yRel = 0;
-			SDL_GetRelativeMouseState(&xRel, &yRel);
-
-			buttonStates[INPUT_MOUSE_AXIS] = true;
-			mouseAxisStates[INPUT_MOUSE_X] = (float)xRel;
-			mouseAxisStates[INPUT_MOUSE_Y] = (float)yRel;
-
-			#if defined(DEBUG_LOGMANAGER_MOUSE_INPUT_LOGGING)
-				LOG("\tRecieved xRel = " + to_string(xRel) + ", yRel = " + to_string(yRel));
-			#endif
-			return;
-		}	
-		break;
-
-		case EVENT_INPUT_MOUSE_CLICK_LEFT:
-		case EVENT_INPUT_MOUSE_RELEASE_LEFT:
-		{
-			buttonStates[INPUT_MOUSE_LEFT] = !buttonStates[INPUT_MOUSE_LEFT];
-		}
-		break;
-
-		case EVENT_INPUT_MOUSE_CLICK_RIGHT:
-		case EVENT_INPUT_MOUSE_RELEASE_RIGHT:
-		{
-			buttonStates[INPUT_MOUSE_RIGHT] = !buttonStates[INPUT_MOUSE_RIGHT];
-		}
-		break;
-
-		default:
-			LOG_ERROR("ERROR: Default event generated in InputManager!");
-			break;
-		}
+		// Initialize mouse mappings as 0 (== SDL_SCANCODE_UNKNOWN)
+		this->inputBindings[INPUT_MOUSE_LEFT]	= SDL_SCANCODE_UNKNOWN;
+		this->inputBindings[INPUT_MOUSE_RIGHT]	= SDL_SCANCODE_UNKNOWN;
 	}
 }
 

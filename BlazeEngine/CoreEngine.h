@@ -142,7 +142,7 @@ namespace BlazeEngine
 		EngineConfig const* GetConfig();
 
 		// BlazeObject interface:
-		void Update()	{}	// Do nothing...
+		void Update();
 
 		// EventListener interface:
 		void HandleEvent(EventInfo const* eventInfo);
@@ -158,11 +158,11 @@ namespace BlazeEngine
 		TimeManager* const BlazeTimeManager = &TimeManager::Instance();
 
 		// Static Engine component singletons
-		static CoreEngine* coreEngine;
-		static EventManager* BlazeEventManager;
-		static InputManager* BlazeInputManager;
-		static SceneManager* BlazeSceneManager;
-		static RenderManager* BlazeRenderManager;
+		static CoreEngine*		coreEngine;
+		static EventManager*	BlazeEventManager;
+		static InputManager*	BlazeInputManager;
+		static SceneManager*	BlazeSceneManager;
+		static RenderManager*	BlazeRenderManager;
 		
 
 		// Engine control:

@@ -32,8 +32,9 @@ namespace BlazeEngine
 		//config.LoadConfig(this->configPath);
 
 		// Initialize SDL:
-		if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+		if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
 		{
+			LOG_ERROR(SDL_GetError());
 			exit(-1);
 		}
 	}
@@ -72,36 +73,38 @@ namespace BlazeEngine
 		LOG("CoreEngine beginning main game loop!");
 
 		// Process any events that might have occurred during startup:
-		BlazeEventManager->Update();
-		BlazeLogManager->Update();
+		this->BlazeEventManager->Update();
+		this->BlazeLogManager->Update();
 
 		// Initialize game loop timing:
-		BlazeTimeManager->Update();
+		this->BlazeTimeManager->Update();
 		double elapsed = 0.0;
 
 		while (isRunning)
 		{
-			BlazeInputManager->Update(); // Note: Input processing occurs via events. This just resets the mouse state
+			this->BlazeInputManager->Update();
 
-			// Process events, incase we received input
-			BlazeEventManager->Update(); // Clears SDL event queue: Must occur after any other component that listens to SDL events
-			BlazeLogManager->Update();
+			// Process events
+			this->BlazeEventManager->Update(); // Clears SDL event queue: Must occur after any other component that listens to SDL events
+			this->BlazeLogManager->Update();
 
-			BlazeTimeManager->Update();	// We only need to call this once per loop. DeltaTime() effectively == #ms between calls to TimeManager.Update()
+			this->BlazeTimeManager->Update();	// We only need to call this once per loop. DeltaTime() effectively == #ms between calls to TimeManager.Update()
 			elapsed += BlazeTimeManager->DeltaTime();
 
 			while (elapsed >= FIXED_TIMESTEP)
 			{
 				// Update components:
-				BlazeEventManager->Update(); // Clears SDL event queue: Must occur after any other component that listens to SDL events
-				BlazeLogManager->Update();
+				this->BlazeEventManager->Update(); // Clears SDL event queue: Must occur after any other component that listens to SDL events
+				this->BlazeLogManager->Update();
 
-				BlazeSceneManager->Update(); // Updates all of the scene objects
+				this->BlazeSceneManager->Update(); // Updates all of the scene objects
 
 				elapsed -= FIXED_TIMESTEP;
 			}
 			
-			BlazeRenderManager->Update();
+			this->BlazeRenderManager->Update();
+
+			this->Update();
 		}
 	}
 
@@ -140,6 +143,8 @@ namespace BlazeEngine
 		delete BlazeEventManager;
 		delete BlazeLogManager;		
 
+		SDL_Quit();
+
 		return;
 	}
 
@@ -147,6 +152,16 @@ namespace BlazeEngine
 	EngineConfig const * CoreEngine::GetConfig()
 	{
 		return &config;
+	}
+
+	
+	void CoreEngine::Update()
+	{
+		// Generate a quit event if the quit button is pressed:
+		if (this->BlazeInputManager->GetInputState(INPUT_BUTTON_QUIT) == true)
+		{
+			this->BlazeEventManager->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this });
+		}
 	}
 
 

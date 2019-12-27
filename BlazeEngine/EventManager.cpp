@@ -25,10 +25,12 @@ namespace BlazeEngine
 		}		
 	}
 
+
 	//EventManager::~EventManager()
 	//{
 	//
 	//}
+
 
 	EventManager& EventManager::Instance()
 	{
@@ -36,10 +38,12 @@ namespace BlazeEngine
 		return *instance;
 	}
 
+
 	void EventManager::Startup()
 	{
 		LOG("Event manager started!");
 	}
+
 
 	void EventManager::Shutdown()
 	{
@@ -48,166 +52,17 @@ namespace BlazeEngine
 		LOG("Event manager shutting down...");
 	}
 
+
 	void EventManager::Update()
 	{
-		bool doFireEvent = true;
-
-		// Catch relevant events from SDL2:
-		SDL_Event currentSDLEvent;
-		while (SDL_PollEvent(&currentSDLEvent))
+		// Check for SDL quit events (only). We do this instead of parsing the entire queue with SDL_PollEvent(), which removed input events we needed
+		SDL_PumpEvents();
+		
+		#define NUM_EVENTS 1
+		SDL_Event eventBuffer[NUM_EVENTS]; // 
+		if (SDL_PeepEvents(eventBuffer, NUM_EVENTS, SDL_GETEVENT, SDL_QUIT, SDL_QUIT) > 0)
 		{
-			switch (currentSDLEvent.type)
-			{
-			case SDL_QUIT:
-			{
-				Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Received SDL_QUIT event") });
-				break;
-			}
-
-			case SDL_KEYDOWN:
-			{
-				int numKeys = 0;
-				const Uint8* keyboardState = SDL_GetKeyboardState(&numKeys);
-				InputBindings const* inputBindings = CoreEngine::GetInputManager()->GetInputBindings();
-				if (numKeys > 0)
-				{
-					// Button input events:
-					if (currentSDLEvent.key.keysym.sym == inputBindings->Button_forward)
-					{
-						if (!CoreEngine::GetInputManager()->GetInputState(INPUT_BUTTON_FORWARD))
-						{
-							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_FORWARD, this });
-						}
-					}
-					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_backward)
-					{
-						if (!CoreEngine::GetInputManager()->GetInputState(INPUT_BUTTON_BACKWARD))
-						{
-							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_BACKWARD, this });
-						}
-					}
-					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_left)
-					{
-						if (!CoreEngine::GetInputManager()->GetInputState(INPUT_BUTTON_LEFT))
-						{
-							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_LEFT, this });
-						}
-					}
-					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_right)
-					{
-						if (!CoreEngine::GetInputManager()->GetInputState(INPUT_BUTTON_RIGHT))
-						{
-							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_RIGHT, this });
-						}
-					}
-					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_up)
-					{
-						if (!CoreEngine::GetInputManager()->GetInputState(INPUT_BUTTON_UP))
-						{
-							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_UP, this });
-						}
-					}
-					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_down)
-					{
-						if (!CoreEngine::GetInputManager()->GetInputState(INPUT_BUTTON_DOWN))
-						{
-							Notify(new EventInfo{ EVENT_INPUT_BUTTON_DOWN_DOWN, this });
-						}
-					}
-
-					// Quit button
-					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_quit)
-					{
-						Notify(new EventInfo{ EVENT_ENGINE_QUIT, this });
-					}
-				}
-				break;
-			}
-			case SDL_KEYUP:
-			{
-				int numKeys = 0;
-				const Uint8* keyboardState = SDL_GetKeyboardState(&numKeys);
-				InputBindings const* inputBindings = CoreEngine::GetInputManager()->GetInputBindings();
-				if (numKeys > 0)
-				{
-					// Button input events:
-					if (currentSDLEvent.key.keysym.sym == inputBindings->Button_forward)
-					{
-						Notify(new EventInfo{ EVENT_INPUT_BUTTON_UP_FORWARD, this });
-					}
-					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_backward)
-					{
-						Notify(new EventInfo{ EVENT_INPUT_BUTTON_UP_BACKWARD, this });
-					}
-					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_left)
-					{
-						Notify(new EventInfo{ EVENT_INPUT_BUTTON_UP_LEFT, this });
-					}
-					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_right)
-					{
-						Notify(new EventInfo{ EVENT_INPUT_BUTTON_UP_RIGHT, this });
-					}
-					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_up)
-					{
-						Notify(new EventInfo{ EVENT_INPUT_BUTTON_UP_UP, this });
-					}
-					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_down)
-					{
-						Notify(new EventInfo{ EVENT_INPUT_BUTTON_UP_DOWN, this });
-					}
-
-					// Quit button
-					else if (currentSDLEvent.key.keysym.sym == inputBindings->Button_quit)
-					{
-						Notify(new EventInfo{ EVENT_ENGINE_QUIT, this });
-					}
-				}
-			}
-			break;
-
-			case SDL_MOUSEBUTTONDOWN:
-			{
-				switch (currentSDLEvent.button.button)
-				{
-				case SDL_BUTTON_LEFT:
-					Notify(new EventInfo{ EVENT_INPUT_MOUSE_CLICK_LEFT, this });
-					break;
-
-				case SDL_BUTTON_RIGHT:
-					Notify(new EventInfo{ EVENT_INPUT_MOUSE_CLICK_RIGHT, this });
-					break;
-				}				
-				
-				break;
-			}			
-			case SDL_MOUSEBUTTONUP:
-			{
-				switch (currentSDLEvent.button.button)
-				{
-				case SDL_BUTTON_LEFT:
-					Notify(new EventInfo{ EVENT_INPUT_MOUSE_RELEASE_LEFT, this });
-					break;
-
-				case SDL_BUTTON_RIGHT:
-					Notify(new EventInfo{ EVENT_INPUT_MOUSE_RELEASE_RIGHT, this });
-					break;
-				}
-
-				break;
-			}			
-			case SDL_MOUSEMOTION:
-			{
-				Notify(new EventInfo{ EVENT_INPUT_MOUSE_MOVED, this, nullptr });				
-				break;
-			}
-				
-
-			default: // We don't care about anything else
-			{
-				break;
-			}
-
-			}// End switch
+			this->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this, new string("Received SDL_QUIT event") });
 		}
 
 		// Loop through each type of event:
@@ -237,11 +92,13 @@ namespace BlazeEngine
 		}
 	}
 
+
 	void EventManager::Subscribe(EVENT_TYPE eventType, EventListener* listener)
 	{
 		eventListeners[eventType].push_back(listener);
 		return;
 	}
+
 
 	//void EventManager::Unsubscribe(EventListener * listener)
 	//{
@@ -251,7 +108,8 @@ namespace BlazeEngine
 	//	return;
 	//}
 
-	void EventManager::Notify(EventInfo const* eventInfo, bool pushToFront)
+
+	void EventManager::Notify(EventInfo const* eventInfo, bool pushToFront /*= false*/)
 	{
 		#if defined(DEBUG_PRINT_NOTIFICATIONS)
 			if (eventInfo)
@@ -285,7 +143,7 @@ namespace BlazeEngine
 			}			
 		#endif
 
-		// Selec what to notify based on type?
+		// Select what to notify based on type?
 
 		if (pushToFront)
 		{

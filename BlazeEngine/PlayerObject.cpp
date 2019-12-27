@@ -32,18 +32,15 @@ namespace BlazeEngine
 		GameObject::Update();
 
 		// Handle first person view orientation: (pitch + yaw)
-		if (InputManager::GetInputState(INPUT_MOUSE_AXIS))
-		{
-			vec3 yaw(0.0f, 0.0f, 0.0f);
-			vec3 pitch(0.0f, 0.0f, 0.0f);
+		vec3 yaw(0.0f, 0.0f, 0.0f);
+		vec3 pitch(0.0f, 0.0f, 0.0f);
 
-			// Compute rotation amounts, in radians:
-			yaw.y	= (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_X) * (float)TimeManager::DeltaTime();
-			pitch.x = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_Y) * (float)TimeManager::DeltaTime();
+		// Compute rotation amounts, in radians:
+		yaw.y	= (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_X) * (float)TimeManager::DeltaTime();
+		pitch.x = (float)InputManager::GetMouseAxisInput(INPUT_MOUSE_Y) * (float)TimeManager::DeltaTime();
 
-			this->transform.Rotate(yaw);
-			this->playerCam->GetTransform()->Rotate(pitch);
-		}
+		this->transform.Rotate(yaw);
+		this->playerCam->GetTransform()->Rotate(pitch);
 
 		// Handle direction:
 		vec3 direction = vec3(0.0f, 0.0f, 0.0f);
@@ -53,7 +50,7 @@ namespace BlazeEngine
 			vec3 forward = this->transform.Forward();
 			Transform::RotateVector(forward, this->playerCam->GetTransform()->GetEulerRotation().x, this->transform.Right());
 
-			direction += forward  * -1.0f;			
+			direction -= forward;
 		}
 		if (InputManager::GetInputState(INPUT_BUTTON_BACKWARD))
 		{
@@ -64,7 +61,7 @@ namespace BlazeEngine
 		}
 		if (InputManager::GetInputState(INPUT_BUTTON_LEFT))
 		{
-			direction += this->transform.Right() * -1.0f;
+			direction -= this->transform.Right();
 		}
 		if (InputManager::GetInputState(INPUT_BUTTON_RIGHT))
 		{
@@ -76,7 +73,7 @@ namespace BlazeEngine
 		}
 		if (InputManager::GetInputState(INPUT_BUTTON_DOWN))
 		{
-			direction += this->transform.Up() * -1.0f;
+			direction -= this->transform.Up();
 		}
 
 		if (glm::length(direction) != 0.0f)
