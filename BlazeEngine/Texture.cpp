@@ -13,6 +13,7 @@
 using std::to_string;
 
 #define ERROR_TEXTURE_NAME "RedErrorTexture"
+#define DEFAULT_ALPHA 1.0f			// Default alpha value when loading texture data, if no alpha exists
 
 
 namespace BlazeEngine
@@ -69,9 +70,9 @@ namespace BlazeEngine
 		if (this->texels != nullptr)
 		{
 			delete[] texels;
-			texels = nullptr;
-			numTexels = 0;
-			resolutionHasChanged = true;
+			this->texels				= nullptr;
+			this->numTexels				= 0;
+			this->resolutionHasChanged	= true;
 		}
 
 		// Copy properties:
@@ -195,8 +196,9 @@ namespace BlazeEngine
 			return texels[0];
 		}
 
-		return texels[(v * height) + u];
+		return texels[(v * this->width) + u]; // Number of elements in v rows, + uth element in next row
 	}
+
 
 	void BlazeEngine::Texture::Fill(vec4 color, bool doBuffer /*= false*/)
 	{
@@ -214,6 +216,7 @@ namespace BlazeEngine
 			Buffer();
 		}
 	}
+
 
 	void BlazeEngine::Texture::Fill(vec4 tl, vec4 tr, vec4 bl, vec4 br, bool doBuffer /*= false*/)
 	{
@@ -246,45 +249,39 @@ namespace BlazeEngine
 	{
 		stbi_set_flip_vertically_on_load(flipY);	// Set stb_image to flip the y-axis on loading to match OpenGL's style (So pixel (0,0) is in the bottom-left of the image)
 
-		LOG("Loading texture at " + texturePath);
+		LOG("Attempting to load texture \"" + texturePath + "\"");
 
 		int width, height, numChannels;
-		unsigned char* imageData = stbi_load(texturePath.c_str(), &width, &height, &numChannels, 0);
+		void* imageData = nullptr;
+		bool isHDR		= false;
+
+		// Handle HDR images:
+		if (stbi_is_hdr(texturePath.c_str()))
+		{
+			imageData	= stbi_loadf(texturePath.c_str(), &width, &height, &numChannels, 0);
+			isHDR		= true;
+		}
+		else
+		{
+			imageData = stbi_load(texturePath.c_str(), &width, &height, &numChannels, 0);
+		}
+		
 
 		if (imageData)
 		{
-			LOG("Attempting to load " + to_string(width) + "x" + to_string(height) + " texture with " + to_string(numChannels) + " channels");
+			LOG("Attempting to load " + to_string(width) + "x" + to_string(height) + (isHDR?" HDR ":" LDR ") + "texture with " + to_string(numChannels) + " channels");
 
 			Texture* texture = new Texture(width, height, texturePath, false);
 
-			// Read texture values:
-			unsigned char* currentElement = imageData;
-			for (int row = 0; row < height; row++)
+			if (isHDR)
 			{
-				for (int col = 0; col < width; col++)
-				{
-					vec4 currentPixel(0.0f, 0.0f, 0.0f, 1.0f);
-					
-					currentPixel.r = (float)((float)((unsigned int)*currentElement) / 255.0f);
-					currentElement++;
-
-					if (numChannels > 1)
-					{
-						currentPixel.g = (float)((float)((unsigned int)* currentElement) / 255.0f);
-						currentElement++;
-						currentPixel.b = (float)((float)((unsigned int)* currentElement) / 255.0f);
-						currentElement++;
-						
-						if (numChannels == 4)
-						{
-							currentPixel.a = (float)((float)((unsigned int)* currentElement) / 255.0f);
-							currentElement++;
-						}
-					}
-					
-		
-					texture->Texel(col, row) = currentPixel;
-				}
+				float* castImageData = static_cast<float*>(imageData);
+				LoadHDRHelper(*texture, castImageData, width, height, numChannels);
+			}
+			else
+			{
+				unsigned char* castImageData = static_cast<unsigned char*>(imageData);
+				LoadLDRHelper(*texture, castImageData, width, height, numChannels);
 			}
 
 			if (doBuffer && !texture->Buffer())
@@ -317,6 +314,50 @@ namespace BlazeEngine
 	}
 
 
+	void Texture::LoadLDRHelper(Texture& targetTexture, const unsigned char* imageData, int width, int height, int numChannels)
+	{
+		// Read texel values:
+		const unsigned char* currentElement = imageData;
+		for (int row = 0; row < height; row++)
+		{
+			for (int col = 0; col < width; col++)
+			{
+				vec4 currentPixel(0.0f, 0.0f, 0.0f, DEFAULT_ALPHA);
+
+				for (int channel = 0; channel < numChannels; channel++)
+				{
+					currentPixel[channel] = (float)((float)((unsigned int)*currentElement) / 255.0f);
+					currentElement++;
+				}
+
+				targetTexture.Texel(col, row) = currentPixel;
+			}
+		}
+	}
+
+	void Texture::LoadHDRHelper(Texture& targetTexture, const float* imageData, int width, int height, int numChannels)
+	{
+		// Read texel values:
+		const float* currentElement = imageData;
+		for (int row = 0; row < height; row++)
+		{
+			for (int col = 0; col < width; col++)
+			{
+				vec4 currentPixel(0.0f, 0.0f, 0.0f, DEFAULT_ALPHA);
+
+				for (int channel = 0; channel < numChannels; channel++)
+				{
+					currentPixel[channel] = *currentElement;
+
+					currentElement++;
+				}
+
+				targetTexture.Texel(col, row) = currentPixel;
+			}
+		}		
+	}
+
+
 	bool Texture::Buffer()
 	{
 		LOG("Buffering texture: \"" + this->TexturePath() + "\"");
@@ -344,7 +385,7 @@ namespace BlazeEngine
 			glTexParameteri(this->texTarget, GL_TEXTURE_WRAP_T, this->textureWrapT);	// v
 
 			// Mip map min/maximizing:
-			glTexParameteri(this->texTarget, GL_TEXTURE_MIN_FILTER, this->textureMinFilter);	// Linear interpolation, nearest neighbour sampling
+			glTexParameteri(this->texTarget, GL_TEXTURE_MIN_FILTER, this->textureMinFilter);
 			glTexParameteri(this->texTarget, GL_TEXTURE_MAG_FILTER, this->textureMaxFilter);
 		}
 		#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
@@ -365,12 +406,14 @@ namespace BlazeEngine
 				#endif
 
 				// Specify storage properties for our texture:
-				glTexStorage2D(this->texTarget, 1, this->internalFormat, (GLsizei)this->width, (GLsizei)this->height);
+				glTexStorage2D(this->texTarget, 1, this->internalFormat, this->width, this->height);
 
 				resolutionHasChanged = false;
 			}
 
 			glTexSubImage2D(this->texTarget, 0, 0, 0, this->width, this->height, this->format, this->type, &this->Texel(0, 0).r);
+			//glTexImage2D(this->texTarget, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, &this->Texel(0, 0).r); // Won't work if glTexStorage2D has been called
+
 			glGenerateMipmap(this->texTarget);
 
 			#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
@@ -416,54 +459,49 @@ namespace BlazeEngine
 	}
 
 
-	bool Texture::BufferCubeMap(Texture** cubeFaceRTs)
+	bool Texture::BufferCubeMap(Texture** cubeFaces) // Note: There must be EXACTLY 6 elements in cubeFaces
 	{
-		// TODO: MERGE COMMON FUNCTIONALITY WITH RENDERTEXTURE!!!!!!!!!!!!!!!!!!
+		// NOTE: This function uses the paramters of cubeFaces[0]
 
-		// TODO: Make this static?!?!?!!?!?
-
-
-		// NOTE: This function uses the paramters of the object its called from
-
-		LOG("Buffering cube map: \"" + this->TexturePath() + "\"");
+		LOG("Buffering cube map: \"" + cubeFaces[0]->TexturePath() + "\"");
 
 		// Bind Texture:
-		glBindTexture(this->texTarget, this->textureID);
-		if (!glIsTexture(this->textureID))
+		glBindTexture(cubeFaces[0]->texTarget, cubeFaces[0]->textureID);
+		if (!glIsTexture(cubeFaces[0]->textureID))
 		{
-			glGenTextures(1, &this->textureID);
-			glBindTexture(this->texTarget, this->textureID);
+			glGenTextures(1, &cubeFaces[0]->textureID);
+			glBindTexture(cubeFaces[0]->texTarget, cubeFaces[0]->textureID);
 
-			if (!glIsTexture(this->textureID))
+			if (!glIsTexture(cubeFaces[0]->textureID))
 			{
 				LOG_ERROR("OpenGL failed to generate new cube map texture name. Texture buffering failed");
-				glBindTexture(this->texTarget, 0);
+				glBindTexture(cubeFaces[0]->texTarget, 0);
 				return false;
 			}
 		}
 
 		// Set texture params:
-		glTexParameteri(this->texTarget, GL_TEXTURE_WRAP_S, this->textureWrapS);
-		glTexParameteri(this->texTarget, GL_TEXTURE_WRAP_T, this->textureWrapT);
-		glTexParameteri(this->texTarget, GL_TEXTURE_WRAP_R, this->textureWrapR);
+		glTexParameteri(cubeFaces[0]->texTarget, GL_TEXTURE_WRAP_S, cubeFaces[0]->textureWrapS);
+		glTexParameteri(cubeFaces[0]->texTarget, GL_TEXTURE_WRAP_T, cubeFaces[0]->textureWrapT);
+		glTexParameteri(cubeFaces[0]->texTarget, GL_TEXTURE_WRAP_R, cubeFaces[0]->textureWrapR);
 
-		glTexParameteri(this->texTarget, GL_TEXTURE_MAG_FILTER, this->textureMaxFilter);
-		glTexParameteri(this->texTarget, GL_TEXTURE_MIN_FILTER, this->textureMinFilter);
+		glTexParameteri(cubeFaces[0]->texTarget, GL_TEXTURE_MAG_FILTER, cubeFaces[0]->textureMaxFilter);
+		glTexParameteri(cubeFaces[0]->texTarget, GL_TEXTURE_MIN_FILTER, cubeFaces[0]->textureMinFilter);
 
 		// Bind sampler:
-		if (this->textureUnit < 0)
+		if (cubeFaces[0]->textureUnit < 0)
 		{
 			LOG_ERROR("Cannot bind Cube Map Texture sampler as textureUnit has not been set");
 			return false;
 		}
 
-		glBindSampler(this->textureUnit, this->samplerID);
-		if (!glIsSampler(this->samplerID))
+		glBindSampler(cubeFaces[0]->textureUnit, cubeFaces[0]->samplerID);
+		if (!glIsSampler(cubeFaces[0]->samplerID))
 		{
-			glGenSamplers(1, &this->samplerID);
-			glBindSampler(this->textureUnit, this->samplerID);
+			glGenSamplers(1, &cubeFaces[0]->samplerID);
+			glBindSampler(cubeFaces[0]->textureUnit, cubeFaces[0]->samplerID);
 
-			if (!glIsSampler(this->samplerID))
+			if (!glIsSampler(cubeFaces[0]->samplerID))
 			{
 				LOG_ERROR("Could not create cube map sampler");
 				return false;
@@ -471,39 +509,35 @@ namespace BlazeEngine
 		}
 
 		// Set sampler params:
-		glSamplerParameteri(this->samplerID, GL_TEXTURE_WRAP_S, this->textureWrapS);
-		glSamplerParameteri(this->samplerID, GL_TEXTURE_WRAP_T, this->textureWrapT);
+		glSamplerParameteri(cubeFaces[0]->samplerID, GL_TEXTURE_WRAP_S, cubeFaces[0]->textureWrapS);
+		glSamplerParameteri(cubeFaces[0]->samplerID, GL_TEXTURE_WRAP_T, cubeFaces[0]->textureWrapT);
 
-		glSamplerParameteri(this->samplerID, GL_TEXTURE_MIN_FILTER, this->textureMinFilter);
-		glSamplerParameteri(this->samplerID, GL_TEXTURE_MAG_FILTER, this->textureMaxFilter);
+		glSamplerParameteri(cubeFaces[0]->samplerID, GL_TEXTURE_MIN_FILTER, cubeFaces[0]->textureMinFilter);
+		glSamplerParameteri(cubeFaces[0]->samplerID, GL_TEXTURE_MAG_FILTER, cubeFaces[0]->textureMaxFilter);
 
-		glBindSampler(this->textureUnit, 0);
+		glBindSampler(cubeFaces[0]->textureUnit, 0);
 
 
 		// Texture cube map specific setup:
-		if (texels != nullptr)
+		if (cubeFaces[0]->texels != nullptr)
 		{
 			// Generate faces:
 			for (int i = 0; i < CUBE_MAP_COUNT; i++)
 			{
-				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, &cubeFaceRTs[i]->Texel(0, 0).r);
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, cubeFaces[0]->internalFormat, cubeFaces[0]->width, cubeFaces[0]->height, 0, cubeFaces[0]->format, cubeFaces[0]->type, &cubeFaces[i]->Texel(0, 0).r);
 			}
 
 
 			// Ensure all of the textures have the correct information stored in them:
-			for (int i = 0; i < CUBE_MAP_COUNT; i++)
+			for (int i = 1; i < CUBE_MAP_COUNT; i++)
 			{
-				if (cubeFaceRTs[i] != this)
-				{
-					cubeFaceRTs[i]->textureID = this->textureID;
-					cubeFaceRTs[i]->samplerID = this->samplerID;
-				}
+				cubeFaces[i]->textureID = cubeFaces[0]->textureID;
+				cubeFaces[i]->samplerID = cubeFaces[0]->samplerID;
 			}
 
 			// Cleanup:
-			glBindTexture(this->texTarget, 0); // Otherwise, we leave the texture bound for the remaining RenderTexture BufferCubeMap()
-		}	
-		
+			glBindTexture(cubeFaces[0]->texTarget, 0); // Otherwise, we leave the texture bound for the remaining RenderTexture BufferCubeMap()
+		}
 
 		return true;
 	}
@@ -517,17 +551,17 @@ namespace BlazeEngine
 			targetTextureUnit = textureUnitOverride;
 		}
 
+		glActiveTexture(GL_TEXTURE0 + targetTextureUnit);
+
 		// Handle unbinding:
 		if (shaderReference == 0)
 		{
-			glActiveTexture(GL_TEXTURE0 + targetTextureUnit);
 			glBindTexture(this->texTarget, 0);
 			glBindSampler(targetTextureUnit, 0); // Assign to index/unit 0
 
 		}
 		else // Handle binding:
-		{
-			glActiveTexture(GL_TEXTURE0 + targetTextureUnit);
+		{			
 			glBindTexture(this->texTarget, this->textureID);
 			glBindSampler(targetTextureUnit, this->samplerID); // Assign our named sampler to the texture
 		}

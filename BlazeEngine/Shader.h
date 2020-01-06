@@ -18,6 +18,7 @@ namespace BlazeEngine
 		UNIFORM_Vec3fv,			// glUniform3fv
 		UNIFORM_Vec4fv,			// glUniform4fv
 		UNIFORM_Float,			// glUniform1f
+		UNIFORM_Int,			// glUniform1i
 	};
 
 
@@ -49,13 +50,13 @@ namespace BlazeEngine
 		inline string const& Name()						{ return shaderName; }
 		inline GLuint const& ShaderReference() const	{ return shaderReference; }
 
-		void UploadUniform(GLchar const* uniformName, GLfloat const* value, UNIFORM_TYPE const& type, int count = 1);
+		void UploadUniform(GLchar const* uniformName, void const* value, UNIFORM_TYPE const& type, int count = 1);
 
 		void Bind(bool doBind);
 
 		// Static functions:
 		//------------------
-		static Shader* CreateShader(string shaderName, vector<string> const*  shaderKeywords = nullptr);
+		static Shader* CreateShader(string shaderFileName, vector<string> const*  shaderKeywords = nullptr);
 
 
 		// Static members:

@@ -10,6 +10,7 @@
 #include "Light.h"
 #include "PlayerObject.h"
 #include "Skybox.h"
+#include "ImageBasedLight.h"
 
 #include "assimp/scene.h"		// Output data structure
 
@@ -49,7 +50,7 @@ namespace BlazeEngine
 	// Container for all scene data:
 	struct Scene
 	{
-		Scene();
+		Scene(string sceneName);
 		~Scene();
 
 		// Meshes:
@@ -78,9 +79,9 @@ namespace BlazeEngine
 		
 		
 		// Duplicate pointers to lights contained in deferredLights
-		Light* ambientLight			= nullptr;		
-		Light*	keyLight			= nullptr;					
-		
+		Light* ambientLight		= nullptr;		
+		Light*	keyLight		= nullptr;
+				
 		vector<Light*> const& GetDeferredLights() { return deferredLights; }
 
 		// Skybox object:
@@ -90,6 +91,8 @@ namespace BlazeEngine
 		{
 			return sceneWorldBounds;
 		}
+
+		string GetSceneName()	{ return this->sceneName; }
 
 	private:
 		vector<vector<Camera*>> sceneCameras;
@@ -101,6 +104,8 @@ namespace BlazeEngine
 		// Lights:
 		//--------
 		vector<Light*> deferredLights;
+
+		string sceneName;
 	};
 
 
@@ -150,6 +155,7 @@ namespace BlazeEngine
 
 		Skybox*							GetSkybox()													{ return currentScene->skybox; }
 
+		string							GetCurrentSceneName()										{ return currentScene->GetSceneName(); }
 
 	protected:
 

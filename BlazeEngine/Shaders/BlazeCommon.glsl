@@ -1,3 +1,6 @@
+#ifndef BLAZE_COMMON
+#define BLAZE_COMMON
+
 // Blaze Engine Shader Common
 // Defines variables and structures common to all shaders
 
@@ -47,6 +50,7 @@
 		vec4 uv2;
 		vec4 uv3;
 
+		vec3 localPos;			// Received in_position: Local-space position
 		vec3 viewPos;			// Camera/eye-space position
 		vec3 worldPos;			// World-space position
 		vec3 shadowPos;			// Shadowmap projection-space position
@@ -73,14 +77,14 @@ uniform vec3 lightWorldPos;		// Light position in world space
 
 // Matrices:
 uniform mat4 in_model;			// Local -> World
-uniform mat4 in_modelRotation;	// Local -> World, rotations ONLY (i.e. For transforming normals)
+uniform mat4 in_modelRotation;	// Local -> World, rotations ONLY (i.e. For transforming normals) TODO: Make this a mat3
 uniform mat4 in_view;			// World -> View
 uniform mat4 in_projection;		// View -> Projection
 uniform mat4 in_mv;				// [View * Model]
 uniform mat4 in_mvp;			// [Projection * View * Model]
 uniform mat4 in_inverse_vp;		// [Projection * View]^-1
 // TODO: Assign locations for these uniforms, and bind them to each shader in the RenderManager
-// Probably need to be offset somehow (b/c of size of VtoF struct?)???
+// Probably need to be offset (b/c of size of VtoF struct?)???
 
 
 // Texture samplers:
@@ -139,3 +143,7 @@ uniform vec4 screenParams;		// .x = xRes, .y = yRes, .z = 1/xRes, .w = 1/yRes
 
 //uniform vec3 cameraPosition;	// World-space camera position
 //// TODO: ^^^Implement these
+
+
+
+#endif

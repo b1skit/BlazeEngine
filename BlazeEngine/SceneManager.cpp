@@ -31,8 +31,10 @@ using glm::pi;
 
 namespace BlazeEngine
 {
-	Scene::Scene()
+	Scene::Scene(string sceneName)
 	{
+		this->sceneName = sceneName;
+
 		gameObjects.reserve(GAMEOBJECTS_RESERVATION_AMT);
 		renderables.reserve(RENDERABLES_RESERVATION_AMT);
 		meshes.reserve(MESHES_RESERVATION_AMT);
@@ -207,7 +209,8 @@ namespace BlazeEngine
 		switch (newLight->Type())
 		{
 		// Check if we've got any existing ambient or directional lights:
-		case LIGHT_AMBIENT:
+		case LIGHT_AMBIENT_COLOR:
+		case LIGHT_AMBIENT_IBL:
 		case LIGHT_DIRECTIONAL:
 		{
 			bool foundExisting = false;
@@ -361,7 +364,7 @@ namespace BlazeEngine
 			delete currentScene;
 			currentScene = nullptr;
 		}
-		currentScene = new Scene();
+		currentScene = new Scene(sceneName);
 
 		// Assemble paths:
 		string sceneRoot = CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + sceneName + "\\";
@@ -424,6 +427,7 @@ namespace BlazeEngine
 		{
 			LOG_ERROR("Scene has no meshes");
 		}
+
 
 		// Setup skybox:
 		//--------------
@@ -831,6 +835,8 @@ namespace BlazeEngine
 					{
 						diffuseTexture->InternalFormat() = GL_SRGB8_ALPHA8;
 					}
+
+					// DOES THIS WORK??? SHOULD I BE DOING THIS, OR JUST HANDLING IT IN THE SHADER?!?!?!!?!?!?!?
 				}
 				else
 				{
@@ -998,124 +1004,10 @@ namespace BlazeEngine
 		LOG("Loaded a total of " + to_string(currentTextureCount) + " textures (including error textures)");
 	}
 
+
 	void BlazeEngine::SceneManager::ImportSky(string sceneName)
 	{
-		// TODO: MOVE THIS INTO THE CONSTRUCTOR OF THE SKYBOX OBJECT?!!?!?!?!?!?!?!?
-
-		LOG("\nLoading skybox cubemap:");
-
-		// Create a cube map material
-		Material* skyMaterial = new Material("SkyboxMaterial", nullptr, CUBE_MAP_COUNT, false);
-
-		// Create/import cube map face textures:
-		string skyboxTextureNames[CUBE_MAP_COUNT] =
-		{
-			"posx",
-			"negx",
-			"posy",
-			"negy",
-			"posz",
-			"negz",
-		};
-
-		const int numFileExtensions = 4;
-		string fileExtensions[numFileExtensions] =	// Add any desired skybox texture filetype extensions here
-		{
-			".jpg",
-			".jpeg",
-			".png",
-			".tga",
-		};
-
-		string skyboxTextureRoot = CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + sceneName + "\\Skybox\\";
-
-		// Track the textures as we load them:
-		Texture* cubeMapTextures[CUBE_MAP_COUNT];
-		for (int i = 0; i < CUBE_MAP_COUNT; i++)
-		{
-			cubeMapTextures[i] = nullptr;
-		}
-
-		for (int i = 0; i < CUBE_MAP_COUNT; i++)
-		{
-			string currentSkyCubeFaceName = skyboxTextureRoot + skyboxTextureNames[i];
-
-			bool foundCurrentFace = false;
-			for (int j = 0; j < numFileExtensions; j++)
-			{
-				string finalName = currentSkyCubeFaceName + fileExtensions[j];
-				
-				Texture* currentFaceTexture = Texture::LoadTextureFileFromPath(finalName, false, false, false);
-				if (currentFaceTexture != nullptr)
-				{
-					skyMaterial->AccessTexture((TEXTURE_TYPE)i) = currentFaceTexture;
-					cubeMapTextures[i]							= currentFaceTexture;	// Track the face
-
-					foundCurrentFace = true;
-
-					// Configure the texture:
-					currentFaceTexture->TextureTarget()		= GL_TEXTURE_CUBE_MAP;
-
-					currentFaceTexture->TextureWrap_S()		= GL_CLAMP_TO_EDGE;
-					currentFaceTexture->TextureWrap_T()		= GL_CLAMP_TO_EDGE;
-					currentFaceTexture->TextureWrap_R()		= GL_CLAMP_TO_EDGE;
-
-					currentFaceTexture->TextureMinFilter()	= GL_LINEAR;
-					currentFaceTexture->TextureMaxFilter()	= GL_LINEAR;
-
-					currentFaceTexture->InternalFormat()	= GL_SRGB8_ALPHA8;						// Set the diffuse texture's internal format to be encoded in sRGB color space, so OpenGL will apply gamma correction: (ie. color = pow(color, 2.2) )
-
-					currentFaceTexture->TextureUnit()		= CUBE_MAP_0 + CUBE_MAP_0_RIGHT;	// We always use the same sampler for all cube map faces;
-
-					break;
-				}
-			}
-
-			if (!foundCurrentFace)
-			{
-				LOG_ERROR("Could not find skybox cubemap face texture #" + to_string(i) + ": " + skyboxTextureNames[i] + " with any supported extension. Aborting skybox loading");
-
-				skyMaterial->Destroy();
-				delete skyMaterial;
-
-				return;
-			}
-		}
-
-		// Create a skybox shader:
-		Shader* skyboxShader = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.skyboxShaderName);
-		skyMaterial->GetShader() = skyboxShader;
-
-		// Configure and buffer textures:
-		if (!skyMaterial->AccessTexture(CUBE_MAP_0_RIGHT)->BufferCubeMap(cubeMapTextures))
-		{
-			LOG_ERROR("Skybox cube map buffering failed");
-
-			skyboxShader->Destroy();
-			delete skyboxShader;
-			skyboxShader = nullptr;
-
-			skyMaterial->Destroy();
-			delete skyMaterial;
-			skyMaterial = nullptr;
-
-			return;
-		}
-
-		Mesh* skyQuad = new Mesh
-		(
-			Mesh::CreateQuad
-			(
-				vec3(-1.0f, 1.0f,	1.0f), // z == 1.0f, since we're in clip space (and camera's negative Z has been reversed)
-				vec3(1.0f, 1.0f,	1.0f),
-				vec3(-1.0f, -1.0f,	1.0f),
-				vec3(1.0f, -1.0f,	1.0f)
-			)
-		);
-
-		skyQuad->Name()				= "SkyboxQuad";
-		
-		currentScene->skybox		= new Skybox(skyMaterial, skyQuad);
+		currentScene->skybox = new Skybox(sceneName);
 	}
 
 
@@ -1815,7 +1707,7 @@ namespace BlazeEngine
 
 					foundAmbient = true;
 
-					pointType = LIGHT_AMBIENT;
+					pointType = LIGHT_AMBIENT_COLOR; // Assume it's a colored ambient for now
 				}
 				else
 				{
@@ -1884,14 +1776,38 @@ namespace BlazeEngine
 				}		
 
 				// Create the light:
-				Light* pointLight = new Light
-				(
-					lightName, 
-					pointType, 
-					lightColor,
-					nullptr,
-					radius		// Only used if we're actually creating a point light
-				);
+				Light* pointLight = nullptr;
+				if (pointType == LIGHT_POINT || CoreEngine::GetCoreEngine()->GetConfig()->renderer.useForwardRendering == true)
+				{
+					pointLight = new Light
+						(
+							lightName,
+							pointType,
+							lightColor,
+							nullptr,
+							radius		// Only used if we're actually creating a point light
+						);
+				}
+				else
+				{
+					pointLight = new ImageBasedLight(lightName, CoreEngine::GetCoreEngine()->GetConfig()->renderer.defaultIBLPath); // TODO: Load the HDR path from FBX (Currently not supported in Assimp???)
+
+					// If we didn't load a valid IBL, fall back to using an ambient color light
+					if (!((ImageBasedLight*)pointLight)->IsValid())
+					{
+						pointLight->Destroy();
+						delete pointLight;
+
+						pointLight = new Light
+						(
+							lightName,
+							pointType,	// This will be AMBIENT_COLOR as set above
+							lightColor,
+							nullptr,
+							radius		// Only used if we're actually creating a point light
+						);
+					}
+				}
 
 				if (pointType == LIGHT_POINT)
 				{

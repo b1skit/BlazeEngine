@@ -1,10 +1,16 @@
+#ifndef BLAZE_LIGHTING
+#define BLAZE_LIGHTING
+
+#include "BlazeGlobals.glsl"
+#include "BlazeCommon.glsl"
+
 // Blaze Engine Lighting Common
 // Defines lighting functions common to all shaders
 
+
+
 // PBR Lighting:
 //--------------
-
-#define PI 3.1415926535897932384626433832795
 
 // Trowbridge-Reitz GGX Normal Distribution Function: Approximate area of surface microfacets aligned with the halfway vector between the light and view dirs
 float NDF(vec3 normal, vec3 halfVector, float roughness)
@@ -87,18 +93,18 @@ vec3 HalfVector(vec3 light, vec3 view)
 vec4 ComputePBRLighting(vec4 FragColor, vec3 worldNormal, vec4 RMAO, vec4 worldPosition, vec3 F0, float NoL, vec3 lightWorldDir, vec3 lightViewDir, vec3 lightColor, float shadowFactor, mat4 in_view)
 {
 	// Convert non-linear RGB to linear:
-	FragColor.rgb = pow(FragColor.rgb, vec3(2.2, 2.2, 2.2));
+	FragColor.rgb = Degamma(FragColor.rgb);
 
 	vec4 viewPosition	= in_view * worldPosition;							// View-space position
 	vec3 viewEyeDir		= normalize(-viewPosition.xyz);						// View-space eye/camera direction
 	vec3 viewNormal		= normalize(in_view * vec4(worldNormal, 0)).xyz;	// View-space surface normal
 
 	vec3 halfVectorView	= HalfVector(lightViewDir, viewEyeDir);				// View-space half direction
-	
+
 	float NoV		= max(0.0, dot(viewNormal, viewEyeDir) );
 
 	float roughness = RMAO.x;
-	float metalness = RMAO.y;	
+	float metalness = RMAO.y;
 
 	// Fresnel-Schlick approximation is only defined for non-metals, so we blend it here:
 	F0	= mix(F0, FragColor.rgb, metalness); // Linear interpolation: x, y, using t=[0,1]. Returns x when t=0 -> Blends towards albedo for metals
@@ -116,8 +122,8 @@ vec4 ComputePBRLighting(vec4 FragColor, vec3 worldNormal, vec4 RMAO, vec4 worldP
 	// Diffuse:
 	vec3 k_d = vec3(1.0) - fresnel;
 	k_d = k_d * (1.0 - metalness); // Metallics absorb refracted light
-	vec3 diffuseContribution = k_d * FragColor.rgb; // Note: Omitted the "/ PI" factor here
-//	vec3 diffuseContribution = k_d * FragColor.rgb / PI;
+//	vec3 diffuseContribution = k_d * FragColor.rgb; // Note: Omitted the "/ PI" factor here
+	vec3 diffuseContribution = k_d * FragColor.rgb / PI;
 
 
 	vec3 combinedContribution = diffuseContribution + specularContribution;
@@ -173,23 +179,22 @@ float LightAttenuation(vec3 fragWorldPosition, vec3 lightWorldPosition)
 }
 
 
+// Shadow mapping
+//---------------
+
 // Compute a depth map bias value based on surface orientation
-//float GetSlopeScaleBias(vec3 worldNml, vec3 lightDir)
 float GetSlopeScaleBias(float NoL)
 {
-//	return max( maxShadowBias * (1.0 - dot(worldNml, lightDir)), minShadowBias);
 	return max( maxShadowBias * (1.0 - NoL), minShadowBias);
 }
 
 
 // Find out if a fragment (in world space) is in shadow
-//float GetShadowFactor(vec3 shadowPos, sampler2D shadowMap, vec3 worldNml, vec3 lightDir)
 float GetShadowFactor(vec3 shadowPos, sampler2D shadowMap, float NoL)
 {
 	vec3 shadowScreen = (shadowPos.xyz + 1.0) / 2.0; // Projection -> Screen/UV [0,1] space
 
 	// Compute a slope-scaled bias depth:
-//	float biasedDepth	= shadowScreen.z - GetSlopeScaleBias(worldNml, lightDir);
 	float biasedDepth	= shadowScreen.z - GetSlopeScaleBias(NoL);
 
 	// Compute a block of samples around our fragment, starting at the top-left:
@@ -221,7 +226,6 @@ float GetShadowFactor(vec3 shadowPos, sampler2D shadowMap, float NoL)
 
 
 // Get shadow factor from a cube map:
-//float GetShadowFactor(vec3 lightToFrag, samplerCube shadowMap, vec3 worldNml, vec3 lightDir)
 float GetShadowFactor(vec3 lightToFrag, samplerCube shadowMap, float NoL)
 {
 	float cubemapShadowDepth = texture(shadowMap, lightToFrag).r;
@@ -230,7 +234,6 @@ float GetShadowFactor(vec3 lightToFrag, samplerCube shadowMap, float NoL)
 	float fragDepth = length(lightToFrag); // We're using linear depth, for now...
 
 	// Compute a slope-scaled bias:
-//	float biasedDepth = fragDepth - GetSlopeScaleBias(worldNml, lightDir);
 	float biasedDepth = fragDepth - GetSlopeScaleBias(NoL);
 
 	// TODO: PCF cube map: (jitter the ray)
@@ -245,4 +248,52 @@ float GetShadowFactor(vec3 lightToFrag, samplerCube shadowMap, float NoL)
 	return shadowFactor;
 }
 
-	
+
+// Sampling:
+//----------
+
+// Helper function: Compute the Van der Corput sequence via radical inverse
+// Based on:  http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html (As per Hacker's Delight)
+float RadicalInverse_VdC(uint bits)
+{
+	bits = (bits << 16u) | (bits >> 16u);
+	bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+	bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+	bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+	bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+	return float(bits) * 2.3283064365386963e-10; // / 0x100000000
+}
+
+
+// Compute the Hammersley point i of N points
+// Based on:  http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
+vec2 Hammersley2D(uint i, uint N)
+{
+	return vec2(float(i)/float(N), RadicalInverse_VdC(i));
+}
+
+
+// Create a uniformly-distributed hemisphere direction (Z-up) from the Hammersley 2D point
+// Based on:  http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
+vec3 HemisphereSample_uniform(float u, float v)
+{
+	float phi		= v * 2.0 * PI;
+	float cosTheta	= 1.0 - u;
+	float sinTheta	= sqrt(1.0 - cosTheta * cosTheta);
+
+	return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
+}
+  
+
+// Create a cosine-distributed hemisphere direction (Z-up) from the Hammersley 2D point (ie. For diffuse lighting sampling)
+// Based on:  http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
+vec3 HemisphereSample_cos(float u, float v)
+{
+	float phi = v * 2.0 * PI;
+	float cosTheta = sqrt(1.0 - u);
+	float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+	return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
+}
+
+
+#endif

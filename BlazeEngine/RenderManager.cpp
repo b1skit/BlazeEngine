@@ -359,8 +359,10 @@ namespace BlazeEngine
 
 				for (int i = 1; i < deferredLights->size(); i++)
 				{
+					// TODO: Fix Ambient/Directional lights: Flip screen-aligned quad and render back faces (to be consistent with other deferred lights)
+
 					// Select face culling:
-					if (deferredLights->at(i)->Type() == LIGHT_AMBIENT || deferredLights->at(i)->Type() == LIGHT_DIRECTIONAL)
+					if (deferredLights->at(i)->Type() == LIGHT_AMBIENT_COLOR || deferredLights->at(i)->Type() == LIGHT_AMBIENT_IBL || deferredLights->at(i)->Type() == LIGHT_DIRECTIONAL)
 					{
 						glCullFace(GL_BACK);
 					}
@@ -439,18 +441,19 @@ namespace BlazeEngine
 		}
 		break;
 
-		case LIGHT_AMBIENT:
+		case LIGHT_AMBIENT_COLOR:
+		case LIGHT_AMBIENT_IBL:
 		case LIGHT_AREA:
 		case LIGHT_SPOT:
 		case LIGHT_TUBE:
-		default:
-			return; // This should never happen...
+		default: // This should never happen...
+			lightShader->Bind(false);
+			return; 
 		}
 
 		if (lightDepthTexture == nullptr)
 		{
 			lightShader->Bind(false);
-
 			return;
 		}
 
@@ -483,7 +486,8 @@ namespace BlazeEngine
 			}
 			break;
 
-			case LIGHT_AMBIENT:
+			case LIGHT_AMBIENT_COLOR:
+			case LIGHT_AMBIENT_IBL:
 			case LIGHT_AREA:
 			case LIGHT_SPOT:
 			case LIGHT_TUBE:
@@ -721,19 +725,45 @@ namespace BlazeEngine
 		// Light properties:
 		currentShader->UploadUniform("lightColor", &deferredLight->Color().r, UNIFORM_Vec3fv);
 
-		if (deferredLight->Type() == LIGHT_DIRECTIONAL)
+		switch (deferredLight->Type())
+		{
+		case LIGHT_AMBIENT_IBL:
+		{
+			// Bind IBL cubemaps:
+			if (!CoreEngine::GetCoreEngine()->GetConfig()->renderer.useForwardRendering)
+			{
+				Texture* IEMCubemap = ((ImageBasedLight*)deferredLight)->GetIBLMaterial()->AccessTexture(CUBE_MAP_0_RIGHT);
+				if (IEMCubemap != nullptr)
+				{
+					IEMCubemap->Bind(currentShader->ShaderReference(), CUBE_MAP_0 + CUBE_MAP_0_RIGHT);
+				}
+			}
+		}
+			break;
+
+		case LIGHT_DIRECTIONAL:
 		{
 			currentShader->UploadUniform("keylightWorldDir", &deferredLight->GetTransform().Forward().x, UNIFORM_Vec3fv);
 
-			vec3 keylightViewDir = glm::normalize(view * vec4(deferredLight->GetTransform().Forward(), 0.0f) );
+			vec3 keylightViewDir = glm::normalize(view * vec4(deferredLight->GetTransform().Forward(), 0.0f));
 			currentShader->UploadUniform("keylightViewDir", &keylightViewDir.x, UNIFORM_Vec3fv);
 		}
-		else
+			break;
+
+		case LIGHT_AMBIENT_COLOR:
+		case LIGHT_POINT:
+		case LIGHT_SPOT:
+		case LIGHT_AREA:
+		case LIGHT_TUBE:
 		{
 			currentShader->UploadUniform("lightWorldPos", &deferredLight->GetTransform().WorldPosition().x, UNIFORM_Vec3fv);
 
 			// TODO: Can we just upload this once when the light is created (and its shader is created)?  (And also update it if the light is ever moved)
-		}		
+		}
+			break;
+		default:
+			break;
+		}
 
 		// Shadow properties:
 		ShadowMap* activeShadowMap = deferredLight->ActiveShadowMap();
@@ -779,7 +809,8 @@ namespace BlazeEngine
 				break;
 
 				// Other light types don't support shadows, yet:
-				case LIGHT_AMBIENT:
+				case LIGHT_AMBIENT_COLOR:
+				case LIGHT_AMBIENT_IBL:
 				case LIGHT_AREA:
 				case LIGHT_SPOT:
 				case LIGHT_TUBE:
@@ -822,7 +853,8 @@ namespace BlazeEngine
 			break;
 
 			// Other light types don't support shadows, yet:
-			case LIGHT_AMBIENT:
+			case LIGHT_AMBIENT_COLOR:
+			case LIGHT_AMBIENT_IBL:
 			case LIGHT_AREA:
 			case LIGHT_SPOT:
 			case LIGHT_TUBE:
@@ -865,7 +897,7 @@ namespace BlazeEngine
 		mat4 inverseViewProjection = glm::inverse(renderCam->ViewProjection()); // TODO: Only compute this if something has changed
 		currentShader->UploadUniform("in_inverse_vp", &inverseViewProjection[0][0], UNIFORM_Matrix4fv);
 				
-		skybox->GetSkyMesh()->Bind(true);		
+		skybox->GetSkyMesh()->Bind(true);
 
 		// Draw!
 		glDrawElements(GL_TRIANGLES, skybox->GetSkyMesh()->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
@@ -964,7 +996,7 @@ namespace BlazeEngine
 		SceneManager* sceneManager	= CoreEngine::GetSceneManager();
 		unsigned int numMaterials	= sceneManager->NumMaterials();
 
-		// Legacy forward rendering parms:
+		// Legacy forward rendering params:
 		Light const* ambientLight	= nullptr;
 		vec3 const* ambientColor	= nullptr;
 		if ((ambientLight = CoreEngine::GetSceneManager()->GetAmbientLight()) != nullptr)
@@ -1036,42 +1068,6 @@ namespace BlazeEngine
 		{
 			shaders.at(i)->Bind(true);
 
-			// Texture sampler locations. Note: These must align with the locations defined in Material.h
-			for (int currentTexture = 0; currentTexture < TEXTURE_COUNT; currentTexture++)
-			{
-				GLint samplerLocation = glGetUniformLocation(shaders.at(i)->ShaderReference(), Material::TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
-				if (samplerLocation >= 0)
-				{
-					glUniform1i(samplerLocation, (TEXTURE_TYPE)currentTexture);
-				}
-			}
-			// RenderTexture sampler locations:
-			for (int currentTexture = 0; currentTexture < RENDER_TEXTURE_COUNT; currentTexture++)
-			{
-				GLint samplerLocation = glGetUniformLocation(shaders.at(i)->ShaderReference(), Material::RENDER_TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
-				if (samplerLocation >= 0)
-				{
-					glUniform1i(samplerLocation, (int)(RENDER_TEXTURE_0 + (TEXTURE_TYPE)currentTexture));
-				}
-			}
-
-			// 2D shadow map textures sampler locations:
-			for (int currentTexture = 0; currentTexture < DEPTH_TEXTURE_COUNT; currentTexture++)
-			{
-				GLint samplerLocation = glGetUniformLocation(shaders.at(i)->ShaderReference(), Material::DEPTH_TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
-				if (samplerLocation >= 0)
-				{
-					glUniform1i(samplerLocation, DEPTH_TEXTURE_0 + (TEXTURE_TYPE)currentTexture);
-				}
-			}
-
-			// Cube map depth texture sampler locations: We just need to add a single cube map sampler
-			GLint samplerLocation = glGetUniformLocation(shaders.at(i)->ShaderReference(), Material::CUBE_MAP_TEXTURE_SAMPLER_NAMES[CUBE_MAP_0_RIGHT].c_str());
-			if (samplerLocation >= 0)
-			{
-				glUniform1i(samplerLocation, CUBE_MAP_0 + (TEXTURE_TYPE)0);
-			}
-			
 			// Upload light direction (world space) and color, and ambient light color:
 			if (ambientLight != nullptr)
 			{
@@ -1085,7 +1081,8 @@ namespace BlazeEngine
 
 				shaders.at(i)->UploadUniform("lightColor", &(keyCol->r), UNIFORM_Vec3fv);
 			}
-			
+
+			// TODO: Shift more value uploads into the shader creation flow
 			
 			// Other params:
 			shaders.at(i)->UploadUniform("screenParams", &(screenParams.x), UNIFORM_Vec4fv);

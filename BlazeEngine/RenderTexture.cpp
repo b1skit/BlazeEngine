@@ -110,7 +110,6 @@ namespace BlazeEngine
 
 		if (isDepth)
 		{
-			/*glFramebufferTexture2D(GL_FRAMEBUFFER, additionalRTs[0]->AttachmentPoint(), additionalRTs[0]->TextureTarget(), additionalRTs[0]->TextureID(), 0);*/
 			glFramebufferTexture2D(GL_FRAMEBUFFER, (*additionalRTs)->AttachmentPoint(), (*additionalRTs)->TextureTarget(), (*additionalRTs)->TextureID(), 0);
 		}
 		else
@@ -204,51 +203,48 @@ namespace BlazeEngine
 
 	bool RenderTexture::BufferCubeMap(RenderTexture** cubeFaceRTs)
 	{
-		// NOTE: This function uses the paramters of the object its called from
+		// NOTE: This function uses the paramters of cubeFaceRTs[0]
 
-		if (!Texture::BufferCubeMap((Texture * *)cubeFaceRTs))
+		if (!Texture::BufferCubeMap((Texture**)cubeFaceRTs))
 		{
 			return false;
 		}
-		
+
 		// RenderTexture specific setup:
-		LOG("Configuring cube map as RenderTexture: \"" + this->TexturePath() + "\"");
+		LOG("Configuring cube map as RenderTexture: \"" + cubeFaceRTs[0]->TexturePath() + "\"");
 
 		// Generate faces:
 		for (int i = 0; i < CUBE_MAP_COUNT; i++)
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, this->internalFormat, this->width, this->height, 0, this->format, this->type, NULL);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, cubeFaceRTs[0]->internalFormat, cubeFaceRTs[0]->width, cubeFaceRTs[0]->height, 0, cubeFaceRTs[0]->format, cubeFaceRTs[0]->type, NULL);
 		}
 
-		// Ensure all of the textures have the correct information stored in them:
-		for (int i = 0; i < CUBE_MAP_COUNT; i++)
+		// Ensure all of the other textures have the same ID, sampler, and FBO info:
+		for (int i = 1; i < CUBE_MAP_COUNT; i++)
 		{
-			if (cubeFaceRTs[i] != this)
-			{
-				cubeFaceRTs[i]->textureID = this->textureID;
-				cubeFaceRTs[i]->samplerID = this->samplerID;
-				cubeFaceRTs[i]->frameBufferObject = this->frameBufferObject;
-			}
+			cubeFaceRTs[i]->textureID			= cubeFaceRTs[0]->textureID;
+			cubeFaceRTs[i]->samplerID			= cubeFaceRTs[0]->samplerID;
+			cubeFaceRTs[i]->frameBufferObject	= cubeFaceRTs[0]->frameBufferObject;
 		}
 
 		// Bind framebuffer:
 		bool result = true;
-		glBindFramebuffer(GL_FRAMEBUFFER, this->frameBufferObject);
-		if (!glIsFramebuffer(this->frameBufferObject))
+		glBindFramebuffer(GL_FRAMEBUFFER, cubeFaceRTs[0]->frameBufferObject);
+		if (!glIsFramebuffer(cubeFaceRTs[0]->frameBufferObject))
 		{
-			glGenFramebuffers(1, &this->frameBufferObject);
-			glBindFramebuffer(GL_FRAMEBUFFER, this->frameBufferObject);
-			if (!glIsFramebuffer(this->frameBufferObject))
+			glGenFramebuffers(1, &cubeFaceRTs[0]->frameBufferObject);
+			glBindFramebuffer(GL_FRAMEBUFFER, cubeFaceRTs[0]->frameBufferObject);
+			if (!glIsFramebuffer(cubeFaceRTs[0]->frameBufferObject))
 			{
 				LOG_ERROR("Failed to create framebuffer object");
 				return false;
 			}
 
 			// Attach framebuffer as a cube map render buffer:
-			glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, this->textureID, 0);
+			glFramebufferTexture(GL_FRAMEBUFFER, cubeFaceRTs[0]->attachmentPoint, cubeFaceRTs[0]->textureID, 0);		
 
-			glDrawBuffer(this->drawBuffer);
-			glReadBuffer(this->readBuffer);
+			glDrawBuffer(cubeFaceRTs[0]->drawBuffer);
+			glReadBuffer(cubeFaceRTs[0]->readBuffer);
 
 			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			{
@@ -256,12 +252,55 @@ namespace BlazeEngine
 				result = false;
 			}
 		}
- 
+
 		// Cleanup:
-		glBindTexture(this->texTarget, 0); // Was still bound from Texture::BufferCubeMap()
-		glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+		glBindTexture(cubeFaceRTs[0]->texTarget, 0); // Was still bound from Texture::BufferCubeMap()
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		return result;
+	}
+
+
+	RenderTexture** RenderTexture::CreateCubeMap(int xRes, int yRes, string name /*="UNNAMMED"*/)
+	{
+		RenderTexture** cubeFaces = new RenderTexture*[CUBE_MAP_COUNT];
+
+		// Attach a texture to each slot:
+		for (int i = 0; i < CUBE_MAP_COUNT; i++)
+		{
+			RenderTexture* cubeRenderTexture = new RenderTexture
+			(
+				xRes,
+				yRes,
+				name + "_CubeMap_" + to_string(i),
+				false,
+				CUBE_MAP_0 + CUBE_MAP_0_RIGHT	// We always use the same sampler for all cube map faces
+			);
+
+
+			// Configure the texture:
+			cubeRenderTexture->TextureTarget()		= GL_TEXTURE_CUBE_MAP;
+
+			cubeRenderTexture->TextureWrap_S()		= GL_CLAMP_TO_EDGE;
+			cubeRenderTexture->TextureWrap_T()		= GL_CLAMP_TO_EDGE;
+			cubeRenderTexture->TextureWrap_R()		= GL_CLAMP_TO_EDGE;
+
+			cubeRenderTexture->TextureMinFilter()	= GL_NEAREST;
+			cubeRenderTexture->TextureMaxFilter()	= GL_NEAREST;
+
+			cubeRenderTexture->InternalFormat()		= GL_DEPTH_COMPONENT32F;
+			cubeRenderTexture->Format()				= GL_DEPTH_COMPONENT;
+			cubeRenderTexture->Type()				= GL_FLOAT;
+
+			cubeRenderTexture->AttachmentPoint()	= GL_DEPTH_ATTACHMENT;
+			cubeRenderTexture->DrawBuffer()			= GL_NONE;
+			cubeRenderTexture->ReadBuffer()			= GL_NONE;
+
+			// Cache off the texture for buffering when we're done
+			cubeFaces[i] = cubeRenderTexture;
+		}
+
+		return cubeFaces;
 	}
 }
 

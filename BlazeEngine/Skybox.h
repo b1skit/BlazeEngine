@@ -1,5 +1,10 @@
 #pragma once
 
+#include <string>
+
+using std::string;
+
+
 namespace BlazeEngine
 {
 	class Material;
@@ -9,6 +14,7 @@ namespace BlazeEngine
 	{
 	public:
 		Skybox(Material* skyMaterial, Mesh* skyMesh);
+		Skybox(string sceneName);
 		~Skybox();
 
 		Material*	GetSkyMaterial()		{ return skyMaterial; }

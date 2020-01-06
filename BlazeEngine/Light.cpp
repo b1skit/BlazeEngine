@@ -18,14 +18,52 @@ namespace BlazeEngine
 		string shaderName;
 		switch (lightType)
 		{
-		case LIGHT_AMBIENT:
+		case LIGHT_AMBIENT_COLOR:
+		case LIGHT_AMBIENT_IBL:
+		{
+			vector<string> shaderKeywords;
+			if (lightType == LIGHT_AMBIENT_COLOR)
+			{
+				shaderKeywords.push_back("AMBIENT_COLOR");
+			}
+			else // LIGHT_AMBIENT_IBL
+			{
+				shaderKeywords.push_back("AMBIENT_IBL");
+			}
+
+			Shader* ambientLightShader = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.deferredAmbientLightShaderName, &shaderKeywords);
+
+			// Attach a deferred Material:
+			this->deferredMaterial = new Material
+			(
+				lightName + "_deferredMaterial",
+				ambientLightShader,
+				(TEXTURE_TYPE)0, // No textures
+				true
+			);
+
+			// Attach a screen aligned quad:
+			this->deferredMesh = new Mesh
+			(
+				Mesh::CreateQuad	// Align along near plane
+				(
+					vec3(-1.0f, 1.0f, -1.0f),	// TL
+					vec3(1.0f, 1.0f, -1.0f),	// TR
+					vec3(-1.0f, -1.0f, -1.0f),	// BL
+					vec3(1.0f, -1.0f, -1.0f)	// BR
+				)
+			);
+
+			break;
+		}			
+
 		case LIGHT_DIRECTIONAL:
 		{
 			// Attach a deferred Material:
 			this->deferredMaterial = new Material
 			(
 				lightName + "_deferredMaterial",
-				lightType == LIGHT_AMBIENT ? CoreEngine::GetCoreEngine()->GetConfig()->shader.deferredAmbientLightShaderName : CoreEngine::GetCoreEngine()->GetConfig()->shader.deferredKeylightShaderName,
+				CoreEngine::GetCoreEngine()->GetConfig()->shader.deferredKeylightShaderName,
 				(TEXTURE_TYPE)0, // No textures
 				true
 			);

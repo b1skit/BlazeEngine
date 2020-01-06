@@ -52,7 +52,7 @@ namespace BlazeEngine
 
 		// Get/set a texel value:
 		// Returns texels[0] if u = [0, width - 1], v = [0, height - 1] are out of localBounds.
-		vec4& Texel(unsigned int u, unsigned int v);
+		vec4& Texel(unsigned int u, unsigned int v); // u == x == col, v == y == row
 
 		// Fill texture with a solid color
 		void Fill(vec4 color, bool doBuffer = false);
@@ -64,26 +64,27 @@ namespace BlazeEngine
 		bool Buffer();	// Upload a texture to the GPU. Returns true if successful, false otherwise
 
 		// Configure GPU frambuffer object for cube maps
-		bool BufferCubeMap(Texture** cubeFaceRTs); // Note: There must be exactly 6 cubeFaceRTs
+		static bool BufferCubeMap(Texture** cubeFaces); // Note: There must be EXACTLY 6 elements in cubeFaces
 
 		// Bind the texture to its sampler for Shader sampling
 		void Bind(GLuint const& shaderReference = 0, int textureUnitOverride = -1); // NOTE: GL_TEXTURE0 + textureUnit is what is bound when calling glActiveTexture()
 
 		vec4 TexelSize();
 
+
 		// Public static functions:
 		//-------------------------
 		
 		// Load a texture object from a (relative) path. Note: Returns nullptr if OpenGL binding fails
 		static Texture* LoadTextureFileFromPath(string texturePath, bool doBuffer = false, bool returnErrorTexIfNotFound = true, bool flipY = true);
-		
 
+		
 
 	protected:
 		GLuint textureID			= 0;
 		
 		GLenum texTarget			= GL_TEXTURE_2D;
-		GLenum format				= GL_RGBA;
+		GLenum format				= GL_RGBA;		// NOTE: Currently, BlazeEngine assumes all textures contain 4-channel vec4's (except for depth). If format != GL_RGBA, buffer will be packed with the wrong stride
 		GLenum internalFormat		= GL_RGBA32F;
 		GLenum type					= GL_FLOAT;
 
@@ -113,7 +114,13 @@ namespace BlazeEngine
 
 	private:	
 
-		
+		// Private static functions:
+		//--------------------------
+
+		// Helper functions for loading Low/High Dynamic Range image formats in LoadTextureFileFromPath()
+		// Note: targetTexture and imageData must be valid
+		static void LoadLDRHelper(Texture& targetTexture, const unsigned char* imageData, int width, int height, int numChannels);
+		static void LoadHDRHelper(Texture& targetTexture, const float* imageData, int width, int height, int numChannels);
 	};
 }
 

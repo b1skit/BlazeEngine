@@ -24,9 +24,14 @@ namespace BlazeEngine
 	public:
 		Vertex()
 		{
-			position = normal = tangent = bitangent = vec3(0.0f, 0.0f, 0.0f);
+			position	= vec3(0.0f, 0.0f, 0.0f);
+
+			// Initialize with non-zero values, to prevent render failures
+			tangent		= vec3(1.0f, 0.0f, 0.0f);
+			normal		= vec3(0.0f, 1.0f, 0.0f);
+			bitangent	= vec3(0.0f, 0.0f, 1.0f);
 			
-			color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+			color		= vec4(0.0f, 0.0f, 0.0f, 0.0f);
 			
 			uv0 = uv1 = uv2 = uv3 = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		}

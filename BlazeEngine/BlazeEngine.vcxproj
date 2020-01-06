@@ -134,6 +134,7 @@
     <ClCompile Include="CoreEngine.cpp" />
     <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="ImageBasedLight.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="LogManager.cpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="EventListener.h" />
     <ClInclude Include="EventManager.h" />
     <ClInclude Include="GameObject.h" />
+    <ClInclude Include="ImageBasedLight.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="LogManager.h" />
@@ -202,6 +204,8 @@
     <None Include="Shaders\deferredPointLightShader.frag" />
     <None Include="Shaders\deferredPointLightShader.vert" />
     <None Include="Shaders\depthShader.vert" />
+    <None Include="Shaders\equilinearToCubemapBlitShader.frag" />
+    <None Include="Shaders\equilinearToCubemapBlitShader.vert" />
     <None Include="Shaders\gBufferFillShader.frag" />
     <None Include="Shaders\gBufferFillShader.geom" />
     <None Include="Shaders\gBufferFillShader.vert" />

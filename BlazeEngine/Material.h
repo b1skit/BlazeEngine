@@ -111,6 +111,9 @@ namespace BlazeEngine
 
 		void BindAllTextures(GLuint const& shaderReference = 0);
 
+		// Helper function: Attaches an array of 6 textures
+		void AttachCubeMapTextures(Texture** cubeMapFaces); // cubeMapFaces must be EXACTLY 6 elements
+
 
 		// RenderTexture sampler names:
 		//-----------------------------

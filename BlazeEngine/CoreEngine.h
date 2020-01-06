@@ -27,7 +27,11 @@ namespace BlazeEngine
 			int windowXRes				= 1024;
 			int windowYRes				= 768;
 
+			// Quality settings:
 			bool useForwardRendering	= false;
+
+			int numIEMSamples			= 15000;			// Number of samples to use when generating IBL IEM texture
+			string defaultIBLPath		= "IBL\\ibl.hdr";
 
 		} renderer;
 
@@ -154,7 +158,7 @@ namespace BlazeEngine
 		//const double MAX_TIMESTEP = 0.5;	// Max amount of time before giving up
 
 		// Private engine component singletons:	
-		LogManager* const BlazeLogManager = &LogManager::Instance();
+		LogManager* const BlazeLogManager	= &LogManager::Instance();
 		TimeManager* const BlazeTimeManager = &TimeManager::Instance();
 
 		// Static Engine component singletons

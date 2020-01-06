@@ -97,7 +97,12 @@ namespace BlazeEngine
 	{
 		if (textures != nullptr)
 		{
-			delete textures;
+			for (int i = 0; i < this->numTextures; i++)
+			{
+				delete this->textures[i];
+				this->textures[i] = nullptr;
+			}
+			delete [] textures;
 			textures = nullptr;
 		}
 
@@ -134,6 +139,36 @@ namespace BlazeEngine
 			{
 				this->textures[i]->Bind(shaderReference);
 			}
+		}
+	}
+
+
+	void Material::AttachCubeMapTextures(Texture** cubeMapFaces)
+	{
+		if (cubeMapFaces == nullptr)
+		{
+			return;
+		}
+
+		if (this->textures != nullptr)
+		{
+			for (int i = 0; i < this->numTextures; i++)
+			{
+				delete this->textures[i];
+				this->textures[i] = nullptr;
+			}
+		}
+
+		this->numTextures = CUBE_MAP_COUNT;
+
+		if (this->textures == nullptr)
+		{
+			this->textures = new Texture*[CUBE_MAP_COUNT];
+		}
+
+		for (int i = 0; i < CUBE_MAP_COUNT; i++)
+		{
+			textures[i] = cubeMapFaces[i];
 		}
 	}
 }

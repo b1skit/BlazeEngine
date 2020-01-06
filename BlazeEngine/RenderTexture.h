@@ -8,6 +8,7 @@
 
 #define DEFAULT_RENDERTEXTURE_NAME "UNNAMED_RenderTexture"
 
+
 namespace BlazeEngine
 {
 	class RenderTexture : public Texture
@@ -38,7 +39,10 @@ namespace BlazeEngine
 		bool Buffer();
 
 		// Configure GPU frambuffer object for cube maps
-		bool BufferCubeMap(RenderTexture** cubeFaceRTs); // Note: There must be exactly 6 cubeFaceRTs
+		static bool BufferCubeMap(RenderTexture** cubeFaceRTs); // Note: There must be exactly 6 cubeFaceRTs
+
+		// Helper function: Create an array of 6 cube map textures (for a depth map by default). Must be configured/buffered before use
+		static RenderTexture** CreateCubeMap(int xRes, int yRes, string name = "UNNAMMED");
 
 
 	protected:

@@ -42,10 +42,10 @@ namespace BlazeEngine
 	}
 
 
-	void Shader::UploadUniform(GLchar const* uniformName, GLfloat const* value, UNIFORM_TYPE const& type, int count /*= 1*/)
+		void Shader::UploadUniform(GLchar const* uniformName, void const* value, UNIFORM_TYPE const& type, int count /*= 1*/)
 	{
 		GLint currentProgram;
-		bool isBound = true;
+		bool isBound = true;	// Track if the current shader is bound or not
 		glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
 		if (currentProgram != this->shaderReference)
 		{
@@ -59,24 +59,29 @@ namespace BlazeEngine
 			switch (type)
 			{
 			case UNIFORM_Matrix4fv:
-				glUniformMatrix4fv(uniformID, count, GL_FALSE, value);
+				glUniformMatrix4fv(uniformID, count, GL_FALSE, (GLfloat const*)value);
 				break;
 
 			case UNIFORM_Matrix3fv:
-				glUniformMatrix3fv(uniformID, count, GL_FALSE, value);
+				glUniformMatrix3fv(uniformID, count, GL_FALSE, (GLfloat const*)value);
 				break;
 
 			case UNIFORM_Vec3fv:
-				glUniform3fv(uniformID, count, value);
+				glUniform3fv(uniformID, count, (GLfloat const*)value);
 				break;
 
 			case UNIFORM_Vec4fv:
-				glUniform4fv(uniformID, count, value);
+				glUniform4fv(uniformID, count, (GLfloat const*)value);
 				break;
 			
 			case UNIFORM_Float:
-				glUniform1f(uniformID, *value);
+				glUniform1f(uniformID, *(GLfloat const*)value);
 				break;
+
+			case UNIFORM_Int:
+				glUniform1i(uniformID, *(GLint const*)value);
+				break;
+
 			default:
 				LOG_ERROR("Shader uniform upload failed: Recieved unimplemented uniform type");
 			}
@@ -104,21 +109,21 @@ namespace BlazeEngine
 	// Static functions:
 	//*******************
 
-	Shader* Shader::CreateShader(string shaderName, vector<string> const*  shaderKeywords /*= nullptr*/)
+	Shader* Shader::CreateShader(string shaderFileName, vector<string> const*  shaderKeywords /*= nullptr*/)
 	{
-		LOG("\nCreating shader \"" + shaderName + "\"");
+		LOG("\nCreating shader \"" + shaderFileName + "\"");
 
 		// Create an empty shader program object, and get its reference:
 		GLuint shaderReference = glCreateProgram();
 
 		// Load the shader files:
-		string vertexShader		= LoadShaderFile(shaderName + ".vert");
-		string geometryShader	= LoadShaderFile(shaderName + ".geom");
-		string fragmentShader	= LoadShaderFile(shaderName + ".frag");
+		string vertexShader		= LoadShaderFile(shaderFileName + ".vert");
+		string geometryShader	= LoadShaderFile(shaderFileName + ".geom");
+		string fragmentShader	= LoadShaderFile(shaderFileName + ".frag");
 		if (vertexShader == "" || fragmentShader == "")
 		{
 			glDeleteProgram(shaderReference);
-			ReturnErrorShader(shaderName);
+			ReturnErrorShader(shaderFileName);
 		}
 
 		// Check if we're also loading a geometry shader:
@@ -208,7 +213,7 @@ namespace BlazeEngine
 		if (!CheckShaderError(shaderReference, GL_LINK_STATUS, true))
 		{
 			glDeleteProgram(shaderReference);
-			newShader		= ReturnErrorShader(shaderName);
+			newShader		= ReturnErrorShader(shaderFileName);
 			shaderSuccess	= false;
 		}
 
@@ -217,7 +222,7 @@ namespace BlazeEngine
 		if (shaderSuccess && !CheckShaderError(shaderReference, GL_VALIDATE_STATUS, true))
 		{
 			glDeleteProgram(shaderReference);
-			newShader		= ReturnErrorShader(shaderName);
+			newShader		= ReturnErrorShader(shaderFileName);
 			shaderSuccess	= false;
 		}
 
@@ -231,11 +236,53 @@ namespace BlazeEngine
 
 		if (shaderSuccess)
 		{
-			newShader = new Shader(shaderName, shaderReference);
+			newShader = new Shader(shaderFileName, shaderReference);
+
+			// Initialize sampler locations:
+			newShader->Bind(true);
+
+			// Texture sampler locations. Note: These must align with the locations defined in Material.h
+			for (int currentTexture = 0; currentTexture < TEXTURE_COUNT; currentTexture++)
+			{
+				GLint samplerLocation = glGetUniformLocation(newShader->ShaderReference(), Material::TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
+				if (samplerLocation >= 0)
+				{
+					glUniform1i(samplerLocation, (TEXTURE_TYPE)currentTexture);
+				}
+			}
+			// RenderTexture sampler locations:
+			for (int currentTexture = 0; currentTexture < RENDER_TEXTURE_COUNT; currentTexture++)
+			{
+				GLint samplerLocation = glGetUniformLocation(newShader->ShaderReference(), Material::RENDER_TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
+				if (samplerLocation >= 0)
+				{
+					glUniform1i(samplerLocation, (int)(RENDER_TEXTURE_0 + (TEXTURE_TYPE)currentTexture));
+				}
+			}
+
+			// 2D shadow map textures sampler locations:
+			for (int currentTexture = 0; currentTexture < DEPTH_TEXTURE_COUNT; currentTexture++)
+			{
+				GLint samplerLocation = glGetUniformLocation(newShader->ShaderReference(), Material::DEPTH_TEXTURE_SAMPLER_NAMES[currentTexture].c_str());
+				if (samplerLocation >= 0)
+				{
+					glUniform1i(samplerLocation, DEPTH_TEXTURE_0 + (TEXTURE_TYPE)currentTexture);
+				}
+			}
+
+			// Cube map depth texture sampler locations: We just need to add a single cube map sampler
+			GLint samplerLocation = glGetUniformLocation(newShader->ShaderReference(), Material::CUBE_MAP_TEXTURE_SAMPLER_NAMES[CUBE_MAP_0_RIGHT].c_str());
+			if (samplerLocation >= 0)
+			{
+				glUniform1i(samplerLocation, CUBE_MAP_0 + (TEXTURE_TYPE)0);
+			}
+
+			// Cleanup:
+			newShader->Bind(false);
 		}		
 
 		#if defined (DEBUG_SCENEMANAGER_SHADER_LOGGING)
-			LOG("Finished creating shader \"" + shaderName + "\"");
+			LOG("Finished creating shader \"" + shaderFileName + "\"");
 		#endif
 
 		return newShader;

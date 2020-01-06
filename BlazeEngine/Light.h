@@ -23,7 +23,8 @@ namespace BlazeEngine
 
 	enum LIGHT_TYPE
 	{
-		LIGHT_AMBIENT,
+		LIGHT_AMBIENT_COLOR,
+		LIGHT_AMBIENT_IBL,
 		LIGHT_DIRECTIONAL,
 		LIGHT_POINT,
 		LIGHT_SPOT,
@@ -32,6 +33,7 @@ namespace BlazeEngine
 
 		LIGHT_TYPE_COUNT // Resereved: The number of light types
 	};
+
 
 	class Light : public SceneObject
 	{
@@ -64,7 +66,6 @@ namespace BlazeEngine
 
 
 	protected:
-
 
 
 	private:
