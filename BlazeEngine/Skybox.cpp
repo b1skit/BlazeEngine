@@ -59,7 +59,7 @@ namespace BlazeEngine
 			{
 				string finalName = currentSkyCubeFaceName + fileExtensions[j];
 
-				Texture* currentFaceTexture = Texture::LoadTextureFileFromPath(finalName, false, false, false);
+				Texture* currentFaceTexture = Texture::LoadTextureFileFromPath(finalName, false, true, false);
 				if (currentFaceTexture != nullptr)
 				{
 					skyMaterial->AccessTexture((TEXTURE_TYPE)i) = currentFaceTexture;
