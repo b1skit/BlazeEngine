@@ -290,10 +290,10 @@ namespace BlazeEngine
 
 	Shader* BlazeEngine::Shader::ReturnErrorShader(string shaderName)
 	{
-		if (shaderName != CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName)
+		if (shaderName != CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("errorShaderName"))
 		{
 			LOG_ERROR("Creating shader \"" + shaderName + "\" failed while loading shader files. Returning error shader");
-			return CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName);
+			return CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("errorShaderName"));
 		}
 		else
 		{
@@ -306,7 +306,7 @@ namespace BlazeEngine
 	string Shader::LoadShaderFile(const string& filename)
 	{
 		// Assemble the full shader file path:
-		string filepath = CoreEngine::GetCoreEngine()->GetConfig()->shader.shaderDirectory + filename;
+		string filepath = CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("shaderDirectory") + filename;
 
 		ifstream file;
 		file.open(filepath.c_str());

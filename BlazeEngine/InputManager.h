@@ -49,7 +49,7 @@ namespace BlazeEngine
 
 		// Static member functions:
 		static bool const&	GetInputState(INPUT_STATE button);
-		static float GetMouseAxisInput(INPUT_AXIS axis);
+		static float		GetMouseAxisInput(INPUT_AXIS axis);
 
 		// EngineComponent interface:
 		void Startup();
@@ -62,10 +62,14 @@ namespace BlazeEngine
 		void LoadInputBindings();
 
 	private:
-		int inputBindings[INPUT_NUM_STATES];				// Stores mapping from INPUT_STATE enums to SDL_SCANCODE_ values
+		int				inputBindings[INPUT_NUM_STATES];		// Stores mapping from INPUT_STATE enums to SDL_SCANCODE_ values
 
-		static bool buttonStates[INPUT_NUM_STATES];			// Stores the state of buttons
-		static float mouseAxisStates[INPUT_NUM_INPUT_AXIS];	// Mouse axis deltas
+		static bool		buttonStates[INPUT_NUM_STATES];			// Stores the state of buttons
+		static float	mouseAxisStates[INPUT_NUM_INPUT_AXIS];	// Mouse axis deltas
+
+		// Cache sensitivity params:
+		static float mousePitchSensitivity;
+		static float mouseYawSensitivity;
 	};
 }
 

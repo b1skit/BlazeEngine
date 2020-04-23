@@ -40,7 +40,7 @@ namespace BlazeEngine
 			".tga",
 		};
 
-		string skyboxTextureRoot = CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + sceneName + "\\Skybox\\";
+		string skyboxTextureRoot = CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("sceneRoot") + sceneName + "\\Skybox\\";
 
 		// Track the textures as we load them:
 		Texture* cubemapTextures[CUBE_MAP_COUNT];
@@ -107,7 +107,7 @@ namespace BlazeEngine
 		// If we failed to load the skybox cubemap, try and use an IBL texture:
 		if (!foundSkyboxFace)
 		{
-			Texture** iblAsSkyboxCubemap = (Texture**)ImageBasedLight::ConvertEquirectangularToCubemap(CoreEngine::GetSceneManager()->GetCurrentSceneName(), CoreEngine::GetCoreEngine()->GetConfig()->renderer.defaultIBLPath, 1024, 1024); // TODO: Parameterize cubemap dimensions?
+			Texture** iblAsSkyboxCubemap = (Texture**)ImageBasedLight::ConvertEquirectangularToCubemap(CoreEngine::GetSceneManager()->GetCurrentSceneName(), CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("defaultIBLPath"), 1024, 1024); // TODO: Parameterize cubemap dimensions?
 
 			if (iblAsSkyboxCubemap == nullptr)
 			{
@@ -123,7 +123,7 @@ namespace BlazeEngine
 		}
 
 		// Create a skybox shader:
-		Shader* skyboxShader = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.skyboxShaderName);
+		Shader* skyboxShader = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("skyboxShaderName"));
 		skyMaterial->GetShader() = skyboxShader;
 
 		// Configure and buffer textures:

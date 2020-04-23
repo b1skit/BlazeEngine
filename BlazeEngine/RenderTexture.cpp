@@ -8,8 +8,8 @@ namespace BlazeEngine
 	RenderTexture::RenderTexture() 
 		: RenderTexture
 		(
-			CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapWidth, 
-			CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapHeight,
+			CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("defaultShadowMapWidth"), 
+			CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("defaultShadowMapHeight"),
 			DEFAULT_RENDERTEXTURE_NAME
 		)
 	{}	// Do nothing else

@@ -72,7 +72,7 @@ namespace BlazeEngine
 		equirectangularToCubemapBlitShader->Bind(true);
 
 		// Load the HDR image:
-		string iblTexturePath	= CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + sceneName + "\\" + relativeHDRPath;
+		string iblTexturePath	= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("sceneRoot") + sceneName + "\\" + relativeHDRPath;
 		Texture* hdrTexture		= Texture::LoadTextureFileFromPath(iblTexturePath, false, false);
 
 		if (hdrTexture == nullptr)
@@ -136,7 +136,8 @@ namespace BlazeEngine
 			glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
 		};
 
-		equirectangularToCubemapBlitShader->UploadUniform("numSamples", &CoreEngine::GetCoreEngine()->GetConfig()->renderer.numIEMSamples, UNIFORM_Int); // "numSamples" is defined directly in the shader
+		int numIEMSamples = CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("numIEMSamples");
+		equirectangularToCubemapBlitShader->UploadUniform("numSamples", &numIEMSamples, UNIFORM_Int); // "numSamples" is defined directly in the shader
 
 		// Render into the cube map:
 		glViewport(0, 0, xRes, yRes);	// Configure viewport to match the cubemap dimensions

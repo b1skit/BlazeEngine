@@ -12,6 +12,9 @@ namespace BlazeEngine
 	bool InputManager::buttonStates[INPUT_NUM_STATES];
 	float InputManager::mouseAxisStates[INPUT_NUM_INPUT_AXIS];
 
+	float InputManager::mousePitchSensitivity	= -0.00005f;
+	float InputManager::mouseYawSensitivity		= -0.00005f;
+
 
 	// Constructor:
 	InputManager::InputManager() : EngineComponent("InputManager")
@@ -46,11 +49,11 @@ namespace BlazeEngine
 		float sensitivity;
 		if (axis == INPUT_MOUSE_X)
 		{
-			sensitivity = CoreEngine::GetCoreEngine()->GetConfig()->input.mousePitchSensitivity;
+			sensitivity = mousePitchSensitivity;
 		}
 		else
 		{
-			sensitivity = CoreEngine::GetCoreEngine()->GetConfig()->input.mouseYawSensitivity;
+			sensitivity = mouseYawSensitivity;
 		}
 
 		return InputManager::mouseAxisStates[axis] * sensitivity;
@@ -60,6 +63,10 @@ namespace BlazeEngine
 	void InputManager::Startup()
 	{
 		this->LoadInputBindings();
+
+		// Cache sensitivity params:
+		InputManager::mousePitchSensitivity	= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<float>("mousePitchSensitivity");
+		InputManager::mouseYawSensitivity	= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<float>("mouseYawSensitivity");
 
 		LOG("Input manager started!");
 	}

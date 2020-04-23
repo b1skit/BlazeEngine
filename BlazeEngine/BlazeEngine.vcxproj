@@ -89,6 +89,8 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)Dependencies\SDL2\include;$(ProjectDir)Dependencies\glew\include;$(ProjectDir)Dependencies\glm;$(ProjectDir)Dependencies\assimp\include;$(ProjectDir)Dependencies\stb;$(IncludePath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(ProjectDir)Dependencies\SDL2\lib\x64;$(ProjectDir)Dependencies\glew\lib\Release\x64;$(ProjectDir)Dependencies\glm;$(ProjectDir)Dependencies\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -132,6 +134,7 @@
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CoreEngine.cpp" />
+    <ClCompile Include="EngineConfig.cpp" />
     <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="ImageBasedLight.cpp" />
@@ -160,6 +163,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CoreEngine.h" />
     <ClInclude Include="EngineComponent.h" />
+    <ClInclude Include="EngineConfig.h" />
     <ClInclude Include="EventListener.h" />
     <ClInclude Include="EventManager.h" />
     <ClInclude Include="GameObject.h" />

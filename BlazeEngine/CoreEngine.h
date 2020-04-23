@@ -5,122 +5,12 @@
 #include "InputManager.h"
 #include "RenderManager.h"
 #include "SceneManager.h"
+#include "EngineConfig.h"
 
 
 namespace BlazeEngine
 {
-	// ENGINE CONFIG:
-	// TODO: Implement loading/saving of this object...
-	// TODO: Make various fields const ?
-	// TODO: Make this object (and members) static?
-	struct EngineConfig
-	{
-		EngineConfig()
-		{
-			
-		}
-
-		// Renderer config:
-		struct
-		{
-			string windowTitle			= "Blaze Engine";
-			int windowXRes				= 1024;
-			int windowYRes				= 768;
-
-			// Quality settings:
-			bool useForwardRendering	= false;
-
-			int numIEMSamples			= 15000;			// Number of samples to use when generating IBL IEM texture
-			string defaultIBLPath		= "IBL\\ibl.hdr";
-
-		} renderer;
-
-		// Compute the aspect ratio == width / height
-		float GetWindowAspectRatio() const { return (float)renderer.windowXRes / (float)renderer.windowYRes; }
-
-		struct
-		{
-			float defaultFieldOfView	= 60.0f;
-			float defaultNear			= 1.0f;
-			float defaultFar			= 100.0f;
-
-			float defaultExposure		= 1.0f;
-		} mainCam;
-
-		struct
-		{
-			// Camera defaults:
-			float defaultNear					= 1.0f;
-			float defaultFar					= 100.0f;
-
-			float defaultOrthoHalfWidth			= 5.0f;		// TODO: Choose appropriate values??
-			float defaultOrthoHalfHeight		= 5.0f;		// -> Function of resolution and scene width
-
-			float defaultMinShadowBias			= 0.01f;
-			float defaultMaxShadowBias			= 0.05f;
-
-			// Texture dimensions:
-			int defaultShadowMapWidth			= 2048;
-			int defaultShadowMapHeight			= 2048;
-
-			int defaultShadowCubeMapthWidth		= 512;
-			int defaultShadowCubeMapthHeight	= 512;
-		} shadows;
-
-		struct
-		{
-			const string shaderDirectory					= ".\\Shaders\\";
-			const string errorShaderName					= "errorShader";
-			const string defaultShaderName					= "lambertShader";
-			
-			// Depth map rendering:
-			const string depthShaderName					= "depthShader";
-			const string cubeDepthShaderName				= "cubeDepthShader";
-
-			// Deferred rendering:
-			const string gBufferFillShaderName				= "gBufferFillShader";
-
-			const string deferredAmbientLightShaderName		= "deferredAmbientLightShader";
-			const string deferredKeylightShaderName			= "deferredKeyLightShader";
-			const string deferredPointLightShaderName		= "deferredPointLightShader";
-
-			const string skyboxShaderName					= "skyboxShader";
-
-			const string blitShader							= "blitShader";
-			const string blurShader							= "blurShader";
-			const string toneMapShader						= "toneMapShader";
-
-			const float	defaultSceneEmissiveIntensity		= 2.0f;
-		} shader;
-
-		struct
-		{
-			float mousePitchSensitivity = -0.00005f;
-			float mouseYawSensitivity	= -0.00005f;
-		} input;
-
-		// Scene config:
-		struct
-		{
-			const string sceneRoot		= ".\\Scenes\\";	// Root path: All assets stored here
-			
-			string currentScene			= "";			// The currently loaded scene
-		} scene;
-		
-		// TODO: Add button config for inputmanager
-		//struct inputConfig
-		//{
-
-		//};
-
-		// TODO: Implement load/save functions
-		void LoadConfig(string path);
-		void SaveConfig(string path);
-
-	private:
-		
-
-	};
+	
 
 
 	// CORE ENGINE:
@@ -174,8 +64,6 @@ namespace BlazeEngine
 
 		// Engine configuration:
 		EngineConfig config;
-		string configPath	= ".\\config.cfg";
-		bool configDirty	= false; // Marks whether we need to save the config file or not
 
 		bool ProcessCommandLineArgs(int argc, char** argv);
 	};

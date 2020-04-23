@@ -367,7 +367,7 @@ namespace BlazeEngine
 		currentScene = new Scene(sceneName);
 
 		// Assemble paths:
-		string sceneRoot = CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + sceneName + "\\";
+		string sceneRoot = CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("sceneRoot") + sceneName + "\\";
 		string fbxPath = sceneRoot + sceneName + ".fbx";
 
 		// Load our .fbx using Assimp:
@@ -656,7 +656,7 @@ namespace BlazeEngine
 		LOG_ERROR("Material \"" + materialName + "\" does not exist... Creating a new material with default shader");
 
 		// If we've made it this far, no material with the given name exists. Create it:
-		Material* newMaterial = new Material(materialName, CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultShaderName); // Assign the default shader
+		Material* newMaterial = new Material(materialName, CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("defaultShaderName")); // Assign the default shader
 
 		return AddMaterial(newMaterial, false);
 	}
@@ -831,7 +831,7 @@ namespace BlazeEngine
 					newMaterial->AccessTexture(TEXTURE_ALBEDO) = diffuseTexture;
 
 					// Set the diffuse texture's internal format to be encoded in sRGB color space, so OpenGL will apply gamma correction: (ie. color = pow(color, 2.2) )
-					if (CoreEngine::GetCoreEngine()->GetConfig()->renderer.useForwardRendering == false) // We don't do this in forward rendering, since we don't currently support tone mapping
+					if (CoreEngine::GetCoreEngine()->GetConfig()->GetValue<bool>("useForwardRendering") == false) // We don't do this in forward rendering, since we don't currently support tone mapping
 					{
 						diffuseTexture->InternalFormat() = GL_SRGB8_ALPHA8;
 					}
@@ -926,7 +926,7 @@ namespace BlazeEngine
 				}
 
 				// No need to load material shaders in deferred mode:
-				if (CoreEngine::GetCoreEngine()->GetConfig()->renderer.useForwardRendering == true)
+				if (CoreEngine::GetCoreEngine()->GetConfig()->GetValue<bool>("useForwardRendering") == true)
 				{
 					// Create a shader, using the keywords we've built
 					bool loadedValidShader = false;
@@ -935,7 +935,7 @@ namespace BlazeEngine
 					{
 						LOG_ERROR("Could not find a shader name prefixed with an underscore in the material name. Destroying loaded textures and assigning error shader - GBuffer data will be garbage!!!");
 
-						Shader* newShader = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName);
+						Shader* newShader = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("errorShaderName"));
 						newMaterial->GetShader() = newShader;
 					}
 					else
@@ -947,7 +947,7 @@ namespace BlazeEngine
 						#endif
 
 						Shader* newShader = Shader::CreateShader(shaderName, &newMaterial->ShaderKeywords());
-						if (newShader->Name() != CoreEngine::GetCoreEngine()->GetConfig()->shader.errorShaderName)
+						if (newShader->Name() != CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("errorShaderName"))
 						{
 							newMaterial->GetShader() = newShader;
 							loadedValidShader = true;
@@ -1143,7 +1143,7 @@ namespace BlazeEngine
 			LOG_WARNING("Received material has " + to_string(textureCount) + " of the requested texture type... Only the first will be extracted");
 		}
 
-		string sceneRoot = CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + sceneName + "\\";
+		string sceneRoot = CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("sceneRoot") + sceneName + "\\";
 
 		aiString path;
 		material->GetTexture(textureType, 0, &path); // We only get the texture at index 0 (any others are ignored...)
@@ -1189,7 +1189,7 @@ namespace BlazeEngine
 				{
 					LOG_WARNING("Texture not found in expected slot. Assigning texture containing \"" + nameSubstring + "\" as a fallback");
 
-					string sceneRoot = CoreEngine::GetCoreEngine()->GetConfig()->scene.sceneRoot + sceneName + "\\";
+					string sceneRoot = CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("sceneRoot") + sceneName + "\\";
 					string texturePath = sceneRoot + string(path.C_Str());
 					
 					return FindLoadTextureByPath(texturePath);					
@@ -1645,8 +1645,8 @@ namespace BlazeEngine
 					ShadowMap* keyLightShadowMap	= new ShadowMap // TEMP: We assume the key light will ALWAYS have a shadow
 					(
 						lightName,
-						CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapWidth,
-						CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapHeight,
+						CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("defaultShadowMapWidth"),
+						CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("defaultShadowMapHeight"),
 						shadowCamConfig,
 						&currentScene->keyLight->GetTransform()
 					);
@@ -1657,11 +1657,11 @@ namespace BlazeEngine
 					aiNode* lightNode = scene->mRootNode->FindNode(scene->mLights[i]->mName.C_Str());
 					if (lightNode)
 					{
-						float minShadowBias = CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultMinShadowBias;
+						float minShadowBias = CoreEngine::GetCoreEngine()->GetConfig()->GetValue<float>("defaultMinShadowBias");
 						lightNode->mMetaData->Get("minShadowBias", minShadowBias);
 						keyLightShadowMap->MinShadowBias() = minShadowBias;
 
-						float maxShadowBias = CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultMaxShadowBias;
+						float maxShadowBias = CoreEngine::GetCoreEngine()->GetConfig()->GetValue<float>("defaultMaxShadowBias");
 						lightNode->mMetaData->Get("maxShadowBias", maxShadowBias);
 						keyLightShadowMap->MaxShadowBias() = maxShadowBias;					
 
@@ -1719,11 +1719,11 @@ namespace BlazeEngine
 				vec3 lightColor(scene->mLights[i]->mColorDiffuse.r, scene->mLights[i]->mColorDiffuse.g, scene->mLights[i]->mColorDiffuse.b); // == color * intensity. Both ambient and point types use the mColorDiffuse
 
 				// Get ready for metadata extraction:
-				float minShadowBias		= CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultMinShadowBias;
-				float maxShadowBias		= CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultMaxShadowBias;
-				float shadowCamNear		= CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultNear;
-				int shadowCubeWidth		= CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowCubeMapthWidth;
-				int shadowCubeHeight	= CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowCubeMapthHeight;
+				float minShadowBias		= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<float>("defaultMinShadowBias");
+				float maxShadowBias		= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<float>("defaultMaxShadowBias");
+				float shadowCamNear		= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<float>("defaultNear");
+				int shadowCubeWidth		= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("defaultShadowCubeMapthWidth");
+				int shadowCubeHeight	= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("defaultShadowCubeMapthHeight");
 
 				// Get ready to compute point light radius, if required:
 				float radius				= 1.0f;
@@ -1777,7 +1777,7 @@ namespace BlazeEngine
 
 				// Create the light:
 				Light* pointLight = nullptr;
-				if (pointType == LIGHT_POINT || CoreEngine::GetCoreEngine()->GetConfig()->renderer.useForwardRendering == true)
+				if (pointType == LIGHT_POINT || CoreEngine::GetCoreEngine()->GetConfig()->GetValue<bool>("useForwardRendering") == true)
 				{
 					pointLight = new Light
 						(
@@ -1790,7 +1790,7 @@ namespace BlazeEngine
 				}
 				else
 				{
-					pointLight = new ImageBasedLight(lightName, CoreEngine::GetCoreEngine()->GetConfig()->renderer.defaultIBLPath); // TODO: Load the HDR path from FBX (Currently not supported in Assimp???)
+					pointLight = new ImageBasedLight(lightName, CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("defaultIBLPath")); // TODO: Load the HDR path from FBX (Currently not supported in Assimp???)
 
 					// If we didn't load a valid IBL, fall back to using an ambient color light
 					if (!((ImageBasedLight*)pointLight)->IsValid())
@@ -1907,7 +1907,7 @@ namespace BlazeEngine
 			}
 
 			// Normalize the lighting if we're in forward mode
-			if (CoreEngine::GetCoreEngine()->GetConfig()->renderer.useForwardRendering)
+			if (CoreEngine::GetCoreEngine()->GetConfig()->GetValue<bool>("useForwardRendering"))
 			{
 				vector<Light*>const* allLights = &currentScene->GetDeferredLights();
 
@@ -1960,11 +1960,11 @@ namespace BlazeEngine
 			LOG("\nCreating a default camera");
 
 			newCamConfig.aspectRatio	= CoreEngine::GetCoreEngine()->GetConfig()->GetWindowAspectRatio();
-			newCamConfig.fieldOfView	= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView;
-			newCamConfig.near			= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultNear;
-			newCamConfig.far			= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFar;
+			newCamConfig.fieldOfView	= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<float>("defaultFieldOfView");
+			newCamConfig.near			= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<float>("defaultNear");
+			newCamConfig.far			= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<float>("defaultFar");
 
-			newCamConfig.exposure		= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultExposure;
+			newCamConfig.exposure		= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<float>("defaultExposure");
 
 			cameraName					= "defaultCamera";
 		}
@@ -1977,13 +1977,13 @@ namespace BlazeEngine
 
 
 			// Camera configuration:
-			newCamConfig.aspectRatio		= (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / (float)CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes;
-			newCamConfig.fieldOfView		= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultFieldOfView; //scene->mCameras[0]->mHorizontalFOV; // TODO: Implement this (Needs to be converted to a vertical FOV???)
+			newCamConfig.aspectRatio		= CoreEngine::GetCoreEngine()->GetConfig()->GetWindowAspectRatio();
+			newCamConfig.fieldOfView		= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<float>("defaultFieldOfView"); //scene->mCameras[0]->mHorizontalFOV; // TODO: Implement this (Needs to be converted to a vertical FOV???)
 			newCamConfig.near				= scene->mCameras[0]->mClipPlaneNear;
 			newCamConfig.far				= scene->mCameras[0]->mClipPlaneFar;
 			newCamConfig.isOrthographic		= false;	// This is the default, but set it here anyway for clarity
 
-			newCamConfig.exposure			= CoreEngine::GetCoreEngine()->GetConfig()->mainCam.defaultExposure;
+			newCamConfig.exposure			= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<float>("defaultExposure");
 
 			cameraName						= string(scene->mCameras[0]->mName.C_Str());
 

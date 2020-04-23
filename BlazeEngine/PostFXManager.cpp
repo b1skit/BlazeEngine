@@ -67,8 +67,8 @@ namespace BlazeEngine
 		// Configure render buffers:
 		this->pingPongTextures = new RenderTexture[NUM_DOWN_SAMPLES + 1]; // +1 so we have an extra RenderTexture to pingpong between at the lowest res
 
-		int currentXRes = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes / 2;
-		int currentYRes = CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes / 2;
+		int currentXRes = CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("windowXRes") / 2;
+		int currentYRes = CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("windowYRes") / 2;
 
 		for (int i = 0; i <= NUM_DOWN_SAMPLES; i++)
 		{
@@ -109,12 +109,12 @@ namespace BlazeEngine
 		vector<string> horizontalBlurKeywords(1,		"BLUR_SHADER_HORIZONTAL");
 		vector<string> verticalBlurKeywords(1,			"BLUR_SHADER_VERTICAL");
 		
-		blurShaders[BLUR_SHADER_LUMINANCE_THRESHOLD]	= Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.blurShader, &luminanceThresholdKeywords);
-		blurShaders[BLUR_SHADER_HORIZONTAL]				= Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.blurShader, &horizontalBlurKeywords);		
-		blurShaders[BLUR_SHADER_VERTICAL]				= Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.blurShader, &verticalBlurKeywords);
+		blurShaders[BLUR_SHADER_LUMINANCE_THRESHOLD]	= Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("blurShader"), &luminanceThresholdKeywords);
+		blurShaders[BLUR_SHADER_HORIZONTAL]				= Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("blurShader"), &horizontalBlurKeywords);
+		blurShaders[BLUR_SHADER_VERTICAL]				= Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("blurShader"), &verticalBlurKeywords);
 
-		blitShader										= Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.blitShader);
-		toneMapShader									= Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.toneMapShader);
+		blitShader										= Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("blitShader"));
+		toneMapShader									= Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("toneMapShader"));
 
 
 		// Upload Shader parameters:

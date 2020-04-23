@@ -10,8 +10,8 @@ namespace BlazeEngine
 
 		RenderTexture* depthRenderTexture = new RenderTexture
 		(
-			CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapWidth,
-			CoreEngine::GetCoreEngine()->GetConfig()->shadows.defaultShadowMapHeight
+			CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("defaultShadowMapWidth"),
+			CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("defaultShadowMapHeight")
 		);
 
 		depthRenderTexture->TextureUnit() = RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH;
@@ -28,7 +28,7 @@ namespace BlazeEngine
 		// Omni-directional (Cube map) shadowmap setup:
 		if (useCubeMap)
 		{
-			this->shadowCam->RenderMaterial() = new Material(shadowCam->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->shader.cubeDepthShaderName, CUBE_MAP_COUNT, true);
+			this->shadowCam->RenderMaterial() = new Material(shadowCam->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("cubeDepthShaderName"), CUBE_MAP_COUNT, true);
 
 			RenderTexture** cubeFaces = RenderTexture::CreateCubeMap(xRes, yRes, lightName);
 
@@ -58,7 +58,7 @@ namespace BlazeEngine
 	// Helper function: Reduces some duplicate code for non-cube map depth textures
 	void ShadowMap::InitializeShadowCam(RenderTexture* renderTexture)
 	{
-		this->shadowCam->RenderMaterial() = new Material(shadowCam->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->shader.depthShaderName, RENDER_TEXTURE_COUNT, true);
+		this->shadowCam->RenderMaterial() = new Material(shadowCam->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("depthShaderName"), RENDER_TEXTURE_COUNT, true);
 		this->shadowCam->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH) = renderTexture;
 
 		CoreEngine::GetSceneManager()->RegisterCamera(CAMERA_TYPE_SHADOW, this->shadowCam);

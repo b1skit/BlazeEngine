@@ -148,14 +148,14 @@ namespace BlazeEngine
 
 	void Camera::AttachGBuffer()
 	{
-		Material* gBufferMaterial	= new Material(this->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->shader.gBufferFillShaderName, RENDER_TEXTURE_COUNT, true);
+		Material* gBufferMaterial	= new Material(this->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("gBufferFillShaderName"), RENDER_TEXTURE_COUNT, true);
 		this->RenderMaterial()		= gBufferMaterial;
 
 		// We use the albedo texture as a basis for the others
 		RenderTexture* gBuffer_albedo = new RenderTexture
 		(
-			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes,
-			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
+			CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("windowXRes"),
+			CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("windowYRes"),
 			this->GetName() + "_" + Material::RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_ALBEDO],
 			false,
 			RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO
@@ -218,8 +218,8 @@ namespace BlazeEngine
 		// Configure the depth buffer:
 		RenderTexture* depth = new RenderTexture
 		(
-			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes,
-			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
+			CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("windowXRes"),
+			CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("windowYRes"),
 			this->GetName() + "_" + Material::RENDER_TEXTURE_SAMPLER_NAMES[RENDER_TEXTURE_DEPTH],
 			false,
 			RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH

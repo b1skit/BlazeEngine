@@ -31,7 +31,7 @@ namespace BlazeEngine
 				shaderKeywords.push_back("AMBIENT_IBL");
 			}
 
-			Shader* ambientLightShader = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->shader.deferredAmbientLightShaderName, &shaderKeywords);
+			Shader* ambientLightShader = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("deferredAmbientLightShaderName"), &shaderKeywords);
 
 			// Attach a deferred Material:
 			this->deferredMaterial = new Material
@@ -63,7 +63,7 @@ namespace BlazeEngine
 			this->deferredMaterial = new Material
 			(
 				lightName + "_deferredMaterial",
-				CoreEngine::GetCoreEngine()->GetConfig()->shader.deferredKeylightShaderName,
+				CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("deferredKeylightShaderName"),
 				(TEXTURE_TYPE)0, // No textures
 				true
 			);
@@ -86,7 +86,7 @@ namespace BlazeEngine
 			this->deferredMaterial = new Material
 			(
 				lightName + "_deferredMaterial",
-				CoreEngine::GetCoreEngine()->GetConfig()->shader.deferredPointLightShaderName,
+				CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("deferredPointLightShaderName"),
 				(TEXTURE_TYPE)0, // No textures
 				true
 			);

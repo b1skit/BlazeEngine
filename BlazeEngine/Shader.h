@@ -74,19 +74,19 @@ namespace BlazeEngine
 		//--------------------------
 		
 		// Helper function: Attempts to load and return the error shader. Returns nullptr if the error shader can't be loaded
-		static Shader* ReturnErrorShader(string shaderName);
+		static Shader*	ReturnErrorShader(string shaderName);
 
 		// Helper function: Loads the contents of a file named "filepath" within the shaders directory
-		static string LoadShaderFile(const string& filepath);
+		static string	LoadShaderFile(const string& filepath);
 
 		// Helper function: Processes #include directives, loading included files from within the shaders directory
-		static void LoadIncludes(string& shaderText);
+		static void		LoadIncludes(string& shaderText);
 
 		// Helper function: Inserts #define statements into shader text
-		static void InsertDefines(string& shaderText, vector<string> const* shaderKeywords);
+		static void		InsertDefines(string& shaderText, vector<string> const* shaderKeywords);
 
-		static GLuint CreateGLShaderObject(const string& text, GLenum shaderType);
-		static bool CheckShaderError(GLuint shader, GLuint flag, bool isProgram);
+		static GLuint	CreateGLShaderObject(const string& text, GLenum shaderType);
+		static bool		CheckShaderError(GLuint shader, GLuint flag, bool isProgram);
 
 	};
 }

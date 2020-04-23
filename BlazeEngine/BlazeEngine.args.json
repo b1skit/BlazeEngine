@@ -17,10 +17,6 @@
     {
       "Id": "5d4c1892-5043-4b55-9ab1-8b9782ffa5ad",
       "Command": "-scene stanfordObjects"
-    },
-    {
-      "Id": "515f2a03-f457-49de-bcca-92ca3853827e",
-      "Command": "-forward"
     }
   ]
 }

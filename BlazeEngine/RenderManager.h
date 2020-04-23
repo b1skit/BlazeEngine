@@ -88,6 +88,8 @@ namespace BlazeEngine
 		int yRes					= -1;
 		string windowTitle			= "Default BlazeEngine window title";
 
+		bool useForwardRendering	= false;
+
 		vec4 windowClearColor		= vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		float depthClearColor		= 1.0f;
 		

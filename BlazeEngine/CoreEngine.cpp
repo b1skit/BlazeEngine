@@ -21,15 +21,10 @@ namespace BlazeEngine
 	{
 		coreEngine = this;
 
-		EngineConfig config = EngineConfig();
-
 		if (!ProcessCommandLineArgs(argc, argv))
 		{
 			exit(-1);
 		}
-
-		//this->configPath = configPath;
-		//config.LoadConfig(this->configPath);
 
 		// Initialize SDL:
 		if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
@@ -56,12 +51,11 @@ namespace BlazeEngine
 
 		// Must wait to start scene manager and load a scene until the renderer is called, since we need to initialize OpenGL in the RenderManager before creating shaders
 		BlazeSceneManager->Startup();
-		bool loadedScene = BlazeSceneManager->LoadScene(config.scene.currentScene);
+		bool loadedScene = BlazeSceneManager->LoadScene(config.currentScene);
 
 		// Now that the scene (and its materials/shaders) has been loaded, we can initialize the shaders
 		if (loadedScene)
 		{
-			
 			BlazeRenderManager->Initialize();
 		}		
 
@@ -123,10 +117,7 @@ namespace BlazeEngine
 	{
 		LOG("CoreEngine shutting down...");
 
-		if (configDirty)
-		{
-			config.SaveConfig(configPath);
-		}		
+		config.SaveConfig();
 		
 		// Note: Shutdown order matters!
 		BlazeTimeManager->Shutdown();		
@@ -153,7 +144,7 @@ namespace BlazeEngine
 	}
 
 
-	EngineConfig const * CoreEngine::GetConfig()
+	EngineConfig const* CoreEngine::GetConfig()
 	{
 		return &config;
 	}
@@ -188,20 +179,6 @@ namespace BlazeEngine
 	}
 
 
-	void EngineConfig::LoadConfig(string path)
-	{
-		LOG_WARNING("DEBUG: EngineConfig.LoadConfig() is not implemented. Using hard coded default values!");
-	
-		// TODO: Implement config loading!
-	}
-
-
-	void EngineConfig::SaveConfig(string path)
-	{
-		LOG_WARNING("DEBUG: EngineConfig.SaveConfig() is not implemented. No data is being saved!\n");
-	}
-
-
 	bool CoreEngine::ProcessCommandLineArgs(int argc, char** argv)
 	{
 		if (argc <= 1)
@@ -210,6 +187,7 @@ namespace BlazeEngine
 			return false;
 		}
 		LOG("Processing " + to_string(argc - 1) + " command line arguments:");
+
 		for (int i = 1; i < argc; i++) // Start at index 1 to skip the executable path
 		{			
 			string currentArg = string(argv[i]);			
@@ -220,16 +198,10 @@ namespace BlazeEngine
 				{
 					LOG("\tReceived scene command: \"" + currentArg + " " + parameter + "\"");
 
-					this->config.scene.currentScene = parameter;
+					this->config.currentScene = parameter;
 				}
 				
 				i++; // Eat the extra command parameter
-			}
-			else if (currentArg.find("-forward") != string::npos)
-			{
-				LOG("\tReceived scene command: \"" + currentArg + "\"");
-
-				this->config.renderer.useForwardRendering = true;
 			}
 			else
 			{
@@ -237,6 +209,7 @@ namespace BlazeEngine
 			}
 
 		}
+
 		return true;
 	}
 }

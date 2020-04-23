@@ -148,9 +148,10 @@ namespace BlazeEngine
 		LOG("Render manager started!");
 
 		// Cache the relevant config data:
-		this->xRes			= CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes;
-		this->yRes			= CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes;
-		this->windowTitle	= CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowTitle;
+		this->windowTitle			= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("windowTitle");
+		this->xRes					= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("windowXRes");
+		this->yRes					= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("windowYRes");
+		this->useForwardRendering	= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<bool>("useForwardRendering");
 
 		// Configure SDL before creating a window:
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
@@ -180,7 +181,7 @@ namespace BlazeEngine
 		// Create a window:
 		glWindow = SDL_CreateWindow
 		(
-			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowTitle.c_str(),
+			this->windowTitle.c_str(),
 			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
 			xRes, 
 			yRes, 
@@ -235,12 +236,12 @@ namespace BlazeEngine
 		ClearWindow(windowClearColor);
 
 		// Configure deferred output:
-		outputMaterial = new Material("RenderManager_OutputMaterial", CoreEngine::GetCoreEngine()->GetConfig()->shader.blitShader, (TEXTURE_TYPE)1, true);
+		outputMaterial = new Material("RenderManager_OutputMaterial", CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("blitShader"), (TEXTURE_TYPE)1, true);
 
 		RenderTexture* outputTexture = new RenderTexture
 		(
-			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes,
-			CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes,
+			this->xRes,
+			this->yRes,
 			"RenderManagerFrameOutput",
 			false,
 			RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO
@@ -329,7 +330,7 @@ namespace BlazeEngine
 
 
 		// Forward rendering:
-		if (CoreEngine::GetCoreEngine()->GetConfig()->renderer.useForwardRendering)
+		if (this->useForwardRendering)
 		{
 			RenderForward(mainCam);
 		}
@@ -359,8 +360,6 @@ namespace BlazeEngine
 
 				for (int i = 1; i < deferredLights->size(); i++)
 				{
-					// TODO: Fix Ambient/Directional lights: Flip screen-aligned quad and render back faces (to be consistent with other deferred lights)
-
 					// Select face culling:
 					if (deferredLights->at(i)->Type() == LIGHT_AMBIENT_COLOR || deferredLights->at(i)->Type() == LIGHT_AMBIENT_IBL || deferredLights->at(i)->Type() == LIGHT_DIRECTIONAL)
 					{
@@ -730,7 +729,7 @@ namespace BlazeEngine
 		case LIGHT_AMBIENT_IBL:
 		{
 			// Bind IBL cubemaps:
-			if (!CoreEngine::GetCoreEngine()->GetConfig()->renderer.useForwardRendering)
+			if (!this->useForwardRendering)
 			{
 				Texture* IEMCubemap = ((ImageBasedLight*)deferredLight)->GetIBLMaterial()->AccessTexture(CUBE_MAP_0_RIGHT);
 				if (IEMCubemap != nullptr)
@@ -878,8 +877,8 @@ namespace BlazeEngine
 		Camera* renderCam = CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera();
 
 		// Bind:
-		Shader* currentShader = skybox->GetSkyMaterial()->GetShader();
-		GLuint shaderReference = currentShader->ShaderReference();
+		Shader* currentShader	= skybox->GetSkyMaterial()->GetShader();
+		GLuint shaderReference	= currentShader->ShaderReference();
 
 		currentShader->Bind(true);
 
@@ -930,7 +929,7 @@ namespace BlazeEngine
 
 	void BlazeEngine::RenderManager::BlitToScreen(Material* srcMaterial, Shader* blitShader)
 	{
-		glViewport(0, 0, CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowXRes, CoreEngine::GetCoreEngine()->GetConfig()->renderer.windowYRes);
+		glViewport(0, 0, this->xRes, this->yRes);
 			
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1075,7 +1074,7 @@ namespace BlazeEngine
 			}			
 
 			// NOTE: These values are overridden every frame for deferred light Shaders:
-			if (keyLight != nullptr && CoreEngine::GetCoreEngine()->GetConfig()->renderer.useForwardRendering == true)
+			if (keyLight != nullptr && this->useForwardRendering == true)
 			{
 				shaders.at(i)->UploadUniform("keylightWorldDir", &(keyDir->x), UNIFORM_Vec3fv);
 
@@ -1088,7 +1087,8 @@ namespace BlazeEngine
 			shaders.at(i)->UploadUniform("screenParams", &(screenParams.x), UNIFORM_Vec4fv);
 			shaders.at(i)->UploadUniform("projectionParams", &(projectionParams.x), UNIFORM_Vec4fv);
 
-			shaders.at(i)->UploadUniform("emissiveIntensity", &CoreEngine::GetCoreEngine()->GetConfig()->shader.defaultSceneEmissiveIntensity, UNIFORM_Float);
+			float emissiveIntensity = CoreEngine::GetCoreEngine()->GetConfig()->GetValue<float>("defaultSceneEmissiveIntensity");
+			shaders.at(i)->UploadUniform("emissiveIntensity", &emissiveIntensity, UNIFORM_Float);
 			// TODO: Load this from .FBX file, and set the cached value here
 
 
