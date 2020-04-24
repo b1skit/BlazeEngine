@@ -21,7 +21,8 @@ namespace BlazeEngine
 	{
 		for (int i = 0; i < INPUT_NUM_STATES; i++)
 		{
-			buttonStates[i] = false;
+			buttonStates[i]		= false;
+			inputBindings[i]	= SDL_SCANCODE_UNKNOWN; // == 0
 		}
 
 		for (int i = 0; i < INPUT_NUM_INPUT_AXIS; i++)
@@ -62,13 +63,13 @@ namespace BlazeEngine
 
 	void InputManager::Startup()
 	{
+		LOG("InputManager starting...");
+
 		this->LoadInputBindings();
 
 		// Cache sensitivity params:
 		InputManager::mousePitchSensitivity	= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<float>("mousePitchSensitivity");
 		InputManager::mouseYawSensitivity	= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<float>("mouseYawSensitivity");
-
-		LOG("Input manager started!");
 	}
 
 
@@ -112,13 +113,15 @@ namespace BlazeEngine
 
 	void InputManager::LoadInputBindings()
 	{
-		// TODO: Load from a file. For now, we just hard code
-
 		// Initialize key mappings:
-		this->inputBindings[INPUT_BUTTON_FORWARD]	= SDL_SCANCODE_W;
-		this->inputBindings[INPUT_BUTTON_BACKWARD]	= SDL_SCANCODE_S;
-		this->inputBindings[INPUT_BUTTON_LEFT]		= SDL_SCANCODE_A;
-		this->inputBindings[INPUT_BUTTON_RIGHT]		= SDL_SCANCODE_D;
+		this->inputBindings[INPUT_BUTTON_FORWARD]	= SDL_GetScancodeFromKey((SDL_Keycode)CoreEngine::GetCoreEngine()->GetConfig()->GetValue<char>("btn_forward"));
+		this->inputBindings[INPUT_BUTTON_BACKWARD]	= SDL_GetScancodeFromKey((SDL_Keycode)CoreEngine::GetCoreEngine()->GetConfig()->GetValue<char>("btn_backward"));
+		this->inputBindings[INPUT_BUTTON_LEFT]		= SDL_GetScancodeFromKey((SDL_Keycode)CoreEngine::GetCoreEngine()->GetConfig()->GetValue<char>("btn_strafeLeft"));
+		this->inputBindings[INPUT_BUTTON_RIGHT]		= SDL_GetScancodeFromKey((SDL_Keycode)CoreEngine::GetCoreEngine()->GetConfig()->GetValue<char>("btn_strafeRight"));
+		
+		
+		// TODO: Implement config mapping of the remaining keys:
+
 		this->inputBindings[INPUT_BUTTON_UP]		= SDL_SCANCODE_SPACE;
 		this->inputBindings[INPUT_BUTTON_DOWN]		= SDL_SCANCODE_LSHIFT;
 		

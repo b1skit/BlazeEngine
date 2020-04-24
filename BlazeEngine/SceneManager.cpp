@@ -271,6 +271,8 @@ namespace BlazeEngine
 
 	void SceneManager::Startup()
 	{
+		LOG("SceneManager starting...");
+
 		// Initialize materials:
 		materials = new Material*[MAX_MATERIALS];
 		for (unsigned int i = 0; i < MAX_MATERIALS; i++)
@@ -285,8 +287,6 @@ namespace BlazeEngine
 			textures[i] = nullptr;
 		}
 		currentTextureCount = 0;
-
-		LOG("Scene manager started!");
 	}
 
 

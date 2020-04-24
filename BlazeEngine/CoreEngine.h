@@ -48,8 +48,8 @@ namespace BlazeEngine
 		//const double MAX_TIMESTEP = 0.5;	// Max amount of time before giving up
 
 		// Private engine component singletons:	
-		LogManager* const BlazeLogManager	= &LogManager::Instance();
-		TimeManager* const BlazeTimeManager = &TimeManager::Instance();
+		LogManager* const	BlazeLogManager		= &LogManager::Instance();
+		TimeManager* const	BlazeTimeManager	= &TimeManager::Instance();
 
 		// Static Engine component singletons
 		static CoreEngine*		coreEngine;

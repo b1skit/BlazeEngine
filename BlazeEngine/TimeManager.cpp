@@ -28,7 +28,7 @@ namespace BlazeEngine
 
 	void TimeManager::Startup()
 	{
-		LOG("TimeManager started!");
+		LOG("TimeManager starting...");
 	}
 
 

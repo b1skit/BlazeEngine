@@ -21,7 +21,7 @@ namespace BlazeEngine
 
 	void LogManager::Startup() 
 	{
-		LOG("Log manager started!");
+		LOG("Log manager starting...");
 
 		#if defined(DEBUG_LOGMANAGER_KEY_INPUT_LOGGING)
 			CoreEngine::GetEventManager()->Subscribe(EVENT_INPUT_BUTTON_DOWN_FORWARD, this);

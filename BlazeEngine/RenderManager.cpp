@@ -145,7 +145,7 @@ namespace BlazeEngine
 
 	void RenderManager::Startup()
 	{
-		LOG("Render manager started!");
+		LOG("RenderManager starting...");
 
 		// Cache the relevant config data:
 		this->windowTitle			= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("windowTitle");

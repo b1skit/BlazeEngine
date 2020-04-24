@@ -5,6 +5,9 @@
 #include <filesystem>
 #include <regex>
 
+#include "SDL_keyboard.h"
+#include "SDL_keycode.h"
+
 using std::ifstream;
 
 
@@ -52,12 +55,7 @@ namespace BlazeEngine
 				}
 
 				// Get the next line:
-				getline(file, line);
-
-
-				LOG_ERROR(line);
-
-				
+				getline(file, line);			
 
 				// Replace whitespace with single spaces:
 				std::regex tabMatch("([\\s])+");
@@ -74,10 +72,6 @@ namespace BlazeEngine
 				{
 					cleanLine = cleanLine.substr(1, string::npos);
 				}
-
-
-				LOG_ERROR("Line after whitespace replacement:\n>" + cleanLine + "<");
-
 				
 				// Remove comments:
 				size_t commentStart = cleanLine.find_first_of("#");
@@ -90,8 +84,6 @@ namespace BlazeEngine
 					}
 
 					cleanLine = cleanLine.substr(0, commentStart);
-
-					LOG_ERROR("Line after comment removal:\n>" + cleanLine + "<");
 
 					if (cleanLine.length() == 0)
 					{
@@ -115,22 +107,16 @@ namespace BlazeEngine
 				}
 
 				// Extract leading command:
-				size_t firstSpace = cleanLine.find_first_of(" \t", 1);
-				string command	= cleanLine.substr(0, firstSpace);
-
-				LOG_ERROR("Command = >" + command + "<");
+				size_t firstSpace	= cleanLine.find_first_of(" \t", 1);
+				string command		= cleanLine.substr(0, firstSpace);
 
 				// Remove the command from the head of the string:
 				cleanLine			= cleanLine.substr(firstSpace + 1, string::npos);
 				
 				
 				// Extract the variable property name:
-				firstSpace = cleanLine.find_first_of(" \t\n", 1);
-				string property = cleanLine.substr(0, firstSpace);
-
-
-				LOG_ERROR("property = >" + property + "<");
-
+				firstSpace			= cleanLine.find_first_of(" \t\n", 1);
+				string property		= cleanLine.substr(0, firstSpace);
 
 				// Remove the property from the head of the string:
 				cleanLine = cleanLine.substr(firstSpace + 1, string::npos);
@@ -139,30 +125,58 @@ namespace BlazeEngine
 				string value = cleanLine;
 
 				// Remove quotation marks from value string:
-				std::regex quoteMatch("([\\\"])+");
-				value = std::regex_replace(value, quoteMatch, "");
-
-				LOG_ERROR("value = >" + value + "<");
-
+				bool isString = false;
+				if (value.find("\"") != string::npos)
+				{
+					isString = true;
+					std::regex quoteMatch("([\\\"])+");
+					value = std::regex_replace(value, quoteMatch, "");
+				}
+				
 				
 				// Update config hashtables:
 				if (command == "set")
 				{
-					LOG_ERROR("FOUND SET COMMAND");
-
-					// Check and see if we can find a matching value:
-					if (configValues.find(property) != configValues.end())
+					// Strings:
+					if (isString)
 					{
-						configValues[property] = value;
+						configValues[property] = string(value);
 					}
+					else
+					{
+						// Booleans:
+						string boolString = ToLowerCase(value);
+						if (boolString == TRUE_STRING)
+						{
+							configValues[property] = true;
+							continue;
+						}
+						else if (boolString == FALSE_STRING)
+						{
+							configValues[property] = false;
+							continue;
+						}
+
+						// Numeric values: Try and cast as an int, and fallback to a float if it fails
+						size_t position = 0;
+						int intResult = std::stoi(value, &position);
+
+						// Ints:
+						if (position == value.length())
+						{
+							configValues[property] = intResult;
+						}
+						else // Floats:
+						{
+							float floatResult = std::stof(value);
+							configValues[property] = floatResult;
+						}
+					}
+
 				}
 				else if (command == "bind")
 				{
-					// TODO: Implement config key bindings
-
-					LOG_ERROR("Found bind command, but binding is not yet implemented");
-
-					configValues[property] = value; // store it anyway
+					configValues[property] = (char)value[0]; // Assume bound values are single chars, for now. Might need to rework this to bind more complex keys
 				}
 				else
 				{
@@ -199,7 +213,7 @@ namespace BlazeEngine
 
 		// Write our config to disk:
 		std::ofstream config_ofstream(CONFIG_DIR + CONFIG_FILENAME);
-		config_ofstream << "# BlazeEngine config file\n";
+		config_ofstream << "# BlazeEngine config.cfg file:\n";
 
 
 		// Output each value, by type:
@@ -220,6 +234,10 @@ namespace BlazeEngine
 			else if (currentElement.second.type() == typeid(bool))
 			{
 				config_ofstream << SET_CMD << currentElement.first << PropertyToConfigString(any_cast<bool>(currentElement.second));
+			}
+			else if (currentElement.second.type() == typeid(char))
+			{
+				config_ofstream << BIND_CMD << currentElement.first << PropertyToConfigString(any_cast<char>(currentElement.second));	
 			}
 			else
 			{

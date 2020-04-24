@@ -9,17 +9,17 @@
 namespace BlazeEngine
 {
 	// Static members:
-	CoreEngine* CoreEngine::coreEngine; // Assigned in constructor
+	CoreEngine*		CoreEngine::coreEngine; // Assigned in constructor
 
-	EventManager* CoreEngine::BlazeEventManager		= &EventManager::Instance();
-	InputManager* CoreEngine::BlazeInputManager		= &InputManager::Instance();
-	SceneManager* CoreEngine::BlazeSceneManager		= &SceneManager::Instance();
-	RenderManager* CoreEngine::BlazeRenderManager	= &RenderManager::Instance();
+	EventManager*	CoreEngine::BlazeEventManager	= &EventManager::Instance();
+	InputManager*	CoreEngine::BlazeInputManager	= &InputManager::Instance();
+	SceneManager*	CoreEngine::BlazeSceneManager	= &SceneManager::Instance();
+	RenderManager*	CoreEngine::BlazeRenderManager	= &RenderManager::Instance();
 
 
 	CoreEngine::CoreEngine(int argc, char** argv) : BlazeObject("CoreEngine")
 	{
-		coreEngine = this;
+		this->coreEngine = this;
 
 		if (!ProcessCommandLineArgs(argc, argv))
 		{
@@ -37,11 +37,12 @@ namespace BlazeEngine
 
 	void CoreEngine::Startup()
 	{
+		LOG("CoreEngine starting...");
+
 		// Initialize BlazeEngine:
 		BlazeEventManager->Startup();	
 		BlazeLogManager->Startup();
-
-		LOG("CoreEngine started!");
+		
 		BlazeEventManager->Subscribe(EVENT_ENGINE_QUIT, this);
 
 		BlazeTimeManager->Startup();
