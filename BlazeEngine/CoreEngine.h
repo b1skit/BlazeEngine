@@ -10,8 +10,6 @@
 
 namespace BlazeEngine
 {
-	
-
 
 	// CORE ENGINE:
 	class CoreEngine : public BlazeObject, public EventListener

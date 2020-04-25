@@ -45,33 +45,33 @@ namespace BlazeEngine
 		// Handle direction:
 		vec3 direction = vec3(0.0f, 0.0f, 0.0f);
 
-		if (InputManager::GetInputState(INPUT_BUTTON_FORWARD))
+		if (InputManager::GetKeyboardInputState(INPUT_BUTTON_FORWARD))
 		{
 			vec3 forward = this->transform.Forward();
 			Transform::RotateVector(forward, this->playerCam->GetTransform()->GetEulerRotation().x, this->transform.Right());
 
 			direction -= forward;
 		}
-		if (InputManager::GetInputState(INPUT_BUTTON_BACKWARD))
+		if (InputManager::GetKeyboardInputState(INPUT_BUTTON_BACKWARD))
 		{
 			vec3 forward = this->transform.Forward();
 			Transform::RotateVector(forward, this->playerCam->GetTransform()->GetEulerRotation().x, this->transform.Right());
 
 			direction += forward;
 		}
-		if (InputManager::GetInputState(INPUT_BUTTON_LEFT))
+		if (InputManager::GetKeyboardInputState(INPUT_BUTTON_LEFT))
 		{
 			direction -= this->transform.Right();
 		}
-		if (InputManager::GetInputState(INPUT_BUTTON_RIGHT))
+		if (InputManager::GetKeyboardInputState(INPUT_BUTTON_RIGHT))
 		{
 			direction += this->transform.Right();
 		}
-		if (InputManager::GetInputState(INPUT_BUTTON_UP))
+		if (InputManager::GetKeyboardInputState(INPUT_BUTTON_UP))
 		{
 			direction += this->transform.Up();
 		}
-		if (InputManager::GetInputState(INPUT_BUTTON_DOWN))
+		if (InputManager::GetKeyboardInputState(INPUT_BUTTON_DOWN))
 		{
 			direction -= this->transform.Up();
 		}
@@ -86,7 +86,7 @@ namespace BlazeEngine
 
 
 		// Reset the cam back to the saved position
-		if (InputManager::GetInputState(INPUT_MOUSE_LEFT))
+		if (InputManager::GetMouseInputState(INPUT_MOUSE_LEFT))
 		{
 			this->transform.SetWorldPosition(savedPosition);
 			this->transform.SetWorldRotation(vec3(0, savedEulerRotation.y, 0));
@@ -94,7 +94,7 @@ namespace BlazeEngine
 		}
 
 		// Save the current position/rotation:
-		if (InputManager::GetInputState(INPUT_MOUSE_RIGHT))
+		if (InputManager::GetMouseInputState(INPUT_MOUSE_RIGHT))
 		{
 			this->savedPosition = transform.WorldPosition();
 			this->savedEulerRotation = vec3(this->playerCam->GetTransform()->GetEulerRotation().x, this->transform.GetEulerRotation().y, 0 );

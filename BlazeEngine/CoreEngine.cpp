@@ -25,6 +25,12 @@ namespace BlazeEngine
 		{
 			exit(-1);
 		}
+	}
+
+
+	void CoreEngine::Startup()
+	{
+		LOG("CoreEngine starting...");
 
 		// Initialize SDL:
 		if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
@@ -32,12 +38,6 @@ namespace BlazeEngine
 			LOG_ERROR(SDL_GetError());
 			exit(-1);
 		}
-	}
-
-
-	void CoreEngine::Startup()
-	{
-		LOG("CoreEngine starting...");
 
 		// Initialize BlazeEngine:
 		BlazeEventManager->Startup();	
@@ -154,7 +154,7 @@ namespace BlazeEngine
 	void CoreEngine::Update()
 	{
 		// Generate a quit event if the quit button is pressed:
-		if (this->BlazeInputManager->GetInputState(INPUT_BUTTON_QUIT) == true)
+		if (this->BlazeInputManager->GetKeyboardInputState(INPUT_BUTTON_QUIT) == true)
 		{
 			this->BlazeEventManager->Notify(new EventInfo{ EVENT_ENGINE_QUIT, this });
 		}

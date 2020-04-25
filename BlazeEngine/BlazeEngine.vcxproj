@@ -169,6 +169,7 @@
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="ImageBasedLight.h" />
     <ClInclude Include="InputManager.h" />
+    <ClInclude Include="KeyConfiguration.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="LogManager.h" />
     <ClInclude Include="Material.h" />
