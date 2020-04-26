@@ -36,7 +36,7 @@ void main()
 	// Cube-map shadows:
 	float NoL				= max(0.0, dot(worldNormal, lightWorldDir));
 	vec3 lightToFrag		= worldPosition.xyz - lightWorldPos; // Cubemap sampler direction length matters, so we can't use -fragToLight
-	float shadowFactor		= GetShadowFactor(lightToFrag, CubeMap_0_Right, NoL);
+	float shadowFactor		= GetShadowFactor(lightToFrag, CubeMap_0, NoL);
 
 	// Factor in light attenuation:
 	float lightAtten		= LightAttenuation(worldPosition.xyz, lightWorldPos);

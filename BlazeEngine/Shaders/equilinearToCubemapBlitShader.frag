@@ -50,8 +50,15 @@ void main()
 
 // Remap from equirectangular to cubemap, performing PMREM filtering (ie. for specular IBL)
 void main()
-{	
-	// TODO: PMREM blit
+{
+	// TEMP HACK: Remap from equirectangular to cubemap, with no processing/filtering (ie. same as HDR images for skybox texture)
+	vec3 worldDir   = normalize(data.localPos);
+
+	vec2 equirectangularUVs	= DirectionToEquirectangularUV(worldDir);
+	
+	FragColor = vec4(texture(albedo, equirectangularUVs).rgb, 1.0);
+
+	// TODO: Actually construct a PMREM texture!!!!!!!
 }
 
 

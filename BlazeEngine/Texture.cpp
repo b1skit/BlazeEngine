@@ -524,14 +524,14 @@ namespace BlazeEngine
 		if (cubeFaces[0]->texels != nullptr)
 		{
 			// Generate faces:
-			for (int i = 0; i < CUBE_MAP_COUNT; i++)
+			for (int i = 0; i < CUBE_MAP_NUM_FACES; i++)
 			{
 				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, cubeFaces[0]->internalFormat, cubeFaces[0]->width, cubeFaces[0]->height, 0, cubeFaces[0]->format, cubeFaces[0]->type, &cubeFaces[i]->Texel(0, 0).r);
 			}
 
 
 			// Ensure all of the textures have the correct information stored in them:
-			for (int i = 1; i < CUBE_MAP_COUNT; i++)
+			for (int i = 1; i < CUBE_MAP_NUM_FACES; i++)
 			{
 				cubeFaces[i]->textureID = cubeFaces[0]->textureID;
 				cubeFaces[i]->samplerID = cubeFaces[0]->samplerID;

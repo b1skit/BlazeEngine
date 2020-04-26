@@ -20,10 +20,13 @@ namespace BlazeEngine
 	Skybox::Skybox(string sceneName)
 	{
 		// Create a cube map material
-		this->skyMaterial = new Material("SkyboxMaterial", nullptr, CUBE_MAP_COUNT, false);
+		this->skyMaterial = new Material("SkyboxMaterial", nullptr, CUBE_MAP_NUM_FACES, false);
+
+		// Attempt to create Skybox from 6x skybox textures:
+		//--------------------------------------------------
 
 		// Create/import cube map face textures:
-		string skyboxTextureNames[CUBE_MAP_COUNT] =
+		string skyboxTextureNames[CUBE_MAP_NUM_FACES] =
 		{
 			"posx",
 			"negx",
@@ -45,14 +48,14 @@ namespace BlazeEngine
 		string skyboxTextureRoot = CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("sceneRoot") + sceneName + "\\Skybox\\";
 
 		// Track the textures as we load them:
-		Texture* cubemapTextures[CUBE_MAP_COUNT];
-		for (int i = 0; i < CUBE_MAP_COUNT; i++)
+		Texture* cubemapTextures[CUBE_MAP_NUM_FACES];
+		for (int i = 0; i < CUBE_MAP_NUM_FACES; i++)
 		{
 			cubemapTextures[i] = nullptr;
 		}
 
-		bool foundSkyboxFace;
-		for (int i = 0; i < CUBE_MAP_COUNT; i++)
+		bool foundSkyboxFace = false;
+		for (int i = 0; i < CUBE_MAP_NUM_FACES; i++)
 		{
 			string currentSkyCubeFaceName = skyboxTextureRoot + skyboxTextureNames[i];
 
@@ -61,7 +64,7 @@ namespace BlazeEngine
 			{
 				string finalName = currentSkyCubeFaceName + fileExtensions[j];
 
-				Texture* currentFaceTexture = Texture::LoadTextureFileFromPath(finalName, false, true, false);
+				Texture* currentFaceTexture = Texture::LoadTextureFileFromPath(finalName, false, false, false);
 				if (currentFaceTexture != nullptr)
 				{
 					skyMaterial->AccessTexture((TEXTURE_TYPE)i) = currentFaceTexture;
@@ -82,7 +85,7 @@ namespace BlazeEngine
 					currentFaceTexture->InternalFormat()	= GL_SRGB8_ALPHA8;				// Set the diffuse texture's internal format to be encoded in sRGB color space, so OpenGL will apply gamma correction: (ie. color = pow(color, 2.2) )
 					// TODO: Should we use this, or use universal shader functions???
 
-					currentFaceTexture->TextureUnit()		= CUBE_MAP_0 + CUBE_MAP_0_RIGHT;	// We always use the same sampler for all cube map faces
+					currentFaceTexture->TextureUnit()		= CUBE_MAP_0;
 
 					break;
 				}
@@ -93,7 +96,7 @@ namespace BlazeEngine
 				LOG("Could not find skybox cubemap face texture #" + to_string(i) + ": " + skyboxTextureNames[i] + " with any supported extension. Attempting to load IBL texture instead...");
 
 				// Cleanup:
-				for (int i = 0; i < CUBE_MAP_COUNT; i++)
+				for (int i = 0; i < CUBE_MAP_NUM_FACES; i++)
 				{
 					if (cubemapTextures[i] != nullptr)
 					{
@@ -106,7 +109,8 @@ namespace BlazeEngine
 			}
 		}
 
-		// If we failed to load the skybox cubemap, try and use an IBL texture:
+		// Create a skybox from an IBL texture, if failing to load a skybox cubemap failed:
+		//---------------------------------------------------------------------------------
 		if (!foundSkyboxFace)
 		{
 			Texture** iblAsSkyboxCubemap = (Texture**)ImageBasedLight::ConvertEquirectangularToCubemap(CoreEngine::GetSceneManager()->GetCurrentSceneName(), CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("defaultIBLPath"), 1024, 1024); // TODO: Parameterize cubemap dimensions?
@@ -124,7 +128,9 @@ namespace BlazeEngine
 			skyMaterial->AttachCubeMapTextures(iblAsSkyboxCubemap);
 		}
 
-		// Create a skybox shader:
+		
+
+		// Create a skybox shader, now that we have some sort of image loaded:
 		Shader* skyboxShader = Shader::CreateShader(CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("skyboxShaderName"));
 		skyMaterial->GetShader() = skyboxShader;
 

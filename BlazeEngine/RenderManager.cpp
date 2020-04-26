@@ -432,7 +432,7 @@ namespace BlazeEngine
 
 		case LIGHT_POINT:
 		{
-			lightDepthTexture = (RenderTexture*)shadowCam->RenderMaterial()->AccessTexture(CUBE_MAP_0_RIGHT);
+			lightDepthTexture = (RenderTexture*)shadowCam->RenderMaterial()->AccessTexture(CUBE_MAP_RIGHT);
 
 			mat4 shadowCamProjection	= shadowCam->Projection();
 			vec3 lightWorldPos			= currentLight->GetTransform().WorldPosition();
@@ -737,10 +737,16 @@ namespace BlazeEngine
 			// Bind IBL cubemaps:
 			if (!this->useForwardRendering)
 			{
-				Texture* IEMCubemap = ((ImageBasedLight*)deferredLight)->GetIBLMaterial()->AccessTexture(CUBE_MAP_0_RIGHT);
+				Texture* IEMCubemap = ((ImageBasedLight*)deferredLight)->GetIEMMaterial()->AccessTexture(CUBE_MAP_RIGHT);
 				if (IEMCubemap != nullptr)
 				{
-					IEMCubemap->Bind(currentShader->ShaderReference(), CUBE_MAP_0 + CUBE_MAP_0_RIGHT);
+					IEMCubemap->Bind(currentShader->ShaderReference(), CUBE_MAP_0);
+				}
+
+				Texture* PMREM_Cubemap = ((ImageBasedLight*)deferredLight)->GetPMREMMaterial()->AccessTexture(CUBE_MAP_RIGHT);
+				if (PMREM_Cubemap != nullptr)
+				{
+					PMREM_Cubemap->Bind(currentShader->ShaderReference(), CUBE_MAP_1);
 				}
 			}
 		}
@@ -805,7 +811,7 @@ namespace BlazeEngine
 
 				case LIGHT_POINT:
 				{
-					depthTexture = (RenderTexture*)activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(CUBE_MAP_0_RIGHT);
+					depthTexture = (RenderTexture*)activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(CUBE_MAP_RIGHT);
 					if (depthTexture)
 					{
 						depthTexture->Bind(shaderReference); // No need for a texture unit override
@@ -853,7 +859,7 @@ namespace BlazeEngine
 
 			case LIGHT_POINT:
 			{
-				activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(CUBE_MAP_0_RIGHT)->Bind(0);
+				activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(CUBE_MAP_RIGHT)->Bind(0);
 			}
 			break;
 
@@ -888,7 +894,7 @@ namespace BlazeEngine
 
 		currentShader->Bind(true);
 
-		Texture* skyboxCubeMap = skybox->GetSkyMaterial()->AccessTexture(CUBE_MAP_0_RIGHT);
+		Texture* skyboxCubeMap = skybox->GetSkyMaterial()->AccessTexture(CUBE_MAP_RIGHT);
 
 		skyboxCubeMap->Bind(shaderReference);
 

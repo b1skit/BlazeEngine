@@ -32,10 +32,12 @@ namespace BlazeEngine
 
 		~ImageBasedLight();
 
-		Material* GetIBLMaterial() { return this->iblMaterial; }
+		// Get the Irradiance Environment Map material:
+		Material* GetIEMMaterial()		{ return this->IEM_Material; }
+		Material* GetPMREMMaterial()	{ return this->PMREM_Material; }
 
 		// Check if an IBL was successfully loaded
-		bool IsValid()	{ return this->isValid; }
+		bool IsValid() const		{ return this->IEM_isValid && this->PMREM_isValid; }
 
 
 		// Public static functions:
@@ -48,13 +50,15 @@ namespace BlazeEngine
 		static RenderTexture** ConvertEquirectangularToCubemap(string sceneName, string relativeHDRPath, int xRes, int yRes, IBL_TYPE iblType = RAW_HDR);
 
 	private:
-		Material* iblMaterial	= nullptr;	// Deallocated in destructor
+		Material* IEM_Material		= nullptr;	// Irradiance Environment Map (IEM) Material: Deallocated in destructor
+		Material* PMREM_Material	= nullptr;	// Pre-filtered Mip-mapped Radiance Environment Map (PMREM) Material: Deallocated in destructor
 
 		// Cubemap face resolution:
-		int xRes				= 512;
-		int yRes				= 512;
+		int xRes					= 512;
+		int yRes					= 512;
 
-		bool isValid			= false; // Is this a valid IBL light? (Ie. Were IBL textures successfully loaded?)
+		bool IEM_isValid			= false; // Is the IEM valid? (Ie. Were IBL textures successfully loaded?)
+		bool PMREM_isValid			= false; // Is the PMREM valid? (Ie. Were IBL textures successfully loaded?)
 	};
 }
 

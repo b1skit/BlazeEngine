@@ -215,13 +215,13 @@ namespace BlazeEngine
 		LOG("Configuring cube map as RenderTexture: \"" + cubeFaceRTs[0]->TexturePath() + "\"");
 
 		// Generate faces:
-		for (int i = 0; i < CUBE_MAP_COUNT; i++)
+		for (int i = 0; i < CUBE_MAP_NUM_FACES; i++)
 		{
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, cubeFaceRTs[0]->internalFormat, cubeFaceRTs[0]->width, cubeFaceRTs[0]->height, 0, cubeFaceRTs[0]->format, cubeFaceRTs[0]->type, NULL);
 		}
 
 		// Ensure all of the other textures have the same ID, sampler, and FBO info:
-		for (int i = 1; i < CUBE_MAP_COUNT; i++)
+		for (int i = 1; i < CUBE_MAP_NUM_FACES; i++)
 		{
 			cubeFaceRTs[i]->textureID			= cubeFaceRTs[0]->textureID;
 			cubeFaceRTs[i]->samplerID			= cubeFaceRTs[0]->samplerID;
@@ -262,12 +262,12 @@ namespace BlazeEngine
 	}
 
 
-	RenderTexture** RenderTexture::CreateCubeMap(int xRes, int yRes, string name /*="UNNAMMED"*/)
+	RenderTexture** RenderTexture::CreateCubeMap(int xRes, int yRes, int textureUnit, string name /*="UNNAMMED"*/)
 	{
-		RenderTexture** cubeFaces = new RenderTexture*[CUBE_MAP_COUNT];
+		RenderTexture** cubeFaces = new RenderTexture*[CUBE_MAP_NUM_FACES];
 
 		// Attach a texture to each slot:
-		for (int i = 0; i < CUBE_MAP_COUNT; i++)
+		for (int i = 0; i < CUBE_MAP_NUM_FACES; i++)
 		{
 			RenderTexture* cubeRenderTexture = new RenderTexture
 			(
@@ -275,7 +275,7 @@ namespace BlazeEngine
 				yRes,
 				name + "_CubeMap_" + to_string(i),
 				false,
-				CUBE_MAP_0 + CUBE_MAP_0_RIGHT	// We always use the same sampler for all cube map faces
+				textureUnit
 			);
 
 

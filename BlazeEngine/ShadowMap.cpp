@@ -32,9 +32,9 @@ namespace BlazeEngine
 		// Omni-directional (Cube map) shadowmap setup:
 		if (useCubeMap)
 		{
-			this->shadowCam->RenderMaterial() = new Material(shadowCam->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("cubeDepthShaderName"), CUBE_MAP_COUNT, true);
+			this->shadowCam->RenderMaterial() = new Material(shadowCam->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("cubeDepthShaderName"), CUBE_MAP_NUM_FACES, true);
 
-			RenderTexture** cubeFaces = RenderTexture::CreateCubeMap(xRes, yRes, lightName);
+			RenderTexture** cubeFaces = RenderTexture::CreateCubeMap(xRes, yRes, CUBE_MAP_0, lightName);
 
 			this->shadowCam->RenderMaterial()->AttachCubeMapTextures((Texture**)cubeFaces);
 

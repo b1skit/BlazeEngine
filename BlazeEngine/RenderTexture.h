@@ -42,7 +42,7 @@ namespace BlazeEngine
 		static bool BufferCubeMap(RenderTexture** cubeFaceRTs); // Note: There must be exactly 6 cubeFaceRTs
 
 		// Helper function: Create an array of 6 cube map textures (for a depth map by default). Must be configured/buffered before use
-		static RenderTexture** CreateCubeMap(int xRes, int yRes, string name = "UNNAMMED");
+		static RenderTexture** CreateCubeMap(int xRes, int yRes, int textureUnit, string name = "UNNAMMED");
 
 
 	protected:

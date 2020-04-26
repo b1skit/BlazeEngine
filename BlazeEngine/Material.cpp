@@ -44,12 +44,8 @@ namespace BlazeEngine
 
 	const string Material::CUBE_MAP_TEXTURE_SAMPLER_NAMES[CUBE_MAP_COUNT] = 
 	{
-		"CubeMap_0_Right",			// CUBE_MAP_0_RIGHT
-		"CubeMap_1_Left",			// CUBE_MAP_1_LEFT
-		"CubeMap_2_Top",			// CUBE_MAP_2_TOP
-		"CubeMap_3_Bottom",			// CUBE_MAP_3_BOTTOM
-		"CubeMap_4_Near",			// CUBE_MAP_4_NEAR
-		"CubeMap_5_Far",			// CUBE_MAP_5_FAR
+		"CubeMap_0",				// CUBE_MAP_RIGHT
+		"CubeMap_1",				// CUBE_MAP_RIGHT
 	};
 
 
@@ -170,14 +166,14 @@ namespace BlazeEngine
 			}
 		}
 
-		this->numTextures = CUBE_MAP_COUNT;
+		this->numTextures = CUBE_MAP_NUM_FACES;
 
 		if (this->textures == nullptr)
 		{
-			this->textures = new Texture*[CUBE_MAP_COUNT];
+			this->textures = new Texture*[CUBE_MAP_NUM_FACES];
 		}
 
-		for (int i = 0; i < CUBE_MAP_COUNT; i++)
+		for (int i = 0; i < CUBE_MAP_NUM_FACES; i++)
 		{
 			textures[i] = cubeMapFaces[i];
 		}

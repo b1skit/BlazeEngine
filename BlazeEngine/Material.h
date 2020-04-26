@@ -52,15 +52,19 @@ namespace BlazeEngine
 
 		// Cube maps:
 		CUBE_MAP_0							= 12,	// RESERVED: Starting offset for *binding* cube RenderTextures to a texture unit: CUBE_MAP_0 + CUBE_MAP_TEXTURE_<texture tyep>. First unit must equal TEXTURE_COUNT + RENDER_TEXTURE_COUNT + DEPTH_TEXTURE_COUNT
+		CUBE_MAP_1							= 18,	// RESERVED: Starting offset for *binding* cube RenderTextures to a texture unit: CUBE_MAP_1 + CUBE_MAP_TEXTURE_<texture tyep>. First unit must equal TEXTURE_COUNT + RENDER_TEXTURE_COUNT + DEPTH_TEXTURE_COUNT + CUBE_MAP_0
 
-		CUBE_MAP_0_RIGHT					= 0,	// X+
-		CUBE_MAP_1_LEFT						= 1,	// X-
-		CUBE_MAP_2_TOP						= 2,	// Y+
-		CUBE_MAP_3_BOTTOM					= 3,	// Y-
-		CUBE_MAP_4_NEAR						= 4,	// Z+
-		CUBE_MAP_5_FAR						= 5,	// Z-
+		CUBE_MAP_COUNT						= 2,	// RESERVED: Total number of cube maps allocated
 
-		CUBE_MAP_COUNT						= 6,
+		// Cube map face offsets (Eg. CUBE_MAP_0 + CUBE_MAP_RIGHT)
+		CUBE_MAP_RIGHT						= 0,	// X+
+		CUBE_MAP_LEFT						= 1,	// X-
+		CUBE_MAP_TOP						= 2,	// Y+
+		CUBE_MAP_BOTTOM						= 3,	// Y-
+		CUBE_MAP_NEAR						= 4,	// Z+
+		CUBE_MAP_FAR						= 5,	// Z-
+
+		CUBE_MAP_NUM_FACES					= 6,	// RESERVED: Number of faces in a cube map
 
 	}; // Note: If new enums are added, don't forget to update Material::RENDER_TEXTURE_SAMPLER_NAMES[] as well!
 

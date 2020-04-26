@@ -41,5 +41,5 @@ void main()
 	vec4 worldPos	= in_inverse_vp * clipPos;
 	worldPos.z *= -1; // Correct our Z
 
-	FragColor = texture(CubeMap_0_Right, worldPos.xyz);
+	FragColor = texture(CubeMap_0, worldPos.xyz);
 } 

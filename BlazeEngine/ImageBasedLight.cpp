@@ -13,56 +13,71 @@ namespace BlazeEngine
 {
 	ImageBasedLight::ImageBasedLight(string lightName, string relativeHDRPath) : Light(lightName, LIGHT_AMBIENT_IBL, vec3(0))
 	{
-		string matName = "IEM_Material";
+		// IEM setup:
+		this->IEM_Material = new Material("IEM_Material", nullptr, CUBE_MAP_NUM_FACES, true);
 
-		this->iblMaterial = new Material(matName, nullptr, CUBE_MAP_COUNT, true);
+		Texture** IEM_Textures = (Texture**)ConvertEquirectangularToCubemap(CoreEngine::GetSceneManager()->GetCurrentSceneName(), relativeHDRPath, this->xRes, this->yRes, IBL_IEM);
 
-		Texture** iblTextures = (Texture**)ConvertEquirectangularToCubemap(CoreEngine::GetSceneManager()->GetCurrentSceneName(), relativeHDRPath, this->xRes, this->yRes, IBL_IEM);
-
-		if (iblTextures != nullptr)
+		if (IEM_Textures != nullptr)
 		{
-			this->isValid = true;
+			this->IEM_isValid = true;
 
-			this->iblMaterial->AttachCubeMapTextures(iblTextures);
+			this->IEM_Material->AttachCubeMapTextures(IEM_Textures);
 		}
 
-		
+		// PMREM setup:
+		this->PMREM_Material = new Material("PMREM_Material", nullptr, CUBE_MAP_NUM_FACES, true);
 
-		// TODO: Implement a PMREM_Material?
+		Texture** PMREM_Textures = (Texture**)ConvertEquirectangularToCubemap(CoreEngine::GetSceneManager()->GetCurrentSceneName(), relativeHDRPath, this->xRes, this->yRes, IBL_PMREM);
+
+		if (PMREM_Textures != nullptr)
+		{
+			this->PMREM_isValid = true;
+
+			this->PMREM_Material->AttachCubeMapTextures(PMREM_Textures);
+		}
 	}
 
 	
 	ImageBasedLight::~ImageBasedLight()
 	{
-		if (iblMaterial != nullptr)
+		if (IEM_Material != nullptr)
 		{
-			this->iblMaterial->Destroy();
-			delete this->iblMaterial;
-			this->iblMaterial = nullptr;
+			this->IEM_Material->Destroy();
+			delete this->IEM_Material;
+			this->IEM_Material = nullptr;
+		}
+
+		if (PMREM_Material != nullptr)
+		{
+			this->PMREM_Material->Destroy();
+			delete this->PMREM_Material;
+			this->PMREM_Material = nullptr;
 		}
 	}
 
 
 	RenderTexture** ImageBasedLight::ConvertEquirectangularToCubemap(string sceneName, string relativeHDRPath, int xRes, int yRes, IBL_TYPE iblType /*= RAW_HDR*/)
 	{
-		// TODO: Support loading/processing of PMREM IBL's
-
-		
 		string cubemapName;
 		vector<string> shaderKeywords;
+		int textureUnit = -1;	// For now, derrive the cube map texture unit based on the type of texture
 		if (iblType == IBL_IEM)
 		{
 			cubemapName = "IBL_IEM";
 			shaderKeywords.push_back("BLIT_IEM");
+			textureUnit = (int)CUBE_MAP_0;
 		}
 		else if (iblType == IBL_PMREM)
 		{
 			cubemapName = "IBL_PMREM";
 			shaderKeywords.push_back("BLIT_PMREM");
+			textureUnit = (int)CUBE_MAP_1;
 		}
 		else
 		{
 			cubemapName = "HDR_Image";
+			textureUnit = (int)CUBE_MAP_0;
 			// No need to insert any shader keywords
 		}
 
@@ -102,7 +117,7 @@ namespace BlazeEngine
 		hdrTexture->Bind(equirectangularToCubemapBlitShader->ShaderReference());
 	
 		// Create a cubemap to render the IBL into:
-		RenderTexture** cubeFaces	= RenderTexture::CreateCubeMap(xRes, yRes, cubemapName); // Sets texture unit as CUBE_MAP_0 + CUBE_MAP_0_RIGHT
+		RenderTexture** cubeFaces		= RenderTexture::CreateCubeMap(xRes, yRes, textureUnit, cubemapName); // Note: RenderTexture constructor caches texture unit supplied here
 		
 		// Update the parameters:
 		cubeFaces[0]->TextureTarget()		= GL_TEXTURE_CUBE_MAP;
@@ -151,7 +166,7 @@ namespace BlazeEngine
 
 		glBindFramebuffer(GL_FRAMEBUFFER, cubeFaces[0]->FBO());
 
-		for (int i = 0; i < CUBE_MAP_COUNT; ++i)
+		for (int i = 0; i < CUBE_MAP_NUM_FACES; ++i)
 		{
 			equirectangularToCubemapBlitShader->UploadUniform("in_view", &captureViews[i][0].x, UNIFORM_Matrix4fv);
 

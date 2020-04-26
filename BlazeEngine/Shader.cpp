@@ -272,11 +272,14 @@ namespace BlazeEngine
 				}
 			}
 
-			// Cube map depth texture sampler locations: We just need to add a single cube map sampler
-			GLint samplerLocation = glGetUniformLocation(newShader->ShaderReference(), Material::CUBE_MAP_TEXTURE_SAMPLER_NAMES[CUBE_MAP_0_RIGHT].c_str());
-			if (samplerLocation >= 0)
+			// Cube map depth texture sampler locations
+			for (int currentCubeMap = 0; currentCubeMap < CUBE_MAP_COUNT; currentCubeMap++)
 			{
-				glUniform1i(samplerLocation, CUBE_MAP_0 + (TEXTURE_TYPE)0);
+				GLint samplerLocation = glGetUniformLocation(newShader->ShaderReference(), Material::CUBE_MAP_TEXTURE_SAMPLER_NAMES[currentCubeMap].c_str());
+				if (samplerLocation >= 0)
+				{
+					glUniform1i(samplerLocation, (TEXTURE_TYPE)(CUBE_MAP_0 + (currentCubeMap * CUBE_MAP_NUM_FACES)));
+				}
 			}
 
 			// Cleanup:

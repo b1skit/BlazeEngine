@@ -35,7 +35,7 @@ void main()
 	vec3 worldNormal	= texture(GBuffer_WorldNormal, data.uv0.xy).xyz;
 	vec4 RMAO			= texture(GBuffer_RMAO, data.uv0.xy);
 	vec4 worldPosition	= texture(GBuffer_WorldPos, data.uv0.xy);
-	vec4 matProp0		= texture(GBuffer_MatProp0, data.uv0.xy); // .rgb = F0 (Surface response at 0 degrees), .a = Phong exponent
+	vec4 matProp0		= texture(GBuffer_MatProp0, data.uv0.xy);	// .rgb = F0 (Surface response at 0 degrees), .a = Phong exponent
 
 	float AO			= RMAO.b;
 	float metalness		= RMAO.y;
@@ -53,7 +53,7 @@ void main()
 	vec3 k_d			= 1.0 - fresnel;	
 
 	// Sample the diffuse irradiance from our prefiltered irradiance environment map:
-	vec3 irradiance		= texture(CubeMap_0_Right, worldNormal).xyz;
+	vec3 irradiance		= texture(CubeMap_0, worldNormal).xyz;
 
 	FragColor			= vec4(FragColor.rgb * irradiance * AO * k_d, 1.0); // Note: Omitted the "/ PI" factor here
 //	FragColor			= vec4(FragColor.rgb * irradiance * AO * k_d / PI, 1.0);
