@@ -1,7 +1,6 @@
 #pragma once
 
-#include "GameObject.h"
-#include "Camera.h"
+#include "GameObject.h"	// Base class
 
 #include "glm.hpp"
 

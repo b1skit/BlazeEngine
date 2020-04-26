@@ -30,8 +30,8 @@ void main()
 	vec4 worldPosition		= texture(GBuffer_WorldPos, uvs);
 	vec4 matProp0			= texture(GBuffer_MatProp0, uvs); // .rgb = F0 (Surface response at 0 degrees), .a = Phong exponent
 
-	vec3 lightWorldDir	= normalize(lightWorldPos - worldPosition.xyz);
-	vec3 lightViewDir	= normalize((in_view * vec4(lightWorldDir, 0.0)).xyz);
+	vec3 lightWorldDir		= normalize(lightWorldPos - worldPosition.xyz);
+	vec3 lightViewDir		= normalize((in_view * vec4(lightWorldDir, 0.0)).xyz);
 
 	// Cube-map shadows:
 	float NoL				= max(0.0, dot(worldNormal, lightWorldDir));
@@ -39,8 +39,8 @@ void main()
 	float shadowFactor		= GetShadowFactor(lightToFrag, CubeMap_0_Right, NoL);
 
 	// Factor in light attenuation:
-	float lightAtten	= LightAttenuation(worldPosition.xyz, lightWorldPos);
-	vec3 fragLight		= lightColor * lightAtten;
+	float lightAtten		= LightAttenuation(worldPosition.xyz, lightWorldPos);
+	vec3 fragLight			= lightColor * lightAtten;
 
 	FragColor = ComputePBRLighting(FragColor, worldNormal, RMAO, worldPosition, matProp0.rgb, NoL, lightWorldDir, lightViewDir, fragLight, shadowFactor, in_view);
 } 

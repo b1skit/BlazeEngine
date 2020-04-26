@@ -9,6 +9,12 @@
 #include "RenderTexture.h"
 #include "BuildConfiguration.h"
 #include "Skybox.h"
+#include "Camera.h"
+#include "ImageBasedLight.h"
+#include "PostFXManager.h"
+#include "ShadowMap.h"
+#include "Scene.h"
+#include "EventManager.h"
 
 #include <string>
 
@@ -25,7 +31,7 @@ using glm::vec3;
 using glm::vec4;
 using glm::mat3;
 using glm::mat4;
-
+using std::string;
 
 
 namespace BlazeEngine

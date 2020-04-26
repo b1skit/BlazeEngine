@@ -3,8 +3,7 @@
 
 #pragma once
 
-#include "SceneObject.h"
-#include "ShadowMap.h"
+#include "SceneObject.h"	// Base class
 
 #include "glm.hpp"
 
@@ -12,6 +11,7 @@
 
 using glm::vec3;
 using glm::vec4;
+using std::string;
 
 
 namespace BlazeEngine
@@ -20,6 +20,8 @@ namespace BlazeEngine
 	class Camera;
 	class Material;
 	class Mesh;
+	class ShadowMap;
+
 
 	enum LIGHT_TYPE
 	{

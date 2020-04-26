@@ -1,4 +1,7 @@
 #include "Renderable.h"
+#include "Mesh.h"
+#include "Transform.h"
+
 
 void BlazeEngine::Renderable::SetTransform(Transform* transform)
 {

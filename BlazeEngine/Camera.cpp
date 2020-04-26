@@ -1,6 +1,10 @@
 #include "BuildConfiguration.h"
 #include "Camera.h"
 #include "CoreEngine.h"
+#include "Texture.h"
+#include "RenderTexture.h"
+#include "Material.h"
+
 
 #include "glm.hpp"
 

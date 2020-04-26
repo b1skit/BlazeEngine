@@ -2,6 +2,10 @@
 #include "CoreEngine.h"
 #include "Camera.h"
 #include "BuildConfiguration.h"
+#include "ShadowMap.h"
+#include "Shader.h"
+#include "Material.h"
+#include "Mesh.h"
 
 
 namespace BlazeEngine

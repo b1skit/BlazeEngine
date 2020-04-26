@@ -3,9 +3,10 @@
 
 #pragma once
 
-#include "EngineComponent.h"
+#include "EngineComponent.h"	// Base class
 
 #include "Dependencies/SDL2/include/SDL_timer.h"
+
 
 namespace BlazeEngine
 {

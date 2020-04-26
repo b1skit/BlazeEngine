@@ -2,31 +2,15 @@
 
 #include "EngineComponent.h"
 #include "EventListener.h"
-#include "SceneObject.h"
-#include "GameObject.h"
-#include "Renderable.h"
-#include "Material.h"
-#include "Shader.h"
-#include "Light.h"
-#include "PlayerObject.h"
-#include "Skybox.h"
-#include "ImageBasedLight.h"
 
 #include "assimp/scene.h"		// Output data structure
+
+#include "glm.hpp"
 
 #include <vector>
 
 using std::vector;
-
-// Initial allocation amounts
-#define GAMEOBJECTS_RESERVATION_AMT			100		// TODO: Set these with more carefully selected values...
-#define RENDERABLES_RESERVATION_AMT			100
-#define MESHES_RESERVATION_AMT				100
-
-#define DEFERRED_LIGHTS_RESERVATION_AMT		25
-
-#define CAMERA_TYPE_SHADOW_ARRAY_SIZE			10
-#define CAMERA_TYPE_REFLECTION_ARRAY_SIZE		10
+using glm::vec4;
 
 
 namespace BlazeEngine
@@ -34,79 +18,18 @@ namespace BlazeEngine
 	// Pre-declarations:
 	class Camera;
 	class aiTexture;
+	class SceneObject;
+	class GameObject;
+	class Material;
+	class Texture;
+	class Renderable;
+	class Light;
+	class Transform;
+	class Mesh;
+	class Skybox;
 	struct Bounds;
-
-
-	enum CAMERA_TYPE // Indexes for scene cameras used for different rendering roles. Rendered in the order defined here.
-	{
-		CAMERA_TYPE_SHADOW,
-		CAMERA_TYPE_REFLECTION,
-		CAMERA_TYPE_MAIN,			// The primary scene camera
-
-		CAMERA_TYPE_COUNT			// Reserved: The number of camera types
-	};
-
-
-	// Container for all scene data:
-	struct Scene
-	{
-		Scene(string sceneName);
-		~Scene();
-
-		// Meshes:
-		//--------
-		// Allocate an empty mesh array. Clears any existing mesh array
-		void	InitMeshArray();
-
-		int		AddMesh(Mesh* newMesh);
-		void	DeleteMeshes();
-		Mesh*	GetMesh(int meshIndex);
-		inline vector<Mesh*> const& GetMeshes()			{ return meshes; }
-
-		// Cameras:
-		//---------
-		vector<Camera*> const&	GetCameras(CAMERA_TYPE cameraType);
-		Camera*					GetMainCamera()		{ return sceneCameras[CAMERA_TYPE_MAIN].at(0); }
-		void					RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera);
-		void					ClearCameras();	// Destroys the scene's cameras
-		
-		void					AddLight(Light* newLight);
-
-		// Scene object containers:
-		//-------------------------
-		vector<GameObject*> gameObjects;	// Pointers to dynamically allocated GameObjects
-		vector<Renderable*> renderables;	// Pointers to statically allocated renderables held by GameObjects
-		
-		
-		// Duplicate pointers to lights contained in deferredLights
-		Light* ambientLight		= nullptr;		
-		Light*	keyLight		= nullptr;
-				
-		vector<Light*> const& GetDeferredLights() { return deferredLights; }
-
-		// Skybox object:
-		Skybox* skybox				= nullptr;
-
-		Bounds& WorldSpaceSceneBounds()
-		{
-			return sceneWorldBounds;
-		}
-
-		string GetSceneName()	{ return this->sceneName; }
-
-	private:
-		vector<vector<Camera*>> sceneCameras;
-
-		vector<Mesh*> meshes;				// Pointers to dynamically allocated Mesh objects
-
-		Bounds sceneWorldBounds;
-
-		// Lights:
-		//--------
-		vector<Light*> deferredLights;
-
-		string sceneName;
-	};
+	struct Scene;
+	enum CAMERA_TYPE;
 
 
 	// Scene Manager: Manages scenes
@@ -136,26 +59,26 @@ namespace BlazeEngine
 		bool LoadScene(string sceneName);
 
 		inline unsigned int				NumMaterials()												{ return currentMaterialCount; }
-		inline Material*				GetMaterial(unsigned int materialIndex)						{ return materials[materialIndex]; }
+		Material*						GetMaterial(unsigned int materialIndex);
 		Material*						GetMaterial(string materialName);
 		
 		vector<Mesh*> const*			GetRenderMeshes(int materialIndex = -1);					// If materialIndex is out of bounds, returns ALL meshes
-		inline vector<Renderable*>*		GetRenderables()											{ return &currentScene->renderables;	}
+		vector<Renderable*>*			GetRenderables();
 
-		inline Light* const&			GetAmbientLight()											{ return currentScene->ambientLight; }
-		inline Light*					GetKeyLight()												{ return currentScene->keyLight; }
+		Light* const&					GetAmbientLight();
+		Light*							GetKeyLight();
 		
-		inline vector<Camera*> const&	GetCameras(CAMERA_TYPE cameraType)							{ return currentScene->GetCameras(cameraType); }
-		inline Camera*					GetMainCamera()							 					{ return currentScene->GetMainCamera(); }
-		void							RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera)	{ currentScene->RegisterCamera(cameraType, newCamera); }
+		vector<Camera*> const&			GetCameras(CAMERA_TYPE cameraType);
+		Camera*							GetMainCamera();
+		void							RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera);;
 
 		int								AddTexture(Texture*& newTexture); // Returns index of inserted texture. Updates pointer if duplicate texture exists
 
-		vector<Light*> const&			GetDeferredLights()											{ return currentScene->GetDeferredLights(); }
+		vector<Light*> const&			GetDeferredLights();
 
-		Skybox*							GetSkybox()													{ return currentScene->skybox; }
+		Skybox*							GetSkybox();
 
-		string							GetCurrentSceneName()										{ return currentScene->GetSceneName(); }
+		string							GetCurrentSceneName() const;
 
 	protected:
 
@@ -196,24 +119,24 @@ namespace BlazeEngine
 		unsigned int		currentTextureCount	= 0;
 		
 		// Find if a texture if it exists, or try and load it if it doesn't. Returns nullptr if file isn't/can't be loaded
-		Texture*	FindLoadTextureByPath(string texturePath, bool loadIfNotFound = true);
+		Texture*		FindLoadTextureByPath(string texturePath, bool loadIfNotFound = true);
 
 
 		// Scene setup/construction:
 		//--------------------------
 
 		// Assimp scene material and texture import helper:
-		void		ImportMaterialsAndTexturesFromScene(aiScene const* scene, string sceneName);
+		void			ImportMaterialsAndTexturesFromScene(aiScene const* scene, string sceneName);
 
 		// Import and configure scene skybox:
-		void		ImportSky(string sceneName);
+		void			ImportSky(string sceneName);
 		
 		// Assimp scene texture import helper:
-		Texture*	ExtractLoadTextureFromAiMaterial(aiTextureType textureType, aiMaterial* material, string sceneName);
-		Texture*	FindTextureByNameInAiMaterial(string nameSubstring, aiMaterial* material, string sceneName);
+		Texture*		ExtractLoadTextureFromAiMaterial(aiTextureType textureType, aiMaterial* material, string sceneName);
+		Texture*		FindTextureByNameInAiMaterial(string nameSubstring, aiMaterial* material, string sceneName);
 
 		// Assimp scene material property helper:
-		bool		ExtractPropertyFromAiMaterial(aiMaterial* material, vec4& targetProperty, char const* AI_MATKEY_TYPE, int unused0 = 0, int unused1 = 0); // NOTE: unused0/unused1 are required to match #defined macros
+		bool			ExtractPropertyFromAiMaterial(aiMaterial* material, vec4& targetProperty, char const* AI_MATKEY_TYPE, int unused0 = 0, int unused1 = 0); // NOTE: unused0/unused1 are required to match #defined macros
 
 
 		// Assimp scene geo import helper:
@@ -237,10 +160,10 @@ namespace BlazeEngine
 
 
 		// Import light data from loaded scene
-		void	ImportLightsFromScene(aiScene const* scene);
+		void			ImportLightsFromScene(aiScene const* scene);
 
 		// Import camera data from loaded scene
-		void	ImportCamerasFromScene(aiScene const* scene = nullptr, bool clearCameras = false);
+		void			ImportCamerasFromScene(aiScene const* scene = nullptr, bool clearCameras = false);
 	};
 }
 

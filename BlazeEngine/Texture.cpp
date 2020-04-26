@@ -4,6 +4,8 @@
 #include "Texture.h"
 #include "CoreEngine.h"
 #include "BuildConfiguration.h"
+#include "Material.h"
+
 
 #define STBI_FAILURE_USERMSG
 #include "stb_image.h"				// STB image loader. No need to #define STB_IMAGE_IMPLEMENTATION, as it was already defined in SceneManager

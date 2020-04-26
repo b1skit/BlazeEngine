@@ -1,10 +1,6 @@
 #pragma once
 
-#include "Light.h"
-#include "Texture.h"
-#include "Material.h"
-
-#include "RenderTexture.h"
+#include "Light.h"	// Base class
 
 #include <string>
 
@@ -13,6 +9,11 @@ using std::string;
 
 namespace BlazeEngine
 {
+	// Predeclarations:
+	class Material;
+	class RenderTexture;
+
+
 	enum IBL_TYPE
 	{
 		IBL_IEM,		// Irradience Environment Map

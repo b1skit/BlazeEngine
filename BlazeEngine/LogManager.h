@@ -1,6 +1,6 @@
 #pragma once
-#include "EventListener.h"
-#include "EngineComponent.h"
+#include "EventListener.h"		// Base class
+#include "EngineComponent.h"	// Base class
 
 
 namespace BlazeEngine

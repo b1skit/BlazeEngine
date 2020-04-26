@@ -5,6 +5,7 @@
 #define GLM_FORCE_SWIZZLE // Enable swizzle operators
 #include "glm.hpp"
 #include "gtc/quaternion.hpp"
+
 #include <vector>
 
 using glm::vec3;

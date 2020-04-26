@@ -3,8 +3,8 @@
 
 
 #pragma once
-#include "EngineComponent.h"
-#include "EventListener.h"
+#include "EngineComponent.h"	// Base class
+#include "EventListener.h"		// Base class
 #include "KeyConfiguration.h"
 
 

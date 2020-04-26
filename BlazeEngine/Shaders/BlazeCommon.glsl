@@ -127,7 +127,7 @@ uniform vec4		projectionParams;		// Main camera: .x = 1.0 (unused), y = near, z 
 
 
 // Generic material properties:
-uniform vec4 matProperty0;		// .rgb == F0, .w == Phong cosine exponent
+uniform vec4 matProperty0;		// .rgb = F0 (Surface response at 0 degrees), .a = Phong exponent
 //uniform vec4 matProperty1;
 //uniform vec4 matProperty2;
 //uniform vec4 matProperty3;

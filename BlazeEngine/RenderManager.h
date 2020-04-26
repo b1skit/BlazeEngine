@@ -2,9 +2,7 @@
 
 #pragma once
 
-#include "EngineComponent.h"
-#include "EventManager.h"
-#include "PostFXManager.h"
+#include "EngineComponent.h"	// Base class
 
 #include <string>
 
@@ -28,6 +26,7 @@ namespace BlazeEngine
 	class Shader;
 	class Light;
 	class Skybox;
+	class PostFXManager;
 
 
 	enum SHADER // Guaranteed shaders

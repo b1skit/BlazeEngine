@@ -6,6 +6,9 @@
 #include "Mesh.h"
 #include "RenderTexture.h"
 #include "Shader.h"
+#include "Camera.h"
+#include "Material.h"
+#include "RenderTexture.h"
 
 #include <vector>
 

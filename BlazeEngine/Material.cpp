@@ -3,6 +3,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "BuildConfiguration.h"
+#include "Shader.h"
 
 
 #include <string>
@@ -90,6 +91,16 @@ namespace BlazeEngine
 		this->isRenderMaterial	= isRenderMaterial;
 
 		Init();	// Initialize textures and properties arrays
+	}
+
+
+	void Material::Destroy()
+	{
+		if (this->shader != nullptr)
+		{
+			this->shader->Destroy();
+			delete this->shader;
+		}
 	}
 
 

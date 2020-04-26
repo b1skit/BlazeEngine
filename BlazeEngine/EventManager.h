@@ -1,9 +1,10 @@
 // Blaze Engine Event Generator
 
 #pragma once
-#include "EventListener.h"
-#include "EngineComponent.h"
+#include "EngineComponent.h"	// Base class
+
 #include <vector>
+
 #include "SDL.h"
 
 using std::vector;
@@ -11,6 +12,9 @@ using std::vector;
 
 namespace BlazeEngine
 {
+	// Predeclarations:
+	class EventListener;
+
 
 	const static int EVENT_QUEUE_START_SIZE = 100; // The starting size of the event queue to reserve
 

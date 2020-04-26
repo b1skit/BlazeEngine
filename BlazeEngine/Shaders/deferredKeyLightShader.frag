@@ -19,7 +19,7 @@ void main()
 	vec3 worldNormal		= texture(GBuffer_WorldNormal, data.uv0.xy).xyz;
 	vec4 RMAO				= texture(GBuffer_RMAO, data.uv0.xy);
 	vec4 worldPosition		= texture(GBuffer_WorldPos, data.uv0.xy);
-	vec4 matProp0			= texture(GBuffer_MatProp0, data.uv0.xy); // .rgb = F0, .a = Phong exponent
+	vec4 matProp0			= texture(GBuffer_MatProp0, data.uv0.xy);	// .rgb = F0 (Surface response at 0 degrees), .a = Phong exponent
 
 	// Read from 2D shadow map:
 	float NoL				= max(0.0, dot(worldNormal, keylightWorldDir));

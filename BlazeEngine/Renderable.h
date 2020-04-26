@@ -1,9 +1,6 @@
 // Renderable interface: For objects drawn by the RenderManager 
 #pragma once
 
-
-#include "Mesh.h"
-#include "Transform.h"
 #include <vector>
 
 using std::vector;
@@ -11,6 +8,11 @@ using std::vector;
 
 namespace BlazeEngine
 {
+	// Predeclarations:
+	class Mesh;
+	class Transform;
+
+
 	class Renderable
 	{
 	public:

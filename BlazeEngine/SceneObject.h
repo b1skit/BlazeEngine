@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "BlazeObject.h"
-#include "EventListener.h"
+#include "BlazeObject.h"	// Base class
+#include "EventListener.h"	// Base class
 #include "Transform.h"
 
 

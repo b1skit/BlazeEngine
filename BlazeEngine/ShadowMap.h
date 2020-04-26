@@ -1,10 +1,12 @@
 #pragma once
 
-#include "RenderTexture.h"
+#include <string>
 
 #include "glm.hpp"
 
 using glm::vec3;
+using std::string;
+
 
 #define DEFAULT_SHADOWMAP_TEXPATH	"ShadowMap"		// Shadow maps don't have a filepath...
 #define DEFAULT_SHADOWMAP_COLOR		vec4(1,1,1,1)	// Default to white (max far)
@@ -16,6 +18,7 @@ namespace BlazeEngine
 	class Camera;
 	class Transform;
 	struct CameraConfig;
+	class RenderTexture;
 
 	class ShadowMap
 	{

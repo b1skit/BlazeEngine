@@ -1,6 +1,7 @@
 #include "RenderTexture.h"
 #include "CoreEngine.h"
 #include "BuildConfiguration.h"
+#include "Material.h"
 
 
 namespace BlazeEngine

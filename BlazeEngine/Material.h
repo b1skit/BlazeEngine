@@ -1,21 +1,24 @@
 #pragma once
 
-#include "Texture.h"
-#include "Shader.h"
-
 #include <vector>
 #include <string>
 
-
 #include "glm.hpp"
+#include "GL/glew.h" 
 
 using glm::vec3;
+using glm::vec4;
 using std::vector;
 using std::string;
 
 
 namespace BlazeEngine
 {
+	// Predeclarations:
+	class Texture;
+	class Shader;
+
+
 	enum TEXTURE_TYPE
 	{
 		TEXTURE_0							= 0,	// RESERVED: Starting offset for *binding* Textures to a texture unit: TEXTURE_0 + TEXTURE_<texture type>
@@ -83,14 +86,7 @@ namespace BlazeEngine
 		Material(string materialName, string shaderName, TEXTURE_TYPE textureCount = TEXTURE_COUNT, bool isRenderMaterial = false);
 		Material(string materialName, Shader* shader, TEXTURE_TYPE textureCount = TEXTURE_COUNT, bool isRenderMaterial = false);
 
-		void Destroy()
-		{
-			if (this->shader != nullptr)
-			{
-				this->shader->Destroy();
-				delete this->shader;
-			}
-		}
+		void Destroy();
 
 		// TODO: Copy constructor, assignment operator
 

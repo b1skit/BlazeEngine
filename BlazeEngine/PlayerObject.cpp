@@ -2,6 +2,7 @@
 #include "TimeManager.h"
 #include "InputManager.h"
 #include "CoreEngine.h"
+#include "Camera.h"
 
 #include "gtc/constants.hpp"
 

@@ -4,6 +4,7 @@
 #include "BlazeObject.h"
 #include "CoreEngine.h"
 #include "BuildConfiguration.h"
+#include "EventListener.h"
 
 #include "SDL.h"
 

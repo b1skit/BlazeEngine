@@ -1,8 +1,5 @@
 #pragma once
 
-#include "Material.h" // REMOVE THIS????
-#include "RenderTexture.h"
-
 #include <string>
 
 
@@ -11,6 +8,9 @@ namespace BlazeEngine
 	// Pre-declarations:
 	class Mesh;
 	class Shader;
+	class Material;
+	class RenderTexture;
+
 
 	enum BLUR_PASS
 	{

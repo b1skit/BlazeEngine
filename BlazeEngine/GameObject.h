@@ -4,13 +4,8 @@
 
 #pragma once
 
-#include "SceneObject.h"
+#include "SceneObject.h"	// Base class
 #include "Renderable.h"
-
-// DEBUG:
-#include <iostream>
-using std::cout;
-using std::to_string;
 
 
 namespace BlazeEngine

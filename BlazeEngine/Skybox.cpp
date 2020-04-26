@@ -4,6 +4,8 @@
 #include "CoreEngine.h"
 #include "BuildConfiguration.h"
 #include "ImageBasedLight.h"
+#include "Shader.h"
+#include "Texture.h"
 
 
 namespace BlazeEngine

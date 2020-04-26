@@ -2,7 +2,7 @@
 // Inherits from BlazeObject
 
 #pragma once
-#include "BlazeObject.h"
+#include "BlazeObject.h"	// Base class
 
 
 namespace BlazeEngine

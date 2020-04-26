@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Texture.h"
+#include "Texture.h"	// Base class
 
 #include <GL/glew.h>
 #include "glm.hpp"

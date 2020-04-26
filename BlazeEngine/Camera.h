@@ -1,8 +1,6 @@
 #pragma once
 
-#include "SceneObject.h"
-
-
+#include "SceneObject.h"	// Base class
 
 #define GLM_FORCE_SWIZZLE
 #include "glm.hpp"

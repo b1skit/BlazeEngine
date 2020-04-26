@@ -1,5 +1,9 @@
 #include "ShadowMap.h"
 #include "CoreEngine.h"
+#include "Camera.h"
+#include "RenderTexture.h"
+#include "Material.h"
+#include "Scene.h"
 
 
 namespace BlazeEngine

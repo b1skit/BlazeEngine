@@ -3,6 +3,8 @@
 #include "Shader.h"
 #include "CoreEngine.h"
 #include "BuildConfiguration.h"
+#include "Material.h"
+
 
 #include <fstream>
 using std::ifstream;
