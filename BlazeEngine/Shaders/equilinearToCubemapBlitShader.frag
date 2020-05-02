@@ -1,6 +1,7 @@
 #version 430 core
 
 #define BLAZE_FRAGMENT_SHADER
+#define BLAZE_VEC4_OUTPUT
 
 #include "BlazeCommon.glsl"
 #include "BlazeGlobals.glsl"
@@ -29,7 +30,7 @@ void main()
 	{
 		vec2 samplePoints = Hammersley2D(i, numSamples);
 
-		vec3 hemSample = HemisphereSample_cos(samplePoints.x, samplePoints.y); // TODO: MAKE ARG TAKE A VEC2!!!!
+		vec3 hemSample = HemisphereSample_cosineDist(samplePoints.x, samplePoints.y); // TODO: MAKE ARG TAKE A VEC2!!!!
 
 		// Project: Tangent space (Z-up) -> World space:
 		hemSample = normalize(vec3(dot(hemSample, vec3(tangent.x, bitangent.x, worldDir.x)), dot(hemSample, vec3(tangent.y, bitangent.y, worldDir.y)), dot(hemSample, vec3(tangent.z, bitangent.z, worldDir.z))));
@@ -48,17 +49,37 @@ void main()
 
 #elif defined BLIT_PMREM
 
+uniform int		numSamples;
+uniform float	roughness;
+
 // Remap from equirectangular to cubemap, performing PMREM filtering (ie. for specular IBL)
 void main()
 {
-	// TEMP HACK: Remap from equirectangular to cubemap, with no processing/filtering (ie. same as HDR images for skybox texture)
-	vec3 worldDir   = normalize(data.localPos);
+	vec3 N = normalize(data.localPos);    
+	vec3 R = N;
+	vec3 V = R;		
 
-	vec2 equirectangularUVs	= DirectionToEquirectangularUV(worldDir);
-	
-	FragColor = vec4(texture(albedo, equirectangularUVs).rgb, 1.0);
+	float totalWeight = 0.0;
+	vec3 sampledColor = vec3(0.0);     
+	for(int i = 0; i < numSamples; i++)
+	{
+		vec2 Xi = Hammersley2D(i, numSamples);
+		vec3 H  = ImportanceSampleGGX(Xi, N, roughness);
+		vec3 L  = normalize(2.0 * dot(V, H) * H - V);
 
-	// TODO: Actually construct a PMREM texture!!!!!!!
+		float NdotL = max(dot(N, L), 0.0);
+		if(NdotL > 0.0)
+		{
+			vec2 equirectangularUVs	= DirectionToEquirectangularUV( L );
+
+			sampledColor += texture(albedo, equirectangularUVs).rgb;
+
+			totalWeight += NdotL;
+		}
+	}
+	sampledColor = sampledColor / totalWeight;
+
+	FragColor = vec4(sampledColor, 1.0);
 }
 
 

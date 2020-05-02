@@ -201,6 +201,8 @@
     <None Include="Shaders\blitShader.vert" />
     <None Include="Shaders\blurShader.frag" />
     <None Include="Shaders\blurShader.vert" />
+    <None Include="Shaders\BRDFIntegrationMapShader.frag" />
+    <None Include="Shaders\BRDFIntegrationMapShader.vert" />
     <None Include="Shaders\cubeDepthShader.frag" />
     <None Include="Shaders\cubeDepthShader.geom" />
     <None Include="Shaders\cubeDepthShader.vert" />

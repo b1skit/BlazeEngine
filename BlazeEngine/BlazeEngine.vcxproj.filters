@@ -295,5 +295,11 @@
     <None Include="Shaders\equilinearToCubemapBlitShader.vert">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="Shaders\BRDFIntegrationMapShader.vert">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\BRDFIntegrationMapShader.frag">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

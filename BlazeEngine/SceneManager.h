@@ -8,8 +8,11 @@
 #include "glm.hpp"
 
 #include <vector>
+#include <unordered_map>
 
 using std::vector;
+using std::unordered_map;
+
 using glm::vec4;
 
 
@@ -72,13 +75,16 @@ namespace BlazeEngine
 		Camera*							GetMainCamera();
 		void							RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera);;
 
-		int								AddTexture(Texture*& newTexture); // Returns index of inserted texture. Updates pointer if duplicate texture exists
+		void							AddTexture(Texture*& newTexture); // If duplicate texture exists, it will be deleted and the newTexture pointer updated to the correct address
+		Texture*						FindLoadTextureByPath(string texturePath, bool loadIfNotFound = true);	// Find if a texture if it exists, or try and load it if it doesn't. Returns nullptr if file isn't/can't be loaded
 
 		vector<Light*> const&			GetDeferredLights();
 
 		Skybox*							GetSkybox();
 
 		string							GetCurrentSceneName() const;
+
+		
 
 	protected:
 
@@ -96,6 +102,8 @@ namespace BlazeEngine
 		Material**			materials				= nullptr;
 		const unsigned int	MAX_MATERIALS			= 100; // TODO: Replace this with something configurable/dynamic?
 		unsigned int		currentMaterialCount	= 0;
+
+		unordered_map<string, Texture*> textures;	// Hash table of texture pointers
 		
 		// Finds an existing material, or creates one using the default shader if none exists
 		int					GetMaterialIndex(string materialName);
@@ -110,16 +118,6 @@ namespace BlazeEngine
 		// Helper function: Compiles vectors filled with meshes that use each material. Must be called once after all meshes have finished loading
 		void				AssembleMaterialMeshLists(); 
 		vector<vector<Mesh*>> materialMeshLists;
-
-
-		// Texture management:
-		//--------------------
-		Texture**			textures			= nullptr;	// TODO: Replace this with vector<Texture*>
-		const unsigned int	MAX_TEXTURES		= 100;
-		unsigned int		currentTextureCount	= 0;
-		
-		// Find if a texture if it exists, or try and load it if it doesn't. Returns nullptr if file isn't/can't be loaded
-		Texture*		FindLoadTextureByPath(string texturePath, bool loadIfNotFound = true);
 
 
 		// Scene setup/construction:

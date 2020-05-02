@@ -1,6 +1,7 @@
 #version 430 core
 
 #define BLAZE_FRAGMENT_SHADER
+#define BLAZE_VEC4_OUTPUT
 
 #include "BlazeCommon.glsl"
 #include "BlazeGlobals.glsl"
@@ -33,13 +34,12 @@ void main()
 	
 	ndcPosition.z	= ((2.0 * gl_FragCoord.z) - gl_DepthRange.near - gl_DepthRange.far) / (gl_DepthRange.diff);
 	
-	
 	ndcPosition.w	= 1.0;
 
 	vec4 clipPos	= ndcPosition / gl_FragCoord.w;
 	
 	vec4 worldPos	= in_inverse_vp * clipPos;
-	worldPos.z *= -1; // Correct our Z
+//	worldPos.z *= -1; // Correct our Z?
 
 	FragColor = texture(CubeMap_0, worldPos.xyz);
 } 

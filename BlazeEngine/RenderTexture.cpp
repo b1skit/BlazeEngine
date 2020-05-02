@@ -107,17 +107,17 @@ namespace BlazeEngine
 			return;
 		}
 
-		glBindFramebuffer(GL_FRAMEBUFFER, this->frameBufferObject); // Reattach the FBO
+		this->BindFramebuffer(true);
 
 		if (isDepth)
 		{
-			glFramebufferTexture2D(GL_FRAMEBUFFER, (*additionalRTs)->AttachmentPoint(), (*additionalRTs)->TextureTarget(), (*additionalRTs)->TextureID(), 0);
+			(*additionalRTs)->AttachToFramebuffer((*additionalRTs)->TextureTarget());
 		}
 		else
 		{
 			for (int currentRT = 0; currentRT < numRTs; currentRT++)
 			{
-				glFramebufferTexture2D(GL_FRAMEBUFFER, additionalRTs[currentRT]->AttachmentPoint(), additionalRTs[currentRT]->TextureTarget(), additionalRTs[currentRT]->TextureID(), 0);
+				additionalRTs[currentRT]->AttachToFramebuffer(additionalRTs[currentRT]->TextureTarget());
 			}
 
 			// Assemble a list of attachment points
@@ -138,7 +138,7 @@ namespace BlazeEngine
 		}
 
 		// Cleanup:
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		this->BindFramebuffer(false);
 	}
 
 
@@ -154,12 +154,12 @@ namespace BlazeEngine
 	{
 		if (Texture::Buffer()) // Makes required calls to glTexParameteri, binds textureID etc 
 		{
-			glBindFramebuffer(GL_FRAMEBUFFER, frameBufferObject);
+			this->BindFramebuffer(true);
 
 			if (!glIsFramebuffer(frameBufferObject))
 			{
 				glGenFramebuffers(1, &frameBufferObject);
-				glBindFramebuffer(GL_FRAMEBUFFER, frameBufferObject);
+				this->BindFramebuffer(true);
 				if (!glIsFramebuffer(frameBufferObject))
 				{
 					LOG_ERROR("Failed to create framebuffer object");
@@ -174,7 +174,7 @@ namespace BlazeEngine
 				glFramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_DEFAULT_HEIGHT, this->height);
 
 				// Attach our texture to the framebuffer as a render buffer:
-				glFramebufferTexture2D(GL_FRAMEBUFFER, this->attachmentPoint, this->texTarget, this->textureID, 0);
+				this->AttachToFramebuffer(this->texTarget);
 			}
 
 			#if defined(DEBUG_SCENEMANAGER_TEXTURE_LOGGING)
@@ -184,11 +184,11 @@ namespace BlazeEngine
 			bool result = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
 			if (!result)
 			{
-				LOG_ERROR("Framebuffer is not complete!");
+				LOG_ERROR("Framebuffer is not complete: " + to_string(glCheckFramebufferStatus(GL_FRAMEBUFFER)));
 			}
 
 			// Cleanup:
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			this->BindFramebuffer(false);
 			glBindTexture(this->texTarget, 0);
 
 			return result;
@@ -230,11 +230,11 @@ namespace BlazeEngine
 
 		// Bind framebuffer:
 		bool result = true;
-		glBindFramebuffer(GL_FRAMEBUFFER, cubeFaceRTs[0]->frameBufferObject);
+		cubeFaceRTs[0]->BindFramebuffer(true);
 		if (!glIsFramebuffer(cubeFaceRTs[0]->frameBufferObject))
 		{
 			glGenFramebuffers(1, &cubeFaceRTs[0]->frameBufferObject);
-			glBindFramebuffer(GL_FRAMEBUFFER, cubeFaceRTs[0]->frameBufferObject);
+			cubeFaceRTs[0]->BindFramebuffer(true);
 			if (!glIsFramebuffer(cubeFaceRTs[0]->frameBufferObject))
 			{
 				LOG_ERROR("Failed to create framebuffer object");
@@ -256,7 +256,7 @@ namespace BlazeEngine
 
 		// Cleanup:
 		glBindTexture(cubeFaceRTs[0]->texTarget, 0); // Was still bound from Texture::BufferCubeMap()
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		cubeFaceRTs[0]->BindFramebuffer(false);
 
 		return result;
 	}
@@ -273,7 +273,7 @@ namespace BlazeEngine
 			(
 				xRes,
 				yRes,
-				name + "_CubeMap_" + to_string(i),
+				name + "_CubeMap",
 				false,
 				textureUnit
 			);
@@ -293,7 +293,7 @@ namespace BlazeEngine
 			cubeRenderTexture->Format()				= GL_DEPTH_COMPONENT;
 			cubeRenderTexture->Type()				= GL_FLOAT;
 
-			cubeRenderTexture->AttachmentPoint()	= GL_DEPTH_ATTACHMENT;
+			cubeRenderTexture->AttachmentPoint()	= GL_DEPTH_ATTACHMENT;	// Preparing a shadow map by default...
 			cubeRenderTexture->DrawBuffer()			= GL_NONE;
 			cubeRenderTexture->ReadBuffer()			= GL_NONE;
 
@@ -302,6 +302,75 @@ namespace BlazeEngine
 		}
 
 		return cubeFaces;
+	}
+
+
+	void RenderTexture::BindFramebuffer(bool doBind)
+	{
+		if (doBind)
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, this->frameBufferObject);
+		}
+		else
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		}
+	}
+
+
+	void RenderTexture::AttachToFramebuffer(GLenum textureTarget, int mipLevel /*= 0*/)
+	{
+		glFramebufferTexture2D(GL_FRAMEBUFFER, this->attachmentPoint, textureTarget, this->textureID, mipLevel);
+	}
+
+
+	void RenderTexture::CreateRenderbuffer(bool leaveBound /*= true*/, int xRes /*= -1*/, int yRes /*= -1*/)
+	{
+		if (xRes <= 0 || yRes <= 0)
+		{
+			xRes = this->width;
+			yRes = this->height;
+		}
+
+		if (glIsRenderbuffer(this->frameBufferObject) == GL_FALSE)
+		{
+			glGenRenderbuffers(1, &this->frameBufferObject);
+		}
+
+		this->BindRenderbuffer(true);
+
+		// Allocate storage: 
+		// NOTE: For now, we hard code internalFormat == GL_DEPTH_COMPONENT24, as it's all we ever use...
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, xRes, yRes);
+
+		if (leaveBound == false)
+		{
+			this->BindRenderbuffer(false);
+		}
+	}
+
+
+	void RenderTexture::BindRenderbuffer(bool doBind)
+	{
+		if (doBind)
+		{
+			glBindRenderbuffer(GL_RENDERBUFFER, this->frameBufferObject);
+		}
+		else
+		{
+			glBindRenderbuffer(GL_RENDERBUFFER, 0);
+		}
+	}
+
+
+	void RenderTexture::DeleteRenderbuffer(bool unbind /*= true*/)
+	{
+		if (unbind == true)
+		{
+			this->BindRenderbuffer(false);
+		}		
+
+		glDeleteRenderbuffers(1, &this->frameBufferObject);
 	}
 }
 

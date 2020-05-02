@@ -29,6 +29,8 @@ namespace BlazeEngine
 			{"useForwardRendering",					false},
 
 			{"numIEMSamples",						15000},	// Number of samples to use when generating IBL IEM texture
+			{"numPMREMSamples",						4096},	// Number of samples to use when generating IBL PMREM texture
+			
 			{"defaultIBLPath",						string("IBL\\ibl.hdr")},
 
 			// Camera defaults:
@@ -64,10 +66,12 @@ namespace BlazeEngine
 			{"deferredKeylightShaderName",			string("deferredKeyLightShader")},
 			{"deferredPointLightShaderName",		string("deferredPointLightShader")},
 			{"skyboxShaderName",					string("skyboxShader")},
+			{"equilinearToCubemapBlitShaderName",	string("equilinearToCubemapBlitShader")},
+			{"BRDFIntegrationMapShaderName",		string("BRDFIntegrationMapShader")},
 			{"blitShader",							string("blitShader")},
 			{"blurShader",							string("blurShader")},
 			{"toneMapShader",						string("toneMapShader")},
-			{"defaultSceneEmissiveIntensity",		2.0f},
+			{"defaultSceneEmissiveIntensity",		2.0f},	// Multiplier used to scale [0,1] emissive values when writing to GBuffer, so they'll bloom
 
 			// Input parameters:
 			{"mousePitchSensitivity",				-0.00005f},

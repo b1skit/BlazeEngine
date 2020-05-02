@@ -1,7 +1,6 @@
 #version 430 core
 
 #define BLAZE_FRAGMENT_SHADER
-#define BLAZE_GBUFFER
 
 #include "BlazeCommon.glsl"
 #include "BlazeGlobals.glsl"

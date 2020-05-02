@@ -1,7 +1,6 @@
 #version 430 core
 
 #define BLAZE_GEOMETRY_SHADER
-#define BLAZE_GBUFFER
 
 #include "BlazeCommon.glsl"
 #include "BlazeGlobals.glsl"

@@ -153,7 +153,7 @@ namespace BlazeEngine
 	void Camera::AttachGBuffer()
 	{
 		Material* gBufferMaterial	= new Material(this->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("gBufferFillShaderName"), RENDER_TEXTURE_COUNT, true);
-		this->RenderMaterial()		= gBufferMaterial;
+		this->renderMaterial		= gBufferMaterial;
 
 		// We use the albedo texture as a basis for the others
 		RenderTexture* gBuffer_albedo = new RenderTexture
@@ -170,7 +170,7 @@ namespace BlazeEngine
 		gBuffer_albedo->TextureMinFilter()	= GL_LINEAR;	// Note: Output is black if this is GL_NEAREST_MIPMAP_LINEAR
 		gBuffer_albedo->TextureMaxFilter()	= GL_LINEAR;
 
-		gBuffer_albedo->AttachmentPoint()	= GL_COLOR_ATTACHMENT0 + 0; // Need to increment by 1 each new textuer we attach. Used in RenderTexture.Buffer()->glFramebufferTexture2D()
+		gBuffer_albedo->AttachmentPoint()	= GL_COLOR_ATTACHMENT0 + 0; // Need to increment by 1 each new texture we attach. Used when calling glFramebufferTexture2D()
 
 		gBuffer_albedo->ReadBuffer()		= GL_COLOR_ATTACHMENT0 + 0;
 		gBuffer_albedo->DrawBuffer()		= GL_COLOR_ATTACHMENT0 + 0;
@@ -185,9 +185,9 @@ namespace BlazeEngine
 		int numAdditionalRTs			= (int)RENDER_TEXTURE_COUNT - 2; // -2 b/c we already have 1, and we'll add the depth texture last
 		RenderTexture** additionalRTs	= new RenderTexture*[numAdditionalRTs];
 
-		int insertIndex = 0;
-		int attachmentIndexOffset = 1;
-		for (int currentType = 1; currentType < (int)RENDER_TEXTURE_COUNT; currentType++)	 
+		int insertIndex				= 0;
+		int attachmentIndexOffset	= 1;
+		for (int currentType = 1; currentType < (int)RENDER_TEXTURE_COUNT; currentType++)
 		{
 			if ((TEXTURE_TYPE)currentType == RENDER_TEXTURE_DEPTH)
 			{
@@ -198,15 +198,15 @@ namespace BlazeEngine
 			currentRT->TexturePath()		= this->GetName() + "_" + Material::RENDER_TEXTURE_SAMPLER_NAMES[(TEXTURE_TYPE)currentType];
 
 			currentRT->FBO()				= gBufferFBO;
-			currentRT->AttachmentPoint()	= GL_COLOR_ATTACHMENT0 + attachmentIndexOffset;
-			currentRT->ReadBuffer()			= GL_COLOR_ATTACHMENT0 + attachmentIndexOffset;
-			currentRT->DrawBuffer()			= GL_COLOR_ATTACHMENT0 + attachmentIndexOffset;
+			currentRT->AttachmentPoint()	= gBuffer_albedo->AttachmentPoint() + attachmentIndexOffset;
+			currentRT->ReadBuffer()			= gBuffer_albedo->AttachmentPoint() + attachmentIndexOffset;
+			currentRT->DrawBuffer()			= gBuffer_albedo->AttachmentPoint() + attachmentIndexOffset;
 			
 			currentRT->TextureUnit()		= RENDER_TEXTURE_0 + currentType;
-
+			
 			currentRT->Texture::Buffer();	// Generate a texture without bothering to attempt to bind a framebuffer
 
-			glBindTexture(currentRT->TextureTarget(), 0); // Cleanup: Texture was never unbound in Texture::Buffer, so we must unbind it here
+			currentRT->Bind(); // Cleanup: Texture was never unbound in Texture::Buffer, so we must unbind it here
 
 			gBufferMaterial->AccessTexture((TEXTURE_TYPE)currentType)	= currentRT;
 			additionalRTs[insertIndex]									= currentRT;

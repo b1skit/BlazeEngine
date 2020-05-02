@@ -336,7 +336,7 @@ namespace BlazeEngine
 
 
 		// Forward rendering:
-		if (this->useForwardRendering)
+		if (this->useForwardRendering) // TODO: Split forward rendering into another function, and access via a function pointer
 		{
 			RenderForward(mainCam);
 		}
@@ -347,7 +347,8 @@ namespace BlazeEngine
 			RenderToGBuffer(mainCam);
 
 			// Render deferred lights:
-			glBindFramebuffer(GL_FRAMEBUFFER, ((RenderTexture*)outputMaterial->AccessTexture((TEXTURE_TYPE)0))->FBO());
+			((RenderTexture*)this->outputMaterial->AccessTexture((TEXTURE_TYPE)0))->BindFramebuffer(true);
+			
 			glViewport(0, 0, this->xRes, this->yRes);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
 
@@ -385,16 +386,18 @@ namespace BlazeEngine
 			glDisable(GL_BLEND);
 			RenderSkybox(CoreEngine::GetSceneManager()->GetSkybox());
 
+			// Unbind the output framebuffer
+			((RenderTexture*)this->outputMaterial->AccessTexture((TEXTURE_TYPE)0))->BindFramebuffer(false);
+
 			// Additively blit the emissive GBuffer texture to screen:
 			glEnable(GL_BLEND);
-			Blit(mainCam->RenderMaterial(), TEXTURE_EMISSIVE, outputMaterial, TEXTURE_ALBEDO);
-			glDisable(GL_BLEND);
+			Blit(mainCam->RenderMaterial(), TEXTURE_EMISSIVE, this->outputMaterial, TEXTURE_ALBEDO);
+			glDisable(GL_BLEND);			
 
 			// Post process finished frame:
-			Material* finalFrameMaterial	= outputMaterial;	// Init as something valid
-			Shader* finalFrameShader		= outputMaterial->GetShader();
+			Material* finalFrameMaterial	= nullptr;	// References updated in ApplyPostFX...
+			Shader* finalFrameShader		= nullptr;
 			postFXManager->ApplyPostFX(finalFrameMaterial, finalFrameShader);
-
 
 			// Cleanup:
 			glEnable(GL_DEPTH_TEST);
@@ -405,7 +408,6 @@ namespace BlazeEngine
 			BlitToScreen(finalFrameMaterial, finalFrameShader);
 		}
 		
-
 		// Display the final frame:
 		SDL_GL_SwapWindow(glWindow);
 	}
@@ -463,7 +465,7 @@ namespace BlazeEngine
 		}
 
 		glViewport(0, 0, lightDepthTexture->Width(), lightDepthTexture->Height());
-		glBindFramebuffer(GL_FRAMEBUFFER, lightDepthTexture->FBO());
+		lightDepthTexture->BindFramebuffer(true);
 		glClear(GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO	
 
 		// Loop through each mesh:			
@@ -529,9 +531,7 @@ namespace BlazeEngine
 			}
 		}
 
-		GLuint gBufferFBO				= renderTexture->FBO();
-		
-		glBindFramebuffer(GL_FRAMEBUFFER, gBufferFBO);
+		renderTexture->BindFramebuffer(true);
 		glViewport(0, 0, renderTexture->Width(), renderTexture->Height());
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO
@@ -599,7 +599,7 @@ namespace BlazeEngine
 
 		} // End Material loop
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		renderTexture->BindFramebuffer(false);
 	}
 
 
@@ -719,11 +719,13 @@ namespace BlazeEngine
 		mat4 view			= renderCam->View();
 		mat4 mv				= view * model;
 		mat4 mvp			= renderCam->ViewProjection() * deferredLight->GetTransform().Model();
+		vec3 cameraPosition = renderCam->GetTransform()->WorldPosition();
 
 		currentShader->UploadUniform("in_model",		&model[0][0],			UNIFORM_Matrix4fv);
 		currentShader->UploadUniform("in_view",			&view[0][0],			UNIFORM_Matrix4fv);
 		currentShader->UploadUniform("in_mv",			&mv[0][0],				UNIFORM_Matrix4fv);
 		currentShader->UploadUniform("in_mvp",			&mvp[0][0],				UNIFORM_Matrix4fv);
+		currentShader->UploadUniform("cameraWorldPos",	&cameraPosition,		UNIFORM_Vec3fv);
 		// TODO: Only upload these matrices if they've changed ^^^^
 		// TODO: Break this out into a function: ALL of our render functions have a similar setup		
 
@@ -740,13 +742,20 @@ namespace BlazeEngine
 				Texture* IEMCubemap = ((ImageBasedLight*)deferredLight)->GetIEMMaterial()->AccessTexture(CUBE_MAP_RIGHT);
 				if (IEMCubemap != nullptr)
 				{
-					IEMCubemap->Bind(currentShader->ShaderReference(), CUBE_MAP_0);
+					IEMCubemap->Bind(currentShader->ShaderReference());
 				}
 
 				Texture* PMREM_Cubemap = ((ImageBasedLight*)deferredLight)->GetPMREMMaterial()->AccessTexture(CUBE_MAP_RIGHT);
 				if (PMREM_Cubemap != nullptr)
 				{
-					PMREM_Cubemap->Bind(currentShader->ShaderReference(), CUBE_MAP_1);
+					PMREM_Cubemap->Bind(currentShader->ShaderReference());
+				}
+
+				// Bind BRDF Integration map:
+				RenderTexture* BRDFIntegrationMap = ((ImageBasedLight*)deferredLight)->GetBRDFIntegrationMap();
+				if (BRDFIntegrationMap != nullptr)
+				{
+					BRDFIntegrationMap->Bind(currentShader->ShaderReference());
 				}
 			}
 		}
@@ -873,6 +882,29 @@ namespace BlazeEngine
 				break;
 			}
 		}
+
+		if (deferredLight->Type() == LIGHT_AMBIENT_IBL && !this->useForwardRendering)
+		{
+			// Unbind IBL cubemaps:
+			Texture* IEMCubemap = ((ImageBasedLight*)deferredLight)->GetIEMMaterial()->AccessTexture(CUBE_MAP_RIGHT);
+			if (IEMCubemap != nullptr)
+			{
+				IEMCubemap->Bind();
+			}
+
+			Texture* PMREM_Cubemap = ((ImageBasedLight*)deferredLight)->GetPMREMMaterial()->AccessTexture(CUBE_MAP_RIGHT);
+			if (PMREM_Cubemap != nullptr)
+			{
+				PMREM_Cubemap->Bind();
+			}
+
+			// Unbind BRDF Integration map:
+			RenderTexture* BRDFIntegrationMap = ((ImageBasedLight*)deferredLight)->GetBRDFIntegrationMap();
+			if (BRDFIntegrationMap != nullptr)
+			{
+				BRDFIntegrationMap->Bind();
+			}
+		}
 		
 		currentShader->Bind(false);
 		deferredLight->DeferredMesh()->Bind(false);
@@ -888,41 +920,45 @@ namespace BlazeEngine
 
 		Camera* renderCam = CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera();
 
-		// Bind:
 		Shader* currentShader	= skybox->GetSkyMaterial()->GetShader();
 		GLuint shaderReference	= currentShader->ShaderReference();
 
+		Texture* skyboxCubeMap	= skybox->GetSkyMaterial()->AccessTexture(CUBE_MAP_RIGHT);
+
+		Texture* depthTexture	= (RenderTexture*)renderCam->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH); // GBuffer depth
+
+		// Bind shader and texture:
 		currentShader->Bind(true);
-
-		Texture* skyboxCubeMap = skybox->GetSkyMaterial()->AccessTexture(CUBE_MAP_RIGHT);
-
 		skyboxCubeMap->Bind(shaderReference);
 
-		Texture* depthTexture = (RenderTexture*)renderCam->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
 		if (depthTexture)
 		{
 			depthTexture->Bind(shaderReference, RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH);
 		}
 
+		skybox->GetSkyMesh()->Bind(true);
+
 		// Assemble common (model independent) matrices:
 		mat4 inverseViewProjection = glm::inverse(renderCam->ViewProjection()); // TODO: Only compute this if something has changed
 		currentShader->UploadUniform("in_inverse_vp", &inverseViewProjection[0][0], UNIFORM_Matrix4fv);
-				
-		skybox->GetSkyMesh()->Bind(true);
 
 		// Draw!
 		glDrawElements(GL_TRIANGLES, skybox->GetSkyMesh()->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
 		// Cleanup:
-		skyboxCubeMap->Bind(0);
-		depthTexture->Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH);
-		currentShader->Bind(false);
 		skybox->GetSkyMesh()->Bind(false);
+		if (depthTexture)
+		{
+			depthTexture->Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH);
+		}		
+		skyboxCubeMap->Bind(0);
+		currentShader->Bind(false);		
 	}
 
 
 	void BlazeEngine::RenderManager::BlitToScreen()
 	{
+		glViewport(0, 0, this->xRes, this->yRes);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -942,10 +978,8 @@ namespace BlazeEngine
 	void BlazeEngine::RenderManager::BlitToScreen(Material* srcMaterial, Shader* blitShader)
 	{
 		glViewport(0, 0, this->xRes, this->yRes);
-			
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 
 		blitShader->Bind(true);
 		srcMaterial->BindAllTextures(blitShader->ShaderReference());
@@ -969,7 +1003,7 @@ namespace BlazeEngine
 		}
 
 		// Bind the output FBO: (Textures MUST already be attached...)
-		glBindFramebuffer(GL_FRAMEBUFFER, ((RenderTexture*)dstMat->AccessTexture((TEXTURE_TYPE)dstTex))->FBO());
+		((RenderTexture*)dstMat->AccessTexture((TEXTURE_TYPE)dstTex))->BindFramebuffer(true);
 		glViewport(0, 0, dstMat->AccessTexture((TEXTURE_TYPE)dstTex)->Width(), dstMat->AccessTexture((TEXTURE_TYPE)dstTex)->Height());
 
 		// Bind the blit shader and screen aligned quad:
@@ -983,15 +1017,14 @@ namespace BlazeEngine
 
 		// Cleanup:
 		srcMat->AccessTexture((TEXTURE_TYPE)dstTex)->Bind(0, TEXTURE_ALBEDO);
-		currentShader->Bind(false);
 		screenAlignedQuad->Bind(false);
+		currentShader->Bind(false);
+		((RenderTexture*)dstMat->AccessTexture((TEXTURE_TYPE)dstTex))->BindFramebuffer(false);
 	}
 
 	
 	void RenderManager::ClearWindow(vec4 clearColor)
 	{
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 		// Set the initial color in both buffers:
 		glClearColor(GLclampf(clearColor.r), GLclampf(clearColor.g), GLclampf(clearColor.b), GLclampf(clearColor.a));
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1031,8 +1064,8 @@ namespace BlazeEngine
 			LOG("Key Col: " + to_string(keyCol->r) + ", " + to_string(keyCol->g) + ", " + to_string(keyCol->b));
 		#endif
 
-		vec4 screenParams = vec4(this->xRes, this->yRes, 1.0f / this->xRes, 1.0f / this->yRes);
-		vec4 projectionParams = vec4(1.0f, CoreEngine::GetSceneManager()->GetMainCamera()->Near(), CoreEngine::GetSceneManager()->GetMainCamera()->Far(), 1.0f / CoreEngine::GetSceneManager()->GetMainCamera()->Far());
+		vec4 screenParams		= vec4(this->xRes, this->yRes, 1.0f / this->xRes, 1.0f / this->yRes);
+		vec4 projectionParams	= vec4(1.0f, CoreEngine::GetSceneManager()->GetMainCamera()->Near(), CoreEngine::GetSceneManager()->GetMainCamera()->Far(), 1.0f / CoreEngine::GetSceneManager()->GetMainCamera()->Far());
 
 		// Add all Material Shaders to a list:
 		vector<Shader*> shaders;

@@ -1,6 +1,7 @@
 #version 430 core
 
 #define BLAZE_FRAGMENT_SHADER
+#define BLAZE_VEC4_OUTPUT
 
 #include "BlazeCommon.glsl"
 #include "BlazeGlobals.glsl"
@@ -38,8 +39,8 @@
 // Pass 0: Blur luminance threshold:
 #if defined(BLUR_SHADER_LUMINANCE_THRESHOLD)
 
-	#define RAMP_POWER 4.0
-	#define SPEED 0.2
+	#define RAMP_POWER 2.0
+	#define SPEED 0.05
 
 	void main()
 	{	

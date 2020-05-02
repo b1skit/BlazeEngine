@@ -63,8 +63,8 @@ namespace BlazeEngine
 		
 		ShadowMap*&					ActiveShadowMap(ShadowMap* newShadowMap = nullptr);				// Get/set the current shadow map
 
-		inline Mesh*&		DeferredMesh()									{ return deferredMesh; }
-		inline Material*&	DeferredMaterial()								{ return deferredMaterial; }
+		inline Mesh*&				DeferredMesh()							{ return deferredMesh; }
+		inline Material*&			DeferredMaterial()						{ return deferredMaterial; }
 
 
 	protected:

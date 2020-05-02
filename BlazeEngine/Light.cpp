@@ -51,10 +51,10 @@ namespace BlazeEngine
 			(
 				Mesh::CreateQuad	// Align along near plane
 				(
-					vec3(-1.0f, 1.0f, -1.0f),	// TL
-					vec3(1.0f, 1.0f, -1.0f),	// TR
-					vec3(-1.0f, -1.0f, -1.0f),	// BL
-					vec3(1.0f, -1.0f, -1.0f)	// BR
+					vec3(-1.0f, 1.0f,	-1.0f),	// TL
+					vec3(1.0f,	1.0f,	-1.0f),	// TR
+					vec3(-1.0f, -1.0f,	-1.0f),	// BL
+					vec3(1.0f,	-1.0f,	-1.0f)	// BR
 				)
 			);
 

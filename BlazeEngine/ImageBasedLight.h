@@ -33,8 +33,9 @@ namespace BlazeEngine
 		~ImageBasedLight();
 
 		// Get the Irradiance Environment Map material:
-		Material* GetIEMMaterial()		{ return this->IEM_Material; }
-		Material* GetPMREMMaterial()	{ return this->PMREM_Material; }
+		Material*		GetIEMMaterial()		{ return this->IEM_Material; }
+		Material*		GetPMREMMaterial()		{ return this->PMREM_Material; }
+		RenderTexture*	GetBRDFIntegrationMap() { return this->BRDF_integrationMap; }
 
 		// Check if an IBL was successfully loaded
 		bool IsValid() const		{ return this->IEM_isValid && this->PMREM_isValid; }
@@ -50,15 +51,23 @@ namespace BlazeEngine
 		static RenderTexture** ConvertEquirectangularToCubemap(string sceneName, string relativeHDRPath, int xRes, int yRes, IBL_TYPE iblType = RAW_HDR);
 
 	private:
-		Material* IEM_Material		= nullptr;	// Irradiance Environment Map (IEM) Material: Deallocated in destructor
-		Material* PMREM_Material	= nullptr;	// Pre-filtered Mip-mapped Radiance Environment Map (PMREM) Material: Deallocated in destructor
+		Material* IEM_Material				= nullptr;	// Irradiance Environment Map (IEM) Material: Deallocated in destructor
+		Material* PMREM_Material			= nullptr;	// Pre-filtered Mip-mapped Radiance Environment Map (PMREM) Material: Deallocated in destructor
 
-		// Cubemap face resolution:
-		int xRes					= 512;
-		int yRes					= 512;
+		int maxMipLevel						= -1;		// Highest valid mip level for the PMREM cube map
 
-		bool IEM_isValid			= false; // Is the IEM valid? (Ie. Were IBL textures successfully loaded?)
-		bool PMREM_isValid			= false; // Is the PMREM valid? (Ie. Were IBL textures successfully loaded?)
+		RenderTexture* BRDF_integrationMap	= nullptr;	// Generated BRDF integration map, required for PMREM calculations
+
+		// Cubemap face/single texture resolution:
+		int xRes							= 512;
+		int yRes							= 512;
+
+		bool IEM_isValid					= false; // Is the IEM valid? (Ie. Were IBL textures successfully loaded?)
+		bool PMREM_isValid					= false; // Is the PMREM valid? (Ie. Were IBL textures successfully loaded?)
+
+		// Private helper functions:
+		//--------------------------
+		void GenerateBRDFIntegrationMap();
 	};
 }
 

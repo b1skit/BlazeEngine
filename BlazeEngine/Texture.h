@@ -71,6 +71,8 @@ namespace BlazeEngine
 
 		vec4 TexelSize();
 
+		// Generate mip maps for the texture:
+		void GenerateMipMaps();
 
 		// Public static functions:
 		//-------------------------

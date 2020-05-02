@@ -580,6 +580,14 @@ namespace BlazeEngine
 
 		return this->texelSize;
 	}
+
+
+	void Texture::GenerateMipMaps()
+	{
+		glBindTexture(this->texTarget, this->textureID);
+		glGenerateMipmap(this->texTarget);
+		glBindTexture(this->texTarget, 0);
+	}
 }
 
 

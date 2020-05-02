@@ -76,6 +76,14 @@ vec3 FresnelSchlick(float NoV, vec3 F0)
 }
 
 
+// Schlick's Approximation, with an added roughness term (as per Sebastien Lagarde)
+vec3 FresnelSchlick_Roughness(float NoV, vec3 F0, float roughness)
+{
+	NoV = max(NoV, 0.0);
+	return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - NoV, 5.0);
+}
+
+
 // Compute the halfway vector between light and view dirs
 vec3 HalfVector(vec3 light, vec3 view)
 {
@@ -261,11 +269,12 @@ float RadicalInverse_VdC(uint bits)
 	bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
 	bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
 	bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+
 	return float(bits) * 2.3283064365386963e-10; // / 0x100000000
 }
 
 
-// Compute the Hammersley point i of N points
+// Compute the i'th Hammersley point, of N points
 // Based on:  http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
 vec2 Hammersley2D(uint i, uint N)
 {
@@ -275,7 +284,7 @@ vec2 Hammersley2D(uint i, uint N)
 
 // Create a uniformly-distributed hemisphere direction (Z-up) from the Hammersley 2D point
 // Based on:  http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
-vec3 HemisphereSample_uniform(float u, float v)
+vec3 HemisphereSample_uniformDist(float u, float v)
 {
 	float phi		= v * 2.0 * PI;
 	float cosTheta	= 1.0 - u;
@@ -287,13 +296,39 @@ vec3 HemisphereSample_uniform(float u, float v)
 
 // Create a cosine-distributed hemisphere direction (Z-up) from the Hammersley 2D point (ie. For diffuse lighting sampling)
 // Based on:  http://holger.dammertz.org/stuff/notes_HammersleyOnHemisphere.html
-vec3 HemisphereSample_cos(float u, float v)
+vec3 HemisphereSample_cosineDist(float u, float v)
 {
-	float phi = v * 2.0 * PI;
-	float cosTheta = sqrt(1.0 - u);
-	float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+	float phi		= v * 2.0 * PI;
+	float cosTheta	= sqrt(1.0 - u);
+	float sinTheta	= sqrt(1.0 - cosTheta * cosTheta);
+
 	return vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
 }
 
+
+//  Get a sample vector near a microsurface's halfway vector, from input roughness and a the low-discrepancy sequence value
+vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness)
+{
+	float a = roughness * roughness;
+
+	float phi = 2.0 * PI * Xi.x;
+	float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a * a - 1.0) * Xi.y));
+	float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+
+	// Convert spherical -> cartesian coordinates
+	vec3 H;
+	H.x = cos(phi) * sinTheta;
+	H.y = sin(phi) * sinTheta;
+	H.z = cosTheta;
+
+	// from tangent-space vector to world-space sample vector
+	vec3 up = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+	vec3 tangent = normalize(cross(up, N));
+	vec3 bitangent = cross(N, tangent);
+
+	vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
+
+	return normalize(sampleVec);
+}
 
 #endif

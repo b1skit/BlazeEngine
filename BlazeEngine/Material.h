@@ -50,9 +50,21 @@ namespace BlazeEngine
 
 		DEPTH_TEXTURE_COUNT					= 1,	// RESERVED: Number of DEPTH RenderTexture slots a material has
 
+		// Generic additional texture samplers:
+		GENERIC_TEXTURE_0					= 12,
+		GENERIC_TEXTURE_1					= 13,
+		GENERIC_TEXTURE_2					= 14,
+		GENERIC_TEXTURE_3					= 15,
+		GENERIC_TEXTURE_4					= 16,
+		GENERIC_TEXTURE_5					= 17,
+		GENERIC_TEXTURE_6					= 18,
+		GENERIC_TEXTURE_7					= 19,
+
+		GENERIC_TEXTURE_COUNT				= 8,	// RESERVED: Number of generic texture samplers
+
 		// Cube maps:
-		CUBE_MAP_0							= 12,	// RESERVED: Starting offset for *binding* cube RenderTextures to a texture unit: CUBE_MAP_0 + CUBE_MAP_TEXTURE_<texture tyep>. First unit must equal TEXTURE_COUNT + RENDER_TEXTURE_COUNT + DEPTH_TEXTURE_COUNT
-		CUBE_MAP_1							= 18,	// RESERVED: Starting offset for *binding* cube RenderTextures to a texture unit: CUBE_MAP_1 + CUBE_MAP_TEXTURE_<texture tyep>. First unit must equal TEXTURE_COUNT + RENDER_TEXTURE_COUNT + DEPTH_TEXTURE_COUNT + CUBE_MAP_0
+		CUBE_MAP_0							= 20,	// RESERVED: Starting offset for *binding* cube RenderTextures to a texture unit: CUBE_MAP_0 + CUBE_MAP_TEXTURE_<texture tyep>. First unit must equal TEXTURE_COUNT + RENDER_TEXTURE_COUNT + DEPTH_TEXTURE_COUNT
+		CUBE_MAP_1							= 26,	// RESERVED: Starting offset for *binding* cube RenderTextures to a texture unit: CUBE_MAP_1 + CUBE_MAP_TEXTURE_<texture tyep>. First unit must equal TEXTURE_COUNT + RENDER_TEXTURE_COUNT + DEPTH_TEXTURE_COUNT + CUBE_MAP_0
 
 		CUBE_MAP_COUNT						= 2,	// RESERVED: Total number of cube maps allocated
 

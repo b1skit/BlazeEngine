@@ -66,13 +66,6 @@ namespace BlazeEngine
 			materials[i] = nullptr;
 		}
 		currentMaterialCount = 0;
-
-		textures = new Texture*[MAX_TEXTURES];
-		for (unsigned int i = 0; i < MAX_TEXTURES; i++)
-		{
-			textures[i] = nullptr;
-		}
-		currentTextureCount = 0;
 	}
 
 
@@ -103,20 +96,16 @@ namespace BlazeEngine
 			currentMaterialCount = 0;
 		}
 
-		if (textures)
+		// Texture cleanup:
+		for (std::pair<string, Texture*> currentTexture : textures)
 		{
-			for (unsigned int i = 0; i < currentTextureCount; i++)
+			if (currentTexture.second != nullptr)
 			{
-				if (textures[i] != nullptr)
-				{
-					textures[i]->Destroy();
-					delete textures[i];
-					textures[i] = nullptr;
-				}
+				currentTexture.second->Destroy();
+				delete currentTexture.second;
 			}
-			delete[] textures;
-			textures = nullptr;
 		}
+		textures.clear();
 	}
 
 
@@ -365,47 +354,29 @@ namespace BlazeEngine
 	}
 
 
-	int SceneManager::AddTexture(Texture*& newTexture)
+	void SceneManager::AddTexture(Texture*& newTexture)
 	{
 		if (newTexture == nullptr)
 		{
-			LOG_ERROR("Cannot add null texture to textures array. Returning 0");
-			return 0;
+			LOG_ERROR("Cannot add null texture to textures table");
+			return;
 		}
 
-		bool foundEmpty = false;
-		int freeIndex	= -1;
-		for (unsigned int i = 0; i < MAX_TEXTURES; i++)
+		// Check if the texture already exists:
+		unordered_map<string, Texture*>::const_iterator texturePosition = textures.find(newTexture->TexturePath());
+		if (texturePosition != textures.end())
 		{
-			if (!foundEmpty && textures[i] == nullptr)
-			{
-				freeIndex = i;
-				foundEmpty = true;
-			}
+			LOG_WARNING("Cannot add texture with an identical path. Deleting duplicate, and updating reference");
 
-			if (textures[i] != nullptr && textures[i]->TexturePath() == newTexture->TexturePath())
-			{	
-				if (textures[i] != newTexture)
-				{
-					LOG_WARNING("Cannot add texture with an identical path. Deleting duplicate, and updating reference");
-					delete newTexture;
+			newTexture->Destroy();
+			delete newTexture;
 
-					newTexture = textures[i];
-				}
-
-				return i;
-			}
+			newTexture = texturePosition->second;
 		}
-		
-		if (foundEmpty)
+		else // Insert the new texture:
 		{
-			textures[freeIndex] = newTexture;
-			currentTextureCount++;
-			return freeIndex;
+			textures[newTexture->TexturePath()] = newTexture;
 		}
-
-		LOG_ERROR("Failed to add new texture: textures array already contains MAX_TEXTURES elements. Returning 0!");
-		return 0;
 	}
 	
 	
@@ -590,13 +561,11 @@ namespace BlazeEngine
 	{
 		// NOTE: Potential bug here: Since we store textureUnit per-texture, we can only share textures that live in the same slot. TODO: Move texture units into the Material?
 
-		for (unsigned int i = 0; i < currentTextureCount; i++)
+		unordered_map<string, Texture*>::const_iterator texturePosition = textures.find(texturePath);
+		if (texturePosition != textures.end())
 		{
-			if (textures[i] != nullptr && textures[i]->TexturePath() == texturePath)
-			{
-				LOG("Texture at path " + texturePath + " has already been loaded");
-				return textures[i];
-			}
+			LOG("Texture at path " + texturePath + " has already been loaded");
+			return texturePosition->second;
 		}
 
 		// If we've made it this far, load the texture
@@ -849,7 +818,7 @@ namespace BlazeEngine
 			}
 		}
 
-		LOG("Loaded a total of " + to_string(currentTextureCount) + " textures (including error textures)");
+		LOG("Loaded a total of " + to_string(textures.size()) + " textures (including error textures)");
 	}
 
 
@@ -1786,6 +1755,11 @@ namespace BlazeEngine
 				LOG("mSize = " + to_string(scene->mLights[i]->mSize.x) + ", " + to_string(scene->mLights[i]->mSize.y));
 				LOG("mUp = " + to_string(scene->mLights[i]->mUp.x) + ", " + to_string(scene->mLights[i]->mUp.y) + ", " + to_string(scene->mLights[i]->mUp.z));
 			#endif
+		}
+
+		if (!foundAmbient)
+		{
+			LOG_WARNING("No ambient light found! An ambient light must be added to the scene for image-based lighting");
 		}
 	}
 

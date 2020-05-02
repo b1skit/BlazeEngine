@@ -25,7 +25,11 @@
 // Fragment shader specific properties:
 //-------------------------------------
 
-#if defined(BLAZE_FRAGMENT_SHADER) && !defined(BLAZE_GBUFFER)
+#if defined(BLAZE_FRAGMENT_SHADER) && defined(BLAZE_VEC2_OUTPUT)
+	out vec2 FragColor;
+#elif defined(BLAZE_FRAGMENT_SHADER) && defined(BLAZE_VEC3_OUTPUT)
+	out vec3 FragColor;
+#elif defined(BLAZE_FRAGMENT_SHADER) && defined(BLAZE_VEC4_OUTPUT)
 	out vec4 FragColor;
 #endif
 
@@ -110,9 +114,19 @@ layout(binding = 10) uniform sampler2D	GBuffer_Depth;
 
 layout(binding = 11) uniform sampler2D	shadowDepth;		// Currently bound 2D shadow depth map
 
+// Generic texture samplers:
+layout(binding = 12) uniform sampler2D	texture0;
+layout(binding = 13) uniform sampler2D	texture1;
+layout(binding = 14) uniform sampler2D	texture2;
+layout(binding = 15) uniform sampler2D	texture3;
+layout(binding = 16) uniform sampler2D	texture4;
+layout(binding = 17) uniform sampler2D	texture5;
+layout(binding = 18) uniform sampler2D	texture6;
+layout(binding = 19) uniform sampler2D	texture7;
+
 // Cube map samplers:
-layout(binding = 12) uniform samplerCube CubeMap_0;			
-layout(binding = 18) uniform samplerCube CubeMap_1;
+layout(binding = 20) uniform samplerCube CubeMap_0;			
+layout(binding = 26) uniform samplerCube CubeMap_1;
 
 uniform vec4		texelSize;				// Depth map/GBuffer texel size: .xyzw = (1/width, 1/height, width, height)
 
@@ -129,22 +143,22 @@ uniform vec4		projectionParams;		// Main camera: .x = 1.0 (unused), y = near, z 
 
 
 // Generic material properties:
-uniform vec4 matProperty0;		// .rgb = F0 (Surface response at 0 degrees), .a = Phong exponent
-//uniform vec4 matProperty1;
-//uniform vec4 matProperty2;
-//uniform vec4 matProperty3;
-//uniform vec4 matProperty4;
-//uniform vec4 matProperty5;
-//uniform vec4 matProperty6;
-//uniform vec4 matProperty7;
+uniform vec4		matProperty0;			// .rgb = F0 (Surface response at 0 degrees), .a = Phong exponent
+//uniform vec4		matProperty1;
+//uniform vec4		matProperty2;
+//uniform vec4		matProperty3;
+//uniform vec4		matProperty4;
+//uniform vec4		matProperty5;
+//uniform vec4		matProperty6;
+//uniform vec4		matProperty7;
 
 
 // System variables:
 uniform vec4 screenParams;		// .x = xRes, .y = yRes, .z = 1/xRes, .w = 1/yRes
 //uniform vec4 zBufferParams;
 
-//uniform vec3 cameraPosition;	// World-space camera position
-//// TODO: ^^^Implement these
+uniform vec3 cameraWorldPos;	// World-space camera position
+
 
 
 

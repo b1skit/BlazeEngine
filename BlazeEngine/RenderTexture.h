@@ -44,6 +44,15 @@ namespace BlazeEngine
 		// Helper function: Create an array of 6 cube map textures (for a depth map by default). Must be configured/buffered before use
 		static RenderTexture** CreateCubeMap(int xRes, int yRes, int textureUnit, string name = "UNNAMMED");
 
+		// Frame buffers helper functions:
+		void BindFramebuffer(bool doBind);
+		void AttachToFramebuffer(GLenum textureTarget, int mipLevel = 0);
+
+		// Render buffer helper functions:
+		void CreateRenderbuffer(bool leaveBound = true, int xRes = -1, int yRes = -1);
+		void BindRenderbuffer(bool doBind);
+		void DeleteRenderbuffer(bool unbind = true);
+
 
 	protected:
 
