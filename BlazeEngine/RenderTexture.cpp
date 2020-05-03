@@ -16,7 +16,7 @@ namespace BlazeEngine
 	{}	// Do nothing else
 
 
-	RenderTexture::RenderTexture(int width, int height, string name /*= DEFAULT_RENDERTEXTURE_NAME*/, bool doBuffer /*= false*/, int textureUnit /*= -1*/)
+	RenderTexture::RenderTexture(int width, int height, string name /*= DEFAULT_RENDERTEXTURE_NAME*/)
 	{
 		this->width					= width;
 		this->height				= height;
@@ -39,27 +39,10 @@ namespace BlazeEngine
 
 		this->textureMinFilter		= GL_LINEAR;
 		this->textureMaxFilter		= GL_LINEAR;
-
-		if (textureUnit >= 0)
-		{
-			this->textureUnit = textureUnit;
-		}
-
-		if (doBuffer)
-		{
-			if (textureUnit < 0)
-			{
-				LOG_ERROR("Cannot buffer RenderTexture \"" + name + "\" before the textureUnit has been set");
-			}
-			else
-			{
-				this->Buffer();
-			}
-		}
 	}
 
 
-	RenderTexture::RenderTexture(RenderTexture const& rhs, bool doBuffer /*= false */) : Texture(rhs)
+	RenderTexture::RenderTexture(RenderTexture const& rhs) : Texture(rhs)
 	{
 		this->frameBufferObject = 0;	// NOTE: We set the frame buffer to 0, since we don't want to stomp any existing ones
 
@@ -67,11 +50,6 @@ namespace BlazeEngine
 
 		this->drawBuffer		= rhs.drawBuffer;
 		this->readBuffer		= rhs.readBuffer;
-
-		if (doBuffer)
-		{
-			Buffer();
-		}
 	}
 
 
@@ -150,9 +128,9 @@ namespace BlazeEngine
 	}
 
 
-	bool RenderTexture::Buffer()
+	bool RenderTexture::Buffer(int textureUnit)
 	{
-		if (Texture::Buffer()) // Makes required calls to glTexParameteri, binds textureID etc 
+		if (Texture::Buffer(textureUnit)) // Makes required calls to glTexParameteri, binds textureID etc 
 		{
 			this->BindFramebuffer(true);
 
@@ -202,11 +180,11 @@ namespace BlazeEngine
 	}
 	
 
-	bool RenderTexture::BufferCubeMap(RenderTexture** cubeFaceRTs)
+	bool RenderTexture::BufferCubeMap(RenderTexture** cubeFaceRTs, int textureUnit)
 	{
 		// NOTE: This function uses the paramters of cubeFaceRTs[0]
 
-		if (!Texture::BufferCubeMap((Texture**)cubeFaceRTs))
+		if (!Texture::BufferCubeMap((Texture**)cubeFaceRTs, textureUnit))
 		{
 			return false;
 		}
@@ -262,7 +240,7 @@ namespace BlazeEngine
 	}
 
 
-	RenderTexture** RenderTexture::CreateCubeMap(int xRes, int yRes, int textureUnit, string name /*="UNNAMMED"*/)
+	RenderTexture** RenderTexture::CreateCubeMap(int xRes, int yRes, string name /*="UNNAMMED"*/)
 	{
 		RenderTexture** cubeFaces = new RenderTexture*[CUBE_MAP_NUM_FACES];
 
@@ -273,11 +251,8 @@ namespace BlazeEngine
 			(
 				xRes,
 				yRes,
-				name + "_CubeMap",
-				false,
-				textureUnit
+				name + "_CubeMap"
 			);
-
 
 			// Configure the texture:
 			cubeRenderTexture->TextureTarget()		= GL_TEXTURE_CUBE_MAP;

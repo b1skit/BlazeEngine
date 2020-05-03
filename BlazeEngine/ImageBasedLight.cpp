@@ -138,14 +138,13 @@ namespace BlazeEngine
 		
 		hdrTexture->TextureMinFilter()	= GL_LINEAR;
 		hdrTexture->TextureMaxFilter()	= GL_LINEAR;					// Default
-		hdrTexture->TextureUnit()		= TEXTURE_0 + TEXTURE_ALBEDO;	// Assign to the "albedo" sampler
 
-		hdrTexture->Buffer();
+		hdrTexture->Buffer(TEXTURE_0 + TEXTURE_ALBEDO);
 
-		hdrTexture->Bind(equirectangularToCubemapBlitShader->ShaderReference());
+		hdrTexture->Bind(TEXTURE_0 + TEXTURE_ALBEDO, true);
 
 		// Create a cubemap to render the IBL into:
-		RenderTexture** cubeFaces		= RenderTexture::CreateCubeMap(xRes, yRes, textureUnit, cubemapName); // Note: RenderTexture constructor caches texture unit supplied here
+		RenderTexture** cubeFaces		= RenderTexture::CreateCubeMap(xRes, yRes, cubemapName); // Note: RenderTexture constructor caches texture unit supplied here
 		
 		// Update the cubemap texture parameters:
 		for (int i = 0; i < CUBE_MAP_NUM_FACES; i++)
@@ -168,14 +167,17 @@ namespace BlazeEngine
 			cubeFaces[i]->DrawBuffer()			= GL_COLOR_ATTACHMENT0 + 0;
 			cubeFaces[i]->ReadBuffer()			= GL_COLOR_ATTACHMENT0 + 0;
 		}
-		
-
-		RenderTexture::BufferCubeMap(cubeFaces);
 
 		// Generate mip-maps for PMREM IBL cubemap faces, to ensure they're allocated once we want to write into them:
 		if (iblType == IBL_PMREM)
 		{
+			RenderTexture::BufferCubeMap(cubeFaces, textureUnit);
+
 			cubeFaces[0]->GenerateMipMaps();
+		}
+		else
+		{
+			RenderTexture::BufferCubeMap(cubeFaces, textureUnit);
 		}
 
 		// Create a cube mesh for rendering:
@@ -281,7 +283,7 @@ namespace BlazeEngine
 		glEnable(GL_CULL_FACE);
 
 		// Cleanup:
-		hdrTexture->Bind(0); // Unbind: Texture will be destroyed/deleted by the SceneManager
+		hdrTexture->Bind(TEXTURE_0 + TEXTURE_ALBEDO, false); // Unbind: Texture will be destroyed/deleted by the SceneManager
 		
 		cubeMesh.Bind(false);
 		cubeMesh.Destroy();
@@ -307,7 +309,6 @@ namespace BlazeEngine
 		}
 
 		LOG("Rendering BRDF Integration map texture");
-
 		
 		// Create a shader:
 		string shaderName = CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("BRDFIntegrationMapShaderName");
@@ -322,7 +323,7 @@ namespace BlazeEngine
 
 		
 		// Create a render texture:
-		this->BRDF_integrationMap = new RenderTexture(this->xRes, this->yRes, "BRDFIntegrationMap", false, GENERIC_TEXTURE_0);
+		this->BRDF_integrationMap = new RenderTexture(this->xRes, this->yRes, "BRDFIntegrationMap");
 
 		// Set texture params:
 		this->BRDF_integrationMap->TextureWrap_S()		= GL_CLAMP_TO_EDGE;
@@ -338,13 +339,13 @@ namespace BlazeEngine
 		this->BRDF_integrationMap->AttachmentPoint()	= GL_COLOR_ATTACHMENT0 + 0;
 		this->BRDF_integrationMap->DrawBuffer()			= GL_COLOR_ATTACHMENT0 + 0;
 
-		if (!this->BRDF_integrationMap->Buffer())
+		if (!this->BRDF_integrationMap->Buffer(GENERIC_TEXTURE_0))
 		{
 			LOG_ERROR("Could not buffer BRDF Integration Map RenderTexture!");
 			return;
 		}
 
-		this->BRDF_integrationMap->Bind();
+		this->BRDF_integrationMap->Bind(GENERIC_TEXTURE_0, true);
 		
 		// Create a CCW screen-aligned quad to render with:
 		Mesh quad = Mesh::CreateQuad
@@ -373,9 +374,10 @@ namespace BlazeEngine
 
 		this->BRDF_integrationMap->BindFramebuffer(false);
 		this->BRDF_integrationMap->DeleteRenderbuffer();
+		this->BRDF_integrationMap->Bind(GENERIC_TEXTURE_0, false);
 
 		BRDFIntegrationMapShader->Bind(false);
 		BRDFIntegrationMapShader->Destroy();
-		delete BRDFIntegrationMapShader;
+		delete BRDFIntegrationMapShader;		
 	}
 }

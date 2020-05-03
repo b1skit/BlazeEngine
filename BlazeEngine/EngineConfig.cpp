@@ -28,7 +28,7 @@ namespace BlazeEngine
 			// Quality settings:
 			{"useForwardRendering",					false},
 
-			{"numIEMSamples",						15000},	// Number of samples to use when generating IBL IEM texture
+			{"numIEMSamples",						20000},	// Number of samples to use when generating IBL IEM texture
 			{"numPMREMSamples",						4096},	// Number of samples to use when generating IBL PMREM texture
 			
 			{"defaultIBLPath",						string("IBL\\ibl.hdr")},
@@ -361,7 +361,14 @@ namespace BlazeEngine
 			}
 			else if (command == "bind")
 			{
-				configValues[property] = (char)value[0]; // Assume bound values are single chars, for now. Might need to rework this to bind more complex keys
+				if (isString)
+				{
+					configValues[property] = string(value);
+				}
+				else
+				{
+					configValues[property] = (char)value[0]; // Assume bound values are single chars, for now. Might need to rework this to bind more complex keys
+				}				
 			}
 			else
 			{
@@ -405,7 +412,7 @@ namespace BlazeEngine
 		// Output each value, by type:
 		for (std::pair<string, any> currentElement : configValues)
 		{
-			if (currentElement.second.type() == typeid(string))
+			if (currentElement.second.type() == typeid(string) && currentElement.first.find("INPUT") == string::npos)
 			{
 				config_ofstream << SET_CMD << currentElement.first << PropertyToConfigString(any_cast<string>(currentElement.second));
 			}
@@ -424,6 +431,10 @@ namespace BlazeEngine
 			else if (currentElement.second.type() == typeid(char))
 			{
 				config_ofstream << BIND_CMD << currentElement.first << PropertyToConfigString(any_cast<char>(currentElement.second));	
+			}
+			else if (currentElement.second.type() == typeid(string) && currentElement.first.find("INPUT") != string::npos)
+			{
+				config_ofstream << BIND_CMD << currentElement.first << PropertyToConfigString(any_cast<string>(currentElement.second));
 			}
 			else
 			{

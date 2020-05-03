@@ -15,9 +15,9 @@ namespace BlazeEngine
 	{
 	public:
 		RenderTexture();
-		RenderTexture(int width, int height, string name = DEFAULT_RENDERTEXTURE_NAME, bool doBuffer = false, int textureUnit = -1);
+		RenderTexture(int width, int height, string name = DEFAULT_RENDERTEXTURE_NAME);
 
-		RenderTexture(RenderTexture const& rhs, bool doBuffer = false);
+		RenderTexture(RenderTexture const& rhs);
 
 		RenderTexture& operator=(RenderTexture const& rhs);
 		
@@ -36,13 +36,13 @@ namespace BlazeEngine
 		void Destroy();
 
 		// Configure GPU framebuffer object. Returns true if successful, false otherwise. Also calls Texture.Buffer()
-		bool Buffer();
+		bool Buffer(int textureUnit);
 
 		// Configure GPU frambuffer object for cube maps
-		static bool BufferCubeMap(RenderTexture** cubeFaceRTs); // Note: There must be exactly 6 cubeFaceRTs
+		static bool BufferCubeMap(RenderTexture** cubeFaceRTs, int textureUnit); // Note: There must be exactly 6 cubeFaceRTs
 
 		// Helper function: Create an array of 6 cube map textures (for a depth map by default). Must be configured/buffered before use
-		static RenderTexture** CreateCubeMap(int xRes, int yRes, int textureUnit, string name = "UNNAMMED");
+		static RenderTexture** CreateCubeMap(int xRes, int yRes, string name = "UNNAMMED");
 
 		// Frame buffers helper functions:
 		void BindFramebuffer(bool doBind);

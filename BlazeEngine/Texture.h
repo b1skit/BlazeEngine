@@ -18,7 +18,7 @@ namespace BlazeEngine
 	{
 	public:
 		Texture();
-		Texture(int width, int height, string texturePath, bool doFill = true, vec4 fillColor = TEXTURE_ERROR_COLOR_VEC4, bool doBuffer = false, int textureUnit = -1);
+		Texture(int width, int height, string texturePath, bool doFill = true, vec4 fillColor = TEXTURE_ERROR_COLOR_VEC4);
 
 		Texture(Texture const& rhs);
 
@@ -48,39 +48,39 @@ namespace BlazeEngine
 		inline GLuint&				Sampler()			{ return samplerID; }
 
 		inline string&				TexturePath()		{ return texturePath; }
-		inline int&					TextureUnit()		{ return textureUnit; }
 
 		// Get/set a texel value:
 		// Returns texels[0] if u = [0, width - 1], v = [0, height - 1] are out of localBounds.
 		vec4& Texel(unsigned int u, unsigned int v); // u == x == col, v == y == row
 
 		// Fill texture with a solid color
-		void Fill(vec4 color, bool doBuffer = false);
+		void Fill(vec4 color);
 
 		// Fill texture with a color gradient
-		void Fill(vec4 tl, vec4 bl, vec4 tr, vec4 br, bool doBuffer = false); 
+		void Fill(vec4 tl, vec4 bl, vec4 tr, vec4 br); 
 
 		// Initialization:
-		bool Buffer();	// Upload a texture to the GPU. Returns true if successful, false otherwise
-
-		// Configure GPU frambuffer object for cube maps
-		static bool BufferCubeMap(Texture** cubeFaces); // Note: There must be EXACTLY 6 elements in cubeFaces
+		bool Buffer(int textureUnit);	// Upload a texture to the GPU. Returns true if successful, false otherwise
 
 		// Bind the texture to its sampler for Shader sampling
-		void Bind(GLuint const& shaderReference = 0, int textureUnitOverride = -1); // NOTE: GL_TEXTURE0 + textureUnit is what is bound when calling glActiveTexture()
+		void Bind(int textureUnit, bool doBind); // NOTE: GL_TEXTURE0 + textureUnit is what is bound when calling glActiveTexture()
 
 		vec4 TexelSize();
 
 		// Generate mip maps for the texture:
 		void GenerateMipMaps();
 
+
 		// Public static functions:
 		//-------------------------
 		
-		// Load a texture object from a (relative) path. Note: Returns nullptr if OpenGL binding fails
-		static Texture* LoadTextureFileFromPath(string texturePath, bool doBuffer = false, bool returnErrorTexIfNotFound = true, bool flipY = true);
+		// Configure GPU frambuffer object for cube maps
+		static bool BufferCubeMap(Texture** cubeFaces, int textureUnit); // Note: There must be EXACTLY 6 elements in cubeFaces
 
-		
+		// Load a texture object from a (relative) path. Returns nullptr if OpenGL binding fails
+		// NOTE: Use SceneManager::FindLoadTextureByPath() instead of accessing this function directly, to ensure duplicate textures can be shared
+		static Texture* LoadTextureFileFromPath(string texturePath, bool returnErrorTexIfNotFound = true, bool flipY = true);
+
 
 	protected:
 		GLuint textureID			= 0;
@@ -98,8 +98,6 @@ namespace BlazeEngine
 		GLenum textureMaxFilter		= GL_LINEAR;
 
 		GLuint samplerID			= 0;		// Name of a sampler
-		int textureUnit				= -1;		// Index to which the texture unit is bound. Must be set before Buffer() is called (ie. via constructor, or manually)
-		// TODO: Move textureUnit to material level to allow textures to be shared among different slots?
 
 		unsigned int	width		= 1;		// # Cols
 		unsigned int	height		= 1;		// # Rows

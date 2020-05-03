@@ -74,14 +74,14 @@ namespace BlazeEngine
 				{
 					string finalName = currentSkyCubeFaceName + fileExtensions[j];
 
-					Texture* currentFaceTexture = Texture::LoadTextureFileFromPath(finalName, false, false, false);
+					Texture* currentFaceTexture = Texture::LoadTextureFileFromPath(finalName, false, false);
 
 					// If we checked the last file extension without success, load an error texture:
 					if (currentFaceTexture == nullptr && j == NUM_FILE_EXTENSIONS - 1)
 					{
 						LOG("Could not find skybox cubemap face texture #" + to_string(i) + ": " + skyboxTextureNames[i] + " with any supported extension. Loading red error texture");
 
-						currentFaceTexture = Texture::LoadTextureFileFromPath(finalName, false, true, false);
+						currentFaceTexture = Texture::LoadTextureFileFromPath(finalName, true, false);
 					}
 
 					if (currentFaceTexture != nullptr)
@@ -104,8 +104,6 @@ namespace BlazeEngine
 						currentFaceTexture->InternalFormat()	= GL_SRGB8_ALPHA8;				// Set the diffuse texture's internal format to be encoded in sRGB color space, so OpenGL will apply gamma correction: (ie. color = pow(color, 2.2) )
 						// TODO: Should we use this, or use universal shader functions???
 
-						currentFaceTexture->TextureUnit()		= CUBE_MAP_0;
-
 						break;
 					}
 				}
@@ -118,7 +116,7 @@ namespace BlazeEngine
 		skyMaterial->GetShader() = skyboxShader;
 
 		// Configure and buffer textures:
-		if (!Texture::BufferCubeMap(&skyMaterial->AccessTexture(TEXTURE_0)))
+		if (!Texture::BufferCubeMap(&skyMaterial->AccessTexture(TEXTURE_0), CUBE_MAP_0))
 		{
 			LOG_ERROR("Skybox cube map buffering failed");
 

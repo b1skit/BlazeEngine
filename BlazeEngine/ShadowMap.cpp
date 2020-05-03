@@ -18,8 +18,6 @@ namespace BlazeEngine
 			CoreEngine::GetCoreEngine()->GetConfig()->GetValue<int>("defaultShadowMapHeight")
 		);
 
-		depthRenderTexture->TextureUnit() = RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH;
-
 		InitializeShadowCam(depthRenderTexture);
 	}
 
@@ -34,12 +32,12 @@ namespace BlazeEngine
 		{
 			this->shadowCam->RenderMaterial() = new Material(shadowCam->GetName() + "_Material", CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("cubeDepthShaderName"), CUBE_MAP_NUM_FACES, true);
 
-			RenderTexture** cubeFaces = RenderTexture::CreateCubeMap(xRes, yRes, CUBE_MAP_0, lightName);
+			RenderTexture** cubeFaces = RenderTexture::CreateCubeMap(xRes, yRes, lightName);
 
 			this->shadowCam->RenderMaterial()->AttachCubeMapTextures((Texture**)cubeFaces);
 
 			// Buffer the cube map:
-			RenderTexture::BufferCubeMap(cubeFaces);
+			RenderTexture::BufferCubeMap(cubeFaces, CUBE_MAP_0);
 
 			CoreEngine::GetSceneManager()->RegisterCamera(CAMERA_TYPE_SHADOW, this->shadowCam);
 		}
@@ -49,10 +47,10 @@ namespace BlazeEngine
 			(
 				xRes,
 				yRes,
-				lightName + "_RenderTexture",
-				true,
-				RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH
+				lightName + "_RenderTexture"
 			);
+
+			depthRenderTexture->Buffer(RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH);
 
 			InitializeShadowCam(depthRenderTexture);
 		}		

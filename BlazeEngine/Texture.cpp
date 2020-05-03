@@ -26,11 +26,11 @@ namespace BlazeEngine
 		texels					= new vec4[numTexels];	// Allocate the default size
 		resolutionHasChanged	= true;
 		
-		Fill(TEXTURE_ERROR_COLOR_VEC4, false);
+		Fill(TEXTURE_ERROR_COLOR_VEC4);
 	}
 
 	// Constructor:
-	Texture::Texture(int width, int height, string texturePath, bool doFill /* = true */, vec4 fillColor /* = (1.0, 0.0, 0.0, 1.0) */, bool doBuffer /*= false*/, int textureUnit /*= -1*/)
+	Texture::Texture(int width, int height, string texturePath, bool doFill /* = true */, vec4 fillColor /* = (1.0, 0.0, 0.0, 1.0) */)
 	{
 		this->width				= width;
 		this->height			= height;
@@ -44,23 +44,6 @@ namespace BlazeEngine
 		if (doFill)
 		{
 			Fill(fillColor);
-		}
-
-		if (textureUnit != -1)
-		{
-			this->textureUnit	= textureUnit;
-		}
-
-		if (doBuffer)
-		{
-			if (textureUnit == -1)
-			{
-				LOG_ERROR("Cannot buffer texture \"" + texturePath + "\" before the textureUnit has been set");
-			}
-			else
-			{
-				this->Buffer();
-			}
 		}
 	}
 
@@ -93,7 +76,6 @@ namespace BlazeEngine
 		this->textureMaxFilter		= rhs.textureMaxFilter;
 
 		this->samplerID				= rhs.samplerID;
-		this->textureUnit			= rhs.textureUnit;
 
 		this->width					= rhs.width;
 		this->height				= rhs.height;
@@ -164,7 +146,6 @@ namespace BlazeEngine
 		this->textureMaxFilter	= rhs.textureMaxFilter;
 
 		this->samplerID			= rhs.samplerID;
-		this->textureUnit		= rhs.textureUnit;
 
 		this->width				= rhs.width;
 		this->height			= rhs.height;
@@ -202,7 +183,7 @@ namespace BlazeEngine
 	}
 
 
-	void BlazeEngine::Texture::Fill(vec4 color, bool doBuffer /*= false*/)
+	void BlazeEngine::Texture::Fill(vec4 color)
 	{
 		for (unsigned int row = 0; row < this->height; row++)
 		{
@@ -211,16 +192,10 @@ namespace BlazeEngine
 				Texel(row, col) = color;
 			}
 		}
-
-		// Upload the texture to the GPU, if required
-		if (doBuffer)
-		{
-			Buffer();
-		}
 	}
 
 
-	void BlazeEngine::Texture::Fill(vec4 tl, vec4 tr, vec4 bl, vec4 br, bool doBuffer /*= false*/)
+	void BlazeEngine::Texture::Fill(vec4 tl, vec4 tr, vec4 bl, vec4 br)
 	{
 		for (unsigned int row = 0; row < height; row++)
 		{
@@ -235,11 +210,6 @@ namespace BlazeEngine
 				Texel(row, col) = (horDelta * endCol) + ((1.0f - horDelta) * startCol);
 			}
 		}
-
-		if (doBuffer)
-		{
-			Buffer();
-		}
 	}
 
 
@@ -247,7 +217,7 @@ namespace BlazeEngine
 	// Static functions:
 	//------------------
 
-	Texture* Texture::LoadTextureFileFromPath(string texturePath, bool doBuffer /*= false*/, bool returnErrorTexIfNotFound /*= false*/, bool flipY /*= true*/)
+	Texture* Texture::LoadTextureFileFromPath(string texturePath, bool returnErrorTexIfNotFound /*= false*/, bool flipY /*= true*/)
 	{
 		stbi_set_flip_vertically_on_load(flipY);	// Set stb_image to flip the y-axis on loading to match OpenGL's style (So pixel (0,0) is in the bottom-left of the image)
 
@@ -284,11 +254,6 @@ namespace BlazeEngine
 			{
 				unsigned char* castImageData = static_cast<unsigned char*>(imageData);
 				LoadLDRHelper(*texture, castImageData, width, height, numChannels);
-			}
-
-			if (doBuffer && !texture->Buffer())
-			{
-				LOG_ERROR("Texture buffering failed");
 			}
 
 			// Cleanup:
@@ -360,7 +325,7 @@ namespace BlazeEngine
 	}
 
 
-	bool Texture::Buffer()
+	bool Texture::Buffer(int textureUnit)
 	{
 		LOG("Buffering texture: \"" + this->TexturePath() + "\"");
 
@@ -407,8 +372,11 @@ namespace BlazeEngine
 					LOG("Buffering texture values");
 				#endif
 
-				// Specify storage properties for our texture:
-				glTexStorage2D(this->texTarget, 1, this->internalFormat, this->width, this->height);
+				// Compute storage properties for our texture:
+				int largestDimension = glm::max(this->width, this->height);
+				int numMipLevels = (int)glm::log2((float)largestDimension) + 1;
+
+				glTexStorage2D(this->texTarget, numMipLevels, this->internalFormat, this->width, this->height);
 
 				resolutionHasChanged = false;
 			}
@@ -437,16 +405,11 @@ namespace BlazeEngine
 		}
 
 		// Configure the Texture sampler:
-		if (this->textureUnit < 0)
-		{
-			LOG_ERROR("Cannot bind Texture sampler as textureUnit has not been set");
-			return false;
-		}
-		glBindSampler(this->textureUnit, this->samplerID);
+		glBindSampler(textureUnit, this->samplerID);
 		if (!glIsSampler(this->samplerID))
 		{
 			glGenSamplers(1, &this->samplerID);
-			glBindSampler(this->textureUnit, this->samplerID);
+			glBindSampler(textureUnit, this->samplerID);
 		}
 
 		glSamplerParameteri(this->samplerID, GL_TEXTURE_WRAP_S, this->textureWrapS);
@@ -455,13 +418,13 @@ namespace BlazeEngine
 		glSamplerParameteri(this->samplerID, GL_TEXTURE_MIN_FILTER, this->textureMinFilter);
 		glSamplerParameteri(this->samplerID, GL_TEXTURE_MAG_FILTER, this->textureMaxFilter);
 
-		glBindSampler(this->textureUnit, 0);
+		glBindSampler(textureUnit, 0);
 
 		return true;
 	}
 
 
-	bool Texture::BufferCubeMap(Texture** cubeFaces) // Note: There must be EXACTLY 6 elements in cubeFaces
+	bool Texture::BufferCubeMap(Texture** cubeFaces, int textureUnit) // Note: There must be EXACTLY 6 elements in cubeFaces
 	{
 		// NOTE: This function uses the paramters of cubeFaces[0]
 
@@ -491,17 +454,11 @@ namespace BlazeEngine
 		glTexParameteri(cubeFaces[0]->texTarget, GL_TEXTURE_MIN_FILTER, cubeFaces[0]->textureMinFilter);
 
 		// Bind sampler:
-		if (cubeFaces[0]->textureUnit < 0)
-		{
-			LOG_ERROR("Cannot bind Cube Map Texture sampler as textureUnit has not been set");
-			return false;
-		}
-
-		glBindSampler(cubeFaces[0]->textureUnit, cubeFaces[0]->samplerID);
+		glBindSampler(textureUnit, cubeFaces[0]->samplerID);
 		if (!glIsSampler(cubeFaces[0]->samplerID))
 		{
 			glGenSamplers(1, &cubeFaces[0]->samplerID);
-			glBindSampler(cubeFaces[0]->textureUnit, cubeFaces[0]->samplerID);
+			glBindSampler(textureUnit, cubeFaces[0]->samplerID);
 
 			if (!glIsSampler(cubeFaces[0]->samplerID))
 			{
@@ -517,7 +474,7 @@ namespace BlazeEngine
 		glSamplerParameteri(cubeFaces[0]->samplerID, GL_TEXTURE_MIN_FILTER, cubeFaces[0]->textureMinFilter);
 		glSamplerParameteri(cubeFaces[0]->samplerID, GL_TEXTURE_MAG_FILTER, cubeFaces[0]->textureMaxFilter);
 
-		glBindSampler(cubeFaces[0]->textureUnit, 0);
+		glBindSampler(textureUnit, 0);
 
 
 		// Texture cube map specific setup:
@@ -545,27 +502,21 @@ namespace BlazeEngine
 	}
 
 
-	void Texture::Bind(GLuint const& shaderReference /*= 0*/, int textureUnitOverride /*= -1*/)
+	void Texture::Bind(int textureUnit, bool doBind)
 	{
-		int targetTextureUnit = this->textureUnit;
-		if (textureUnitOverride != -1)
-		{
-			targetTextureUnit = textureUnitOverride;
-		}
-
-		glActiveTexture(GL_TEXTURE0 + targetTextureUnit);
+		glActiveTexture(GL_TEXTURE0 + textureUnit);
 
 		// Handle unbinding:
-		if (shaderReference == 0)
+		if (doBind == false)
 		{
 			glBindTexture(this->texTarget, 0);
-			glBindSampler(targetTextureUnit, 0); // Assign to index/unit 0
+			glBindSampler(textureUnit, 0); // Assign to index/unit 0
 
 		}
 		else // Handle binding:
 		{			
 			glBindTexture(this->texTarget, this->textureID);
-			glBindSampler(targetTextureUnit, this->samplerID); // Assign our named sampler to the texture
+			glBindSampler(textureUnit, this->samplerID); // Assign our named sampler to the texture
 		}
 	}
 

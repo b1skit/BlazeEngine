@@ -121,7 +121,8 @@ namespace BlazeEngine
 		inline bool&			IsRenderMaterial()						{ return isRenderMaterial; }
 
 
-		void BindAllTextures(GLuint const& shaderReference = 0);
+		void BindAllTextures(int startingTextureUnit, bool doBind);
+		void BufferAllTextures(int startingTextureUnit);
 
 		// Helper function: Attaches an array of 6 textures
 		void AttachCubeMapTextures(Texture** cubeMapFaces); // cubeMapFaces must be EXACTLY 6 elements

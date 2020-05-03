@@ -26,6 +26,7 @@ using std::unordered_map;
 
 
 // Input binding names: Used as hash keys in EngineConfig <key, value> mappings
+// NOTE: Input bindings MUST start with INPUT_
 #define INPUT_BUTTON_FORWARD	btn_forward
 #define INPUT_BUTTON_BACKWARD	btn_backward
 #define INPUT_BUTTON_LEFT		btn_strafeLeft

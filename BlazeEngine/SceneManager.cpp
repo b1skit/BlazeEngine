@@ -789,9 +789,9 @@ namespace BlazeEngine
 						newMaterial->AccessTexture(TEXTURE_ALBEDO) = FindLoadTextureByPath(errorTextureName, false);
 						if (newMaterial->AccessTexture(TEXTURE_ALBEDO) == nullptr)
 						{
-							newMaterial->AccessTexture(TEXTURE_ALBEDO) = new Texture(1, 1, errorTextureName, true, vec4(1.0f, 0.0f, 1.0f, 1.0f), false, TEXTURE_0 + TEXTURE_ALBEDO);
+							newMaterial->AccessTexture(TEXTURE_ALBEDO) = new Texture(1, 1, errorTextureName, true, vec4(1.0f, 0.0f, 1.0f, 1.0f));
 
-							if (newMaterial->AccessTexture(TEXTURE_ALBEDO)->Buffer())
+							if (newMaterial->AccessTexture(TEXTURE_ALBEDO)->Buffer(TEXTURE_0 + TEXTURE_ALBEDO))
 							{
 								AddTexture(newMaterial->AccessTexture(TEXTURE_ALBEDO));
 							}
@@ -803,13 +803,15 @@ namespace BlazeEngine
 				}
 				
 				// Buffer all of the textures:
-				for (int currentTextureIndex = 0; currentTextureIndex < newMaterial->NumTextureSlots(); currentTextureIndex++)
+				newMaterial->BufferAllTextures(TEXTURE_0);
+
+				// Generate mip-maps:
+				for (int i = 0; i < newMaterial->NumTextureSlots(); i++)
 				{
-					Texture* currentTexture = newMaterial->AccessTexture((TEXTURE_TYPE)currentTextureIndex);
+					Texture* currentTexture = newMaterial->AccessTexture((TEXTURE_TYPE)i);
 					if (currentTexture != nullptr)
 					{
-						currentTexture->TextureUnit() = currentTextureIndex;	// Have to set this here, since we didn't set it above
-						currentTexture->Buffer();
+						currentTexture->GenerateMipMaps();
 					}
 				}
 
@@ -948,7 +950,13 @@ namespace BlazeEngine
 				// None exists, so create one:
 				if (newTexture == nullptr)
 				{
-					newTexture = new Texture(1, 1, newName, true, newColor, false, texUnit); // NOTE: Since we're storing the texUnit per-texture, we need unique textures incase they're in different slots...
+					newTexture = new Texture(1, 1, newName, true, newColor); // NOTE: Since we're storing the texUnit per-texture, we need unique textures incase they're in different slots...
+
+					if (newTexture->Buffer(texUnit))
+					{
+						// Add the texture to our collection:
+						this->AddTexture(newTexture);
+					}				
 				}
 			}
 
@@ -985,7 +993,7 @@ namespace BlazeEngine
 			newTexture = FindLoadTextureByPath(INVALID_TEXTURE_PATH);
 		}
 
-		return newTexture;
+		return newTexture; // Note: Texture is currently unbuffered
 	}
 
 

@@ -138,13 +138,25 @@ namespace BlazeEngine
 	}
 
 
-	void Material::BindAllTextures(GLuint const& shaderReference /*= 0*/)
+	void Material::BindAllTextures(int startingTextureUnit, bool doBind)
 	{
-		for (int i = 0; i < numTextures; i++)
+		for (int i = 0; i < this->numTextures; i++)
 		{
 			if (this->textures[i] != nullptr)
 			{
-				this->textures[i]->Bind(shaderReference);
+				this->textures[i]->Bind(startingTextureUnit + i, doBind);
+			}
+		}
+	}
+
+
+	void Material::BufferAllTextures(int startingTextureUnit)
+	{
+		for (int currentTextureIndex = 0; currentTextureIndex < this->numTextures; currentTextureIndex++)
+		{
+			if (this->textures[currentTextureIndex] != nullptr)
+			{
+				this->textures[currentTextureIndex]->Buffer(startingTextureUnit + currentTextureIndex);
 			}
 		}
 	}

@@ -248,9 +248,7 @@ namespace BlazeEngine
 		(
 			this->xRes,
 			this->yRes,
-			"RenderManagerFrameOutput",
-			false,
-			RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO
+			"RenderManagerFrameOutput"
 		);
 		
 		outputTexture->Format()				= GL_RGBA;		// Note: Using 4 channels for future flexibility
@@ -264,7 +262,7 @@ namespace BlazeEngine
 		outputTexture->ReadBuffer()			= GL_COLOR_ATTACHMENT0 + 0;
 		outputTexture->DrawBuffer()			= GL_COLOR_ATTACHMENT0 + 0;
 
-		outputTexture->Buffer();
+		outputTexture->Buffer(RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO);
 
 		outputMaterial->AccessTexture(TEXTURE_ALBEDO) = outputTexture;
 
@@ -558,7 +556,7 @@ namespace BlazeEngine
 
 			// Bind:
 			currentShader->Bind(true);
-			currentMaterial->BindAllTextures(shaderReference);
+			currentMaterial->BindAllTextures(TEXTURE_0, true);
 
 			// Upload material properties:
 			currentShader->UploadUniform(Material::MATERIAL_PROPERTY_NAMES[MATERIAL_PROPERTY_0].c_str(), &currentMaterial->Property(MATERIAL_PROPERTY_0).x, UNIFORM_Vec4fv);
@@ -594,7 +592,7 @@ namespace BlazeEngine
 			}
 
 			// Cleanup:
-			currentMaterial->BindAllTextures();
+			currentMaterial->BindAllTextures(TEXTURE_0, false);
 			currentShader->Bind(false);
 
 		} // End Material loop
@@ -639,14 +637,14 @@ namespace BlazeEngine
 
 			// Bind:
 			currentShader->Bind(true);
-			currentMaterial->BindAllTextures(shaderReference);
+			currentMaterial->BindAllTextures(TEXTURE_0, true);
 
 			// Bind the key light depth buffer and related data:
 			vec4 texelSize(0, 0, 0, 0);
 			RenderTexture* depthTexture = (RenderTexture*)keyLight->ActiveShadowMap()->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
 			if (depthTexture)
 			{
-				depthTexture->Bind(shaderReference, DEPTH_TEXTURE_0 + DEPTH_TEXTURE_SHADOW);
+				depthTexture->Bind(DEPTH_TEXTURE_0 + DEPTH_TEXTURE_SHADOW, true);
 
 				texelSize = depthTexture->TexelSize();
 			}
@@ -690,10 +688,10 @@ namespace BlazeEngine
 			}
 
 			// Cleanup current material and shader:
-			currentMaterial->BindAllTextures();
+			currentMaterial->BindAllTextures(TEXTURE_0, false);
 			if (depthTexture)
 			{
-				depthTexture->Bind(0, DEPTH_TEXTURE_0 + DEPTH_TEXTURE_SHADOW);
+				depthTexture->Bind(DEPTH_TEXTURE_0 + DEPTH_TEXTURE_SHADOW, false);
 			}
 			currentShader->Bind(false);
 
@@ -707,10 +705,9 @@ namespace BlazeEngine
 
 		// Bind:
 		Shader* currentShader	= deferredLight->DeferredMaterial()->GetShader();
-		GLuint shaderReference	= currentShader->ShaderReference();
 
 		currentShader->Bind(true);
-		renderCam->RenderMaterial()->BindAllTextures(shaderReference);	// Bind GBuffer textures
+		renderCam->RenderMaterial()->BindAllTextures(RENDER_TEXTURE_0, true);	// Bind GBuffer textures
 		
 		// Assemble common (model independent) matrices:
 		bool hasShadowMap = deferredLight->ActiveShadowMap() != nullptr;
@@ -742,20 +739,20 @@ namespace BlazeEngine
 				Texture* IEMCubemap = ((ImageBasedLight*)deferredLight)->GetIEMMaterial()->AccessTexture(CUBE_MAP_RIGHT);
 				if (IEMCubemap != nullptr)
 				{
-					IEMCubemap->Bind(currentShader->ShaderReference());
+					IEMCubemap->Bind(CUBE_MAP_0 + CUBE_MAP_RIGHT, true);
 				}
 
 				Texture* PMREM_Cubemap = ((ImageBasedLight*)deferredLight)->GetPMREMMaterial()->AccessTexture(CUBE_MAP_RIGHT);
 				if (PMREM_Cubemap != nullptr)
 				{
-					PMREM_Cubemap->Bind(currentShader->ShaderReference());
+					PMREM_Cubemap->Bind(CUBE_MAP_1 + CUBE_MAP_RIGHT, true);
 				}
 
 				// Bind BRDF Integration map:
 				RenderTexture* BRDFIntegrationMap = ((ImageBasedLight*)deferredLight)->GetBRDFIntegrationMap();
 				if (BRDFIntegrationMap != nullptr)
 				{
-					BRDFIntegrationMap->Bind(currentShader->ShaderReference());
+					BRDFIntegrationMap->Bind(GENERIC_TEXTURE_0, true);
 				}
 			}
 		}
@@ -813,7 +810,7 @@ namespace BlazeEngine
 					depthTexture = (RenderTexture*)activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH);
 					if (depthTexture)
 					{
-						depthTexture->Bind(shaderReference, DEPTH_TEXTURE_0 + DEPTH_TEXTURE_SHADOW);
+						depthTexture->Bind(DEPTH_TEXTURE_0 + DEPTH_TEXTURE_SHADOW, true);
 					}
 				}
 				break;
@@ -823,7 +820,7 @@ namespace BlazeEngine
 					depthTexture = (RenderTexture*)activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(CUBE_MAP_RIGHT);
 					if (depthTexture)
 					{
-						depthTexture->Bind(shaderReference); // No need for a texture unit override
+						depthTexture->Bind(CUBE_MAP_0 + CUBE_MAP_RIGHT, true);
 					}
 				}
 				break;
@@ -854,7 +851,7 @@ namespace BlazeEngine
 
 
 		// Cleanup:
-		renderCam->RenderMaterial()->BindAllTextures();
+		renderCam->RenderMaterial()->BindAllTextures(RENDER_TEXTURE_0, false);
 
 		if (activeShadowMap != nullptr)
 		{
@@ -862,13 +859,13 @@ namespace BlazeEngine
 			{
 			case LIGHT_DIRECTIONAL:
 			{
-				activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH)->Bind(0, DEPTH_TEXTURE_0 + DEPTH_TEXTURE_SHADOW);
+				activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(RENDER_TEXTURE_DEPTH)->Bind(DEPTH_TEXTURE_0 + DEPTH_TEXTURE_SHADOW, false);
 			}			
 			break;
 
 			case LIGHT_POINT:
 			{
-				activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(CUBE_MAP_RIGHT)->Bind(0);
+				activeShadowMap->ShadowCamera()->RenderMaterial()->AccessTexture(CUBE_MAP_RIGHT)->Bind(CUBE_MAP_0 + CUBE_MAP_RIGHT, false);
 			}
 			break;
 
@@ -889,20 +886,20 @@ namespace BlazeEngine
 			Texture* IEMCubemap = ((ImageBasedLight*)deferredLight)->GetIEMMaterial()->AccessTexture(CUBE_MAP_RIGHT);
 			if (IEMCubemap != nullptr)
 			{
-				IEMCubemap->Bind();
+				IEMCubemap->Bind(CUBE_MAP_0 + CUBE_MAP_RIGHT, false);
 			}
 
 			Texture* PMREM_Cubemap = ((ImageBasedLight*)deferredLight)->GetPMREMMaterial()->AccessTexture(CUBE_MAP_RIGHT);
 			if (PMREM_Cubemap != nullptr)
 			{
-				PMREM_Cubemap->Bind();
+				PMREM_Cubemap->Bind(CUBE_MAP_1 + CUBE_MAP_RIGHT, false);
 			}
 
 			// Unbind BRDF Integration map:
 			RenderTexture* BRDFIntegrationMap = ((ImageBasedLight*)deferredLight)->GetBRDFIntegrationMap();
 			if (BRDFIntegrationMap != nullptr)
 			{
-				BRDFIntegrationMap->Bind();
+				BRDFIntegrationMap->Bind(GENERIC_TEXTURE_0, false);
 			}
 		}
 		
@@ -929,11 +926,11 @@ namespace BlazeEngine
 
 		// Bind shader and texture:
 		currentShader->Bind(true);
-		skyboxCubeMap->Bind(shaderReference);
+		skyboxCubeMap->Bind(CUBE_MAP_0 + CUBE_MAP_RIGHT, true);
 
 		if (depthTexture)
 		{
-			depthTexture->Bind(shaderReference, RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH);
+			depthTexture->Bind(RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH, true);
 		}
 
 		skybox->GetSkyMesh()->Bind(true);
@@ -949,9 +946,9 @@ namespace BlazeEngine
 		skybox->GetSkyMesh()->Bind(false);
 		if (depthTexture)
 		{
-			depthTexture->Bind(0, RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH);
+			depthTexture->Bind(RENDER_TEXTURE_0 + RENDER_TEXTURE_DEPTH, false);
 		}		
-		skyboxCubeMap->Bind(0);
+		skyboxCubeMap->Bind(CUBE_MAP_0 + CUBE_MAP_RIGHT, false);
 		currentShader->Bind(false);		
 	}
 
@@ -963,13 +960,13 @@ namespace BlazeEngine
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		outputMaterial->GetShader()->Bind(true);
-		outputMaterial->BindAllTextures(outputMaterial->GetShader()->ShaderReference());
+		outputMaterial->BindAllTextures(RENDER_TEXTURE_0, true);
 		screenAlignedQuad->Bind(true);
 
 		glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
 		// Cleanup:
-		outputMaterial->BindAllTextures();
+		outputMaterial->BindAllTextures(RENDER_TEXTURE_0, false);
 		outputMaterial->GetShader()->Bind(false);
 		screenAlignedQuad->Bind(false);
 	}
@@ -982,13 +979,13 @@ namespace BlazeEngine
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		blitShader->Bind(true);
-		srcMaterial->BindAllTextures(blitShader->ShaderReference());
+		srcMaterial->BindAllTextures(RENDER_TEXTURE_0, true); // NOTE: Assume we're binding to GBuffer_Albedo, for now...
 		screenAlignedQuad->Bind(true);
 
 		glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
 		// Cleanup:
-		srcMaterial->BindAllTextures();
+		srcMaterial->BindAllTextures(RENDER_TEXTURE_0, false);
 		blitShader->Bind(false);
 		screenAlignedQuad->Bind(false);
 	}
@@ -1011,12 +1008,12 @@ namespace BlazeEngine
 		screenAlignedQuad->Bind(true);
 
 		// Bind the source texture into the slot specified in the blit shader:
-		srcMat->AccessTexture((TEXTURE_TYPE)srcTex)->Bind(currentShader->ShaderReference(), RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO); // Note: Blit shader reads from this texture unit (for now)
+		srcMat->AccessTexture((TEXTURE_TYPE)srcTex)->Bind(RENDER_TEXTURE_0 + RENDER_TEXTURE_ALBEDO, true); // Note: Blit shader reads from this texture unit (for now)
 		
 		glDrawElements(GL_TRIANGLES, screenAlignedQuad->NumIndices(), GL_UNSIGNED_INT, (void*)(0)); // (GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
 
 		// Cleanup:
-		srcMat->AccessTexture((TEXTURE_TYPE)dstTex)->Bind(0, TEXTURE_ALBEDO);
+		srcMat->AccessTexture((TEXTURE_TYPE)dstTex)->Bind(TEXTURE_ALBEDO, false);
 		screenAlignedQuad->Bind(false);
 		currentShader->Bind(false);
 		((RenderTexture*)dstMat->AccessTexture((TEXTURE_TYPE)dstTex))->BindFramebuffer(false);
