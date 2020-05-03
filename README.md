@@ -1,15 +1,15 @@
 # Blaze Engine
-A real-time 3D renderer, with the architecture of a game engine.
+A real-time, physically-based 3D renderer, with the architecture of a game engine.
 - Requires a GPU compatible with OpenGL 4.3+
+- Compiles with Visual Studio 2019
 
 Check the Documentation directory for UML diagrams.
 
 Included Dependencies:
-- Assimp used for .FBX scene imports
-- GLM used for OpenGL math data structures
-- SDL 2.0 used for input event parsing
-- STB used for .PNG image loading
-- Compiles with Visual Studio 2019
+- Assimp: .FBX scene imports
+- GLM: OpenGL math data structures
+- SDL 2.0: input & event parsing
+- STB: Texture loading
 
 .FBX Scene support:
 - Loaded via commandline flag -scene <sceneName> (Eg. -scene myScene)
@@ -24,3 +24,4 @@ Included Dependencies:
   
 Recommended Visual Studio extensions:
 - Smart Command Line Arguments: https://marketplace.visualstudio.com/items?itemName=MBulli.SmartCommandlineArguments
+- GLSL Language Integration: https://github.com/danielscherzer/GLSL
