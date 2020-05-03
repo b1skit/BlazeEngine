@@ -59,13 +59,6 @@ namespace BlazeEngine
 	{
 		LOG("SceneManager starting...");
 
-		// Initialize materials:
-		materials = new Material*[MAX_MATERIALS];
-		for (unsigned int i = 0; i < MAX_MATERIALS; i++)
-		{
-			materials[i] = nullptr;
-		}
-		currentMaterialCount = 0;
 	}
 
 
@@ -81,19 +74,18 @@ namespace BlazeEngine
 		
 
 		// Scene manager cleanup:
-		if (materials)
+		if (materials.size() > 0)
 		{
-			for (unsigned int i = 0; i < MAX_MATERIALS; i++)
+			for (std::pair<string, Material*> currentMaterialEntry : this->materials)
 			{
-				if (materials[i])
+				if (currentMaterialEntry.second != nullptr)
 				{
-					materials[i]->Destroy();
-					delete materials[i];
-					materials[i] = nullptr;
+					currentMaterialEntry.second->Destroy();
+					delete currentMaterialEntry.second;
+					currentMaterialEntry.second = nullptr;
 				}
 			}
-			delete[] materials;
-			currentMaterialCount = 0;
+			this->materials.clear();
 		}
 
 		// Texture cleanup:
@@ -103,6 +95,7 @@ namespace BlazeEngine
 			{
 				currentTexture.second->Destroy();
 				delete currentTexture.second;
+				currentTexture.second = nullptr;
 			}
 		}
 		textures.clear();
@@ -285,36 +278,42 @@ namespace BlazeEngine
 	}
 
 
-	Material* SceneManager::GetMaterial(unsigned int materialIndex)
-	{ 
-		return materials[materialIndex]; 
+	unordered_map<string, Material*> const& BlazeEngine::SceneManager::GetMaterials() const
+	{
+		return this->materials;
 	}
 
 
 	Material* SceneManager::GetMaterial(string materialName)
 	{
-		for (unsigned int i = 0; i < currentMaterialCount; i++)
+		auto result = this->materials.find(materialName);
+		if (result != this->materials.end())
 		{
-			if (materials[i]->Name() == materialName)
-			{
-				return materials[i];
-			}
+			return result->second;
 		}
-
-		LOG_ERROR("Could not find material \"" + materialName + "\"");
-		return nullptr;
+		else
+		{
+			LOG_ERROR("Could not find material \"" + materialName + "\"");
+			return nullptr;
+		}
 	}
 
 
-	vector<Mesh*> const* SceneManager::GetRenderMeshes(int materialIndex /*= -1*/)
+	vector<Mesh*> const* SceneManager::GetRenderMeshes(Material* targetMaterial)
 	{
 		// If materialIndex is out of bounds, return ALL meshes
-		if (materialIndex < 0 || materialIndex >= (int)materialMeshLists.size())
+		if (targetMaterial == nullptr)
 		{
 			return &currentScene->GetMeshes();
 		}
 
-		return &materialMeshLists.at(materialIndex);
+		auto result = this->materialMeshLists.find(targetMaterial->Name());
+		if (result == materialMeshLists.end())
+		{
+			return &currentScene->GetMeshes();
+		}
+
+		return &result->second;
 	}
 
 
@@ -463,61 +462,30 @@ namespace BlazeEngine
 	}
 
 
-	int SceneManager::GetMaterialIndex(string materialName)
+	void SceneManager::AddMaterial(Material*& newMaterial)
 	{
-		// Check if a material with the same name exists, and return it if it does:
-		int materialIndex = GetMaterialIndexIfExists(materialName);
-		if (materialIndex != -1)
+		if (newMaterial == nullptr)
 		{
-			return materialIndex;
-		}
-		
-		LOG_ERROR("Material \"" + materialName + "\" does not exist... Creating a new material with default shader");
-
-		// If we've made it this far, no material with the given name exists. Create it:
-		Material* newMaterial = new Material(materialName, CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("defaultShaderName")); // Assign the default shader
-
-		return AddMaterial(newMaterial, false);
-	}
-
-
-	unsigned int SceneManager::AddMaterial(Material* newMaterial, bool checkForExisting /*= true*/)
-	{
-		if (checkForExisting) // Check if a material with the same name exists, and return it if it does
-		{
-			int materialIndex = GetMaterialIndexIfExists(newMaterial->Name());
-			if (materialIndex != -1)
-			{
-				LOG("Found existing material \"" + materials[materialIndex]->Name() + "\" at index " + to_string(materialIndex));
-				return materialIndex;
-			}
-		}			
-
-		// Otherwise, add a new material:
-		if (currentMaterialCount == MAX_MATERIALS)
-		{
-			LOG_ERROR("Cannot add any new materials: Max materials have been added! Returning material at index 0");
-			return 0; // Error: Return first material
+			LOG_ERROR("Cannot add null material to scene manager material list");
+			return;
 		}
 
-		materials[currentMaterialCount] = newMaterial;
-		unsigned int newIndex = currentMaterialCount;
-		currentMaterialCount++;
+		auto result = this->materials.find(newMaterial->Name());
 
-		return newIndex; // Return the previous index
-	}
-
-
-	int SceneManager::GetMaterialIndexIfExists(string materialName)
-	{
-		for (unsigned int i = 0; i < MAX_MATERIALS; i++)
+		// Add new Material
+		if (result == this->materials.end())
 		{
-			if (materials[i] && materials[i]->Name() == materialName)
-			{
-				return i;
-			}
+			this->materials[newMaterial->Name()] = newMaterial;
+			LOG("Material \"" + newMaterial->Name() + "\" registered with SceneManager");
 		}
-		return -1;
+		else // Material already exists: Destroy the duplicate and update the pointer
+		{
+			LOG_WARNING("The material \"" + newMaterial->Name() + "\" already exists! Destroying duplicate, and updating reference to point to original material");
+
+			newMaterial->Destroy();
+			delete newMaterial;
+			newMaterial = result->second;
+		}
 	}
 
 
@@ -525,14 +493,14 @@ namespace BlazeEngine
 	{
 		const unsigned int ESTIMATED_MESHES_PER_MATERIAL = 25;	// TODO: Tune this value based on the actual number of meshes loaded?
 
-		// Pre-allocate our vector of vectors:
-		materialMeshLists.clear();
-		materialMeshLists.reserve(currentMaterialCount);
-		for (unsigned int i = 0; i < currentMaterialCount; i++)
-		{
-			materialMeshLists.emplace_back(vector<Mesh*>());
-			materialMeshLists.at(i).reserve(ESTIMATED_MESHES_PER_MATERIAL);
-		}
+		//// Pre-allocate our vector of vectors:
+		//materialMeshLists.clear();
+		//materialMeshLists.reserve(currentMaterialCount);
+		//for (unsigned int i = 0; i < currentMaterialCount; i++)
+		//{
+		//	materialMeshLists.emplace_back(vector<Mesh*>());
+		//	materialMeshLists.at(i).reserve(ESTIMATED_MESHES_PER_MATERIAL);
+		//}
 
 		unsigned int numMeshes = 0;
 		for (int i = 0; i < (int)currentScene->renderables.size(); i++)
@@ -540,15 +508,26 @@ namespace BlazeEngine
 			for (int j = 0; j < (int)currentScene->renderables.at(i)->ViewMeshes()->size(); j++)
 			{
 				Mesh* viewMesh = currentScene->renderables.at(i)->ViewMeshes()->at(j);
-				int materialIndex = viewMesh->MaterialIndex();
-				if (materialIndex < 0 || (unsigned int)materialIndex >= currentMaterialCount)
+
+				Material* meshMaterial = viewMesh->MeshMaterial();
+				if (meshMaterial == nullptr)
 				{
-					LOG("AssembleMaterialMeshLists() is skipping a mesh with out of bounds material index!");
+					LOG_ERROR("AssembleMaterialMeshLists() is skipping a mesh with NULL material pointer!");
 				}
 				else
 				{
-					materialMeshLists.at(materialIndex).emplace_back(viewMesh);
-					numMeshes++;
+					auto result = this->materialMeshLists.find(meshMaterial->Name());
+
+					if (result == this->materialMeshLists.end())
+					{
+						// Create a new entry, containing a vector with our object
+						this->materialMeshLists[meshMaterial->Name()] = vector<Mesh*>{viewMesh};
+					}
+					else
+					{
+						result->second.emplace_back(viewMesh);
+						numMeshes++;
+					}					
 				}
 			}
 		}
@@ -588,7 +567,7 @@ namespace BlazeEngine
 	void SceneManager::ImportMaterialsAndTexturesFromScene(aiScene const* scene, string sceneName)
 	{
 		int numMaterials = scene->mNumMaterials;
-		LOG("Found " + to_string(numMaterials) + " scene materials");
+		LOG("\nFound " + to_string(numMaterials) + " scene materials:");
 
 		// Create Blaze Engine materials:
 		for (int currentMaterial = 0; currentMaterial < numMaterials; currentMaterial++)
@@ -608,15 +587,6 @@ namespace BlazeEngine
 						LOG("KEY: " + string(currentAiMaterial->mProperties[i]->mKey.C_Str()));
 					}
 				#endif
-
-				string rawName = matName; // Convert to lowercase for comparisons
-				for (int currentChar = 0; currentChar < rawName.length(); currentChar++)
-				{
-					if (isalpha(rawName.at(currentChar)) &&  isupper(rawName.at(currentChar)))
-					{
-						rawName.at(currentChar) = tolower(rawName.at(currentChar));
-					}
-				}
 
 				// Create a material using the error shader, for now:
 				Material* newMaterial = new Material(matName, nullptr);
@@ -816,11 +786,11 @@ namespace BlazeEngine
 				}
 
 				// Add the material to our material list:
-				AddMaterial(newMaterial, false);
+				AddMaterial(newMaterial);
 			}
 		}
 
-		LOG("Loaded a total of " + to_string(textures.size()) + " textures (including error textures)");
+		LOG("\nLoaded a total of " + to_string(textures.size()) + " textures (including error textures)\n");
 	}
 
 
@@ -1101,6 +1071,10 @@ namespace BlazeEngine
 				int numUVs			= scene->mMeshes[currentMesh]->mNumUVComponents[0]; // Just look at the first UV channel for now...
 				int numUVChannels	= scene->mMeshes[currentMesh]->GetNumUVChannels();
 				int materialIndex	= scene->mMeshes[currentMesh]->mMaterialIndex;
+				
+				aiString name;
+				scene->mMaterials[materialIndex]->Get(AI_MATKEY_NAME, name);
+				string materialName = string(name.C_Str());
 
 				#if defined(DEBUG_SCENEMANAGER_MESH_LOGGING)
 					LOG("\nMesh #" + to_string(currentMesh) + " \"" + meshName + "\": " + to_string(numVerts) + " verts, " + to_string(numFaces) + " faces, " + to_string(numUVChannels) + " UV channels, " + to_string(numUVs) + " UV components in channel 0, using material #" + to_string(materialIndex));
@@ -1184,7 +1158,7 @@ namespace BlazeEngine
 					}
 				}
 
-				Mesh* newMesh				= new Mesh(meshName, vertices, numVerts, indices, numIndices, materialIndex);
+				Mesh* newMesh				= new Mesh(meshName, vertices, numVerts, indices, numIndices, this->GetMaterial(materialName));
 
 				GameObject* gameObject		= FindCreateGameObjectParents(scene, currentNode->mParent);
 
@@ -1229,7 +1203,7 @@ namespace BlazeEngine
 		}
 
 		int numGameObjects = (int)currentScene->gameObjects.size();
-		LOG("Created " + to_string(numGameObjects) + " game objects");
+		LOG("\nCreated " + to_string(numGameObjects) + " game objects");
 	}
 
 

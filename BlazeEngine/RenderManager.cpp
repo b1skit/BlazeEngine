@@ -467,7 +467,7 @@ namespace BlazeEngine
 		glClear(GL_DEPTH_BUFFER_BIT); // Clear the currently bound FBO	
 
 		// Loop through each mesh:			
-		vector<Mesh*> const* meshes = CoreEngine::GetSceneManager()->GetRenderMeshes();
+		vector<Mesh*> const* meshes = CoreEngine::GetSceneManager()->GetRenderMeshes(nullptr); // Get ALL meshes
 		unsigned int numMeshes	= (unsigned int)meshes->size();
 		for (unsigned int j = 0; j < numMeshes; j++)
 		{
@@ -537,20 +537,13 @@ namespace BlazeEngine
 		// Assemble common (model independent) matrices:
 		mat4 view			= renderCam->View();
 
-		// Configure render material:
-		unsigned int numMaterials	= CoreEngine::GetSceneManager()->NumMaterials();
-		Material* currentMaterial	= renderCam->RenderMaterial();
-
-		Shader* currentShader				= nullptr;
-		GLuint shaderReference				= 0;
-
 		// Loop by material (+shader), mesh:
-		for (unsigned int currentMaterialIndex = 0; currentMaterialIndex < numMaterials; currentMaterialIndex++)
+		std::unordered_map<string, Material*> const sceneMaterials = CoreEngine::GetSceneManager()->GetMaterials();
+		for (std::pair<string, Material*> currentElement : sceneMaterials)
 		{
 			// Setup the current material and shader:
-			currentMaterial		= CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
-			currentShader		= renderCam->RenderMaterial()->GetShader();
-			shaderReference		= currentShader->ShaderReference();
+			Material* currentMaterial	= currentElement.second;
+			Shader* currentShader		= renderCam->RenderMaterial()->GetShader();
 
 			vector<Mesh*> const* meshes;
 
@@ -563,7 +556,7 @@ namespace BlazeEngine
 			currentShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
 
 			// Get all meshes that use the current material
-			meshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
+			meshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterial);
 
 			// Loop through each mesh:			
 			unsigned int numMeshes	= (unsigned int)meshes->size();
@@ -610,13 +603,13 @@ namespace BlazeEngine
 		// Assemble common (model independent) matrices:
 		mat4 view			= renderCam->View();
 		mat4 shadowCam_vp = mat4(1.0f);
-		if (CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight() && CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight()->ActiveShadowMap() && CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight()->ActiveShadowMap()->ShadowCamera())
+		if (CoreEngine::GetSceneManager()->GetKeyLight() && CoreEngine::GetSceneManager()->GetKeyLight()->ActiveShadowMap() && CoreEngine::GetSceneManager()->GetKeyLight()->ActiveShadowMap()->ShadowCamera())
 		{
-			shadowCam_vp = CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight()->ActiveShadowMap()->ShadowCamera()->ViewProjection();
+			shadowCam_vp = CoreEngine::GetSceneManager()->GetKeyLight()->ActiveShadowMap()->ShadowCamera()->ViewProjection();
 		}
 
 		// Cache required values once outside of the loop:
-		Light* keyLight						= CoreEngine::GetCoreEngine()->GetSceneManager()->GetKeyLight();
+		Light* keyLight						= CoreEngine::GetSceneManager()->GetKeyLight();
 
 		// Temp fix: If we don't have a keylight, abort. TODO: Implement forward rendering of all light types
 		if (keyLight == nullptr)
@@ -627,13 +620,12 @@ namespace BlazeEngine
 		}
 
 		// Loop by material (+shader), mesh:
-		unsigned int numMaterials = CoreEngine::GetSceneManager()->NumMaterials();
-		for (unsigned int currentMaterialIndex = 0; currentMaterialIndex < numMaterials; currentMaterialIndex++)
+		std::unordered_map<string, Material*> const sceneMaterials = CoreEngine::GetSceneManager()->GetMaterials();
+		for (std::pair<string, Material*> currentElement : sceneMaterials)
 		{
 			// Setup the current material and shader:
-			Material* currentMaterial	= CoreEngine::GetSceneManager()->GetMaterial(currentMaterialIndex);
+			Material* currentMaterial = currentElement.second;
 			Shader* currentShader		= currentMaterial->GetShader();		
-			GLuint shaderReference		= currentShader->ShaderReference();
 
 			// Bind:
 			currentShader->Bind(true);
@@ -653,7 +645,7 @@ namespace BlazeEngine
 			currentShader->UploadUniform("texelSize",				&texelSize.x,									UNIFORM_Vec4fv);
 
 			// Get all meshes that use the current material
-			vector<Mesh*> const* meshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterialIndex);
+			vector<Mesh*> const* meshes = CoreEngine::GetSceneManager()->GetRenderMeshes(currentMaterial);
 
 			// Upload common shader matrices:
 			currentShader->UploadUniform("in_view", &view[0][0], UNIFORM_Matrix4fv);
@@ -701,7 +693,7 @@ namespace BlazeEngine
 
 	void BlazeEngine::RenderManager::RenderDeferredLight(Light* deferredLight)
 	{
-		Camera* renderCam = CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera();
+		Camera* renderCam = CoreEngine::GetSceneManager()->GetMainCamera();
 
 		// Bind:
 		Shader* currentShader	= deferredLight->DeferredMaterial()->GetShader();
@@ -915,10 +907,9 @@ namespace BlazeEngine
 			return;
 		}
 
-		Camera* renderCam = CoreEngine::GetCoreEngine()->GetSceneManager()->GetMainCamera();
+		Camera* renderCam = CoreEngine::GetSceneManager()->GetMainCamera();
 
 		Shader* currentShader	= skybox->GetSkyMaterial()->GetShader();
-		GLuint shaderReference	= currentShader->ShaderReference();
 
 		Texture* skyboxCubeMap	= skybox->GetSkyMaterial()->AccessTexture(CUBE_MAP_RIGHT);
 
@@ -1066,18 +1057,20 @@ namespace BlazeEngine
 
 		// Add all Material Shaders to a list:
 		vector<Shader*> shaders;
-		for (unsigned int i = 0; i < numMaterials; i++)
+		std::unordered_map<string, Material*> const sceneMaterials = CoreEngine::GetSceneManager()->GetMaterials();
+		for (std::pair<string, Material*> currentElement : sceneMaterials)
 		{
-			if (sceneManager->GetMaterial(i)->GetShader() != nullptr)
+			Material* currentMaterial = currentElement.second;
+			if (currentMaterial->GetShader() != nullptr)
 			{
-				shaders.push_back(sceneManager->GetMaterial(i)->GetShader());
+				shaders.push_back(currentMaterial->GetShader());
 			}			
 		}
 
 		// Add all Camera Shaders:	
 		for (int i = 0; i < CAMERA_TYPE_COUNT; i++)
 		{
-			vector<Camera*> cameras = CoreEngine::GetCoreEngine()->GetSceneManager()->GetCameras((CAMERA_TYPE)i);
+			vector<Camera*> cameras = CoreEngine::GetSceneManager()->GetCameras((CAMERA_TYPE)i);
 			for (int currentCam = 0; currentCam < cameras.size(); currentCam++)
 			{
 				if (cameras.at(currentCam)->RenderMaterial() && cameras.at(currentCam)->RenderMaterial()->GetShader())
@@ -1088,7 +1081,7 @@ namespace BlazeEngine
 		}
 			
 		// Add deferred light Shaders
-		vector<Light*> const* deferredLights = &CoreEngine::GetCoreEngine()->GetSceneManager()->GetDeferredLights();
+		vector<Light*> const* deferredLights = &CoreEngine::GetSceneManager()->GetDeferredLights();
 		for (int currentLight = 0; currentLight < (int)deferredLights->size(); currentLight++)
 		{
 			shaders.push_back(deferredLights->at(currentLight)->DeferredMaterial()->GetShader());

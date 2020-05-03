@@ -119,7 +119,7 @@ namespace BlazeEngine
 
 		// Load the HDR image:
 		string iblTexturePath	= CoreEngine::GetCoreEngine()->GetConfig()->GetValue<string>("sceneRoot") + sceneName + "\\" + relativeHDRPath;
-		Texture* hdrTexture		= CoreEngine::GetCoreEngine()->GetSceneManager()->FindLoadTextureByPath(iblTexturePath); // Deallocated by SceneManager
+		Texture* hdrTexture		= CoreEngine::GetSceneManager()->FindLoadTextureByPath(iblTexturePath); // Deallocated by SceneManager
 
 		if (hdrTexture == nullptr)
 		{

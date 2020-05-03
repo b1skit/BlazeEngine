@@ -7,17 +7,19 @@
 
 #include <string>
 
-
 using glm::vec2;
 using glm::vec3;
 using glm::vec4;
-
 
 using std::string;
 
 
 namespace BlazeEngine
 {
+	// Predeclarations:
+	class Material;
+
+
 	// Vertex structure:
 	struct Vertex
 	{
@@ -203,7 +205,7 @@ namespace BlazeEngine
 	class Mesh
 	{
 	public:
-		Mesh(string name, Vertex* vertices, unsigned int numVerts, GLuint* indices, unsigned int numIndices, int materialIndex = -1);
+		Mesh(string name, Vertex* vertices, unsigned int numVerts, GLuint* indices, unsigned int numIndices, Material* newMeshMaterial);
 		
 		/*~Mesh(); // Cleanup should be handled by whatever owns the mesh, by calling Destroy() */
 
@@ -217,7 +219,7 @@ namespace BlazeEngine
 		inline Vertex*			Vertices()						{ return vertices; }
 		inline unsigned int		NumVerts()						{ return this->numVerts; }
 		
-		inline int&				MaterialIndex()					{ return materialIndex; }
+		inline Material*		MeshMaterial()					{ return this->meshMaterial; }
 		
 		inline GLuint*			Indices() { return indices; }
 		inline unsigned int		NumIndices()					{ return numIndices; }
@@ -241,11 +243,11 @@ namespace BlazeEngine
 		//------------------
 
 		// Create a simple cube mesh aligned to +/-1 on all axis'
-		static Mesh CreateCube();
+		static Mesh CreateCube(Material* newMeshMaterial = nullptr);
 
-		static Mesh CreateQuad(vec3 tl = vec3(-0.5f, 0.5f, 0.0f), vec3 tr = vec3(0.5f, 0.5f, 0.0f), vec3 bl = vec3(-0.5f, -0.5f, 0.0f), vec3 br = vec3(0.5f, -0.5f, 0.0f));
+		static Mesh CreateQuad(vec3 tl = vec3(-0.5f, 0.5f, 0.0f), vec3 tr = vec3(0.5f, 0.5f, 0.0f), vec3 bl = vec3(-0.5f, -0.5f, 0.0f), vec3 br = vec3(0.5f, -0.5f, 0.0f), Material* newMeshMaterial = nullptr);
 
-		static Mesh CreateSphere(float radius = 0.5f, int numLatSlices = 16, int numLongSlices = 16);
+		static Mesh CreateSphere(float radius = 0.5f, int numLatSlices = 16, int numLongSlices = 16, Material* newMeshMaterial = nullptr);
 	
 	protected:
 
@@ -260,7 +262,7 @@ namespace BlazeEngine
 		GLuint meshVAO			= 0;
 		GLuint meshVBOs[BUFFER_COUNT];			// Buffer objects that hold vertices in GPU memory
 
-		int materialIndex		= -1;
+		Material* meshMaterial	= nullptr;
 
 		Transform transform;
 		string meshName			= "UNNAMED_MESH";

@@ -61,28 +61,28 @@ namespace BlazeEngine
 		// sceneName == the root folder name within the ./Scenes/ directory. Must contain an .fbx file with the same name.
 		bool LoadScene(string sceneName);
 
-		inline unsigned int				NumMaterials()												{ return currentMaterialCount; }
-		Material*						GetMaterial(unsigned int materialIndex);
-		Material*						GetMaterial(string materialName);
+		inline unsigned int						NumMaterials()								{ return (int)this->materials.size(); }
+		unordered_map<string, Material*> const&	GetMaterials() const;
+		Material*								GetMaterial(string materialName);
 		
-		vector<Mesh*> const*			GetRenderMeshes(int materialIndex = -1);					// If materialIndex is out of bounds, returns ALL meshes
-		vector<Renderable*>*			GetRenderables();
+		vector<Mesh*> const*					GetRenderMeshes(Material* targetMaterial);					// If targetMaterial is nullptr, returns ALL meshes
+		vector<Renderable*>*					GetRenderables();
 
-		Light* const&					GetAmbientLight();
-		Light*							GetKeyLight();
+		Light* const&							GetAmbientLight();
+		Light*									GetKeyLight();
 		
-		vector<Camera*> const&			GetCameras(CAMERA_TYPE cameraType);
-		Camera*							GetMainCamera();
-		void							RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera);;
+		vector<Camera*> const&					GetCameras(CAMERA_TYPE cameraType);
+		Camera*									GetMainCamera();
+		void									RegisterCamera(CAMERA_TYPE cameraType, Camera* newCamera);;
 
-		void							AddTexture(Texture*& newTexture); // If duplicate texture exists, it will be deleted and the newTexture pointer updated to the correct address
-		Texture*						FindLoadTextureByPath(string texturePath, bool loadIfNotFound = true);	// Find if a texture if it exists, or try and load it if it doesn't. Returns nullptr if file isn't/can't be loaded
+		void									AddTexture(Texture*& newTexture); // If duplicate texture exists, it will be deleted and the newTexture pointer updated to the correct address
+		Texture*								FindLoadTextureByPath(string texturePath, bool loadIfNotFound = true);	// Find if a texture if it exists, or try and load it if it doesn't. Returns nullptr if file isn't/can't be loaded
 
-		vector<Light*> const&			GetDeferredLights();
+		vector<Light*> const&					GetDeferredLights();
 
-		Skybox*							GetSkybox();
+		Skybox*									GetSkybox();
 
-		string							GetCurrentSceneName() const;
+		string									GetCurrentSceneName() const;
 
 		
 
@@ -99,25 +99,14 @@ namespace BlazeEngine
 
 		// Material management:
 		//---------------------
-		Material**			materials				= nullptr;
-		const unsigned int	MAX_MATERIALS			= 100; // TODO: Replace this with something configurable/dynamic?
-		unsigned int		currentMaterialCount	= 0;
+		unordered_map<string, Material*> materials;	// Hash table of scene Material pointers
 
-		unordered_map<string, Texture*> textures;	// Hash table of texture pointers
-		
-		// Finds an existing material, or creates one using the default shader if none exists
-		int					GetMaterialIndex(string materialName);
+		unordered_map<string, Texture*> textures;	// Hash table of scene Texture pointers
 
-		// Add a material to the material array
-		// Warning: Material name MUST be unique if checkForExisting == false
-		unsigned int		AddMaterial(Material* newMaterial, bool checkForExisting = true);
-		
-		// Returns index of material with matching name, or -1 otherwise
-		int					GetMaterialIndexIfExists(string materialName); 
+		void				AddMaterial(Material*& newMaterial);	// Add a material to the material array. Note: Material name MUST be unique
 
-		// Helper function: Compiles vectors filled with meshes that use each material. Must be called once after all meshes have finished loading
-		void				AssembleMaterialMeshLists(); 
-		vector<vector<Mesh*>> materialMeshLists;
+		void				AssembleMaterialMeshLists();		// Helper function: Compiles vectors filled with meshes that use each material. Must be called once after all meshes have finished loading
+		unordered_map<string, vector<Mesh*>>materialMeshLists;	// Hash table: Maps material names, to a vector of Mesh* using the material
 
 
 		// Scene setup/construction:

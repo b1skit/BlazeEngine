@@ -241,7 +241,7 @@ namespace BlazeEngine
 
 		if (imageData)
 		{
-			LOG("Attempting to load " + to_string(width) + "x" + to_string(height) + (isHDR?" HDR ":" LDR ") + "texture with " + to_string(numChannels) + " channels");
+			LOG("Found " + to_string(width) + "x" + to_string(height) + (isHDR?" HDR ":" LDR ") + "texture with " + to_string(numChannels) + " channels");
 
 			Texture* texture = new Texture(width, height, texturePath, false);
 

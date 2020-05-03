@@ -13,7 +13,7 @@ namespace BlazeEngine
 
 
 	// Mesh functions:
-	Mesh::Mesh(string name, Vertex* vertices, unsigned int numVerts, GLuint* indices, unsigned int numIndices, int materialIndex /*= -1*/)
+	Mesh::Mesh(string name, Vertex* vertices, unsigned int numVerts, GLuint* indices, unsigned int numIndices, Material* newMeshMaterial)
 	{
 		this->meshName		= name;
 
@@ -23,7 +23,7 @@ namespace BlazeEngine
 		this->indices		= indices;
 		this->numIndices	= numIndices;
 
-		this->materialIndex = materialIndex;
+		this->meshMaterial	= newMeshMaterial;
 
 		// Once we've stored our properties locally, we can compute the localBounds:
 		ComputeBounds();
@@ -112,28 +112,28 @@ namespace BlazeEngine
 
 		if (vertices)
 		{
-			delete[] vertices;
-			vertices = nullptr;
-			numVerts = -1;
+			delete[] this->vertices;
+			this->vertices = nullptr;
+			this->numVerts = -1;
 		}
 		if (indices)
 		{
-			delete[] indices;
-			indices = nullptr;
-			numIndices = -1;
+			delete[] this->indices;
+			this->indices = nullptr;
+			this->numIndices = -1;
 		}
 
-		glDeleteVertexArrays(1, &meshVAO);
-		glDeleteBuffers(BUFFER_COUNT, meshVBOs);
+		glDeleteVertexArrays(1, &this->meshVAO);
+		glDeleteBuffers(BUFFER_COUNT, this->meshVBOs);
 
-		materialIndex = -1;		// Note: Material MUST be cleaned up elsewhere!
+		this->meshMaterial = nullptr;		// Note: Material MUST be cleaned up elsewhere!
 	}
 
 
 	// Static functions:
 	//-------------------
 
-	Mesh Mesh::CreateCube()
+	Mesh Mesh::CreateCube(Material* newMeshMaterial /*= nullptr*/)
 	{
 		// Note: BlazeEngine uses a RHCS in all cases
 		vec3 positions[8];
@@ -247,10 +247,10 @@ namespace BlazeEngine
 			21, 22, 23,
 		};
 
-		return Mesh("cube", cubeVerts, numVerts, cubeIndices, numIndices);
+		return Mesh("cube", cubeVerts, numVerts, cubeIndices, numIndices, newMeshMaterial);
 	}
 
-	Mesh Mesh::CreateQuad(vec3 tl /*= vec3(-0.5f, 0.5f, 0.0f)*/, vec3 tr /*= vec3(0.5f, 0.5f, 0.0f)*/, vec3 bl /*= vec3(-0.5f, -0.5f, 0.0f)*/, vec3 br /*= vec3(0.5f, -0.5f, 0.0f)*/)
+	Mesh Mesh::CreateQuad(vec3 tl /*= vec3(-0.5f, 0.5f, 0.0f)*/, vec3 tr /*= vec3(0.5f, 0.5f, 0.0f)*/, vec3 bl /*= vec3(-0.5f, -0.5f, 0.0f)*/, vec3 br /*= vec3(0.5f, -0.5f, 0.0f)*/, Material* newMeshMaterial /*= nullptr*/)
 	{
 		vec3 tangent	= normalize(vec3(br - bl));
 		vec3 bitangent	= normalize(vec3(tl - bl));
@@ -290,11 +290,11 @@ namespace BlazeEngine
 			2, 1, 3
 		}; // Note: CCW winding
 
-		return Mesh("quad", quadVerts, numVerts, quadIndices, numIndices);
+		return Mesh("quad", quadVerts, numVerts, quadIndices, numIndices, newMeshMaterial);
 	}
 
 
-	Mesh Mesh::CreateSphere(float radius /*= 0.5f*/, int numLatSlices /*= 16*/, int numLongSlices /*= 16*/)
+	Mesh Mesh::CreateSphere(float radius /*= 0.5f*/, int numLatSlices /*= 16*/, int numLongSlices /*= 16*/, Material* newMeshMaterial /*= nullptr*/)
 	{
 		// NOTE: Currently, this function does not generate valid tangents for any verts. Some UV's are distorted, as we're using merged vertices. TODO: Fix this
 
@@ -443,7 +443,7 @@ namespace BlazeEngine
 		}
 		indices[currentIndex - 1] = numVerts - numLatSlices - 1; // Wrap the last edge back to the start		
 
-		return Mesh("sphere", vertices, numVerts, indices, numIndices);
+		return Mesh("sphere", vertices, numVerts, indices, numIndices, newMeshMaterial);
 	}
 
 	void Mesh::ComputeBounds()

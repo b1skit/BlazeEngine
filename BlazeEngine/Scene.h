@@ -75,12 +75,12 @@ namespace BlazeEngine
 
 		// Duplicate pointers to lights contained in deferredLights
 		Light* ambientLight = nullptr;
-		Light* keyLight = nullptr;
+		Light* keyLight		= nullptr;
 
 		vector<Light*> const& GetDeferredLights() const		{ return deferredLights; }
 
 		// Skybox object:
-		Skybox* skybox = nullptr;
+		Skybox* skybox		= nullptr;
 
 		inline Bounds const& WorldSpaceSceneBounds() const	{ return sceneWorldBounds; }
 
