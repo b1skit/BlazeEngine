@@ -677,10 +677,10 @@ namespace BlazeEngine
 
 						newMaterial->Property(MATERIAL_PROPERTY_0) = vec4(0.04f, 0.04f, 0.04f, 0.0f);
 					}
-
-					#if defined(DEBUG_SCENEMANAGER_SHADER_LOGGING)
+					else
+					{
 						LOG("Inserted F0 into matProperty0 uniform: " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).x) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).y) + ", " + to_string(newMaterial->Property(MATERIAL_PROPERTY_0).z));
-					#endif
+					}
 				}
 				else
 				{
