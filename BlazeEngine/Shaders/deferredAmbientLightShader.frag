@@ -54,7 +54,7 @@ void main()
 	vec3 k_d				= 1.0 - fresnel_kS;	
 
 	// Sample the diffuse irradiance from our prefiltered irradiance environment map:
-	vec3 irradiance			= texture(CubeMap_0, worldNormal).xyz;
+	vec3 irradiance			= texture(CubeMap_0, worldNormal).xyz * AO;
 
 
 	// Get the specular reflectance term:
@@ -65,8 +65,7 @@ void main()
 	vec3 specular			= textureLod(CubeMap_1, worldReflection, RMAO.x * maxMipLevel).xyz * ((fresnel_kS * BRDF.x) + BRDF.y);
 
 
-
-	FragColor				= vec4((FragColor.rgb * irradiance * k_d + specular) * AO, 1.0); // Note: Omitted the "/ PI" factor here
+	FragColor				= vec4((FragColor.rgb * irradiance * k_d + specular), 1.0); // Note: Omitted the "/ PI" factor here
 //	FragColor				= vec4((FragColor.rgb * irradiance * k_d + specular) * AO / PI, 1.0); // Note: Omitted the "/ PI" factor here
 }
 
