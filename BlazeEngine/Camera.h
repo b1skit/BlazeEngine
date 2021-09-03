@@ -86,8 +86,8 @@ namespace BlazeEngine
 		mat4 projection				= mat4();
 		mat4 viewProjection			= mat4();
 
-		mat4* cubeView				= nullptr;	// Only initialized if we actually need it. Deallocated by Destroy()
-		mat4* cubeViewProjection	= nullptr;
+		vector<mat4> cubeView;
+		vector<mat4> cubeViewProjection;
 		
 		Material* renderMaterial	= nullptr;	// Deallocated by Destroy()
 

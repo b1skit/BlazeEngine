@@ -86,18 +86,6 @@ namespace BlazeEngine
 			delete renderMaterial;
 			renderMaterial = nullptr;
 		}
-
-		if (this->cubeView != nullptr)
-		{
-			delete[] cubeView;
-			cubeView = nullptr;
-		}
-
-		if (this->cubeViewProjection != nullptr)
-		{
-			delete[] cubeViewProjection;
-			cubeViewProjection = nullptr;
-		}
 	}
 
 
@@ -110,43 +98,43 @@ namespace BlazeEngine
 	mat4 const* Camera::CubeView()
 	{
 		// If we've never allocated cubeView, do it now:
-		if (cubeView == nullptr)
+		if (cubeView.size() == 0)
 		{
-			cubeView = new mat4[6];
-			
-			cubeView[0] = glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() + Transform::WORLD_X, -Transform::WORLD_Y);
-			cubeView[1] = glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() - Transform::WORLD_X, -Transform::WORLD_Y);
+			cubeView.reserve(6);
 
-			cubeView[2] = glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() + Transform::WORLD_Y, Transform::WORLD_Z);
-			cubeView[3] = glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() - Transform::WORLD_Y, -Transform::WORLD_Z);
+			cubeView.emplace_back( glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() + Transform::WORLD_X, -Transform::WORLD_Y) );			
+			cubeView.emplace_back( glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() - Transform::WORLD_X, -Transform::WORLD_Y) );
 
-			cubeView[4] = glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() + Transform::WORLD_Z, -Transform::WORLD_Y);
-			cubeView[5] = glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() - Transform::WORLD_Z, -Transform::WORLD_Y);
+			cubeView.emplace_back( glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() + Transform::WORLD_Y, Transform::WORLD_Z) );
+			cubeView.emplace_back( glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() - Transform::WORLD_Y, -Transform::WORLD_Z) );
+
+			cubeView.emplace_back( glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() + Transform::WORLD_Z, -Transform::WORLD_Y) );
+			cubeView.emplace_back( glm::lookAt(this->transform.WorldPosition(), this->transform.WorldPosition() - Transform::WORLD_Z, -Transform::WORLD_Y) );
 		}
 
 		// TODO: Recalculate this if the camera has moved
 
-		return cubeView;
+		return &cubeView[0];
 	}
 
 	mat4 const* Camera::CubeViewProjection()
 	{
 		// If we've never allocated cubeViewProjection, do it now:
-		if (cubeViewProjection == nullptr)
+		if (cubeViewProjection.size() == 0)
 		{
-			cubeViewProjection = new mat4[6];
+			cubeViewProjection.reserve(6);
 
 			mat4 const* ourCubeViews = this->CubeView(); // Call this to ensure cubeView has been initialized
 
-			cubeViewProjection[0] = this->projection * ourCubeViews[0];
-			cubeViewProjection[1] = this->projection * ourCubeViews[1];
-			cubeViewProjection[2] = this->projection * ourCubeViews[2];
-			cubeViewProjection[3] = this->projection * ourCubeViews[3];
-			cubeViewProjection[4] = this->projection * ourCubeViews[4];
-			cubeViewProjection[5] = this->projection * ourCubeViews[5];
+			cubeViewProjection.emplace_back(this->projection * ourCubeViews[0]);
+			cubeViewProjection.emplace_back(this->projection * ourCubeViews[1]);
+			cubeViewProjection.emplace_back(this->projection * ourCubeViews[2]);
+			cubeViewProjection.emplace_back(this->projection * ourCubeViews[3]);
+			cubeViewProjection.emplace_back(this->projection * ourCubeViews[4]);
+			cubeViewProjection.emplace_back(this->projection * ourCubeViews[5]);
 		}
 
-		return cubeViewProjection;
+		return &cubeViewProjection[0];
 	}
 
 
@@ -181,7 +169,7 @@ namespace BlazeEngine
 
 		// Store references to our additonal RenderTextures:
 		int numAdditionalRTs			= (int)RENDER_TEXTURE_COUNT - 2; // -2 b/c we already have 1, and we'll add the depth texture last
-		RenderTexture** additionalRTs	= new RenderTexture*[numAdditionalRTs];
+		vector<RenderTexture*> additionalRTs(numAdditionalRTs, nullptr);
 
 		int insertIndex				= 0;
 		int attachmentIndexOffset	= 1;
@@ -212,8 +200,7 @@ namespace BlazeEngine
 		}
 
 		// Attach the textures to the existing FBO
-		gBuffer_albedo->AttachAdditionalRenderTexturesToFramebuffer(additionalRTs, numAdditionalRTs);
-		delete [] additionalRTs;	// Cleanup
+		gBuffer_albedo->AttachAdditionalRenderTexturesToFramebuffer(&additionalRTs[0], numAdditionalRTs);
 
 		// Configure the depth buffer:
 		RenderTexture* depth = new RenderTexture
