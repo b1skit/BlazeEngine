@@ -91,6 +91,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)Dependencies\SDL2\include;$(ProjectDir)Dependencies\glew\include;$(ProjectDir)Dependencies\glm;$(ProjectDir)Dependencies\assimp\include;$(ProjectDir)Dependencies\stb;$(IncludePath);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(ProjectDir)Dependencies\SDL2\lib\x64;$(ProjectDir)Dependencies\glew\lib\Release\x64;$(ProjectDir)Dependencies\glm;$(ProjectDir)Dependencies\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
