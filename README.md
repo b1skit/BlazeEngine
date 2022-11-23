@@ -25,3 +25,5 @@ Included Dependencies:
 Recommended Visual Studio extensions:
 - Smart Command Line Arguments: https://marketplace.visualstudio.com/items?itemName=MBulli.SmartCommandlineArguments
 - GLSL Language Integration: https://github.com/danielscherzer/GLSL
+
+© 2019 Adam Badke. All rights reserved.
